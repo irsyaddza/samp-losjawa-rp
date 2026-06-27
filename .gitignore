@@ -21,3 +21,7 @@ logs/plugins/
 # OS files
 Thumbs.db
 .DS_Store
+
+# Docker — environment & generated data
+.env
+mysql/data/

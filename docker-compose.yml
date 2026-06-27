@@ -1,0 +1,64 @@
+services:
+  # ─────────────────────────────────────────────
+  #  MySQL 5.7 — database utama SA-MP server
+  # ─────────────────────────────────────────────
+  mysql:
+    image: mysql:5.7
+    container_name: ljrp-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-jawa}
+      MYSQL_USER: ${MYSQL_USER:-samp}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-samppassword}
+    ports:
+      - "3306:3306"          # buka ke host (untuk HeidiSQL/dev tools)
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init:/docker-entrypoint-initdb.d
+    networks:
+      - samp_net
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --sql-mode=NO_ENGINE_SUBSTITUTION
+      --max_allowed_packet=64M
+    healthcheck:
+      test: ["CMD", "sh", "-c", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ─────────────────────────────────────────────
+  #  SA-MP Server — berjalan di atas Linux
+  # ─────────────────────────────────────────────
+  samp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ljrp-samp
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "7777:7777/udp"
+      - "7777:7777/tcp"
+    volumes:
+      - ./logs:/samp/logs
+      - ./scriptfiles:/samp/scriptfiles
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_USER: ${MYSQL_USER:-samp}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-samppassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-jawa}
+    networks:
+      - samp_net
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  samp_net:
+    driver: bridge
