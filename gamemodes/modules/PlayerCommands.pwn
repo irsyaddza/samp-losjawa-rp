@@ -2968,7 +2968,7 @@ CMD:sellpackage(playerid, params[])
 
 public OnPlayerClickMap(playerid, Float:fX, Float:fY, Float:fZ)
 {
-	if(EnableTP{playerid})
+	if(AdminDuty{playerid})
 	{
         if(!fX || !fY || !fZ) return true;
 

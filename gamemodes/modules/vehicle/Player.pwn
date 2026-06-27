@@ -5,6 +5,19 @@
 #define MAX_VEHICLE_KEYS (3)
 #define REDUCE_VEHICLE_PRICE (2)
 
+stock GetCategoryDealerType(category_id)
+{
+	switch(category_id)
+	{
+		case 3, 5, 6, 10, 11, 12, 14: return 0; // Mobil Harian (Convertibles, Low Riders, Off Road, Saloons, Sports, Station Wagons, Unique)
+		case 2: return 1;                      // Kendaraan Roda Dua (Bikes)
+		case 4, 7: return 2;                   // Kendaraan Kerja (Industrial, Public Service)
+		case 13: return 3;                     // Kapal/Perahu (Boats)
+		case 0, 1: return 4;                   // Kendaraan Udara (Airplanes, Helicopters)
+	}
+	return -1; // Blocked (Factions / Government)
+}
+
 // Variables
 
 new const ColorMenuInfo[][] =
@@ -1048,6 +1061,22 @@ PutPlayerSettingVehicle(playerid, model, price)
 			return SendServerMessage(playerid, "You are not a part of this vehicle faction.");
 	}
 
+	// PONYTAIL: Job vehicle purchase restriction
+	new nearest_biz = Business_Nearest(playerid);
+	if(nearest_biz != -1 && BusinessData[nearest_biz][bType] == 4 && BusinessData[nearest_biz][bsubType] == 2)
+	{
+		if(model == 420 || model == 438) // Taxi & Cabbie
+		{
+			if(PlayerData[playerid][pJob] != JOB_TAXI && PlayerData[playerid][pSideJob] != JOB_TAXI)
+				return SendErrorMessage(playerid, "You must be a Taxi Driver to purchase this vehicle.");
+		}
+		else if(model == 499 || model == 414 || model == 456 || model == 455 || model == 443 || model == 403 || model == 515 || model == 514) // Benson, Mule, Yankee, Flatbed, Packer, Linerunner, Roadtrain, Petrol
+		{
+			if(PlayerData[playerid][pJob] != JOB_TRUCKER && PlayerData[playerid][pSideJob] != JOB_TRUCKER)
+				return SendErrorMessage(playerid, "You must be a Trucker to purchase this vehicle.");
+		}
+	}
+
 	new id = -1;
 
 	if((id = Business_Nearest(playerid)) != -1 && BusinessData[id][bType] == 4)
@@ -1378,6 +1407,27 @@ Dialog:DealercarConfirm(playerid, response, listitem, inputtext[])
 				SendClientMessage(playerid, COLOR_LIGHTRED, "You don't have enough money to buy this vehicle.");
 				ShowPlayerDealercarDialog(playerid);
 				return true;
+			}
+
+			// PONYTAIL: Job vehicle purchase restriction double check
+			if(BusinessData[bizid][bsubType] == 2)
+			{
+				if(model == 420 || model == 438) // Taxi & Cabbie
+				{
+					if(PlayerData[playerid][pJob] != JOB_TAXI && PlayerData[playerid][pSideJob] != JOB_TAXI)
+					{
+						ExitSettingVehicle(playerid);
+						return SendErrorMessage(playerid, "You must be a Taxi Driver to purchase this vehicle.");
+					}
+				}
+				else if(model == 499 || model == 414 || model == 456 || model == 455 || model == 443 || model == 403 || model == 515 || model == 514) // Benson, Mule, Yankee, Flatbed, Packer, Linerunner, Roadtrain, Petrol
+				{
+					if(PlayerData[playerid][pJob] != JOB_TRUCKER && PlayerData[playerid][pSideJob] != JOB_TRUCKER)
+					{
+						ExitSettingVehicle(playerid);
+						return SendErrorMessage(playerid, "You must be a Trucker to purchase this vehicle.");
+					}
+				}
 			}
 
 			if(CountPlayerVehicles(playerid) >= 12)
@@ -2556,35 +2606,52 @@ ShowPlayerDealershipMenu(playerid)
 		VDealerData[playerid][i][4] = 0;
 	}
 
+	new bizid = Business_Nearest(playerid);
+	new dealerType = (bizid != -1) ? BusinessData[bizid][bsubType] : 0; // PONYTAIL: 0 = Harian, 1 = Roda Dua, 2 = Kerja
+
     if(VDealerSelectCatalog[playerid] == -1)
 	{
-		numbveh = sizeof(VehicleMenuInfo);
-
-		for(new i = (PCarPage[playerid]-1) * 6; i < numbveh; ++i)
+		numbveh = 0;
+		for(new i = 0; i < sizeof(VehicleMenuInfo); ++i)
 		{
-			VDealerData[playerid][count][0] = VehicleMenuInfo[i][0];
-			VDealerData[playerid][count][1] = -1;
-			VDealerData[playerid][count][2] = -1;
-			VDealerData[playerid][count][3] = 0;
+			if(GetCategoryDealerType(i) == dealerType) numbveh++;
+		}
 
-			for(new x = 0; x != sizeof(VehicleDealership); ++x)
+		new skip = (PCarPage[playerid]-1) * 6;
+		for(new i = 0; i < sizeof(VehicleMenuInfo); ++i)
+		{
+			// PONYTAIL: Filter categories based on dealer subtype
+			if(GetCategoryDealerType(i) != dealerType) continue;
+
+			if(skip > 0)
 			{
-				if(VehicleDealership[x][1] == i)
-				{
-				    new price = VehicleData[VehicleDealership[x][0] - 400][c_price];
-
-				    if(PlayerData[playerid][pCash] >= price)
-					{
-						VDealerData[playerid][count][3] = 1;
-						break;
-				    }
-				}
+				skip--;
+				continue;
 			}
 
-		  	count++;
+			if(count < 6)
+			{
+				VDealerData[playerid][count][0] = VehicleMenuInfo[i][0];
+				VDealerData[playerid][count][1] = i; // PONYTAIL: Save original category index
+				VDealerData[playerid][count][2] = -1;
+				VDealerData[playerid][count][3] = 0;
 
-			if(count > 5)
-		  		break;
+				for(new x = 0; x != sizeof(VehicleDealership); ++x)
+				{
+					if(VehicleDealership[x][1] == i)
+					{
+						new price = VehicleData[VehicleDealership[x][0] - 400][c_price];
+
+						if(PlayerData[playerid][pCash] >= price)
+						{
+							VDealerData[playerid][count][3] = 1;
+							break;
+						}
+					}
+				}
+
+				count++;
+			}
 		}
 
 		format(str, sizeof(str), "Categories");

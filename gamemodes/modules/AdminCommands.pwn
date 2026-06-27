@@ -2552,124 +2552,20 @@ CMD:makebusiness(playerid, params[])
 	if(PlayerData[playerid][pAdmin] < 4)
     	return SendErrorMessage(playerid, "You're not authorized to use this command.");
 
-	new bizid = Iter_Free(Business), level, price, type, Float:x, Float:y, Float:z;
+	new level, price, type;
 
 	if(sscanf(params, "ddd", level, price, type))
-		return SendSyntaxMessage(playerid, "/makebusiness [buylevel] [price] [type(/biztypes)]");
+	{
+		Dialog_Show(playerid, MbizCreateType, DIALOG_STYLE_LIST, "Create Business (Wizard) - Step 1: Type", 
+			"1: Gas Station\n2: Ammunation\n3: 24-7\n4: Vehicle Dealership\n5: Car Modding Shop\n6: Pay & Spray\n7: Clothing Shop\n8: Bar\n9: Restaurant\n10: Furniture Shop\n11: Advertisement\n12: Bank\n13: Weapon Factory", 
+			"Next", "Cancel");
+		return true;
+	}
 
 	if(type < 1 || type > 13)
 		return SendClientMessage(playerid, COLOR_GRAD2, "Invalid business type (1-13).");
 
-	if(bizid != -1)
-	{
-		GetPlayerPos(playerid, x, y, z);
-
-		BusinessData[bizid][bEntranceX] = x;
-		BusinessData[bizid][bEntranceY] = y;
-		BusinessData[bizid][bEntranceZ] = z;
-		BusinessData[bizid][bExitX] = 0.0;
-		BusinessData[bizid][bExitY] = 0.0;
-		BusinessData[bizid][bExitZ] = 0.0;
-		BusinessData[bizid][bLevelNeeded] = level;
-		BusinessData[bizid][bBuyPrice] = price;
-		BusinessData[bizid][bOwned] = 0;
-		BusinessData[bizid][bLocked] = 0;
-		BusinessData[bizid][bInterior] = 0;
-		BusinessData[bizid][bWorld] = bizid;
-		BusinessData[bizid][bTill] = 0;
-		BusinessData[bizid][bEntranceCost] = 0;
-		BusinessData[bizid][bProducts] = 0;
-		format(BusinessData[bizid][bOwner], 24, "The State");
-		format(BusinessData[bizid][bInfo], 80, "Business");
-		BusinessData[bizid][bType] = type;
-
-		if(type == 12 || type == 11 || type == 10)
-		{
-            BusinessData[bizid][bOwned] = 1;
-		}
-
-		switch(type)
-		{
-		    case 1: { // Gas Station
-		        format(BusinessData[bizid][bInfo], 80, "Gas Station");
-		        BusinessData[bizid][bItems][0] = 50;
-                BusinessData[bizid][bMaxProducts] = 2400;
-		    }
-		    case 2: { // Ammunations
-		        format(BusinessData[bizid][bInfo], 80, "Ammunations");
-                BusinessData[bizid][bMaxProducts] = 1000;
-		    }
-		    case 3: { // 24-7
-		        format(BusinessData[bizid][bInfo], 80, "24-7");
-
-		        BusinessData[bizid][bItems][0] = 500;
-		        BusinessData[bizid][bItems][1] = 10000;
-		        BusinessData[bizid][bItems][2] = 1500;
-		        BusinessData[bizid][bItems][3] = 500;
-		        BusinessData[bizid][bItems][4] = 200;
-		        BusinessData[bizid][bItems][5] = 500;
-		        BusinessData[bizid][bItems][6] = 5000;
-		        BusinessData[bizid][bItems][7] = 200;
-		        BusinessData[bizid][bItems][8] = 500;
-		        BusinessData[bizid][bItems][9] = 2000;
-		        BusinessData[bizid][bItems][10] = 5000;
-		        BusinessData[bizid][bItems][11] = 8000;
-
-                BusinessData[bizid][bMaxProducts] = 500;
-		    }
-		    case 4: {
-		        format(BusinessData[bizid][bInfo], 80, "Vehicle Dealerships");
-		        BusinessData[bizid][bMaxProducts] = 200;
-		    }
-		    case 5: {
-		        format(BusinessData[bizid][bInfo], 80, "Car Modding Shops");
-		        BusinessData[bizid][bMaxProducts] = 1000;
-		    }
-		    case 6: {
-		        format(BusinessData[bizid][bInfo], 80, "Pay & Spray");
-		        BusinessData[bizid][bMaxProducts] = 600;
-		    }
-		    case 7: {
-		        format(BusinessData[bizid][bInfo], 80, "Clothing Shops");
-		        BusinessData[bizid][bMaxProducts] = 500;
-		    }
-		    case 8: {
-		        format(BusinessData[bizid][bInfo], 80, "Bars");
-		        BusinessData[bizid][bMaxProducts] = 500;
-		    }
-		    case 9: { // Restaurant
-		        format(BusinessData[bizid][bInfo], 80, "Restaurant");
-		        BusinessData[bizid][bItems][0] = 100;
-		        BusinessData[bizid][bItems][1] = 200;
-		        BusinessData[bizid][bItems][2] = 300;
-		        BusinessData[bizid][bItems][3] = 300;
-		        BusinessData[bizid][bMaxProducts] = 500;
-		    }
-		    case 10: {
-		        format(BusinessData[bizid][bInfo], 80, "Furniture Shop");
-		        BusinessData[bizid][bMaxProducts] = 10000;
-		    }
-		    case 11: { // Advertisement
-		        format(BusinessData[bizid][bInfo], 80, "Advertisement");
-                BusinessData[bizid][bMaxProducts] = 5000;
-		    }
-		    case 12: { // Bank
-		        format(BusinessData[bizid][bInfo], 80, "Bank");
-                BusinessData[bizid][bMaxProducts] = 10000;
-		    }
-		    case 13: { // Weapon Factory
-		        format(BusinessData[bizid][bInfo], 80, "Weapon Factory");
-                BusinessData[bizid][bMaxProducts] = 300;
-		    }
-		}
-
-		BusinessData[bizid][bsubType] = 0;
-		BusinessData[bizid][bPickup] = CreateDynamicPickup(1239, 2, x, y, z, -1, -1, -1, 100.0);
-
-		AddBizToFile(bizid, price, type, BusinessData[bizid][bOwner], BusinessData[bizid][bInfo], x, y, z);
-
-		SendClientMessageEx(playerid, COLOR_GREEN, "The new business has been added [Level: %d Price: %d Type: %s]", level, price, BusinessData[bizid][bInfo]);
-	}
+	CreateNewBusiness(playerid, level, price, type);
 	return true;
 }
 
@@ -3020,6 +2916,17 @@ CMD:editbusiness(playerid, params[])
 
 			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_subtype` = '%d' WHERE `biz_id` = '%d'", input, BusinessData[bizid][bID]);
 			mysql_tquery(dbCon, gquery);
+
+			switch(input)
+			{
+				case 0: SendClientMessage(playerid, COLOR_GRAD2, "Business sub type set to Car Dealer.");
+				case 1: SendClientMessage(playerid, COLOR_GRAD2, "Business sub type set to Bike Dealer.");
+				case 2: SendClientMessage(playerid, COLOR_GRAD2, "Business sub type set to Industrial Dealer.");
+				case 3: SendClientMessage(playerid, COLOR_GRAD2, "Business sub type set to Boat Dealer.");
+				case 4: SendClientMessage(playerid, COLOR_GRAD2, "Business sub type set to Air Vehicle Dealer.");
+				default: SendClientMessage(playerid, COLOR_GRAD2, "Business sub type set to Unknown Dealer.");
+			}
+			return true;
 		}
 		else if(type == 4)
 		{
@@ -5674,55 +5581,7 @@ CMD:smack(playerid, params[])
 	return true;
 }
 
-CMD:enabletp(playerid, params[])
-{
-	if(PlayerData[playerid][pAdmin] < 3)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
 
-	new userid;
-
-	if(sscanf(params, "u", userid))
-	    return SendSyntaxMessage(playerid, "/enabletp [playerid/PartOfName]");
-
-	if(!IsPlayerConnected(userid))
-		return SendErrorMessage(playerid, "The player you specified isn't connected.");
-
-	if(!SQL_IsLogged(userid))
-		return SendErrorMessage(playerid, "The player you specified isn't logged in.");
-
-	if(EnableTP{userid})
-        return SendErrorMessage(playerid, "Player already has right click on map teleportation enabled.");
-
-	EnableTP{userid} = true;
-
-    SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(3): %s enabled %s's ability to teleport by right click on map.", ReturnName(playerid), ReturnName(userid));
-	return true;
-}
-
-CMD:disabletp(playerid, params[])
-{
-	if(PlayerData[playerid][pAdmin] < 3)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
-
-	new userid;
-
-	if(sscanf(params, "u", userid))
-	    return SendSyntaxMessage(playerid, "/disabletp [playerid/PartOfName]");
-
-	if(!IsPlayerConnected(userid))
-		return SendErrorMessage(playerid, "The player you specified isn't connected.");
-
-	if(!SQL_IsLogged(userid))
-		return SendErrorMessage(playerid, "The player you specified isn't logged in.");
-
-	if(!EnableTP{userid})
-        return SendErrorMessage(playerid, "Player doesn't have right click on map teleportation enabled.");
-
-	EnableTP{userid} = false;
-
-    SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(3): %s disabled %s's ability to teleport by right click on map.", ReturnName(playerid), ReturnName(userid));
-	return true;
-}
 
 CMD:kickfromjob(playerid, params[])
 {
@@ -7710,4 +7569,700 @@ CMD:sotot(playerid, params[])
     SendClientMessage(playerid, -1, "You received 2 weapons, armour(150), health(150), happy sotot!");
     
     return 1;
+}
+
+// ==========================================
+// PONYTAIL: Unified Business Manager (/mbiz)
+// ==========================================
+
+new EditingBizID[MAX_PLAYERS];
+new EditingBizOption[MAX_PLAYERS][30];
+
+new const BusinessInteriorNames[49][] = {
+	"None",
+	"Marcos Bistro",
+	"Big Spread Ranch Strip Club",
+	"Burger Shot",
+	"Cluckin Bell",
+	"Well Stacked Pizza",
+	"Rusty Browns Donuts",
+	"Jays Diner",
+	"Pump Truck Stop Diner",
+	"Alhambra Club",
+	"Mistys",
+	"Lil' Probe Inn",
+	"Exclusive Clothes Shop",
+	"Binco Clothes Shop",
+	"ProLaps Clothes Shop",
+	"SubUrban Clothes Shop",
+	"Victim Clothes Shop",
+	"Zip Clothes Shop",
+	"Redsands Casino",
+	"Off Track Betting",
+	"Sex Shop",
+	"Zeros RC Shop",
+	"Ammunation 1",
+	"Ammunation 2",
+	"Ammunation 3",
+	"Ammunation 4",
+	"Jizzy's Club",
+	"24-7 Shop 1",
+	"24-7 Shop 2",
+	"24-7 Shop 3",
+	"24-7 Shop 4",
+	"24-7 Shop 5",
+	"24-7 Shop 6",
+	"Advertising/Phone Network",
+	"Brothel",
+	"Four Dragons Casino",
+	"Bikers Garage",
+	"Ganton Gym",
+	"Tattoo Shop 1",
+	"Tattoo Shop 2",
+	"Tattoo Shop 3",
+	"Crack Den",
+	"Zero RC Shop 2",
+	"Record Studio",
+	"LS Court Room",
+	"Meat Factory",
+	"Betting Place",
+	"Barber Shop",
+	"Pleasure Domes"
+};
+
+stock CreateNewBusiness(playerid, level, price, type)
+{
+	new bizid = Iter_Free(Business);
+	if(bizid == -1) return SendErrorMessage(playerid, "Business limit reached.");
+	
+	new Float:x, Float:y, Float:z;
+	GetPlayerPos(playerid, x, y, z);
+
+	BusinessData[bizid][bEntranceX] = x;
+	BusinessData[bizid][bEntranceY] = y;
+	BusinessData[bizid][bEntranceZ] = z;
+	BusinessData[bizid][bExitX] = 0.0;
+	BusinessData[bizid][bExitY] = 0.0;
+	BusinessData[bizid][bExitZ] = 0.0;
+	BusinessData[bizid][bLevelNeeded] = level;
+	BusinessData[bizid][bBuyPrice] = price;
+	BusinessData[bizid][bOwned] = 0;
+	BusinessData[bizid][bLocked] = 0;
+	BusinessData[bizid][bInterior] = 0;
+	BusinessData[bizid][bWorld] = bizid;
+	BusinessData[bizid][bTill] = 0;
+	BusinessData[bizid][bEntranceCost] = 0;
+	BusinessData[bizid][bProducts] = 0;
+	format(BusinessData[bizid][bOwner], 24, "The State");
+	format(BusinessData[bizid][bInfo], 80, "Business");
+	BusinessData[bizid][bType] = type;
+
+	if(type == 12 || type == 11 || type == 10)
+	{
+		BusinessData[bizid][bOwned] = 1;
+	}
+
+	switch(type)
+	{
+		case 1: { // Gas Station
+			format(BusinessData[bizid][bInfo], 80, "Gas Station");
+			BusinessData[bizid][bItems][0] = 50;
+			BusinessData[bizid][bMaxProducts] = 2400;
+		}
+		case 2: { // Ammunations
+			format(BusinessData[bizid][bInfo], 80, "Ammunations");
+			BusinessData[bizid][bMaxProducts] = 1000;
+		}
+		case 3: { // 24-7
+			format(BusinessData[bizid][bInfo], 80, "24-7");
+
+			BusinessData[bizid][bItems][0] = 500;
+			BusinessData[bizid][bItems][1] = 10000;
+			BusinessData[bizid][bItems][2] = 1500;
+			BusinessData[bizid][bItems][3] = 500;
+			BusinessData[bizid][bItems][4] = 200;
+			BusinessData[bizid][bItems][5] = 500;
+			BusinessData[bizid][bItems][6] = 5000;
+			BusinessData[bizid][bItems][7] = 200;
+			BusinessData[bizid][bItems][8] = 500;
+			BusinessData[bizid][bItems][9] = 2000;
+			BusinessData[bizid][bItems][10] = 5000;
+			BusinessData[bizid][bItems][11] = 8000;
+
+			BusinessData[bizid][bMaxProducts] = 500;
+		}
+		case 4: {
+			format(BusinessData[bizid][bInfo], 80, "Vehicle Dealerships");
+			BusinessData[bizid][bMaxProducts] = 200;
+		}
+		case 5: {
+			format(BusinessData[bizid][bInfo], 80, "Car Modding Shops");
+			BusinessData[bizid][bMaxProducts] = 1000;
+		}
+		case 6: {
+			format(BusinessData[bizid][bInfo], 80, "Pay & Spray");
+			BusinessData[bizid][bMaxProducts] = 600;
+		}
+		case 7: {
+			format(BusinessData[bizid][bInfo], 80, "Clothing Shops");
+			BusinessData[bizid][bMaxProducts] = 500;
+		}
+		case 8: {
+			format(BusinessData[bizid][bInfo], 80, "Bars");
+			BusinessData[bizid][bMaxProducts] = 500;
+		}
+		case 9: { // Restaurant
+			format(BusinessData[bizid][bInfo], 80, "Restaurant");
+			BusinessData[bizid][bItems][0] = 100;
+			BusinessData[bizid][bItems][1] = 200;
+			BusinessData[bizid][bItems][2] = 300;
+			BusinessData[bizid][bItems][3] = 300;
+			BusinessData[bizid][bMaxProducts] = 500;
+		}
+		case 10: {
+			format(BusinessData[bizid][bInfo], 80, "Furniture Shop");
+			BusinessData[bizid][bMaxProducts] = 10000;
+		}
+		case 11: { // Advertisement
+			format(BusinessData[bizid][bInfo], 80, "Advertisement");
+			BusinessData[bizid][bMaxProducts] = 5000;
+		}
+		case 12: { // Bank
+			format(BusinessData[bizid][bInfo], 80, "Bank");
+			BusinessData[bizid][bMaxProducts] = 10000;
+		}
+		case 13: { // Weapon Factory
+			format(BusinessData[bizid][bInfo], 80, "Weapon Factory");
+			BusinessData[bizid][bMaxProducts] = 300;
+		}
+	}
+
+	BusinessData[bizid][bsubType] = 0;
+	BusinessData[bizid][bPickup] = CreateDynamicPickup(1239, 2, x, y, z, -1, -1, -1, 100.0);
+
+	AddBizToFile(bizid, price, type, BusinessData[bizid][bOwner], BusinessData[bizid][bInfo], x, y, z);
+
+	SendClientMessageEx(playerid, COLOR_GREEN, "The new business has been added [Level: %d Price: %d Type: %s]", level, price, BusinessData[bizid][bInfo]);
+	return 1;
+}
+
+YCMD:mbiz(playerid, params[], help) = managebusiness;
+
+CMD:managebusiness(playerid, params[])
+{
+	if(PlayerData[playerid][pAdmin] < 4)
+		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+
+	new bizid = -1;
+	if(sscanf(params, "d", bizid))
+	{
+		bizid = Business_Nearest(playerid);
+		if(bizid == -1)
+			return SendErrorMessage(playerid, "You're not near any business entrance/exit. Usage: /mbiz [business_id]");
+	}
+
+	if(bizid < 0 || bizid >= MAX_BUSINESS || !BusinessData[bizid][bID])
+		return SendErrorMessage(playerid, "Invalid business ID specified.");
+
+	EditingBizID[playerid] = bizid;
+	ShowMbizMainDialog(playerid, bizid);
+	return true;
+}
+
+stock ShowMbizMainDialog(playerid, bizid)
+{
+	new string[2048], line[256], idx = 0;
+	
+	format(string, sizeof(string), "Name: %s\n", BusinessData[bizid][bInfo]);
+	EditingBizOption[playerid][idx++] = 0;
+	
+	format(line, sizeof(line), "Price: $%s\n", FormatNumber(BusinessData[bizid][bBuyPrice]));
+	strcat(string, line);
+	EditingBizOption[playerid][idx++] = 1;
+	
+	format(line, sizeof(line), "Level Needed: %d\n", BusinessData[bizid][bLevelNeeded]);
+	strcat(string, line);
+	EditingBizOption[playerid][idx++] = 2;
+	
+	format(line, sizeof(line), "Lock State: %s\n", BusinessData[bizid][bLocked] ? ("{FF0000}Locked{FFFFFF}") : ("{00FF00}Unlocked{FFFFFF}"));
+	strcat(string, line);
+	EditingBizOption[playerid][idx++] = 3;
+	
+	format(line, sizeof(line), "Products: %d / %d\n", BusinessData[bizid][bProducts], BusinessData[bizid][bMaxProducts]);
+	strcat(string, line);
+	EditingBizOption[playerid][idx++] = 4;
+	
+	format(line, sizeof(line), "Max Products: %d\n", BusinessData[bizid][bMaxProducts]);
+	strcat(string, line);
+	EditingBizOption[playerid][idx++] = 5;
+	
+	format(line, sizeof(line), "Cargo/Product Price: $%s\n", FormatNumber(BusinessData[bizid][bPriceProd]));
+	strcat(string, line);
+	EditingBizOption[playerid][idx++] = 6;
+	
+	format(line, sizeof(line), "Entrance Cost: $%s\n", FormatNumber(BusinessData[bizid][bEntranceCost]));
+	strcat(string, line);
+	EditingBizOption[playerid][idx++] = 7;
+	
+	format(line, sizeof(line), "Business Cash (Till): $%s\n", FormatNumber(BusinessData[bizid][bTill]));
+	strcat(string, line);
+	EditingBizOption[playerid][idx++] = 8;
+	
+	if(BusinessData[bizid][bType] == 4)
+	{
+		new subName[32];
+		switch(BusinessData[bizid][bsubType])
+		{
+			case 0: subName = "Car Dealer";
+			case 1: subName = "Bike Dealer";
+			case 2: subName = "Industrial Dealer";
+			case 3: subName = "Boat Dealer";
+			case 4: subName = "Air Vehicle Dealer";
+			default: subName = "Unknown";
+		}
+		format(line, sizeof(line), "Dealership Sub-Type: %s (%d)\n", subName, BusinessData[bizid][bsubType]);
+		strcat(string, line);
+		EditingBizOption[playerid][idx++] = 9;
+	}
+	else if(BusinessData[bizid][bType] == 8)
+	{
+		new subName[32];
+		switch(BusinessData[bizid][bsubType])
+		{
+			case 0: subName = "Cluckin Bell";
+			case 1: subName = "Burger Shot";
+			case 2: subName = "Well Stacked Pizza";
+			case 3: subName = "Rusty Browns Donuts";
+			default: subName = "Unknown";
+		}
+		format(line, sizeof(line), "Restaurant Sub-Type: %s (%d)\n", subName, BusinessData[bizid][bsubType]);
+		strcat(string, line);
+		EditingBizOption[playerid][idx++] = 10;
+	}
+	
+	format(line, sizeof(line), "Interior Template: %d\n", BusinessData[bizid][bInterior]);
+	strcat(string, line);
+	EditingBizOption[playerid][idx++] = 11;
+	
+	if(BusinessData[bizid][bType] == 4)
+	{
+		strcat(string, "Set Car Spawn Location (Here)\n");
+		EditingBizOption[playerid][idx++] = 12;
+		
+		strcat(string, "Set Boat Spawn Location (Here)\n");
+		EditingBizOption[playerid][idx++] = 13;
+		
+		strcat(string, "Set Air Spawn Location (Here)\n");
+		EditingBizOption[playerid][idx++] = 14;
+	}
+	
+	strcat(string, "Set Entrance Location (Here)\n");
+	EditingBizOption[playerid][idx++] = 15;
+	
+	strcat(string, "Set Exit Location (Here)\n");
+	EditingBizOption[playerid][idx++] = 16;
+	
+	strcat(string, "Fill Products (Instant)\n");
+	EditingBizOption[playerid][idx++] = 17;
+	
+	strcat(string, "Teleport to Entrance\n");
+	EditingBizOption[playerid][idx++] = 18;
+	
+	strcat(string, "Teleport to Exit/Interior\n");
+	EditingBizOption[playerid][idx++] = 19;
+	
+	strcat(string, "{FF0000}Delete Business");
+	EditingBizOption[playerid][idx++] = 20;
+	
+	new title[64];
+	format(title, sizeof(title), "Business Manager (ID: %d)", bizid);
+	Dialog_Show(playerid, MbizMenu, DIALOG_STYLE_LIST, title, string, "Select", "Cancel");
+	return 1;
+}
+
+Dialog:MbizCreateType(playerid, response, listitem, inputtext[])
+{
+	if(!response) return 1;
+	SetPVarInt(playerid, "MbizCreateType", listitem + 1);
+	Dialog_Show(playerid, MbizCreatePrice, DIALOG_STYLE_INPUT, "Create Business (Wizard) - Step 2: Price", "Enter the purchase price for the business:", "Next", "Back");
+	return 1;
+}
+
+Dialog:MbizCreatePrice(playerid, response, listitem, inputtext[])
+{
+	if(!response)
+	{
+		Dialog_Show(playerid, MbizCreateType, DIALOG_STYLE_LIST, "Create Business (Wizard) - Step 1: Type", 
+			"1: Gas Station\n2: Ammunation\n3: 24-7\n4: Vehicle Dealership\n5: Car Modding Shop\n6: Pay & Spray\n7: Clothing Shop\n8: Bar\n9: Restaurant\n10: Furniture Shop\n11: Advertisement\n12: Bank\n13: Weapon Factory", 
+			"Next", "Cancel");
+		return 1;
+	}
+	new price = strval(inputtext);
+	if(price < 0) return Dialog_Show(playerid, MbizCreatePrice, DIALOG_STYLE_INPUT, "Create Business (Wizard) - Step 2: Price", "Enter the purchase price for the business:\n{FF0000}Price must be 0 or higher!", "Next", "Back");
+	
+	SetPVarInt(playerid, "MbizCreatePrice", price);
+	Dialog_Show(playerid, MbizCreateLevel, DIALOG_STYLE_INPUT, "Create Business (Wizard) - Step 3: Level", "Enter the minimum level required to buy this business:", "Finish", "Back");
+	return 1;
+}
+
+Dialog:MbizCreateLevel(playerid, response, listitem, inputtext[])
+{
+	if(!response)
+	{
+		Dialog_Show(playerid, MbizCreatePrice, DIALOG_STYLE_INPUT, "Create Business (Wizard) - Step 2: Price", "Enter the purchase price for the business:", "Next", "Back");
+		return 1;
+	}
+	new level = strval(inputtext);
+	if(level < 0) return Dialog_Show(playerid, MbizCreateLevel, DIALOG_STYLE_INPUT, "Create Business (Wizard) - Step 3: Level", "Enter the minimum level required to buy this business:\n{FF0000}Level must be 0 or higher!", "Finish", "Back");
+	
+	new type = GetPVarInt(playerid, "MbizCreateType");
+	new price = GetPVarInt(playerid, "MbizCreatePrice");
+	DeletePVar(playerid, "MbizCreateType");
+	DeletePVar(playerid, "MbizCreatePrice");
+	
+	CreateNewBusiness(playerid, level, price, type);
+	return 1;
+}
+
+Dialog:MbizEditName(playerid, response, listitem, inputtext[])
+{
+	new bizid = EditingBizID[playerid];
+	if(!response) return ShowMbizMainDialog(playerid, bizid);
+	if(isnull(inputtext)) return Dialog_Show(playerid, MbizEditName, DIALOG_STYLE_INPUT, "Edit Name", "Enter the new name for the business:\n{FF0000}Name cannot be empty!", "Save", "Back");
+	
+	format(BusinessData[bizid][bInfo], 80, "%s", inputtext);
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_info` = '%e' WHERE `biz_id` = '%d'", inputtext, BusinessData[bizid][bID]);
+	mysql_tquery(dbCon, gquery);
+	SendClientMessage(playerid, COLOR_GREEN, "Business name updated successfully.");
+	ShowMbizMainDialog(playerid, bizid);
+	return 1;
+}
+
+Dialog:MbizEditPrice(playerid, response, listitem, inputtext[])
+{
+	new bizid = EditingBizID[playerid];
+	if(!response) return ShowMbizMainDialog(playerid, bizid);
+	new val = strval(inputtext);
+	if(val < 0) return Dialog_Show(playerid, MbizEditPrice, DIALOG_STYLE_INPUT, "Edit Price", "Enter the new purchase price for the business:\n{FF0000}Price must be 0 or higher!", "Save", "Back");
+	
+	BusinessData[bizid][bBuyPrice] = val;
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_price` = '%d' WHERE `biz_id` = '%d'", val, BusinessData[bizid][bID]);
+	mysql_tquery(dbCon, gquery);
+	SendClientMessage(playerid, COLOR_GREEN, "Business price updated successfully.");
+	ShowMbizMainDialog(playerid, bizid);
+	return 1;
+}
+
+Dialog:MbizEditLevel(playerid, response, listitem, inputtext[])
+{
+	new bizid = EditingBizID[playerid];
+	if(!response) return ShowMbizMainDialog(playerid, bizid);
+	new val = strval(inputtext);
+	if(val < 0) return Dialog_Show(playerid, MbizEditLevel, DIALOG_STYLE_INPUT, "Edit Level", "Enter the new level requirement:\n{FF0000}Level must be 0 or higher!", "Save", "Back");
+	
+	BusinessData[bizid][bLevelNeeded] = val;
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_level` = '%d' WHERE `biz_id` = '%d'", val, BusinessData[bizid][bID]);
+	mysql_tquery(dbCon, gquery);
+	SendClientMessage(playerid, COLOR_GREEN, "Business level requirement updated successfully.");
+	ShowMbizMainDialog(playerid, bizid);
+	return 1;
+}
+
+Dialog:MbizEditProducts(playerid, response, listitem, inputtext[])
+{
+	new bizid = EditingBizID[playerid];
+	if(!response) return ShowMbizMainDialog(playerid, bizid);
+	new val = strval(inputtext);
+	if(val < 0 || val > BusinessData[bizid][bMaxProducts]) 
+		return Dialog_Show(playerid, MbizEditProducts, DIALOG_STYLE_INPUT, "Edit Products", "Enter the current stock of products:\n{FF0000}Must be between 0 and Max Products!", "Save", "Back");
+	
+	BusinessData[bizid][bProducts] = val;
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_prod` = '%d' WHERE `biz_id` = '%d'", val, BusinessData[bizid][bID]);
+	mysql_tquery(dbCon, gquery);
+	SendClientMessage(playerid, COLOR_GREEN, "Business products updated successfully.");
+	ShowMbizMainDialog(playerid, bizid);
+	return 1;
+}
+
+Dialog:MbizEditMaxProducts(playerid, response, listitem, inputtext[])
+{
+	new bizid = EditingBizID[playerid];
+	if(!response) return ShowMbizMainDialog(playerid, bizid);
+	new val = strval(inputtext);
+	if(val < 0) return Dialog_Show(playerid, MbizEditMaxProducts, DIALOG_STYLE_INPUT, "Edit Max Products", "Enter the maximum product stock:\n{FF0000}Must be 0 or higher!", "Save", "Back");
+	
+	BusinessData[bizid][bMaxProducts] = val;
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_maxprod` = '%d' WHERE `biz_id` = '%d'", val, BusinessData[bizid][bID]);
+	mysql_tquery(dbCon, gquery);
+	SendClientMessage(playerid, COLOR_GREEN, "Business max products updated successfully.");
+	ShowMbizMainDialog(playerid, bizid);
+	return 1;
+}
+
+Dialog:MbizEditCargoPrice(playerid, response, listitem, inputtext[])
+{
+	new bizid = EditingBizID[playerid];
+	if(!response) return ShowMbizMainDialog(playerid, bizid);
+	new val = strval(inputtext);
+	if(val < 0) return Dialog_Show(playerid, MbizEditCargoPrice, DIALOG_STYLE_INPUT, "Edit Cargo Price", "Enter the cargo/product price:\n{FF0000}Must be 0 or higher!", "Save", "Back");
+	
+	BusinessData[bizid][bPriceProd] = val;
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_priceprod` = '%d' WHERE `biz_id` = '%d'", val, BusinessData[bizid][bID]);
+	mysql_tquery(dbCon, gquery);
+	SendClientMessage(playerid, COLOR_GREEN, "Business cargo price updated successfully.");
+	ShowMbizMainDialog(playerid, bizid);
+	return 1;
+}
+
+Dialog:MbizEditEntranceCost(playerid, response, listitem, inputtext[])
+{
+	new bizid = EditingBizID[playerid];
+	if(!response) return ShowMbizMainDialog(playerid, bizid);
+	new val = strval(inputtext);
+	if(val < 0) return Dialog_Show(playerid, MbizEditEntranceCost, DIALOG_STYLE_INPUT, "Edit Entrance Cost", "Enter the entrance fee:\n{FF0000}Must be 0 or higher!", "Save", "Back");
+	
+	BusinessData[bizid][bEntranceCost] = val;
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_encost` = '%d' WHERE `biz_id` = '%d'", val, BusinessData[bizid][bID]);
+	mysql_tquery(dbCon, gquery);
+	SendClientMessage(playerid, COLOR_GREEN, "Business entrance cost updated successfully.");
+	ShowMbizMainDialog(playerid, bizid);
+	return 1;
+}
+
+Dialog:MbizEditTill(playerid, response, listitem, inputtext[])
+{
+	new bizid = EditingBizID[playerid];
+	if(!response) return ShowMbizMainDialog(playerid, bizid);
+	new val = strval(inputtext);
+	if(val < 0) return Dialog_Show(playerid, MbizEditTill, DIALOG_STYLE_INPUT, "Edit Till", "Enter the cash inside the till:\n{FF0000}Must be 0 or higher!", "Save", "Back");
+	
+	BusinessData[bizid][bTill] = val;
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_till` = '%d' WHERE `biz_id` = '%d'", val, BusinessData[bizid][bID]);
+	mysql_tquery(dbCon, gquery);
+	SendClientMessage(playerid, COLOR_GREEN, "Business till cash updated successfully.");
+	ShowMbizMainDialog(playerid, bizid);
+	return 1;
+}
+
+Dialog:MbizSubtypeDealer(playerid, response, listitem, inputtext[])
+{
+	new bizid = EditingBizID[playerid];
+	if(!response) return ShowMbizMainDialog(playerid, bizid);
+	
+	BusinessData[bizid][bsubType] = listitem;
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_subtype` = '%d' WHERE `biz_id` = '%d'", listitem, BusinessData[bizid][bID]);
+	mysql_tquery(dbCon, gquery);
+	
+	SendClientMessage(playerid, COLOR_GREEN, "Dealership subtype updated successfully.");
+	ShowMbizMainDialog(playerid, bizid);
+	return 1;
+}
+
+Dialog:MbizSubtypeRest(playerid, response, listitem, inputtext[])
+{
+	new bizid = EditingBizID[playerid];
+	if(!response) return ShowMbizMainDialog(playerid, bizid);
+	
+	BusinessData[bizid][bsubType] = listitem;
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_subtype` = '%d' WHERE `biz_id` = '%d'", listitem, BusinessData[bizid][bID]);
+	mysql_tquery(dbCon, gquery);
+	
+	SendClientMessage(playerid, COLOR_GREEN, "Restaurant subtype updated successfully.");
+	ShowMbizMainDialog(playerid, bizid);
+	return 1;
+}
+
+Dialog:MbizInterior(playerid, response, listitem, inputtext[])
+{
+	new bizid = EditingBizID[playerid];
+	if(!response) return ShowMbizMainDialog(playerid, bizid);
+	
+	SetBusinessInterior(playerid, bizid, listitem);
+	SendClientMessageEx(playerid, COLOR_GREEN, "Business interior template updated to #%d (%s).", listitem, inputtext);
+	ShowMbizMainDialog(playerid, bizid);
+	return 1;
+}
+
+Dialog:MbizDeleteConfirm(playerid, response, listitem, inputtext[])
+{
+	if(response)
+	{
+		new bizid = EditingBizID[playerid];
+		if(!BusinessData[bizid][bID]) return 1;
+
+		DestroyDynamicPickup(BusinessData[bizid][bPickup]);
+		new ply = INVALID_PLAYER_ID;
+		new msg[128];
+
+		if((ply = GetIDByName(BusinessData[bizid][bOwner])) != INVALID_PLAYER_ID)
+		{
+			PlayerData[ply][pPbiskey] = -1;
+			SendClientMessageEx(ply, COLOR_GRAD2, "An administrator has removed your business from the database.", ReturnName(playerid));
+			if(BusinessData[bizid][bTill] > 0)
+			{
+				SendClientMessageEx(ply, COLOR_GRAD2, "You got back $%d from the till.", BusinessData[bizid][bTill]);
+				SendPlayerMoney(ply, BusinessData[bizid][bTill]);
+			}
+		}
+		else
+		{
+			mysql_format(dbCon, msg, sizeof(msg), "UPDATE `characters` SET `PlayerBusinessKey` = -1 WHERE `char_name` = '%e'", BusinessData[bizid][bOwner]);
+			mysql_tquery(dbCon, msg);
+
+			if(BusinessData[bizid][bTill] > 0)
+			{
+				mysql_format(dbCon, msg, sizeof(msg), "UPDATE `characters` SET `Cash` = (Cash + %d) WHERE `char_name` = '%e'", BusinessData[bizid][bTill], BusinessData[bizid][bOwner]);
+				mysql_tquery(dbCon, msg);
+			}
+		}
+
+		mysql_format(dbCon, msg, sizeof(msg), "DELETE FROM `business` WHERE `biz_id` = '%d' LIMIT 1", BusinessData[bizid][bID]);
+		mysql_tquery(dbCon, msg, "OnBizRemove", "i", bizid);
+
+		SendClientMessageEx(playerid, COLOR_YELLOW, "-> You've successfully destroyed business #%d.", bizid);
+		Iter_Remove(Business, bizid);
+	}
+	return 1;
+}
+
+Dialog:MbizMenu(playerid, response, listitem, inputtext[])
+{
+	new bizid = EditingBizID[playerid];
+	if(!response) return 1;
+	
+	new option = EditingBizOption[playerid][listitem];
+	switch(option)
+	{
+		case 0: Dialog_Show(playerid, MbizEditName, DIALOG_STYLE_INPUT, "Edit Name", "Enter the new name for the business:", "Save", "Back");
+		case 1: Dialog_Show(playerid, MbizEditPrice, DIALOG_STYLE_INPUT, "Edit Price", "Enter the new purchase price for the business:", "Save", "Back");
+		case 2: Dialog_Show(playerid, MbizEditLevel, DIALOG_STYLE_INPUT, "Edit Level", "Enter the new level requirement:", "Save", "Back");
+		case 3: // Toggle Lock
+		{
+			BusinessData[bizid][bLocked] = !BusinessData[bizid][bLocked];
+			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_locked` = '%d' WHERE `biz_id` = '%d'", BusinessData[bizid][bLocked], BusinessData[bizid][bID]);
+			mysql_tquery(dbCon, gquery);
+			SendClientMessageEx(playerid, COLOR_GRAD2, "Business %s.", BusinessData[bizid][bLocked] ? "locked" : "unlocked");
+			PlayerPlaySoundEx(playerid, 1145);
+			ShowMbizMainDialog(playerid, bizid);
+		}
+		case 4: Dialog_Show(playerid, MbizEditProducts, DIALOG_STYLE_INPUT, "Edit Products", "Enter the current stock of products:", "Save", "Back");
+		case 5: Dialog_Show(playerid, MbizEditMaxProducts, DIALOG_STYLE_INPUT, "Edit Max Products", "Enter the maximum product stock:", "Save", "Back");
+		case 6: Dialog_Show(playerid, MbizEditCargoPrice, DIALOG_STYLE_INPUT, "Edit Cargo Price", "Enter the cargo/product price:", "Save", "Back");
+		case 7: Dialog_Show(playerid, MbizEditEntranceCost, DIALOG_STYLE_INPUT, "Edit Entrance Cost", "Enter the entrance fee:", "Save", "Back");
+		case 8: Dialog_Show(playerid, MbizEditTill, DIALOG_STYLE_INPUT, "Edit Till", "Enter the cash inside the till:", "Save", "Back");
+		case 9: // Dealership Sub-Type list
+		{
+			Dialog_Show(playerid, MbizSubtypeDealer, DIALOG_STYLE_LIST, "Choose Dealership Subtype", "0: Car Dealer\n1: Bike Dealer\n2: Industrial Dealer\n3: Boat Dealer\n4: Air Vehicle Dealer", "Select", "Back");
+		}
+		case 10: // Restaurant Sub-Type list
+		{
+			Dialog_Show(playerid, MbizSubtypeRest, DIALOG_STYLE_LIST, "Choose Restaurant Subtype", "0: Cluckin Bell\n1: Burger Shot\n2: Well Stacked Pizza\n3: Rusty Browns Donuts", "Select", "Back");
+		}
+		case 11: // Interior templates list
+		{
+			new lst[2048];
+			for(new i = 0; i < 49; ++i)
+			{
+				format(lst, sizeof(lst), "%s%d: %s\n", lst, i, BusinessInteriorNames[i]);
+			}
+			Dialog_Show(playerid, MbizInterior, DIALOG_STYLE_LIST, "Choose Interior Template", lst, "Select", "Back");
+		}
+		case 12: // Set Car Spawn Point
+		{
+			new Float:x, Float:y, Float:z, Float:a;
+			GetPlayerPos(playerid, x, y, z);
+			GetPlayerFacingAngle(playerid, a);
+			BusinessData[bizid][bBuyingCarX] = x;
+			BusinessData[bizid][bBuyingCarY] = y;
+			BusinessData[bizid][bBuyingCarZ] = z;
+			BusinessData[bizid][bBuyingCarA] = a;
+			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_carX` = '%.4f', `biz_carY` = '%.4f', `biz_carZ` = '%.4f', `biz_carA` = '%.4f' WHERE `biz_id` = '%d'", x, y, z, a, BusinessData[bizid][bID]);
+			mysql_tquery(dbCon, gquery);
+			SendClientMessage(playerid, COLOR_GREEN, "Car spawn point updated.");
+			ShowMbizMainDialog(playerid, bizid);
+		}
+		case 13: // Set Boat Spawn Point
+		{
+			new Float:x, Float:y, Float:z, Float:a;
+			GetPlayerPos(playerid, x, y, z);
+			GetPlayerFacingAngle(playerid, a);
+			BusinessData[bizid][bBuyingBoatX] = x;
+			BusinessData[bizid][bBuyingBoatY] = y;
+			BusinessData[bizid][bBuyingBoatZ] = z;
+			BusinessData[bizid][bBuyingBoatA] = a;
+			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_boatX` = '%.4f', `biz_boatY` = '%.4f', `biz_boatZ` = '%.4f', `biz_boatA` = '%.4f' WHERE `biz_id` = '%d'", x, y, z, a, BusinessData[bizid][bID]);
+			mysql_tquery(dbCon, gquery);
+			SendClientMessage(playerid, COLOR_GREEN, "Boat spawn point updated.");
+			ShowMbizMainDialog(playerid, bizid);
+		}
+		case 14: // Set Air Spawn Point
+		{
+			new Float:x, Float:y, Float:z, Float:a;
+			GetPlayerPos(playerid, x, y, z);
+			GetPlayerFacingAngle(playerid, a);
+			BusinessData[bizid][bBuyingAirX] = x;
+			BusinessData[bizid][bBuyingAirY] = y;
+			BusinessData[bizid][bBuyingAirZ] = z;
+			BusinessData[bizid][bBuyingAirA] = a;
+			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_airX` = '%.4f', `biz_airY` = '%.4f', `biz_airZ` = '%.4f', `biz_airA` = '%.4f' WHERE `biz_id` = '%d'", x, y, z, a, BusinessData[bizid][bID]);
+			mysql_tquery(dbCon, gquery);
+			SendClientMessage(playerid, COLOR_GREEN, "Air spawn point updated.");
+			ShowMbizMainDialog(playerid, bizid);
+		}
+		case 15: // Set Entrance Location
+		{
+			new Float:x, Float:y, Float:z;
+			GetPlayerPos(playerid, x, y, z);
+			BusinessData[bizid][bEntranceX] = x;
+			BusinessData[bizid][bEntranceY] = y;
+			BusinessData[bizid][bEntranceZ] = z;
+			DestroyDynamicPickup(BusinessData[bizid][bPickup]);
+			BusinessData[bizid][bPickup] = CreateDynamicPickup(1239, 2, x, y, z, -1, -1, -1, 100.0);
+			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_enX` = '%.4f', `biz_enY` = '%.4f', `biz_enZ` = '%.4f' WHERE `biz_id` = '%d'", x, y, z, BusinessData[bizid][bID]);
+			mysql_tquery(dbCon, gquery);
+			SendClientMessage(playerid, COLOR_GREEN, "Entrance location updated.");
+			ShowMbizMainDialog(playerid, bizid);
+		}
+		case 16: // Set Exit Location
+		{
+			new Float:x, Float:y, Float:z;
+			GetPlayerPos(playerid, x, y, z);
+			BusinessData[bizid][bExitX] = x;
+			BusinessData[bizid][bExitY] = y;
+			BusinessData[bizid][bExitZ] = z;
+			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_etX` = '%.4f', `biz_etY` = '%.4f', `biz_etZ` = '%.4f' WHERE `biz_id` = '%d'", x, y, z, BusinessData[bizid][bID]);
+			mysql_tquery(dbCon, gquery);
+			SendClientMessage(playerid, COLOR_GREEN, "Exit location updated.");
+			ShowMbizMainDialog(playerid, bizid);
+		}
+		case 17: // Fill Products
+		{
+			BusinessData[bizid][bProducts] = BusinessData[bizid][bMaxProducts];
+			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_prod` = '%d' WHERE `biz_id` = '%d'", BusinessData[bizid][bProducts], BusinessData[bizid][bID]);
+			mysql_tquery(dbCon, gquery);
+			SendClientMessage(playerid, COLOR_GREEN, "Products filled to maximum.");
+			ShowMbizMainDialog(playerid, bizid);
+		}
+		case 18: // Teleport Entrance
+		{
+			SetPlayerPosEx(playerid, BusinessData[bizid][bEntranceX], BusinessData[bizid][bEntranceY], BusinessData[bizid][bEntranceZ]);
+			SetPlayerInteriorEx(playerid, 0);
+			SetPlayerVirtualWorldEx(playerid, 0);
+			InBusiness[playerid] = -1;
+			SendClientMessage(playerid, COLOR_GREEN, "Teleported to entrance.");
+		}
+		case 19: // Teleport Exit
+		{
+			SetPlayerPosEx(playerid, BusinessData[bizid][bExitX], BusinessData[bizid][bExitY], BusinessData[bizid][bExitZ] + 0.5);
+			SetPlayerInteriorEx(playerid, BusinessData[bizid][bInterior]);
+			SetPlayerVirtualWorldEx(playerid, bizid);
+			InBusiness[playerid] = bizid;
+			SendClientMessage(playerid, COLOR_GREEN, "Teleported to exit/interior.");
+		}
+		case 20: // Delete
+		{
+			Dialog_Show(playerid, MbizDeleteConfirm, DIALOG_STYLE_MSGBOX, "Delete Business", "{FF0000}WARNING:{FFFFFF} Are you sure you want to delete this business entirely?", "Delete", "Cancel");
+		}
+	}
+	return 1;
 }

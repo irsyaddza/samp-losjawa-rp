@@ -572,8 +572,6 @@ new VehicleDealership[][] =
 	{579, 6},
 
 	{420, 7},
-	{431, 7},
-	{437, 7},
 	{438, 7},
 
 	{490, 8},
@@ -1709,7 +1707,6 @@ new bool:ForceKnockout[MAX_PLAYERS char];
 new bool:TesterColor[MAX_PLAYERS char];
 new bool:FactionEars[MAX_PLAYERS char];
 new bool:PrivateMessageEars[MAX_PLAYERS char];
-new bool:EnableTP[MAX_PLAYERS char];
 new bool:TimeTip[MAX_PLAYERS char];
 new bool:SwitchingWeapon[MAX_PLAYERS char];
 new bool:AdminDuty[MAX_PLAYERS char];
@@ -2215,6 +2212,26 @@ public OnPlayerConnect(playerid)
 
   	RemoveBuilding(playerid);
   	CreateTextdraws(playerid);
+
+	// PONYTAIL: Reset color selection state and hide textdraws on connect
+	ColorSelectShow{playerid} = false;
+	ColorSelectShow2{playerid} = false;
+	ColorSelect[playerid] = -1;
+	ColorSelect2[playerid] = -1;
+	ColorSelectPage[playerid] = 1;
+	ColorSelectPage2[playerid] = 1;
+	for(new i = 0; i < 8 ; ++i)
+	{
+		PlayerTextDrawHide(playerid, ColorSelection[playerid][i]);
+		PlayerTextDrawHide(playerid, ColorSelection2[playerid][i]);
+	}
+	PlayerTextDrawHide(playerid, ColorSelectText[playerid]);
+	PlayerTextDrawHide(playerid, ColorSelectLeft[playerid]);
+	PlayerTextDrawHide(playerid, ColorSelectRight[playerid]);
+	PlayerTextDrawHide(playerid, ColorSelectText2[playerid]);
+	PlayerTextDrawHide(playerid, ColorSelectLeft2[playerid]);
+	PlayerTextDrawHide(playerid, ColorSelectRight2[playerid]);
+
 	SetPlayerWeather(playerid, globalWeather);
 
     SetPlayerColor(playerid, COLOR_GRAD2);
@@ -4637,7 +4654,6 @@ ResetStatistics(playerid) // Clear player Stats
     FirstSpawn{playerid} = false;
     ALPR_Enabled{playerid} = true;
     ALPR_Hit{playerid} = false;
-    EnableTP{playerid} = false;
     FactionEars{playerid} = false;
     PrivateMessageEars{playerid} = false;
     Unpackaging{playerid} = false;
@@ -9864,7 +9880,13 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
 			    if(VDealerSelectCatalog[playerid] == -1)
 				{
-					caramount = sizeof(VehicleMenuInfo);
+					new bizid = Business_Nearest(playerid);
+					new dealerType = (bizid != -1) ? BusinessData[bizid][bsubType] : 0; // PONYTAIL: 0 = Harian, 1 = Roda Dua, 2 = Kerja
+
+					for(new cat = 0; cat < sizeof(VehicleMenuInfo); ++cat)
+					{
+						if(GetCategoryDealerType(cat) == dealerType) caramount++;
+					}
 				}
 			    else
 				{
@@ -9902,7 +9924,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 					{
 					    if(VDealerSelectCatalog[playerid] == -1)
 					    {
-							VDealerSelectCatalog[playerid] = (PCarPage[playerid] * 6) - (6 - i);
+							VDealerSelectCatalog[playerid] = VDealerData[playerid][i][1]; // PONYTAIL: Retrieve original category index
 							PCarPage[playerid] = 1;
 		                    ShowPlayerDealershipMenu(playerid);
 	                    }
@@ -15114,8 +15136,6 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                         /gotocmdspot - Go to command spot\n\
                         /hints - Show hints\n\
                         /variables - Show variables\n\
-                        /enabletp - Enable teleporting\n\
-                        /disabletp - Disable teleporting\n\
                         /setwpackage - Set weapon package\n\
                         /glog - View game logs\n\
                         /log - View logs\n\
