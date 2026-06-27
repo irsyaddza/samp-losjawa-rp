@@ -1,3 +1,19 @@
+CMD:relog(playerid, params[])
+{
+	if(!SQL_IsLogged(playerid))
+		return SendErrorMessage(playerid, "You are not logged in.");
+
+	if(PlayerData[playerid][pID] == -1)
+		return SendErrorMessage(playerid, "You're already at the character selection screen.");
+
+	if(IsBrutallyWounded(playerid))
+		return SendErrorMessage(playerid, "You cannot relog while critically injured.");
+
+	SendClientMessage(playerid, COLOR_YELLOW, "SERVER: Returning you to character selection...");
+	Relog_Player(playerid);
+	return true;
+}
+
 CMD:stats(playerid, params[])
 {
 	new

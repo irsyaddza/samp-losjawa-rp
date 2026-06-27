@@ -5346,6 +5346,60 @@ SQL_RunDisconnect(playerid)
 	}
 }
 
+// =============================================
+// RELOG: Returns player to character selection
+// without disconnecting from the server.
+// =============================================
+Relog_Player(playerid)
+{
+	if(!SQL_IsLogged(playerid) || AccountData[playerid][aUserid] <= 0)
+		return SendErrorMessage(playerid, "You are not logged in.");
+
+	// 1. Save current character data
+	SQL_SaveCharacter(playerid, false);
+
+	// 2. Exit any vehicle
+	if(IsPlayerInAnyVehicle(playerid))
+		RemovePlayerFromVehicle(playerid);
+
+	// 3. Clear weapons and animations
+	ResetPlayerWeapons(playerid);
+	ClearAnimations(playerid);
+
+	// 4. Reset in-game flags
+	Spawned{playerid} = false;
+
+	// 5. Mark character as not selected (pID = -1 means "at char select screen")
+	PlayerData[playerid][pID] = -1;
+
+	// 6. Restore player name back to account name (strip character name)
+	SetPlayerName(playerid, AccountData[playerid][aUsername]);
+
+	// 7. Put player back in spectate mode so they don't appear in-world
+	TogglePlayerSpectating(playerid, true);
+
+	// 8. Cancel any active TextDraw selection mode
+	CancelSelectTextDraw(playerid);
+
+	// 9. Destroy ALL 13 CharSelectionTD slots so CreateCharacterMenuTD starts fresh.
+	//    Without this, old TextDraw IDs remain and new ones overlap/conflict → broken clicks.
+	for(new i = 0; i < 13; ++i)
+	{
+		PlayerTextDrawDestroy(playerid, CharSelectionTD[playerid][i]);
+	}
+
+	// 10. Re-create the base CharSelectionTD layout (same as first connect)
+	CreateTextdraws(playerid);
+
+	// 11. Set login camera
+	RandomLoginScreen(playerid);
+
+	// 12. Reload character list from DB → triggers THREAD_CHECK_CHARACTER → TextDraw char selection
+	SQL_LoadCharacters(playerid);
+
+	return 1;
+}
+
 SQL_SaveCharacter(playerid, bool:quit = true)
 {
 	if(!SQL_IsLogged(playerid) || PlayerData[playerid][pID] == -1) return false;
