@@ -1,0 +1,23 @@
+# SA-MP Server Config (contains secrets like rcon password, bot tokens)
+server.cfg
+
+# Compiled gamemodes and filterscripts (rebuild from .pwn source)
+*.amx
+
+# Logs
+logs/
+server_log.txt
+crashinfo.txt
+
+# Ban list
+samp.ban
+
+# MySQL plugin logs
+logs/plugins/
+
+# IDE
+.vscode/
+
+# OS files
+Thumbs.db
+.DS_Store

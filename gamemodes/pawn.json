@@ -1,0 +1,5 @@
+{
+    "entry": "roleplay.pwn",
+    "output": "roleplay.amx",
+    "dependencies": ["pawn-lang/samp-stdlib", "Southclaws/formatex"]
+  }
