@@ -1,3 +1,49 @@
+new EditingHouseID[MAX_PLAYERS];
+new EditingHouseOption[MAX_PLAYERS][30];
+
+new EditingGateID[MAX_PLAYERS];
+new EditingGateOption[MAX_PLAYERS][30];
+
+new EditingCarID[MAX_PLAYERS];
+new EditingCarOption[MAX_PLAYERS][30];
+
+new const HouseInteriorNames[34][] = {
+	"Interior 1 (Small Room)",
+	"Interior 2 (Safe House)",
+	"Interior 3 (Small House 1)",
+	"Interior 4 (Small House 2)",
+	"Interior 5 (Medium House 1)",
+	"Interior 6 (Medium House 2)",
+	"Interior 7 (Medium House 3)",
+	"Interior 8 (Medium House 4)",
+	"Interior 9 (Large House 1)",
+	"Interior 10 (Large House 2)",
+	"Interior 11 (Large House 3)",
+	"Interior 12 (Large House 4)",
+	"Interior 13 (Mansion 1)",
+	"Interior 14 (Mansion 2)",
+	"Interior 15 (Mansion 3)",
+	"Interior 16 (Modern House 1)",
+	"Interior 17 (Modern House 2)",
+	"Interior 18 (Modern House 3)",
+	"Interior 19 (Trailer Home)",
+	"Interior 20 (Low-end Room 1)",
+	"Interior 21 (Low-end Room 2)",
+	"Interior 22 (Low-end Room 3)",
+	"Interior 23 (Gang House 1)",
+	"Interior 24 (Gang House 2)",
+	"Interior 25 (Gang House 3)",
+	"Interior 26 (Apartment 1)",
+	"Interior 27 (Apartment 2)",
+	"Interior 28 (Apartment 3)",
+	"Interior 29 (Duplex)",
+	"Interior 30 (Richman Mansion)",
+	"Interior 31 (Jefferson House)",
+	"Interior 32 (Willowfield House)",
+	"Interior 33 (East LS House)",
+	"Interior 34 (Las Venturas House)"
+};
+
 CMD:respawnrental(playerid, params[])
 {
 	if(PlayerData[playerid][pAdmin] < 1)
@@ -3304,76 +3350,17 @@ CMD:createprop(playerid, params[])
 	new type, value;
 
 	if(sscanf(params,"dd", type, value))
-		return SendSyntaxMessage(playerid, "/createprop [type 1-34] [value]");
-
-	if(type < 1 || type > 34)
-	    return SendErrorMessage(playerid, "Invalid type specified 1-34.");
-
-	if(value < 1)
-	    return SendErrorMessage(playerid, "Invalid value specified.");
-
-	new houseid = Iter_Free(Property);
-
-	if(houseid == -1)
-	    return SendErrorMessage(playerid, "Failed to create property, MAX_PROPERTIES reached.");
-
-	new Float:x, Float:y, Float:z;
-	GetPlayerPos(playerid, x, y, z);
-
-	PropertyData[houseid][hEntranceX] = x;
-	PropertyData[houseid][hEntranceY] = y;
-	PropertyData[houseid][hEntranceZ] = z;
-	PropertyData[houseid][hExitX] = HouseInteriorss[type - 1][0];
-	PropertyData[houseid][hExitY] = HouseInteriorss[type - 1][1];
-	PropertyData[houseid][hExitZ] = HouseInteriorss[type - 1][2];
-	PropertyData[houseid][hCheckPosX] = PropertyData[houseid][hExitX];
-	PropertyData[houseid][hCheckPosY] = PropertyData[houseid][hExitY];
-	PropertyData[houseid][hCheckPosZ] = PropertyData[houseid][hExitZ];
-	PropertyData[houseid][hPrice] = value;
-	PropertyData[houseid][hOwnerSQLID] = -1;
-	PropertyData[houseid][hOwned] = 0;
-	PropertyData[houseid][hLocked] = 1;
-	PropertyData[houseid][hRentprice] = 0;
-	PropertyData[houseid][hRentable] = 0;
-	PropertyData[houseid][hInterior] = houseid + 1;
-	PropertyData[houseid][hWorld] = houseid + LOCAL_HOUSE;
-	PropertyData[houseid][hCash] = 0;
-	PropertyData[houseid][hRadio] = 0;
-	PropertyData[houseid][hLevelbuy] = 1;
-
-	new apt = InApartment[playerid];
-
-	if(apt != -1)
 	{
-		PropertyData[houseid][hComplexSQL] = ComplexData[apt][aID];
-		PropertyData[houseid][hComplexID] = apt;
-
-		format(PropertyData[houseid][hInfo], 64, "%s", ReturnDynamicAddress(ComplexData[apt][aEntranceX], ComplexData[apt][aEntranceY]));
-	}
-	else
-	{
-		PropertyData[houseid][hComplexSQL] = -1;
-		PropertyData[houseid][hComplexID] = -1;
-
-		format(PropertyData[houseid][hInfo], 64, "%s", ReturnDynamicAddress(PropertyData[houseid][hEntranceX], PropertyData[houseid][hEntranceY]));
+		new lst[2048];
+		for(new i = 0; i < 34; ++i)
+		{
+			format(lst, sizeof(lst), "%s%d: %s\n", lst, i + 1, HouseInteriorNames[i]);
+		}
+		Dialog_Show(playerid, MhouseCreateType, DIALOG_STYLE_LIST, "Create Property (Wizard) - Step 1: Interior", lst, "Next", "Cancel");
+		return true;
 	}
 
-	format(PropertyData[houseid][hOwner], MAX_PLAYER_NAME, "The State");
-
-	Property_Refresh(houseid);
-
-	if(PropertyData[houseid][hComplexID] == -1)
-		PropertyData[houseid][hDynamicArea] = CreateDynamicSphere(PropertyData[houseid][hEntranceX], PropertyData[houseid][hEntranceY], PropertyData[houseid][hEntranceZ], 2.5, 0, -1, -1);
-	else
-		PropertyData[houseid][hDynamicArea] = CreateDynamicSphere(PropertyData[houseid][hEntranceX], PropertyData[houseid][hEntranceY], PropertyData[houseid][hEntranceZ], 1.5, ComplexData[ PropertyData[houseid][hComplexID] ][aWorld], -1, -1);
-
-	AssignDynamicAreaValue(PropertyData[houseid][hDynamicArea], AREA_TYPE_PROPERTY, houseid);
-
-	AddHouseToFile(houseid, value, PropertyData[houseid][hInfo], x, y, z, PropertyData[houseid][hExitX], PropertyData[houseid][hExitY], PropertyData[houseid][hExitZ], PropertyData[houseid][hComplexSQL], PropertyData[houseid][hWorld]);
-
-	SendClientMessageEx(playerid, COLOR_GREEN, "Property successfully created [Type: %d | Value: %d]", type, value);
-
-	Iter_Add(Property, houseid);
+	CreateNewProperty(playerid, type, value);
 	return true;
 }
 
@@ -4866,22 +4853,23 @@ CMD:viewfactions(playerid, params[])
 
 CMD:createfaction(playerid, params[])
 {
-	new faction = -1, type, name[32];
-
     if(PlayerData[playerid][pAdmin] < 4)
 	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
 
+	new type, name[32];
+
 	if(sscanf(params, "ds[32]", type, name))
 	{
-	    SendSyntaxMessage(playerid, "/createfaction [type] [name]");
-	    SendClientMessage(playerid, COLOR_GREY, "Available types: 1: LSPD | 2: NEWS | 3: LSFD | 4: GOV | 5: MAFIA | 6: LSSD | 7: DOC");
+		Dialog_Show(playerid, FactionCreateType, DIALOG_STYLE_LIST, "Create Faction (Wizard) - Step 1: Type", 
+			"1: LSPD (Police)\n2: NEWS (News)\n3: LSFD (Medical)\n4: GOV (Government)\n5: MAFIA (Gang/Family)\n6: LSSD (Sheriff)\n7: DOC (Correctional)", 
+			"Next", "Cancel");
 		return true;
 	}
 
 	if(type < 1 || type > 7)
 	    return SendNoticeMessage(playerid, "The categories listed are between 1 and 7.");
 
-	faction = Faction_Create(name, type);
+	new faction = Faction_Create(name, type);
 
 	if(faction == -1)
 	    return SendClientMessage(playerid, COLOR_GRAD1, "Failed to create the faction, contact a developer.");
@@ -4892,11 +4880,10 @@ CMD:createfaction(playerid, params[])
 
 CMD:removefaction(playerid, params[])
 {
-	new
-	    id = 0;
-
     if(PlayerData[playerid][pAdmin] < 4)
 	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+
+	new id = -1;
 
 	if(sscanf(params, "d", id))
 	    return SendSyntaxMessage(playerid, "/destroyfaction [faction id]");
@@ -4904,11 +4891,10 @@ CMD:removefaction(playerid, params[])
 	if((id < 0 || id >= MAX_FACTIONS) || !FactionData[id][factionExists])
 	    return SendNoticeMessage(playerid, "You specified an invalid faction.");
 
-	Faction_Delete(id);
-
-	SendClientMessageEx(playerid, COLOR_YELLOW, "-> You've successfully deleted Faction %d.", id);
-
-	SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn: %s deleted Faction ID %d.", ReturnName(playerid), id);
+	SetPVarInt(playerid, "DestroyingFactionID", id);
+	new prompt[128];
+	format(prompt, sizeof(prompt), "{FF0000}WARNING:{FFFFFF} Are you sure you want to delete Faction #%d (%s) entirely?", id, FactionData[id][factionName]);
+	Dialog_Show(playerid, FactionDestroyConfirm, DIALOG_STYLE_MSGBOX, "Destroy Faction", prompt, "Destroy", "Cancel");
 	return true;
 }
 
@@ -4983,41 +4969,15 @@ CMD:makegate(playerid, params[])
 	if(PlayerData[playerid][pAdmin] < 1337)
     	return SendErrorMessage(playerid, "You're not authorized to use this command.");
 
-	new objectid, modelid, faction, name[64], Float:X, Float:Y, Float:Z;
+	new modelid, faction, name[64];
 
 	if(sscanf(params, "dds[64]", modelid, faction, name))
 	{
-		SendSyntaxMessage(playerid, "/makegate [modelid] [Faction Type] [Description]");
-		SendClientMessage(playerid, COLOR_GREY, "Faction types: 1: LSPD | 2: NEWS | 3: LSFD | 4: GOV | 5: MAFIA | 6: LSSD | 7: DOC");
+		Dialog_Show(playerid, MgateCreateSelectModel, DIALOG_STYLE_INPUT, "Create Gate (Wizard) - Step 1: Model ID", "Enter the Object Model ID for the new gate:", "Next", "Cancel");
 		return true;
 	}
 
-	GetPlayerPos(playerid, X, Y, Z);
-
-    if((objectid = Iter_Free(Gates)) != -1)
-	{
-		Gates[objectid][gateModel] = modelid;
-		Gates[objectid][gatePosX] = X;
-		Gates[objectid][gatePosY] = Y;
-		Gates[objectid][gatePosZ] = Z;
-		Gates[objectid][gatePosRX] = 0.0;
-		Gates[objectid][gatePosRY] = 0.0;
-		Gates[objectid][gatePosRZ] = 0.0;
-		Gates[objectid][gateInterior] = GetPlayerInterior(playerid);
-		Gates[objectid][gateFaction] = faction;
-		Gates[objectid][gateOpened] = 0;
-		Gates[objectid][gateLocked] = 0;
-		Gates[objectid][gateVirtualWorld] = GetPlayerVirtualWorld(playerid);
-
-		format(Gates[objectid][gateName], 64, "%s", name);
-		Gates[objectid][gateObject] = CreateDynamicObject(modelid, X, Y, Z, 0.0, 0.0, 0.0, Gates[objectid][gateVirtualWorld], Gates[objectid][gateInterior], -1, 200.0);
-
-		AddGateToFile(objectid, Gates[objectid][gateModel], Gates[objectid][gateFaction], Gates[objectid][gateInterior], Gates[objectid][gateVirtualWorld], Gates[objectid][gatePosX], Gates[objectid][gatePosY], Gates[objectid][gatePosZ], Gates[objectid][gateName]);
-
-		SendClientMessageEx(playerid, COLOR_YELLOW, "-> You've sccessfully created Gate #%d with description \"%s\".", objectid, Gates[objectid][gateName]);
-
-		Iter_Add(Gates, objectid);
-	}
+	CreateNewGate(playerid, modelid, faction, name);
 	return true;
 }
 
@@ -7106,14 +7066,7 @@ CMD:ahelp(playerid, params[])
     if(PlayerData[playerid][pAdmin] < 1)
 	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
     
-    ShowPlayerDialog(playerid, DIALOG_ADMIN_COMMANDS, DIALOG_STYLE_LIST, "Admin Commands", 
-        "Vehicle Commands\n\
-        Teleport Commands\n\
-        Player Management\n\
-        Property Commands\n\
-        Faction Commands\n\
-        Miscellaneous Commands", 
-        "Select", "Cancel");
+    ShowAdminHelpMain(playerid);
     return 1;
 }
 
@@ -8264,5 +8217,1684 @@ Dialog:MbizMenu(playerid, response, listitem, inputtext[])
 			Dialog_Show(playerid, MbizDeleteConfirm, DIALOG_STYLE_MSGBOX, "Delete Business", "{FF0000}WARNING:{FFFFFF} Are you sure you want to delete this business entirely?", "Delete", "Cancel");
 		}
 	}
+	return 1;
+}
+
+// ==========================================
+// PONYTAIL: Unified Property Manager (/mhouse)
+// ==========================================
+
+stock CreateNewProperty(playerid, type, value)
+{
+	if(type < 1 || type > 34)
+	    return SendErrorMessage(playerid, "Invalid type specified 1-34.");
+
+	if(value < 1)
+	    return SendErrorMessage(playerid, "Invalid value specified.");
+
+	new houseid = Iter_Free(Property);
+
+	if(houseid == -1)
+	    return SendErrorMessage(playerid, "Failed to create property, MAX_PROPERTIES reached.");
+
+	new Float:x, Float:y, Float:z;
+	GetPlayerPos(playerid, x, y, z);
+
+	PropertyData[houseid][hEntranceX] = x;
+	PropertyData[houseid][hEntranceY] = y;
+	PropertyData[houseid][hEntranceZ] = z;
+	PropertyData[houseid][hExitX] = HouseInteriorss[type - 1][0];
+	PropertyData[houseid][hExitY] = HouseInteriorss[type - 1][1];
+	PropertyData[houseid][hExitZ] = HouseInteriorss[type - 1][2];
+	PropertyData[houseid][hCheckPosX] = PropertyData[houseid][hExitX];
+	PropertyData[houseid][hCheckPosY] = PropertyData[houseid][hExitY];
+	PropertyData[houseid][hCheckPosZ] = PropertyData[houseid][hExitZ];
+	PropertyData[houseid][hPrice] = value;
+	PropertyData[houseid][hOwnerSQLID] = -1;
+	PropertyData[houseid][hOwned] = 0;
+	PropertyData[houseid][hLocked] = 1;
+	PropertyData[houseid][hRentprice] = 0;
+	PropertyData[houseid][hRentable] = 0;
+	PropertyData[houseid][hInterior] = houseid + 1;
+	PropertyData[houseid][hWorld] = houseid + LOCAL_HOUSE;
+	PropertyData[houseid][hCash] = 0;
+	PropertyData[houseid][hRadio] = 0;
+	PropertyData[houseid][hLevelbuy] = 1;
+
+	new apt = InApartment[playerid];
+
+	if(apt != -1)
+	{
+		PropertyData[houseid][hComplexSQL] = ComplexData[apt][aID];
+		PropertyData[houseid][hComplexID] = apt;
+
+		format(PropertyData[houseid][hInfo], 64, "%s", ReturnDynamicAddress(ComplexData[apt][aEntranceX], ComplexData[apt][aEntranceY]));
+	}
+	else
+	{
+		PropertyData[houseid][hComplexSQL] = -1;
+		PropertyData[houseid][hComplexID] = -1;
+
+		format(PropertyData[houseid][hInfo], 64, "%s", ReturnDynamicAddress(PropertyData[houseid][hEntranceX], PropertyData[houseid][hEntranceY]));
+	}
+
+	format(PropertyData[houseid][hOwner], MAX_PLAYER_NAME, "The State");
+
+	Property_Refresh(houseid);
+
+	if(PropertyData[houseid][hComplexID] == -1)
+		PropertyData[houseid][hDynamicArea] = CreateDynamicSphere(PropertyData[houseid][hEntranceX], PropertyData[houseid][hEntranceY], PropertyData[houseid][hEntranceZ], 2.5, 0, -1, -1);
+	else
+		PropertyData[houseid][hDynamicArea] = CreateDynamicSphere(PropertyData[houseid][hEntranceX], PropertyData[houseid][hEntranceY], PropertyData[houseid][hEntranceZ], 1.5, ComplexData[ PropertyData[houseid][hComplexID] ][aWorld], -1, -1);
+
+	AssignDynamicAreaValue(PropertyData[houseid][hDynamicArea], AREA_TYPE_PROPERTY, houseid);
+
+	AddHouseToFile(houseid, value, PropertyData[houseid][hInfo], x, y, z, PropertyData[houseid][hExitX], PropertyData[houseid][hExitY], PropertyData[houseid][hExitZ], PropertyData[houseid][hComplexSQL], PropertyData[houseid][hWorld]);
+
+	SendClientMessageEx(playerid, COLOR_GREEN, "Property successfully created [Type: %d | Value: %d]", type, value);
+
+	Iter_Add(Property, houseid);
+	return 1;
+}
+
+YCMD:mhouse(playerid, params[], help) = managehouse;
+
+CMD:managehouse(playerid, params[])
+{
+	if(PlayerData[playerid][pAdmin] < 4)
+		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+
+	new houseid = -1;
+	if(sscanf(params, "d", houseid))
+	{
+		houseid = ReturnClosestProperty(playerid);
+		if(houseid == -1)
+			return SendErrorMessage(playerid, "You're not near any house entrance/exit. Usage: /mhouse [house_id]");
+	}
+
+	if(houseid < 0 || houseid >= MAX_PROPERTIES || !Iter_Contains(Property, houseid))
+		return SendErrorMessage(playerid, "Invalid house ID specified.");
+
+	EditingHouseID[playerid] = houseid;
+	ShowMhouseMainDialog(playerid, houseid);
+	return true;
+}
+
+stock ShowMhouseMainDialog(playerid, houseid)
+{
+	new string[2048], line[256], idx = 0;
+	
+	format(string, sizeof(string), "Address/Info: %s\n", PropertyData[houseid][hInfo]);
+	EditingHouseOption[playerid][idx++] = 0;
+	
+	if(PropertyData[houseid][hOwned])
+		format(line, sizeof(line), "Owner: %s\n", PropertyData[houseid][hOwner]);
+	else
+		format(line, sizeof(line), "Owner: {00FF00}The State (For Sale){FFFFFF}\n");
+	strcat(string, line);
+	EditingHouseOption[playerid][idx++] = 1;
+	
+	format(line, sizeof(line), "Price: $%s\n", FormatNumber(PropertyData[houseid][hPrice]));
+	strcat(string, line);
+	EditingHouseOption[playerid][idx++] = 2;
+	
+	format(line, sizeof(line), "Level Needed: %d\n", PropertyData[houseid][hLevelbuy]);
+	strcat(string, line);
+	EditingHouseOption[playerid][idx++] = 3;
+	
+	format(line, sizeof(line), "Lock State: %s\n", PropertyData[houseid][hLocked] ? ("{FF0000}Locked{FFFFFF}") : ("{00FF00}Unlocked{FFFFFF}"));
+	strcat(string, line);
+	EditingHouseOption[playerid][idx++] = 4;
+	
+	format(line, sizeof(line), "Rentable: %s\n", PropertyData[houseid][hRentable] ? ("{00FF00}Yes{FFFFFF}") : ("{FF0000}No{FFFFFF}"));
+	strcat(string, line);
+	EditingHouseOption[playerid][idx++] = 5;
+	
+	format(line, sizeof(line), "Rent Price: $%s\n", FormatNumber(PropertyData[houseid][hRentprice]));
+	strcat(string, line);
+	EditingHouseOption[playerid][idx++] = 6;
+	
+	format(line, sizeof(line), "Cash Box (Till): $%s\n", FormatNumber(PropertyData[houseid][hCash]));
+	strcat(string, line);
+	EditingHouseOption[playerid][idx++] = 7;
+	
+	format(line, sizeof(line), "Virtual World: %d\n", PropertyData[houseid][hWorld]);
+	strcat(string, line);
+	EditingHouseOption[playerid][idx++] = 8;
+	
+	new templateId = -1;
+	for(new i = 0; i < 34; ++i)
+	{
+		if(floatabs(PropertyData[houseid][hExitX] - HouseInteriorss[i][0]) < 0.1 && floatabs(PropertyData[houseid][hExitY] - HouseInteriorss[i][1]) < 0.1)
+		{
+			templateId = i;
+			break;
+		}
+	}
+	if(templateId != -1)
+	{
+		format(line, sizeof(line), "Interior Template: %s (%d)\n", HouseInteriorNames[templateId], templateId + 1);
+	}
+	else
+	{
+		format(line, sizeof(line), "Interior Template: Custom (%f, %f, %f)\n", PropertyData[houseid][hExitX], PropertyData[houseid][hExitY], PropertyData[houseid][hExitZ]);
+	}
+	strcat(string, line);
+	EditingHouseOption[playerid][idx++] = 9;
+	
+	strcat(string, "Set Entrance Location (Here)\n");
+	EditingHouseOption[playerid][idx++] = 10;
+	
+	strcat(string, "Set Exit Location (Here)\n");
+	EditingHouseOption[playerid][idx++] = 11;
+	
+	strcat(string, "Teleport to Entrance\n");
+	EditingHouseOption[playerid][idx++] = 12;
+	
+	strcat(string, "Teleport to Exit/Interior\n");
+	EditingHouseOption[playerid][idx++] = 13;
+	
+	strcat(string, "{FF0000}Delete Property");
+	EditingHouseOption[playerid][idx++] = 14;
+	
+	new title[64];
+	format(title, sizeof(title), "House Manager (ID: %d)", houseid);
+	Dialog_Show(playerid, MhouseMenu, DIALOG_STYLE_LIST, title, string, "Select", "Cancel");
+	return 1;
+}
+
+Dialog:MhouseCreateType(playerid, response, listitem, inputtext[])
+{
+	if(!response) return 1;
+	SetPVarInt(playerid, "MhouseCreateType", listitem + 1);
+	Dialog_Show(playerid, MhouseCreateValue, DIALOG_STYLE_INPUT, "Create Property (Wizard) - Step 2: Price", "Enter the purchase price for this property:", "Finish", "Back");
+	return 1;
+}
+
+Dialog:MhouseCreateValue(playerid, response, listitem, inputtext[])
+{
+	if(!response)
+	{
+		new lst[2048];
+		for(new i = 0; i < 34; ++i)
+		{
+			format(lst, sizeof(lst), "%s%d: %s\n", lst, i + 1, HouseInteriorNames[i]);
+		}
+		Dialog_Show(playerid, MhouseCreateType, DIALOG_STYLE_LIST, "Create Property (Wizard) - Step 1: Interior", lst, "Next", "Cancel");
+		return 1;
+	}
+	new val = strval(inputtext);
+	if(val < 1) return Dialog_Show(playerid, MhouseCreateValue, DIALOG_STYLE_INPUT, "Create Property (Wizard) - Step 2: Price", "Enter the purchase price for this property:\n{FF0000}Price must be 1 or higher!", "Finish", "Back");
+	
+	new type = GetPVarInt(playerid, "MhouseCreateType");
+	DeletePVar(playerid, "MhouseCreateType");
+	
+	CreateNewProperty(playerid, type, val);
+	return 1;
+}
+
+Dialog:MhouseEditAddress(playerid, response, listitem, inputtext[])
+{
+	new houseid = EditingHouseID[playerid];
+	if(!response) return ShowMhouseMainDialog(playerid, houseid);
+	if(isnull(inputtext)) return Dialog_Show(playerid, MhouseEditAddress, DIALOG_STYLE_INPUT, "Edit Address/Info", "Enter the new address/info for the house:\n{FF0000}Address cannot be empty!", "Save", "Back");
+	
+	format(PropertyData[houseid][hInfo], 64, "%s", inputtext);
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `houses` SET `info` = '%e' WHERE `id` = '%d'", inputtext, PropertyData[houseid][hID]);
+	mysql_tquery(dbCon, gquery);
+	
+	if(PropertyData[houseid][hOwned] == 0) Property_Refresh(houseid);
+	
+	SendClientMessage(playerid, COLOR_GREEN, "Property address updated.");
+	ShowMhouseMainDialog(playerid, houseid);
+	return 1;
+}
+
+Dialog:MhouseEditOwner(playerid, response, listitem, inputtext[])
+{
+	new houseid = EditingHouseID[playerid];
+	if(!response) return ShowMhouseMainDialog(playerid, houseid);
+	if(isnull(inputtext)) return Dialog_Show(playerid, MhouseEditOwner, DIALOG_STYLE_INPUT, "Edit Owner", "Enter the new owner name (type 'The State' to make it for sale):\n{FF0000}Name cannot be empty!", "Save", "Back");
+	
+	if(!strcmp(inputtext, "The State", true))
+	{
+		foreach (new i : Player)
+		{
+			if(PlayerData[i][pHouseKey] == houseid)
+			{
+				PlayerData[i][pHouseKey] = -1;
+				SendClientMessageEx(i, COLOR_LIGHTRED, "Administrator %s has sold your property, you're no longer a resident at %s.", ReturnName(playerid), PropertyData[houseid][hInfo]);
+				break;
+			}
+		}
+
+		mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `characters` SET `playerHouseKey` = '-1' WHERE `playerHouseKey` = '%d' LIMIT 1", houseid);
+		mysql_tquery(dbCon, gquery);
+
+		mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `houses` SET `owner` = 'The State', `owned` = '0', `locked` = '1', `rentprice` = '0', `rentable` = '0' WHERE `id` = '%d' LIMIT 1", PropertyData[houseid][hID]);
+		mysql_tquery(dbCon, gquery, "OnAdminSellHouse", "i", houseid);
+		
+		SendClientMessage(playerid, COLOR_GREEN, "Property sold back to the State.");
+	}
+	else
+	{
+		format(PropertyData[houseid][hOwner], MAX_PLAYER_NAME, "%s", inputtext);
+		PropertyData[houseid][hOwned] = 1;
+		PropertyData[houseid][hLocked] = 0;
+		
+		if(PropertyData[houseid][hOwned] == 0) Property_Refresh(houseid);
+		else if(IsValidDynamic3DTextLabel(Text3D:PropertyData[houseid][hLabel])) 
+		{
+			DestroyDynamic3DTextLabel(Text3D:PropertyData[houseid][hLabel]);
+			PropertyData[houseid][hLabel] = Text3D:INVALID_3DTEXT_ID;
+		}
+
+		mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `houses` SET `owner` = '%e', `owned` = '1' WHERE `id` = '%d'", inputtext, PropertyData[houseid][hID]);
+		mysql_tquery(dbCon, gquery);
+		
+		SendClientMessage(playerid, COLOR_GREEN, "Property owner updated.");
+	}
+	ShowMhouseMainDialog(playerid, houseid);
+	return 1;
+}
+
+Dialog:MhouseEditPrice(playerid, response, listitem, inputtext[])
+{
+	new houseid = EditingHouseID[playerid];
+	if(!response) return ShowMhouseMainDialog(playerid, houseid);
+	new val = strval(inputtext);
+	if(val < 0) return Dialog_Show(playerid, MhouseEditPrice, DIALOG_STYLE_INPUT, "Edit Price", "Enter the new purchase price for the house:\n{FF0000}Price must be 0 or higher!", "Save", "Back");
+	
+	PropertyData[houseid][hPrice] = val;
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `houses` SET `price` = '%d' WHERE `id` = '%d'", val, PropertyData[houseid][hID]);
+	mysql_tquery(dbCon, gquery);
+	
+	if(PropertyData[houseid][hOwned] == 0) Property_Refresh(houseid);
+	
+	SendClientMessage(playerid, COLOR_GREEN, "Property price updated.");
+	ShowMhouseMainDialog(playerid, houseid);
+	return 1;
+}
+
+Dialog:MhouseEditLevel(playerid, response, listitem, inputtext[])
+{
+	new houseid = EditingHouseID[playerid];
+	if(!response) return ShowMhouseMainDialog(playerid, houseid);
+	new val = strval(inputtext);
+	if(val < 0) return Dialog_Show(playerid, MhouseEditLevel, DIALOG_STYLE_INPUT, "Edit Level", "Enter the new level requirement:\n{FF0000}Level must be 0 or higher!", "Save", "Back");
+	
+	PropertyData[houseid][hLevelbuy] = val;
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `houses` SET `levelbuy` = '%d' WHERE `id` = '%d'", val, PropertyData[houseid][hID]);
+	mysql_tquery(dbCon, gquery);
+	
+	if(PropertyData[houseid][hOwned] == 0) Property_Refresh(houseid);
+	
+	SendClientMessage(playerid, COLOR_GREEN, "Property level requirement updated.");
+	ShowMhouseMainDialog(playerid, houseid);
+	return 1;
+}
+
+Dialog:MhouseEditRent(playerid, response, listitem, inputtext[])
+{
+	new houseid = EditingHouseID[playerid];
+	if(!response) return ShowMhouseMainDialog(playerid, houseid);
+	new val = strval(inputtext);
+	if(val < 0) return Dialog_Show(playerid, MhouseEditRent, DIALOG_STYLE_INPUT, "Edit Rent Price", "Enter the new rent price:\n{FF0000}Price must be 0 or higher!", "Save", "Back");
+	
+	PropertyData[houseid][hRentprice] = val;
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `houses` SET `rentprice` = '%d' WHERE `id` = '%d'", val, PropertyData[houseid][hID]);
+	mysql_tquery(dbCon, gquery);
+	
+	SendClientMessage(playerid, COLOR_GREEN, "Property rent price updated.");
+	ShowMhouseMainDialog(playerid, houseid);
+	return 1;
+}
+
+Dialog:MhouseEditCash(playerid, response, listitem, inputtext[])
+{
+	new houseid = EditingHouseID[playerid];
+	if(!response) return ShowMhouseMainDialog(playerid, houseid);
+	new val = strval(inputtext);
+	if(val < 0) return Dialog_Show(playerid, MhouseEditCash, DIALOG_STYLE_INPUT, "Edit Cash Box", "Enter the cash inside the cash box:\n{FF0000}Must be 0 or higher!", "Save", "Back");
+	
+	PropertyData[houseid][hCash] = val;
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `houses` SET `cash` = '%d' WHERE `id` = '%d'", val, PropertyData[houseid][hID]);
+	mysql_tquery(dbCon, gquery);
+	
+	SendClientMessage(playerid, COLOR_GREEN, "Property cash box updated.");
+	ShowMhouseMainDialog(playerid, houseid);
+	return 1;
+}
+
+Dialog:MhouseEditWorld(playerid, response, listitem, inputtext[])
+{
+	new houseid = EditingHouseID[playerid];
+	if(!response) return ShowMhouseMainDialog(playerid, houseid);
+	new val = strval(inputtext);
+	if(val < 0) return Dialog_Show(playerid, MhouseEditWorld, DIALOG_STYLE_INPUT, "Edit Virtual World", "Enter the new virtual world:\n{FF0000}Must be 0 or higher!", "Save", "Back");
+	
+	PropertyData[houseid][hWorld] = val;
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `houses` SET `world` = '%d' WHERE `id` = '%d'", val, PropertyData[houseid][hID]);
+	mysql_tquery(dbCon, gquery);
+	
+	SendClientMessage(playerid, COLOR_GREEN, "Property virtual world updated.");
+	ShowMhouseMainDialog(playerid, houseid);
+	return 1;
+}
+
+Dialog:MhouseInterior(playerid, response, listitem, inputtext[])
+{
+	new houseid = EditingHouseID[playerid];
+	if(!response) return ShowMhouseMainDialog(playerid, houseid);
+	
+	PropertyData[houseid][hExitX] = HouseInteriorss[listitem][0];
+	PropertyData[houseid][hExitY] = HouseInteriorss[listitem][1];
+	PropertyData[houseid][hExitZ] = HouseInteriorss[listitem][2];
+	PropertyData[houseid][hCheckPosX] = PropertyData[houseid][hExitX];
+	PropertyData[houseid][hCheckPosY] = PropertyData[houseid][hExitY];
+	PropertyData[houseid][hCheckPosZ] = PropertyData[houseid][hExitZ];
+	
+	if(PropertyData[houseid][hOwned] == 0) Property_Refresh(houseid);
+	
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `houses` SET `exitx` = '%f', `exity` = '%f', `exitz` = '%f', `checkx` = '%f', `checky` = '%f', `checkz` = '%f' WHERE `id` = '%d'", 
+		PropertyData[houseid][hExitX], PropertyData[houseid][hExitY], PropertyData[houseid][hExitZ], 
+		PropertyData[houseid][hCheckPosX], PropertyData[houseid][hCheckPosY], PropertyData[houseid][hCheckPosZ], 
+		PropertyData[houseid][hID]);
+	mysql_tquery(dbCon, gquery);
+	
+	SendClientMessageEx(playerid, COLOR_GREEN, "Property interior template changed to #%d (%s).", listitem + 1, HouseInteriorNames[listitem]);
+	ShowMhouseMainDialog(playerid, houseid);
+	return 1;
+}
+
+Dialog:MhouseDeleteConfirm(playerid, response, listitem, inputtext[])
+{
+	if(response)
+	{
+		new houseid = EditingHouseID[playerid];
+		if(!Iter_Contains(Property, houseid)) return 1;
+		
+		if(PropertyData[houseid][hOwned])
+		{
+			foreach (new i : Player)
+			{
+				if(PlayerData[i][pHouseKey] == houseid)
+				{
+					PlayerData[i][pHouseKey] = -1;
+					SendClientMessageEx(i, COLOR_LIGHTRED, "An administrator has deleted your property.");
+					break;
+				}
+			}
+			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `characters` SET `playerHouseKey` = '-1' WHERE `playerHouseKey` = '%d' LIMIT 1", houseid);
+			mysql_tquery(dbCon, gquery);
+		}
+		
+		DestroyDynamic3DTextLabel(Text3D:PropertyData[houseid][hLabel]);
+		PropertyData[houseid][hLabel] = Text3D:INVALID_3DTEXT_ID;
+		
+		mysql_format(dbCon, gquery, sizeof(gquery), "DELETE FROM `houses` WHERE `id` = '%d' LIMIT 1", PropertyData[houseid][hID]);
+		mysql_tquery(dbCon, gquery, "OnHouseRemove", "i", houseid);
+		
+		SendClientMessageEx(playerid, COLOR_YELLOW, "-> You've successfully destroyed property #%d.", houseid);
+		Iter_Remove(Property, houseid);
+	}
+	return 1;
+}
+
+Dialog:MhouseMenu(playerid, response, listitem, inputtext[])
+{
+	new houseid = EditingHouseID[playerid];
+	if(!response) return 1;
+	
+	new option = EditingHouseOption[playerid][listitem];
+	switch(option)
+	{
+		case 0: Dialog_Show(playerid, MhouseEditAddress, DIALOG_STYLE_INPUT, "Edit Address/Info", "Enter the new address/info for the house:", "Save", "Back");
+		case 1: Dialog_Show(playerid, MhouseEditOwner, DIALOG_STYLE_INPUT, "Edit Owner", "Enter the new owner name (type 'The State' to make it for sale):", "Save", "Back");
+		case 2: Dialog_Show(playerid, MhouseEditPrice, DIALOG_STYLE_INPUT, "Edit Price", "Enter the new purchase price for the house:", "Save", "Back");
+		case 3: Dialog_Show(playerid, MhouseEditLevel, DIALOG_STYLE_INPUT, "Edit Level", "Enter the new level requirement:", "Save", "Back");
+		case 4: // Toggle Lock
+		{
+			PropertyData[houseid][hLocked] = !PropertyData[houseid][hLocked];
+			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `houses` SET `locked` = '%d' WHERE `id` = '%d'", PropertyData[houseid][hLocked], PropertyData[houseid][hID]);
+			mysql_tquery(dbCon, gquery);
+			SendClientMessageEx(playerid, COLOR_GRAD2, "House locked state set to %s.", PropertyData[houseid][hLocked] ? "Locked" : "Unlocked");
+			PlayerPlaySoundEx(playerid, 1145);
+			ShowMhouseMainDialog(playerid, houseid);
+		}
+		case 5: // Toggle Rentable
+		{
+			PropertyData[houseid][hRentable] = !PropertyData[houseid][hRentable];
+			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `houses` SET `rentable` = '%d' WHERE `id` = '%d'", PropertyData[houseid][hRentable], PropertyData[houseid][hID]);
+			mysql_tquery(dbCon, gquery);
+			SendClientMessageEx(playerid, COLOR_GRAD2, "House rentable state set to %s.", PropertyData[houseid][hRentable] ? "Rentable" : "Not rentable");
+			PlayerPlaySoundEx(playerid, 1145);
+			ShowMhouseMainDialog(playerid, houseid);
+		}
+		case 6: Dialog_Show(playerid, MhouseEditRent, DIALOG_STYLE_INPUT, "Edit Rent Price", "Enter the new rent price:", "Save", "Back");
+		case 7: Dialog_Show(playerid, MhouseEditCash, DIALOG_STYLE_INPUT, "Edit Cash Box", "Enter the cash inside the cash box:", "Save", "Back");
+		case 8: Dialog_Show(playerid, MhouseEditWorld, DIALOG_STYLE_INPUT, "Edit Virtual World", "Enter the new virtual world:", "Save", "Back");
+		case 9: // Choose interior template
+		{
+			new lst[2048];
+			for(new i = 0; i < 34; ++i)
+			{
+				format(lst, sizeof(lst), "%s%d: %s\n", lst, i + 1, HouseInteriorNames[i]);
+			}
+			Dialog_Show(playerid, MhouseInterior, DIALOG_STYLE_LIST, "Choose House Interior Template", lst, "Select", "Back");
+		}
+		case 10: // Set Entrance Location
+		{
+			new Float:px, Float:py, Float:pz;
+			GetPlayerPos(playerid, px, py, pz);
+
+			PropertyData[houseid][hEntranceX] = px;
+			PropertyData[houseid][hEntranceY] = py;
+			PropertyData[houseid][hEntranceZ] = pz;
+
+			if(IsValidDynamicArea(PropertyData[houseid][hDynamicArea])) DestroyDynamicArea(PropertyData[houseid][hDynamicArea]);
+			
+			if(PropertyData[houseid][hComplexID] == -1)
+				PropertyData[houseid][hDynamicArea] = CreateDynamicSphere(PropertyData[houseid][hEntranceX], PropertyData[houseid][hEntranceY], PropertyData[houseid][hEntranceZ], 2.5, 0, -1, -1);
+			else
+				PropertyData[houseid][hDynamicArea] = CreateDynamicSphere(PropertyData[houseid][hEntranceX], PropertyData[houseid][hEntranceY], PropertyData[houseid][hEntranceZ], 1.5, ComplexData[ PropertyData[houseid][hComplexID] ][aWorld], -1, -1);
+
+			AssignDynamicAreaValue(PropertyData[houseid][hDynamicArea], AREA_TYPE_PROPERTY, houseid);
+
+			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `houses` SET `posx` = '%f', `posy` = '%f', `posz` = '%f' WHERE `id` = '%d'", px, py, pz, PropertyData[houseid][hID]);
+			mysql_tquery(dbCon, gquery);
+
+			if(IsValidDynamic3DTextLabel(Text3D:PropertyData[houseid][hLabel]))
+			{
+				DestroyDynamic3DTextLabel(Text3D:PropertyData[houseid][hLabel]);
+				PropertyData[houseid][hLabel] = Text3D:INVALID_3DTEXT_ID;
+			}
+			Property_Refresh(houseid);
+
+			SendClientMessage(playerid, COLOR_GREEN, "Entrance location updated.");
+			ShowMhouseMainDialog(playerid, houseid);
+		}
+		case 11: // Set Exit Location
+		{
+			new Float:px, Float:py, Float:pz;
+			GetPlayerPos(playerid, px, py, pz);
+
+			PropertyData[houseid][hExitX] = px;
+			PropertyData[houseid][hExitY] = py;
+			PropertyData[houseid][hExitZ] = pz;
+			PropertyData[houseid][hCheckPosX] = px;
+			PropertyData[houseid][hCheckPosY] = py;
+			PropertyData[houseid][hCheckPosZ] = pz;
+
+			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `houses` SET `exitx` = %f, `exity` = %f, `exitz` = %f, `checkx` = %f, `checky` = %f, `checkz` = %f WHERE `id` = %d", px, py, pz, px, py, pz, PropertyData[houseid][hID]);
+			mysql_tquery(dbCon, gquery);
+
+			SendClientMessage(playerid, COLOR_GREEN, "Exit location updated.");
+			ShowMhouseMainDialog(playerid, houseid);
+		}
+		case 12: // Teleport Entrance
+		{
+			SetPlayerPosEx(playerid, PropertyData[houseid][hEntranceX], PropertyData[houseid][hEntranceY], PropertyData[houseid][hEntranceZ] + 0.5);
+			SetPlayerInteriorEx(playerid, 0);
+			if(PropertyData[houseid][hComplexID] == -1)
+				SetPlayerVirtualWorldEx(playerid, 0);
+			else
+				SetPlayerVirtualWorldEx(playerid, ComplexData[ PropertyData[houseid][hComplexID] ][aWorld]);
+			
+			InProperty[playerid] = -1;
+			SendClientMessage(playerid, COLOR_GREEN, "Teleported to house entrance.");
+		}
+		case 13: // Teleport Exit
+		{
+			SetPlayerPosEx(playerid, PropertyData[houseid][hExitX], PropertyData[houseid][hExitY], PropertyData[houseid][hExitZ] + 0.5);
+			SetPlayerInteriorEx(playerid, PropertyData[houseid][hInterior]);
+			SetPlayerVirtualWorldEx(playerid, PropertyData[houseid][hWorld]);
+			
+			InProperty[playerid] = houseid;
+			SendClientMessage(playerid, COLOR_GREEN, "Teleported to house interior.");
+		}
+		case 14: // Delete Property
+		{
+			Dialog_Show(playerid, MhouseDeleteConfirm, DIALOG_STYLE_MSGBOX, "Delete Property", "{FF0000}WARNING:{FFFFFF} Are you sure you want to delete this property entirely?", "Delete", "Cancel");
+		}
+	}
+	return 1;
+}
+
+// ==========================================
+// PONYTAIL: Unified Faction Manager (/mfac)
+// ==========================================
+
+YCMD:destroyfaction(playerid, params[], help) = removefaction;
+YCMD:mfac(playerid, params[], help) = managefaction;
+
+CMD:managefaction(playerid, params[])
+{
+	if(PlayerData[playerid][pAdmin] < 4)
+	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+
+	new factionid = -1;
+	if(sscanf(params, "d", factionid))
+	{
+		ViewFactions(playerid);
+		return true;
+	}
+
+	if(factionid < 0 || factionid >= MAX_FACTIONS || !FactionData[factionid][factionExists])
+	    return SendErrorMessage(playerid, "Invalid faction ID specified.");
+
+	ShowPlayerEditFaction(playerid, factionid);
+	return true;
+}
+
+Dialog:FactionCreateType(playerid, response, listitem, inputtext[])
+{
+	if(!response) return 1;
+	SetPVarInt(playerid, "FactionCreateType", listitem + 1);
+	Dialog_Show(playerid, FactionCreateName, DIALOG_STYLE_INPUT, "Create Faction (Wizard) - Step 2: Name", "Enter the name for the new faction:", "Finish", "Back");
+	return 1;
+}
+
+Dialog:FactionCreateName(playerid, response, listitem, inputtext[])
+{
+	if(!response)
+	{
+		Dialog_Show(playerid, FactionCreateType, DIALOG_STYLE_LIST, "Create Faction (Wizard) - Step 1: Type", 
+			"1: LSPD (Police)\n2: NEWS (News)\n3: LSFD (Medical)\n4: GOV (Government)\n5: MAFIA (Gang/Family)\n6: LSSD (Sheriff)\n7: DOC (Correctional)", 
+			"Next", "Cancel");
+		return 1;
+	}
+
+	if(isnull(inputtext))
+		return Dialog_Show(playerid, FactionCreateName, DIALOG_STYLE_INPUT, "Create Faction (Wizard) - Step 2: Name", "Enter the name for the new faction:\n{FF0000}Name cannot be empty!", "Finish", "Back");
+
+	new type = GetPVarInt(playerid, "FactionCreateType");
+	DeletePVar(playerid, "FactionCreateType");
+
+	new faction = Faction_Create(inputtext, type);
+	if(faction == -1)
+	    return SendClientMessage(playerid, COLOR_GRAD1, "Failed to create the faction, contact a developer.");
+
+	SendClientMessageEx(playerid, COLOR_YELLOW, "-> You've successfully created Faction ID %d (%s).", faction, inputtext);
+	return 1;
+}
+
+Dialog:FactionDestroyConfirm(playerid, response, listitem, inputtext[])
+{
+	if(!response) return 1;
+
+	new id = GetPVarInt(playerid, "DestroyingFactionID");
+	DeletePVar(playerid, "DestroyingFactionID");
+
+	if((id < 0 || id >= MAX_FACTIONS) || !FactionData[id][factionExists])
+	    return SendNoticeMessage(playerid, "Invalid faction specified.");
+
+	Faction_Delete(id);
+
+	SendClientMessageEx(playerid, COLOR_YELLOW, "-> You've successfully deleted Faction %d.", id);
+	SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn: %s deleted Faction ID %d.", ReturnName(playerid), id);
+	return 1;
+}
+
+// ==========================================
+// PONYTAIL: Unified Gate Manager (/mgate)
+// ==========================================
+
+stock CreateNewGate(playerid, modelid, faction, name[])
+{
+	new Float:X, Float:Y, Float:Z, objectid;
+	GetPlayerPos(playerid, X, Y, Z);
+
+    if((objectid = Iter_Free(Gates)) != -1)
+	{
+		Gates[objectid][gateModel] = modelid;
+		Gates[objectid][gatePosX] = X;
+		Gates[objectid][gatePosY] = Y;
+		Gates[objectid][gatePosZ] = Z;
+		Gates[objectid][gatePosRX] = 0.0;
+		Gates[objectid][gatePosRY] = 0.0;
+		Gates[objectid][gatePosRZ] = 0.0;
+		Gates[objectid][gateInterior] = GetPlayerInterior(playerid);
+		Gates[objectid][gateFaction] = faction;
+		Gates[objectid][gateOpened] = 0;
+		Gates[objectid][gateLocked] = 0;
+		Gates[objectid][gateVirtualWorld] = GetPlayerVirtualWorld(playerid);
+
+		format(Gates[objectid][gateName], 64, "%s", name);
+		Gates[objectid][gateObject] = CreateDynamicObject(modelid, X, Y, Z, 0.0, 0.0, 0.0, Gates[objectid][gateVirtualWorld], Gates[objectid][gateInterior], -1, 200.0);
+
+		AddGateToFile(objectid, Gates[objectid][gateModel], Gates[objectid][gateFaction], Gates[objectid][gateInterior], Gates[objectid][gateVirtualWorld], Gates[objectid][gatePosX], Gates[objectid][gatePosY], Gates[objectid][gatePosZ], Gates[objectid][gateName]);
+
+		SendClientMessageEx(playerid, COLOR_YELLOW, "-> You've successfully created Gate #%d with description \"%s\".", objectid, Gates[objectid][gateName]);
+
+		Iter_Add(Gates, objectid);
+	}
+	return 1;
+}
+
+YCMD:mgate(playerid, params[], help) = managegate;
+
+CMD:managegate(playerid, params[])
+{
+	if(PlayerData[playerid][pAdmin] < 1337)
+    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+
+	new gateid = -1;
+	if(sscanf(params, "d", gateid))
+	{
+		new Float:fDistance[2] = {99999.0, 0.0}, closest_gate = -1;
+		foreach (new x: Gates)
+		{
+			fDistance[1] = GetPlayerDistanceFromPoint(playerid, Gates[x][gatePosX], Gates[x][gatePosY], Gates[x][gatePosZ]);
+			if(fDistance[1] < fDistance[0])
+			{
+				fDistance[0] = fDistance[1];
+				closest_gate = x;
+			}
+		}
+		if(closest_gate == -1 || fDistance[0] >= 10.0)
+			return SendErrorMessage(playerid, "You're not near any gate. Usage: /mgate [gate_id]");
+		
+		gateid = closest_gate;
+	}
+
+	if(gateid < 0 || gateid >= MAX_GATES || !Iter_Contains(Gates, gateid))
+		return SendErrorMessage(playerid, "Invalid gate ID specified.");
+
+	EditingGateID[playerid] = gateid;
+	ShowMgateMainDialog(playerid, gateid);
+	return true;
+}
+
+stock ShowMgateMainDialog(playerid, gateid)
+{
+	new string[2048], line[256], idx = 0;
+	
+	format(string, sizeof(string), "Description: %s\n", Gates[gateid][gateName]);
+	EditingGateOption[playerid][idx++] = 0;
+	
+	format(line, sizeof(line), "Model ID: %d\n", Gates[gateid][gateModel]);
+	strcat(string, line);
+	EditingGateOption[playerid][idx++] = 1;
+	
+	new facName[32];
+	switch(Gates[gateid][gateFaction])
+	{
+		case -1: facName = "None (Public)";
+		case 1: facName = "LSPD";
+		case 2: facName = "NEWS";
+		case 3: facName = "LSFD";
+		case 4: facName = "GOV";
+		case 5: facName = "MAFIA";
+		case 6: facName = "LSSD";
+		case 7: facName = "DOC";
+		default: facName = "Custom";
+	}
+	format(line, sizeof(line), "Faction: %s (%d)\n", facName, Gates[gateid][gateFaction]);
+	strcat(string, line);
+	EditingGateOption[playerid][idx++] = 2;
+	
+	format(line, sizeof(line), "Move Speed: %.2f\n", Gates[gateid][gateOpenSpeed]);
+	strcat(string, line);
+	EditingGateOption[playerid][idx++] = 3;
+	
+	format(line, sizeof(line), "Virtual World: %d\n", Gates[gateid][gateVirtualWorld]);
+	strcat(string, line);
+	EditingGateOption[playerid][idx++] = 4;
+	
+	format(line, sizeof(line), "Interior: %d\n", Gates[gateid][gateInterior]);
+	strcat(string, line);
+	EditingGateOption[playerid][idx++] = 5;
+	
+	format(line, sizeof(line), "Locked: %s\n", Gates[gateid][gateLocked] ? ("{FF0000}Yes{FFFFFF}") : ("{00FF00}No{FFFFFF}"));
+	strcat(string, line);
+	EditingGateOption[playerid][idx++] = 6;
+	
+	strcat(string, "Adjust Closed Position (Object Editor)\n");
+	EditingGateOption[playerid][idx++] = 7;
+	
+	strcat(string, "Adjust Open Position (Object Editor)\n");
+	EditingGateOption[playerid][idx++] = 8;
+	
+	strcat(string, "Test Gate (Open/Close)\n");
+	EditingGateOption[playerid][idx++] = 9;
+	
+	strcat(string, "{FF0000}Delete Gate");
+	EditingGateOption[playerid][idx++] = 10;
+	
+	new title[64];
+	format(title, sizeof(title), "Gate Manager (ID: %d)", gateid);
+	Dialog_Show(playerid, MgateMenu, DIALOG_STYLE_LIST, title, string, "Select", "Cancel");
+	return 1;
+}
+
+Dialog:MgateCreateSelectModel(playerid, response, listitem, inputtext[])
+{
+	if(!response) return 1;
+	new val = strval(inputtext);
+	if(val <= 0) return Dialog_Show(playerid, MgateCreateSelectModel, DIALOG_STYLE_INPUT, "Create Gate (Wizard) - Step 1: Model ID", "Enter the Object Model ID for the new gate:\n{FF0000}Model ID must be higher than 0!", "Next", "Cancel");
+	
+	SetPVarInt(playerid, "MgateCreateSelModel", val);
+	Dialog_Show(playerid, MgateCreateSelectFaction, DIALOG_STYLE_LIST, "Create Gate (Wizard) - Step 2: Faction Requirement", "0: None / Public\n1: LSPD\n2: NEWS\n3: LSFD\n4: GOV\n5: MAFIA\n6: LSSD\n7: DOC", "Next", "Back");
+	return 1;
+}
+
+Dialog:MgateCreateSelectFaction(playerid, response, listitem, inputtext[])
+{
+	if(!response)
+	{
+		Dialog_Show(playerid, MgateCreateSelectModel, DIALOG_STYLE_INPUT, "Create Gate (Wizard) - Step 1: Model ID", "Enter the Object Model ID for the new gate:", "Next", "Cancel");
+		return 1;
+	}
+	SetPVarInt(playerid, "MgateCreateSelFaction", (listitem == 0) ? -1 : listitem);
+	Dialog_Show(playerid, MgateCreateSelectDesc, DIALOG_STYLE_INPUT, "Create Gate (Wizard) - Step 3: Description", "Enter a name/description for this gate:", "Finish", "Back");
+	return 1;
+}
+
+Dialog:MgateCreateSelectDesc(playerid, response, listitem, inputtext[])
+{
+	if(!response)
+	{
+		Dialog_Show(playerid, MgateCreateSelectFaction, DIALOG_STYLE_LIST, "Create Gate (Wizard) - Step 2: Faction Requirement", "0: None / Public\n1: LSPD\n2: NEWS\n3: LSFD\n4: GOV\n5: MAFIA\n6: LSSD\n7: DOC", "Next", "Back");
+		return 1;
+	}
+	if(isnull(inputtext)) return Dialog_Show(playerid, MgateCreateSelectDesc, DIALOG_STYLE_INPUT, "Create Gate (Wizard) - Step 3: Description", "Enter a name/description for this gate:\n{FF0000}Description cannot be empty!", "Finish", "Back");
+	
+	new modelid = GetPVarInt(playerid, "MgateCreateSelModel");
+	new faction = GetPVarInt(playerid, "MgateCreateSelFaction");
+	DeletePVar(playerid, "MgateCreateSelModel");
+	DeletePVar(playerid, "MgateCreateSelFaction");
+	
+	CreateNewGate(playerid, modelid, faction, inputtext);
+	return 1;
+}
+
+Dialog:MgateEditName(playerid, response, listitem, inputtext[])
+{
+	new gateid = EditingGateID[playerid];
+	if(!response) return ShowMgateMainDialog(playerid, gateid);
+	if(isnull(inputtext)) return Dialog_Show(playerid, MgateEditName, DIALOG_STYLE_INPUT, "Edit Gate Description", "Enter new description for this gate:\n{FF0000}Description cannot be empty!", "Save", "Back");
+	
+	format(Gates[gateid][gateName], 64, "%s", inputtext);
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `gates` SET `name` = '%e' WHERE `id` = '%d'", inputtext, Gates[gateid][gateID]);
+	mysql_pquery(dbCon, gquery);
+	
+	SendClientMessage(playerid, COLOR_GREEN, "Gate description updated.");
+	ShowMgateMainDialog(playerid, gateid);
+	return 1;
+}
+
+Dialog:MgateEditModel(playerid, response, listitem, inputtext[])
+{
+	new gateid = EditingGateID[playerid];
+	if(!response) return ShowMgateMainDialog(playerid, gateid);
+	new val = strval(inputtext);
+	if(val <= 0) return Dialog_Show(playerid, MgateEditModel, DIALOG_STYLE_INPUT, "Edit Model ID", "Enter new Object Model ID for this gate:\n{FF0000}Model ID must be higher than 0!", "Save", "Back");
+	
+	Gates[gateid][gateModel] = val;
+	DestroyDynamicObject(Gates[gateid][gateObject]);
+	Gates[gateid][gateObject] = CreateDynamicObject(val, Gates[gateid][gatePosX], Gates[gateid][gatePosY], Gates[gateid][gatePosZ], Gates[gateid][gatePosRX], Gates[gateid][gatePosRY], Gates[gateid][gatePosRZ], Gates[gateid][gateVirtualWorld], Gates[gateid][gateInterior], -1, 200.0);
+	
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `gates` SET `model` = '%d' WHERE `id` = '%d'", val, Gates[gateid][gateID]);
+	mysql_pquery(dbCon, gquery);
+	
+	SendClientMessage(playerid, COLOR_GREEN, "Gate model ID updated and object re-created.");
+	ShowMgateMainDialog(playerid, gateid);
+	return 1;
+}
+
+Dialog:MgateEditFaction(playerid, response, listitem, inputtext[])
+{
+	new gateid = EditingGateID[playerid];
+	if(!response) return ShowMgateMainDialog(playerid, gateid);
+	
+	new faction = (listitem == 0) ? -1 : listitem;
+	Gates[gateid][gateFaction] = faction;
+	
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `gates` SET `faction` = '%d' WHERE `id` = '%d'", faction, Gates[gateid][gateID]);
+	mysql_pquery(dbCon, gquery);
+	
+	SendClientMessage(playerid, COLOR_GREEN, "Gate faction requirement updated.");
+	ShowMgateMainDialog(playerid, gateid);
+	return 1;
+}
+
+Dialog:MgateEditSpeed(playerid, response, listitem, inputtext[])
+{
+	new gateid = EditingGateID[playerid];
+	if(!response) return ShowMgateMainDialog(playerid, gateid);
+	new Float:val = floatstr(inputtext);
+	if(val <= 0.0) return Dialog_Show(playerid, MgateEditSpeed, DIALOG_STYLE_INPUT, "Edit Speed", "Enter the movement speed for this gate:\n{FF0000}Speed must be higher than 0.0!", "Save", "Back");
+	
+	Gates[gateid][gateOpenSpeed] = val;
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `gates` SET `openspeed` = %f WHERE `id` = '%d'", val, Gates[gateid][gateID]);
+	mysql_pquery(dbCon, gquery);
+	
+	SendClientMessage(playerid, COLOR_GREEN, "Gate move speed updated.");
+	ShowMgateMainDialog(playerid, gateid);
+	return 1;
+}
+
+Dialog:MgateEditWorld(playerid, response, listitem, inputtext[])
+{
+	new gateid = EditingGateID[playerid];
+	if(!response) return ShowMgateMainDialog(playerid, gateid);
+	new val = strval(inputtext);
+	if(val < 0) return Dialog_Show(playerid, MgateEditWorld, DIALOG_STYLE_INPUT, "Edit Virtual World", "Enter the new virtual world ID:\n{FF0000}Must be 0 or higher!", "Save", "Back");
+	
+	Gates[gateid][gateVirtualWorld] = val;
+	
+	// Update dynamic object properties
+	DestroyDynamicObject(Gates[gateid][gateObject]);
+	Gates[gateid][gateObject] = CreateDynamicObject(Gates[gateid][gateModel], Gates[gateid][gatePosX], Gates[gateid][gatePosY], Gates[gateid][gatePosZ], Gates[gateid][gatePosRX], Gates[gateid][gatePosRY], Gates[gateid][gatePosRZ], Gates[gateid][gateVirtualWorld], Gates[gateid][gateInterior], -1, 200.0);
+	
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `gates` SET `vw` = '%d' WHERE `id` = '%d'", val, Gates[gateid][gateID]);
+	mysql_pquery(dbCon, gquery);
+	
+	SendClientMessage(playerid, COLOR_GREEN, "Gate virtual world updated.");
+	ShowMgateMainDialog(playerid, gateid);
+	return 1;
+}
+
+Dialog:MgateEditInterior(playerid, response, listitem, inputtext[])
+{
+	new gateid = EditingGateID[playerid];
+	if(!response) return ShowMgateMainDialog(playerid, gateid);
+	new val = strval(inputtext);
+	if(val < 0) return Dialog_Show(playerid, MgateEditInterior, DIALOG_STYLE_INPUT, "Edit Interior", "Enter the new interior ID:\n{FF0000}Must be 0 or higher!", "Save", "Back");
+	
+	Gates[gateid][gateInterior] = val;
+	
+	// Update dynamic object properties
+	DestroyDynamicObject(Gates[gateid][gateObject]);
+	Gates[gateid][gateObject] = CreateDynamicObject(Gates[gateid][gateModel], Gates[gateid][gatePosX], Gates[gateid][gatePosY], Gates[gateid][gatePosZ], Gates[gateid][gatePosRX], Gates[gateid][gatePosRY], Gates[gateid][gatePosRZ], Gates[gateid][gateVirtualWorld], Gates[gateid][gateInterior], -1, 200.0);
+	
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `gates` SET `interior` = '%d' WHERE `id` = '%d'", val, Gates[gateid][gateID]);
+	mysql_pquery(dbCon, gquery);
+	
+	SendClientMessage(playerid, COLOR_GREEN, "Gate interior updated.");
+	ShowMgateMainDialog(playerid, gateid);
+	return 1;
+}
+
+Dialog:MgateDeleteConfirm(playerid, response, listitem, inputtext[])
+{
+	if(response)
+	{
+		new gateid = EditingGateID[playerid];
+		if(!Iter_Contains(Gates, gateid)) return 1;
+		
+		mysql_format(dbCon, gquery, sizeof(gquery), "DELETE FROM `gates` WHERE `id` = '%d'", Gates[gateid][gateID]);
+		mysql_tquery(dbCon, gquery, "OnGateRemove", "i", gateid);
+		
+		Iter_Remove(Gates, gateid);
+		SendClientMessageEx(playerid, COLOR_YELLOW, "-> Gate %d successfully removed from the database.", gateid);
+	}
+	return 1;
+}
+
+Dialog:MgateMenu(playerid, response, listitem, inputtext[])
+{
+	new gateid = EditingGateID[playerid];
+	if(!response) return 1;
+	
+	new option = EditingGateOption[playerid][listitem];
+	switch(option)
+	{
+		case 0: Dialog_Show(playerid, MgateEditName, DIALOG_STYLE_INPUT, "Edit Gate Description", "Enter new description for this gate:", "Save", "Back");
+		case 1: Dialog_Show(playerid, MgateEditModel, DIALOG_STYLE_INPUT, "Edit Model ID", "Enter new Object Model ID for this gate:\n{FF0000}WARNING: Changing model ID will recreate the object!", "Save", "Back");
+		case 2: Dialog_Show(playerid, MgateEditFaction, DIALOG_STYLE_LIST, "Edit Faction Requirement", "0: None / Public\n1: LSPD\n2: NEWS\n3: LSFD\n4: GOV\n5: MAFIA\n6: LSSD\n7: DOC", "Select", "Back");
+		case 3: Dialog_Show(playerid, MgateEditSpeed, DIALOG_STYLE_INPUT, "Edit Speed", "Enter the movement speed for this gate:", "Save", "Back");
+		case 4: Dialog_Show(playerid, MgateEditWorld, DIALOG_STYLE_INPUT, "Edit Virtual World", "Enter the new virtual world ID:", "Save", "Back");
+		case 5: Dialog_Show(playerid, MgateEditInterior, DIALOG_STYLE_INPUT, "Edit Interior", "Enter the new interior ID:", "Save", "Back");
+		case 6: // Toggle Locked
+		{
+			Gates[gateid][gateLocked] = !Gates[gateid][gateLocked];
+			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `gates` SET `locked` = '%d' WHERE `id` = '%d'", Gates[gateid][gateLocked], Gates[gateid][gateID]);
+			mysql_pquery(dbCon, gquery);
+			SendClientMessageEx(playerid, COLOR_GRAD2, "Gate locked state set to %s.", Gates[gateid][gateLocked] ? "Locked" : "Unlocked");
+			ShowMgateMainDialog(playerid, gateid);
+		}
+		case 7: // Adjust Closed Position
+		{
+			SetPVarInt(playerid, "EditingGate", 1);
+			SetPVarInt(playerid, "ObjectEditing", gateid);
+			EditDynamicObject(playerid, Gates[gateid][gateObject]);
+			SendClientMessageEx(playerid, COLOR_YELLOW, "-> You're now adjusting Gate %d's default (closed) position.", gateid);
+		}
+		case 8: // Adjust Open Position
+		{
+			SetPVarInt(playerid, "EditingGateMove", 1);
+			SetPVarInt(playerid, "ObjectEditing", gateid);
+			EditDynamicObject(playerid, Gates[gateid][gateObject]);
+			SendClientMessageEx(playerid, COLOR_YELLOW, "-> You're now adjusting Gate %d's moving (open) position.", gateid);
+		}
+		case 9: // Test Gate
+		{
+			if(Gates[gateid][gateOpened] == 1)
+			{
+				Gates[gateid][gateOpened] = 0;
+				MoveDynamicObject(Gates[gateid][gateObject], Gates[gateid][gatePosX], Gates[gateid][gatePosY], Gates[gateid][gatePosZ], Gates[gateid][gateOpenSpeed], Gates[gateid][gatePosRX], Gates[gateid][gatePosRY], Gates[gateid][gatePosRZ]);
+				SendClientMessage(playerid, COLOR_GREEN, "Testing: Closing gate.");
+			}
+			else
+			{
+				Gates[gateid][gateOpened] = 1;
+				MoveDynamicObject(Gates[gateid][gateObject], Gates[gateid][gateMoveX], Gates[gateid][gateMoveY], Gates[gateid][gateMoveZ], Gates[gateid][gateOpenSpeed], Gates[gateid][gateMoveRX], Gates[gateid][gateMoveRY], Gates[gateid][gateMoveRZ]);
+				SendClientMessage(playerid, COLOR_GREEN, "Testing: Opening gate.");
+			}
+			ShowMgateMainDialog(playerid, gateid);
+		}
+		case 10: // Delete
+		{
+			Dialog_Show(playerid, MgateDeleteConfirm, DIALOG_STYLE_MSGBOX, "Delete Gate", "{FF0000}WARNING:{FFFFFF} Are you sure you want to delete this gate entirely from the database?", "Delete", "Cancel");
+		}
+	}
+	return 1;
+}
+
+// ==========================================
+// PONYTAIL: Unified Vehicle Manager (/mveh)
+// ==========================================
+
+stock SaveVehicleAsPermanent(playerid, vehicleid)
+{
+	new i = Iter_Free(sv_servercar);
+	if(i == -1)
+	{
+		SendErrorMessage(playerid, "Server vehicle limit reached.");
+		return -1;
+	}
+
+	new queryString[255], Float: vPos[4];
+	GetVehiclePos(vehicleid, vPos[0], vPos[1], vPos[2]);
+	GetVehicleZAngle(vehicleid, vPos[3]);
+
+	format(queryString, sizeof(queryString), "INSERT INTO vehicles (vehicleModelID, vehiclePosX, vehiclePosY, vehiclePosZ, vehiclePosRotation) VALUES('%d', '%f', '%f', '%f', '%f')", GetVehicleModel(vehicleid), vPos[0], vPos[1], vPos[2], vPos[3]);
+	new Cache:cache = mysql_query(dbCon, queryString);
+	new insertid = cache_insert_id();
+	cache_delete(cache);
+
+	vehicleVariables[i][vVehicleID] = insertid;
+	vehicleVariables[i][vVehicleModelID] = GetVehicleModel(vehicleid);
+	vehicleVariables[i][vVehiclePosition][0] = vPos[0];
+	vehicleVariables[i][vVehiclePosition][1] = vPos[1];
+	vehicleVariables[i][vVehiclePosition][2] = vPos[2];
+	vehicleVariables[i][vVehicleRotation] = vPos[3];
+	vehicleVariables[i][vVehicleFaction] = -1;
+	vehicleVariables[i][vVehicleSiren] = 0;
+	vehicleVariables[i][vVehicleScriptID] = vehicleid;
+	format(vehicleVariables[i][vVehiclePlate], 24, "LOSJAWA");
+
+	SetVehicleNumberPlate(vehicleid, "LOSJAWA");
+	SetVehicleToRespawn(vehicleid);
+
+	Iter_Add(sv_servercar, i);
+
+	for(new x = 0; x != MAX_ADMIN_VEHICLES; ++x)
+	{
+		if(AdminSpawnedVehicles[x] == vehicleid)
+		{
+			AdminSpawnedVehicles[x] = 0;
+			break;
+		}
+	}
+
+	systemVariables[vehicleCounts][2]--;
+	systemVariables[vehicleCounts][0]++;
+	return i;
+}
+
+YCMD:mveh(playerid, params[], help) = managevehicle;
+
+CMD:managevehicle(playerid, params[])
+{
+	if(PlayerData[playerid][pAdmin] < 4)
+	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+
+	new inputid = -1;
+	if(sscanf(params, "d", inputid))
+	{
+		if(IsPlayerInAnyVehicle(playerid))
+		{
+			new vehicleid = GetPlayerVehicleID(playerid);
+			new id = Vehicle_GetID(vehicleid);
+			if(id == -1)
+			{
+				SetPVarInt(playerid, "SaveTempVehID", vehicleid);
+				Dialog_Show(playerid, MvehTempConfirm, DIALOG_STYLE_MSGBOX, "Save Temporary Vehicle", 
+					"This is a temporary vehicle. Would you like to save it permanently as a server/faction vehicle?", 
+					"Save", "Cancel");
+				return true;
+			}
+			EditingCarID[playerid] = id;
+			ShowMvehMainDialog(playerid, id);
+			return true;
+		}
+		else
+		{
+			return SendErrorMessage(playerid, "You must be inside a vehicle or specify its Vehicle ID: /mveh [vehicle_id]");
+		}
+	}
+
+	new id = Vehicle_GetID(inputid);
+	if(id == -1)
+	    return SendErrorMessage(playerid, "The specified vehicle is not a permanent server/faction vehicle.");
+
+	EditingCarID[playerid] = id;
+	ShowMvehMainDialog(playerid, id);
+	return true;
+}
+
+stock ShowMvehMainDialog(playerid, id)
+{
+	new string[2048], line[256], idx = 0;
+	
+	new modelid = vehicleVariables[id][vVehicleModelID];
+	format(string, sizeof(string), "Model: %s (%d)\n", g_arrVehicleNames[modelid - 400], modelid);
+	EditingCarOption[playerid][idx++] = 0;
+	
+	new facName[32];
+	switch(vehicleVariables[id][vVehicleFaction])
+	{
+		case -1: facName = "None (Public)";
+		case 1: facName = "LSPD";
+		case 2: facName = "NEWS";
+		case 3: facName = "LSFD";
+		case 4: facName = "GOV";
+		case 5: facName = "MAFIA";
+		case 6: facName = "LSSD";
+		case 7: facName = "DOC";
+		default: facName = "Custom";
+	}
+	format(line, sizeof(line), "Faction Owner: %s (%d)\n", facName, vehicleVariables[id][vVehicleFaction]);
+	strcat(string, line);
+	EditingCarOption[playerid][idx++] = 1;
+	
+	format(line, sizeof(line), "Primary Color: %d\n", vehicleVariables[id][vVehicleColour][0]);
+	strcat(string, line);
+	EditingCarOption[playerid][idx++] = 2;
+	
+	format(line, sizeof(line), "Secondary Color: %d\n", vehicleVariables[id][vVehicleColour][1]);
+	strcat(string, line);
+	EditingCarOption[playerid][idx++] = 3;
+	
+	format(line, sizeof(line), "Siren: %s\n", vehicleVariables[id][vVehicleSiren] ? ("{00FF00}Enabled{FFFFFF}") : ("{FF0000}Disabled{FFFFFF}"));
+	strcat(string, line);
+	EditingCarOption[playerid][idx++] = 4;
+	
+	format(line, sizeof(line), "License Plate: %s\n", vehicleVariables[id][vVehiclePlate]);
+	strcat(string, line);
+	EditingCarOption[playerid][idx++] = 5;
+	
+	format(line, sizeof(line), "Spawn Position: %.2f, %.2f, %.2f\n", vehicleVariables[id][vVehiclePosition][0], vehicleVariables[id][vVehiclePosition][1], vehicleVariables[id][vVehiclePosition][2]);
+	strcat(string, line);
+	EditingCarOption[playerid][idx++] = 6;
+	
+	strcat(string, "Set Spawn Position (Here)\n");
+	EditingCarOption[playerid][idx++] = 7;
+	
+	strcat(string, "Teleport Vehicle to Me\n");
+	EditingCarOption[playerid][idx++] = 8;
+	
+	strcat(string, "Teleport Me to Vehicle\n");
+	EditingCarOption[playerid][idx++] = 9;
+	
+	strcat(string, "Respawn Vehicle\n");
+	EditingCarOption[playerid][idx++] = 10;
+	
+	strcat(string, "{FF0000}Delete/Destroy Vehicle");
+	EditingCarOption[playerid][idx++] = 11;
+	
+	new title[64];
+	format(title, sizeof(title), "Vehicle Manager (VehID: %d)", vehicleVariables[id][vVehicleScriptID]);
+	Dialog_Show(playerid, MvehMenu, DIALOG_STYLE_LIST, title, string, "Select", "Cancel");
+	return 1;
+}
+
+Dialog:MvehTempConfirm(playerid, response, listitem, inputtext[])
+{
+	if(response)
+	{
+		new vehicleid = GetPVarInt(playerid, "SaveTempVehID");
+		DeletePVar(playerid, "SaveTempVehID");
+		
+		if(!IsPlayerInAnyVehicle(playerid) || GetPlayerVehicleID(playerid) != vehicleid)
+		{
+			SendErrorMessage(playerid, "You must remain inside the vehicle to save it.");
+			return 1;
+		}
+		
+		new id = SaveVehicleAsPermanent(playerid, vehicleid);
+		if(id != -1)
+		{
+			EditingCarID[playerid] = id;
+			ShowMvehMainDialog(playerid, id);
+		}
+	}
+	else
+	{
+		DeletePVar(playerid, "SaveTempVehID");
+	}
+	return 1;
+}
+
+Dialog:MvehEditModel(playerid, response, listitem, inputtext[])
+{
+	new id = EditingCarID[playerid];
+	if(!response) return ShowMvehMainDialog(playerid, id);
+	new val = strval(inputtext);
+	if(val < 400 || val > 611) return Dialog_Show(playerid, MvehEditModel, DIALOG_STYLE_INPUT, "Edit Model ID", "Enter the new vehicle Model ID (400-611):\n{FF0000}Model ID must be between 400 and 611!", "Save", "Back");
+
+	vehicleVariables[id][vVehicleModelID] = val;
+	
+	DestroyVehicle(vehicleVariables[id][vVehicleScriptID]);
+	Iter_Remove(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
+	
+	vehicleVariables[id][vVehicleScriptID] = CreateVehicle(val, vehicleVariables[id][vVehiclePosition][0], vehicleVariables[id][vVehiclePosition][1], vehicleVariables[id][vVehiclePosition][2], vehicleVariables[id][vVehicleRotation], vehicleVariables[id][vVehicleColour][0], vehicleVariables[id][vVehicleColour][1], 60000, vehicleVariables[id][vVehicleSiren]);
+	Iter_Add(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
+	
+	Vehicle_Save(id);
+	SendClientMessage(playerid, COLOR_GREEN, "Vehicle model ID updated.");
+	ShowMvehMainDialog(playerid, id);
+	return 1;
+}
+
+Dialog:MvehEditFaction(playerid, response, listitem, inputtext[])
+{
+	new id = EditingCarID[playerid];
+	if(!response) return ShowMvehMainDialog(playerid, id);
+	
+	new faction = (listitem == 0) ? -1 : listitem;
+	vehicleVariables[id][vVehicleFaction] = faction;
+	Vehicle_Save(id);
+	
+	SendClientMessage(playerid, COLOR_GREEN, "Vehicle faction requirement updated.");
+	ShowMvehMainDialog(playerid, id);
+	return 1;
+}
+
+Dialog:MvehEditColor1(playerid, response, listitem, inputtext[])
+{
+	new id = EditingCarID[playerid];
+	if(!response) return ShowMvehMainDialog(playerid, id);
+	new val = strval(inputtext);
+	if(val < 0 || val > 255) return Dialog_Show(playerid, MvehEditColor1, DIALOG_STYLE_INPUT, "Edit Primary Color", "Enter the primary color ID (0-255):\n{FF0000}Color ID must be between 0 and 255!", "Save", "Back");
+	
+	vehicleVariables[id][vVehicleColour][0] = val;
+	
+	DestroyVehicle(vehicleVariables[id][vVehicleScriptID]);
+	Iter_Remove(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
+	
+	vehicleVariables[id][vVehicleScriptID] = CreateVehicle(vehicleVariables[id][vVehicleModelID], vehicleVariables[id][vVehiclePosition][0], vehicleVariables[id][vVehiclePosition][1], vehicleVariables[id][vVehiclePosition][2], vehicleVariables[id][vVehicleRotation], vehicleVariables[id][vVehicleColour][0], vehicleVariables[id][vVehicleColour][1], 60000, vehicleVariables[id][vVehicleSiren]);
+	Iter_Add(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
+	
+	Vehicle_Save(id);
+	SendClientMessage(playerid, COLOR_GREEN, "Vehicle primary color updated.");
+	ShowMvehMainDialog(playerid, id);
+	return 1;
+}
+
+Dialog:MvehEditColor2(playerid, response, listitem, inputtext[])
+{
+	new id = EditingCarID[playerid];
+	if(!response) return ShowMvehMainDialog(playerid, id);
+	new val = strval(inputtext);
+	if(val < 0 || val > 255) return Dialog_Show(playerid, MvehEditColor2, DIALOG_STYLE_INPUT, "Edit Secondary Color", "Enter the secondary color ID (0-255):\n{FF0000}Color ID must be between 0 and 255!", "Save", "Back");
+	
+	vehicleVariables[id][vVehicleColour][1] = val;
+	
+	DestroyVehicle(vehicleVariables[id][vVehicleScriptID]);
+	Iter_Remove(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
+	
+	vehicleVariables[id][vVehicleScriptID] = CreateVehicle(vehicleVariables[id][vVehicleModelID], vehicleVariables[id][vVehiclePosition][0], vehicleVariables[id][vVehiclePosition][1], vehicleVariables[id][vVehiclePosition][2], vehicleVariables[id][vVehicleRotation], vehicleVariables[id][vVehicleColour][0], vehicleVariables[id][vVehicleColour][1], 60000, vehicleVariables[id][vVehicleSiren]);
+	Iter_Add(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
+	
+	Vehicle_Save(id);
+	SendClientMessage(playerid, COLOR_GREEN, "Vehicle secondary color updated.");
+	ShowMvehMainDialog(playerid, id);
+	return 1;
+}
+
+Dialog:MvehEditPlate(playerid, response, listitem, inputtext[])
+{
+	new id = EditingCarID[playerid];
+	if(!response) return ShowMvehMainDialog(playerid, id);
+	if(strlen(inputtext) < 3 || strlen(inputtext) > 9) return Dialog_Show(playerid, MvehEditPlate, DIALOG_STYLE_INPUT, "Edit License Plate", "Enter new license plate text (3-9 characters):\n{FF0000}Plate must be between 3 and 9 characters!", "Save", "Back");
+	
+	format(vehicleVariables[id][vVehiclePlate], 24, "%s", inputtext);
+	SetVehicleNumberPlate(vehicleVariables[id][vVehicleScriptID], vehicleVariables[id][vVehiclePlate]);
+	SetVehicleToRespawn(vehicleVariables[id][vVehicleScriptID]);
+	
+	Vehicle_Save(id);
+	SendClientMessage(playerid, COLOR_GREEN, "Vehicle license plate updated and vehicle respawned.");
+	ShowMvehMainDialog(playerid, id);
+	return 1;
+}
+
+Dialog:MvehEditPos(playerid, response, listitem, inputtext[])
+{
+	new id = EditingCarID[playerid];
+	if(!response) return ShowMvehMainDialog(playerid, id);
+	
+	new Float:vx, Float:vy, Float:vz;
+	if(sscanf(inputtext, "fff", vx, vy, vz))
+		return Dialog_Show(playerid, MvehEditPos, DIALOG_STYLE_INPUT, "Edit Spawn Position", "Enter new position X, Y, Z:\n{FF0000}Format: [X] [Y] [Z]!", "Save", "Back");
+		
+	vehicleVariables[id][vVehiclePosition][0] = vx;
+	vehicleVariables[id][vVehiclePosition][1] = vy;
+	vehicleVariables[id][vVehiclePosition][2] = vz;
+	
+	DestroyVehicle(vehicleVariables[id][vVehicleScriptID]);
+	Iter_Remove(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
+	
+	vehicleVariables[id][vVehicleScriptID] = CreateVehicle(vehicleVariables[id][vVehicleModelID], vehicleVariables[id][vVehiclePosition][0], vehicleVariables[id][vVehiclePosition][1], vehicleVariables[id][vVehiclePosition][2], vehicleVariables[id][vVehicleRotation], vehicleVariables[id][vVehicleColour][0], vehicleVariables[id][vVehicleColour][1], 60000, vehicleVariables[id][vVehicleSiren]);
+	Iter_Add(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
+	
+	Vehicle_Save(id);
+	SendClientMessage(playerid, COLOR_GREEN, "Vehicle spawn position updated.");
+	ShowMvehMainDialog(playerid, id);
+	return 1;
+}
+
+Dialog:MvehDeleteConfirm(playerid, response, listitem, inputtext[])
+{
+	if(response)
+	{
+		new id = EditingCarID[playerid];
+		new string[64];
+		mysql_format(dbCon, string, sizeof(string), "DELETE FROM `vehicles` WHERE `vehicleID` = '%d' LIMIT 1", vehicleVariables[id][vVehicleID]);
+		mysql_tquery(dbCon, string);
+		
+		SendClientMessageEx(playerid, COLOR_YELLOW, "-> Vehicle %d successfully removed from the database.", vehicleVariables[id][vVehicleScriptID]);
+		
+		DestroyVehicle(vehicleVariables[id][vVehicleScriptID]);
+		Iter_Remove(sv_servercar, id);
+		Iter_Remove(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
+	}
+	return 1;
+}
+
+Dialog:MvehMenu(playerid, response, listitem, inputtext[])
+{
+	new id = EditingCarID[playerid];
+	if(!response) return 1;
+	
+	new option = EditingCarOption[playerid][listitem];
+	switch(option)
+	{
+		case 0: Dialog_Show(playerid, MvehEditModel, DIALOG_STYLE_INPUT, "Edit Model ID", "Enter the new vehicle Model ID (400-611):", "Save", "Back");
+		case 1: Dialog_Show(playerid, MvehEditFaction, DIALOG_STYLE_LIST, "Edit Faction Requirement", "0: None / Public\n1: LSPD\n2: NEWS\n3: LSFD\n4: GOV\n5: MAFIA\n6: LSSD\n7: DOC", "Select", "Back");
+		case 2: Dialog_Show(playerid, MvehEditColor1, DIALOG_STYLE_INPUT, "Edit Primary Color", "Enter the primary color ID (0-255):", "Save", "Back");
+		case 3: Dialog_Show(playerid, MvehEditColor2, DIALOG_STYLE_INPUT, "Edit Secondary Color", "Enter the secondary color ID (0-255):", "Save", "Back");
+		case 4: // Toggle Siren
+		{
+			vehicleVariables[id][vVehicleSiren] = !vehicleVariables[id][vVehicleSiren];
+			DestroyVehicle(vehicleVariables[id][vVehicleScriptID]);
+			Iter_Remove(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
+			
+			vehicleVariables[id][vVehicleScriptID] = CreateVehicle(vehicleVariables[id][vVehicleModelID], vehicleVariables[id][vVehiclePosition][0], vehicleVariables[id][vVehiclePosition][1], vehicleVariables[id][vVehiclePosition][2], vehicleVariables[id][vVehicleRotation], vehicleVariables[id][vVehicleColour][0], vehicleVariables[id][vVehicleColour][1], 60000, vehicleVariables[id][vVehicleSiren]);
+			Iter_Add(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
+			
+			Vehicle_Save(id);
+			SendClientMessage(playerid, COLOR_GREEN, "Vehicle siren status updated.");
+			ShowMvehMainDialog(playerid, id);
+		}
+		case 5: Dialog_Show(playerid, MvehEditPlate, DIALOG_STYLE_INPUT, "Edit License Plate", "Enter new license plate text (3-9 characters):", "Save", "Back");
+		case 6: Dialog_Show(playerid, MvehEditPos, DIALOG_STYLE_INPUT, "Edit Spawn Position", "Enter new position X, Y, Z:", "Save", "Back");
+		case 7: // Set Spawn Position Here
+		{
+			new Float:px, Float:py, Float:pz, Float:pa;
+			if(IsPlayerInAnyVehicle(playerid) && GetPlayerVehicleID(playerid) == vehicleVariables[id][vVehicleScriptID])
+			{
+				GetVehiclePos(vehicleVariables[id][vVehicleScriptID], px, py, pz);
+				GetVehicleZAngle(vehicleVariables[id][vVehicleScriptID], pa);
+			}
+			else
+			{
+				GetPlayerPos(playerid, px, py, pz);
+				GetPlayerFacingAngle(playerid, pa);
+			}
+			vehicleVariables[id][vVehiclePosition][0] = px;
+			vehicleVariables[id][vVehiclePosition][1] = py;
+			vehicleVariables[id][vVehiclePosition][2] = pz;
+			vehicleVariables[id][vVehicleRotation] = pa;
+			
+			DestroyVehicle(vehicleVariables[id][vVehicleScriptID]);
+			Iter_Remove(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
+			
+			vehicleVariables[id][vVehicleScriptID] = CreateVehicle(vehicleVariables[id][vVehicleModelID], px, py, pz, pa, vehicleVariables[id][vVehicleColour][0], vehicleVariables[id][vVehicleColour][1], 60000, vehicleVariables[id][vVehicleSiren]);
+			Iter_Add(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
+			
+			Vehicle_Save(id);
+			SendClientMessage(playerid, COLOR_GREEN, "Vehicle spawn position set here.");
+			ShowMvehMainDialog(playerid, id);
+		}
+		case 8: // Teleport Vehicle to Me
+		{
+			new Float:px, Float:py, Float:pz, Float:pa;
+			GetPlayerPos(playerid, px, py, pz);
+			GetPlayerFacingAngle(playerid, pa);
+			
+			SetVehiclePos(vehicleVariables[id][vVehicleScriptID], px + 2.0, py + 2.0, pz + 0.5);
+			SetVehicleZAngle(vehicleVariables[id][vVehicleScriptID], pa);
+			SendClientMessage(playerid, COLOR_GREEN, "Vehicle teleported to you.");
+			ShowMvehMainDialog(playerid, id);
+		}
+		case 9: // Teleport Me to Vehicle
+		{
+			new Float:vx, Float:vy, Float:vz;
+			GetVehiclePos(vehicleVariables[id][vVehicleScriptID], vx, vy, vz);
+			SetPlayerPosEx(playerid, vx, vy, vz + 2.0, 1000);
+			SendClientMessage(playerid, COLOR_GREEN, "Teleported to vehicle.");
+			ShowMgateMainDialog(playerid, id);
+		}
+		case 10: // Respawn
+		{
+			SetVehicleToRespawn(vehicleVariables[id][vVehicleScriptID]);
+			SendClientMessage(playerid, COLOR_GREEN, "Vehicle respawned.");
+			ShowMvehMainDialog(playerid, id);
+		}
+		case 11: // Delete
+		{
+			Dialog_Show(playerid, MvehDeleteConfirm, DIALOG_STYLE_MSGBOX, "Delete Permanent Vehicle", "{FF0000}WARNING:{FFFFFF} Are you sure you want to delete this vehicle entirely from the database?", "Delete", "Cancel");
+		}
+	}
+	return 1;
+}
+
+// ==========================================
+// PONYTAIL: Interactive Admin Help System (/ahelp)
+// ==========================================
+
+enum E_AHELP_CMD
+{
+	ahName[20],
+	ahDesc[256],
+	ahSyntax[64],
+	ahLevel,
+	ahCategory // 1: Veh, 2: Prop/Biz, 3: Faction/Gate, 4: Player/Punish, 5: Teleport
+}
+
+new const AdminHelpCmds[][E_AHELP_CMD] = {
+	// Junior Admin / Level 1
+	{"/spec", "Spectate a player.", "/spec [playerid/name]", 1, 4},
+	{"/specoff", "Stop spectating a player.", "/specoff", 1, 4},
+	{"/freeze", "Freeze a player in place.", "/freeze [playerid/name]", 1, 4},
+	{"/unfreeze", "Unfreeze a frozen player.", "/unfreeze [playerid/name]", 1, 4},
+	{"/mute", "Mute a player from chat channels.", "/mute [playerid/name] [time in mins] [reason]", 1, 4},
+	{"/unmute", "Unmute a muted player.", "/unmute [playerid/name]", 1, 4},
+	{"/slap", "Slap a player (launches them slightly into the air).", "/slap [playerid/name]", 1, 4},
+	{"/smack", "Smack a player (knocks them down temporarily).", "/smack [playerid/name]", 1, 4},
+	{"/checkafk", "Check if a player is AFK.", "/checkafk [playerid/name]", 1, 4},
+	{"/arecord", "Check player admin records and punishment history.", "/arecord [playerid/name]", 1, 4},
+	{"/gotospawn", "Teleport to the player spawn point.", "/gotospawn", 1, 5},
+	{"/gotols", "Teleport to Los Santos.", "/gotols", 1, 5},
+	{"/gotolv", "Teleport to Las Venturas.", "/gotolv", 1, 5},
+	{"/gotosf", "Teleport to San Fierro.", "/gotosf", 1, 5},
+	{"/xyz", "Show current coordinates.", "/xyz", 1, 5},
+	{"/pmears", "Monitor player private messages.", "/pmears", 1, 4},
+
+	// General Admin / Level 2
+	{"/goto", "Teleport directly to a player's position.", "/goto [playerid/name]", 2, 5},
+	{"/gethere", "Teleport a player to your current position.", "/gethere [playerid/name]", 2, 5},
+	{"/revive", "Revive a player from death or down state.", "/revive [playerid/name]", 2, 4},
+	{"/healcar", "Fully repair and restore vehicle health.", "/healcar", 2, 1},
+	{"/fixveh", "Repair a vehicle body.", "/fixveh", 2, 1},
+	{"/gotocar", "Teleport to a vehicle by its ID.", "/gotocar [samp_vehicle_id]", 2, 1},
+	{"/getcar", "Bring a vehicle to your position by its ID.", "/getcar [samp_vehicle_id]", 2, 1},
+	{"/gotohouse", "Teleport to a house by its ID.", "/gotohouse [house_id]", 2, 5},
+	{"/gotobiz", "Teleport to a business by its ID.", "/gotobiz [business_id]", 2, 5},
+	{"/veh", "Spawn a temporary vehicle for admin duty.", "/veh [model_id] [color1] [color2]", 2, 1},
+	{"/nos", "Add nitro to a vehicle.", "/nos", 2, 1},
+
+	// Senior Admin / Level 3
+	{"/ban", "Permanently ban a player from the server.", "/ban [playerid/name] [reason]", 3, 4},
+	{"/unban", "Unban a player name.", "/unban [exact_account_name]", 3, 4},
+	{"/unbanip", "Unban an IP address.", "/unbanip [ip_address]", 3, 4},
+	{"/ajail", "Send a player to Admin Jail.", "/ajail [playerid/name] [time in mins] [reason]", 3, 4},
+	{"/unjail", "Release a player from Admin Jail.", "/unjail [playerid/name]", 3, 4},
+	{"/kick", "Kick a player from the server.", "/kick [playerid/name] [reason]", 3, 4},
+	{"/setskin", "Set player character skin.", "/setskin [playerid/name] [skin_id]", 3, 4},
+	{"/sethealth", "Set player health level.", "/sethealth [playerid/name] [amount]", 3, 4},
+	{"/setarmour", "Set player armor level.", "/setarmour [playerid/name] [amount]", 3, 4},
+	{"/givegun", "Give weapon to player.", "/givegun [playerid/name] [weapon_id] [ammo]", 3, 4},
+
+	// Head Admin / Level 4
+	{"/mhouse", "Unified GUI Property Manager. Manage nearest or specific house ID.", "/mhouse [house_id (optional)]", 4, 2},
+	{"/createprop", "Wizard to create a new property/house at current position.", "/createprop", 4, 2},
+	{"/removeprop", "Delete a property from database.", "/removeprop [house_id]", 4, 2},
+	{"/asellhouse", "Admin sell a house back to state ownership.", "/asellhouse [house_id]", 4, 2},
+	{"/mbiz", "Unified GUI Business Manager. Manage nearest or specific business ID.", "/mbiz [business_id (optional)]", 4, 2},
+	{"/makebusiness", "Create a new business at current position.", "/makebusiness [type 1-5] [price]", 4, 2},
+	{"/removebusiness", "Delete a business from database.", "/removebusiness [business_id]", 4, 2},
+	{"/asellbusiness", "Admin sell a business back to state ownership.", "/asellbusiness [business_id]", 4, 2},
+	{"/mfac", "Unified GUI Faction Manager. Manage specific faction ID.", "/mfac [faction_id (optional)]", 4, 3},
+	{"/createfaction", "Wizard to create a new faction.", "/createfaction", 4, 3},
+	{"/destroyfaction", "Delete a faction entirely (with confirmation).", "/destroyfaction [faction_id]", 4, 3},
+	{"/setfaction", "Set faction parameters manually.", "/setfaction [faction_id] [stat] [value]", 4, 3},
+	{"/mveh", "Unified GUI Vehicle Manager. Manage current or specific vehicle ID.", "/mveh [vehicle_id (optional)]", 4, 1},
+	{"/saveveh", "Save current temporary vehicle permanently to database.", "/saveveh", 4, 1},
+	{"/deleteveh", "Delete vehicle from database.", "/deleteveh [vehicle_id]", 4, 1},
+	{"/editveh", "Edit vehicle properties manually.", "/editveh [vehicle_id] [stat] [value]", 4, 1},
+
+	// Developer / Level 1337
+	{"/mgate", "Unified GUI Gate Manager. Manage nearest or specific gate ID.", "/mgate [gate_id (optional)]", 1337, 3},
+	{"/makegate", "Wizard to create a new gate.", "/makegate", 1337, 3},
+	{"/removegate", "Delete a gate from database.", "/removegate [gate_id]", 1337, 3},
+	{"/editgate", "Edit gate properties manually.", "/editgate [gate_id] [type] [value]", 1337, 3},
+	{"/whatgate", "Identify nearest gate script ID and SQL ID.", "/whatgate", 1337, 3},
+	{"/showgates", "Tablist of all server gates with teleport option.", "/showgates", 1337, 3},
+	{"/setstat", "Set character stats.", "/setstat [playerid/name] [stat_name] [value]", 1337, 4},
+	{"/givemoney", "Give money to a player.", "/givemoney [playerid/name] [amount]", 1337, 4},
+	{"/takemoney", "Take money from a player.", "/takemoney [playerid/name] [amount]", 1337, 4},
+	{"/makeadmin", "Make a player an administrator.", "/makeadmin [playerid/name] [level 1-1337]", 1337, 4}
+};
+
+stock ShowAdminHelpMain(playerid)
+{
+	new string[512];
+	strcat(string, "Admin duty guidelines\n");
+	strcat(string, "Level 1: Junior Admin / Helper / Tester\n");
+	strcat(string, "Level 2: General Admin\n");
+	strcat(string, "Level 3: Senior Admin\n");
+	strcat(string, "Level 4: Head Admin / Manager\n");
+	strcat(string, "Level 1337: Developer / Owner\n");
+	strcat(string, "Category: Vehicle Management\n");
+	strcat(string, "Category: Property & Business\n");
+	strcat(string, "Category: Faction & Gate Management\n");
+	strcat(string, "Category: Player Management & Punishment\n");
+	strcat(string, "Category: Teleport & Navigation");
+	
+	Dialog_Show(playerid, AdminHelpMain, DIALOG_STYLE_LIST, "Admin Help Center", string, "Select", "Close");
+	return 1;
+}
+
+Dialog:AdminHelpMain(playerid, response, listitem, inputtext[])
+{
+	if(!response) return 1;
+	
+	if(listitem == 0) // Guidelines
+	{
+		new prompt[1024];
+		format(prompt, sizeof(prompt), \
+			"{FFFFFF}As an administrator, you must adhere to the server's code of conduct:\n\n\
+			1. {7E98B6}Admin Duty{FFFFFF}: You must only perform administrative actions while on admin duty (/aduty).\n\
+			2. {7E98B6}Teleport Click{FFFFFF}: Teleport Click is automatically active while in /aduty. Click on the map to teleport.\n\
+			3. {7E98B6}Respect{FFFFFF}: Treat all players with respect and keep a professional tone.\n\
+			4. {7E98B6}Evidence{FFFFFF}: Always document and record proof of player infractions before issuing bans or jails.");
+		Dialog_Show(playerid, AdminHelpGuidelines, DIALOG_STYLE_MSGBOX, "Admin Duty Guidelines", prompt, "Back", "");
+		return 1;
+	}
+	
+	new targetVal = -1;
+	new bool:isCategory = false;
+	
+	if(listitem >= 1 && listitem <= 5) // Level
+	{
+		if(listitem == 1) targetVal = 1;
+		else if(listitem == 2) targetVal = 2;
+		else if(listitem == 3) targetVal = 3;
+		else if(listitem == 4) targetVal = 4;
+		else if(listitem == 5) targetVal = 1337;
+		isCategory = false;
+	}
+	else if(listitem >= 6) // Category
+	{
+		targetVal = listitem - 5; // 1: Veh, 2: Prop, 3: Faction, 4: Player, 5: Teleport
+		isCategory = true;
+	}
+	
+	SetPVarInt(playerid, "AhelpLastListitem", listitem);
+	
+	new cmdCount = 0;
+	gstr[0] = EOS;
+	format(gstr, sizeof(gstr), "Command\tDescription\n");
+	
+	new key[32];
+	for(new i = 0; i < sizeof(AdminHelpCmds); ++i)
+	{
+		new bool:match = false;
+		if(isCategory)
+		{
+			if(AdminHelpCmds[i][ahCategory] == targetVal) match = true;
+		}
+		else
+		{
+			if(AdminHelpCmds[i][ahLevel] == targetVal) match = true;
+		}
+		
+		if(match)
+		{
+			format(gstr, sizeof(gstr), "%s%s\t%s\n", gstr, AdminHelpCmds[i][ahName], AdminHelpCmds[i][ahDesc]);
+			format(key, sizeof(key), "AhelpCmd_%d", cmdCount);
+			SetPVarInt(playerid, key, i);
+			cmdCount++;
+		}
+	}
+	
+	if(!cmdCount)
+	{
+		SendErrorMessage(playerid, "No commands found in this section.");
+		ShowAdminHelpMain(playerid);
+		return 1;
+	}
+	
+	new title[64];
+	format(title, sizeof(title), "Admin Help: %s", inputtext);
+	Dialog_Show(playerid, AdminHelpList, DIALOG_STYLE_TABLIST_HEADERS, title, gstr, "Details", "Back");
+	return 1;
+}
+
+Dialog:AdminHelpGuidelines(playerid, response, listitem, inputtext[])
+{
+	ShowAdminHelpMain(playerid);
+	return 1;
+}
+
+Dialog:AdminHelpList(playerid, response, listitem, inputtext[])
+{
+	new key[32];
+	if(!response)
+	{
+		// Clean up PVars
+		for(new x = 0; x < 60; ++x) {
+			format(key, sizeof(key), "AhelpCmd_%d", x);
+			DeletePVar(playerid, key);
+		}
+		ShowAdminHelpMain(playerid);
+		return 1;
+	}
+	
+	format(key, sizeof(key), "AhelpCmd_%d", listitem);
+	new cmdIdx = GetPVarInt(playerid, key);
+	
+	// Clean up PVars
+	for(new x = 0; x < 60; ++x) {
+		format(key, sizeof(key), "AhelpCmd_%d", x);
+		DeletePVar(playerid, key);
+	}
+	
+	if(cmdIdx < 0 || cmdIdx >= sizeof(AdminHelpCmds))
+	{
+		ShowAdminHelpMain(playerid);
+		return 1;
+	}
+	
+	SetPVarInt(playerid, "AhelpLastCmdIdx", cmdIdx);
+	
+	new info[512];
+	format(info, sizeof(info), \
+		"{FFFFFF}Command: {7E98B6}%s{FFFFFF}\n\n\
+		Syntax: {A9C4E4}%s{FFFFFF}\n\n\
+		Description: %s\n\n\
+		Required Admin Level: {FFBF00}%d{FFFFFF}",
+		AdminHelpCmds[cmdIdx][ahName],
+		AdminHelpCmds[cmdIdx][ahSyntax],
+		AdminHelpCmds[cmdIdx][ahDesc],
+		AdminHelpCmds[cmdIdx][ahLevel]
+	);
+	
+	Dialog_Show(playerid, AdminHelpDetail, DIALOG_STYLE_MSGBOX, "Command Details", info, "Back", "");
+	return 1;
+}
+
+Dialog:AdminHelpDetail(playerid, response, listitem, inputtext[])
+{
+	new lastListitem = GetPVarInt(playerid, "AhelpLastListitem");
+	new titleText[64];
+	
+	new targetVal = -1;
+	new bool:isCategory = false;
+	
+	if(lastListitem >= 1 && lastListitem <= 5) // Level
+	{
+		if(lastListitem == 1) { targetVal = 1; format(titleText, 64, "Level 1: Junior Admin / Helper / Tester"); }
+		else if(lastListitem == 2) { targetVal = 2; format(titleText, 64, "Level 2: General Admin"); }
+		else if(lastListitem == 3) { targetVal = 3; format(titleText, 64, "Level 3: Senior Admin"); }
+		else if(lastListitem == 4) { targetVal = 4; format(titleText, 64, "Level 4: Head Admin / Manager"); }
+		else if(lastListitem == 5) { targetVal = 1337; format(titleText, 64, "Level 1337: Developer / Owner"); }
+		isCategory = false;
+	}
+	else if(lastListitem >= 6) // Category
+	{
+		targetVal = lastListitem - 5; // 1: Veh, 2: Prop, 3: Faction, 4: Player, 5: Teleport
+		if(lastListitem == 6) format(titleText, 64, "Category: Vehicle Management");
+		else if(lastListitem == 7) format(titleText, 64, "Category: Property & Business");
+		else if(lastListitem == 8) format(titleText, 64, "Category: Faction & Gate Management");
+		else if(lastListitem == 9) format(titleText, 64, "Category: Player Management & Punishment");
+		else if(lastListitem == 10) format(titleText, 64, "Category: Teleport & Navigation");
+		isCategory = true;
+	}
+	
+	new cmdCount = 0;
+	gstr[0] = EOS;
+	format(gstr, sizeof(gstr), "Command\tDescription\n");
+	
+	new key[32];
+	for(new i = 0; i < sizeof(AdminHelpCmds); ++i)
+	{
+		new bool:match = false;
+		if(isCategory)
+		{
+			if(AdminHelpCmds[i][ahCategory] == targetVal) match = true;
+		}
+		else
+		{
+			if(AdminHelpCmds[i][ahLevel] == targetVal) match = true;
+		}
+		
+		if(match)
+		{
+			format(gstr, sizeof(gstr), "%s%s\t%s\n", gstr, AdminHelpCmds[i][ahName], AdminHelpCmds[i][ahDesc]);
+			format(key, sizeof(key), "AhelpCmd_%d", cmdCount);
+			SetPVarInt(playerid, key, i);
+			cmdCount++;
+		}
+	}
+	
+	new title[64];
+	format(title, sizeof(title), "Admin Help: %s", titleText);
+	Dialog_Show(playerid, AdminHelpList, DIALOG_STYLE_TABLIST_HEADERS, title, gstr, "Details", "Back");
 	return 1;
 }
