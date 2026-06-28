@@ -1,5 +1,5 @@
 #define SERVER_SITE "https://ucp.ljrp.my.id"
-#define SERVER_MODE "LS:RP 6.6.6"
+#define SERVER_MODE "LJ:RP 0.5.1"
 
 #if IS_LOCAL_HOST == true
 	#define SERVER_NAME "[0.3-DL] Los Jawa Roleplay | DOcker!"

@@ -2090,6 +2090,7 @@ forward RefreshTutorial(playerid);
 #include "modules/Anticheat.pwn"
 #include "modules/Interface.pwn"
 #include "modules/Prison.pwn"
+new LastEngineToggle[MAX_PLAYERS];
 #include "modules/PlayerCommands.pwn"
 #include "modules/AdminCommands.pwn"
 #include "modules/TesterCommands.pwn"
@@ -2199,6 +2200,7 @@ public OnGameModeExit()
 
 public OnPlayerConnect(playerid)
 {
+	LastEngineToggle[playerid] = 0;
 	HasSeenPassengerMessage[playerid] = false;
 
 	FinishedDownloadingModels{playerid} = false;
@@ -7103,7 +7105,7 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
 		{
 			if(!GetEngineStatus(vehicleid))
 			{
-				SendClientMessage(playerid, COLOR_GREEN, "The engine is off. (/engine)");
+				SendClientMessage(playerid, COLOR_GREEN, "The engine is off. (/engine or Left Ctrl)");
 			}
 		}
 
@@ -8911,6 +8913,29 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 			}
 		}
     }
+
+	if(newkeys & KEY_SECONDARY_ATTACK) // Press F / Enter to Enter/Exit Interior
+	{
+		if(GetPlayerState(playerid) == PLAYER_STATE_ONFOOT)
+		{
+			new cmdText[8];
+			cmdText = "/enter";
+			Command_ReProcess(playerid, cmdText, 0);
+
+			cmdText = "/exit";
+			Command_ReProcess(playerid, cmdText, 0);
+		}
+	}
+
+	if(newkeys & KEY_ACTION) // Press Left Alt (KEY_ACTION in vehicle) to turn engine on/off
+	{
+		if(GetPlayerState(playerid) == PLAYER_STATE_DRIVER)
+		{
+			new cmdText[10];
+			cmdText = "/engine";
+			Command_ReProcess(playerid, cmdText, 0);
+		}
+	}
 
 	// Tutorial auto-advances via ptask Players; no manual key input needed.
 	return true;

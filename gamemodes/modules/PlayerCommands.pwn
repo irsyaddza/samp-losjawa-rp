@@ -3798,6 +3798,22 @@ CMD:buy(playerid, params[])
 	        ShowShopList(playerid, true);
 	        return true;
 		}
+		else if(InBusiness[playerid] == id && BusinessData[id][bType] == 7) // Clothing Shop
+		{
+			if(BusinessData[id][bLocked] == 1)
+				return GameTextForPlayer(playerid, "~r~Closed", 5000, 1);
+
+			if(BusinessData[id][bProducts] == 0)
+				return GameTextForPlayer(playerid, "~r~Out Of Stock", 5000, 1);
+
+			new category = BusinessData[id][bsubType];
+			if(category != BUYZIP && category != BUYSPORTS && category != BUYMUSIC)
+			{
+				category = BUYZIP; // Default to ZIP
+			}
+			cl_buying[playerid] = category;
+		}
+		else return SendErrorMessage(playerid, "You can't purchase anything here.");
     }
     else return SendErrorMessage(playerid, "You can't purchase anything here.");
 
@@ -12499,6 +12515,9 @@ CMD:engine(playerid, params[])
 	if(!IsPlayerInAnyVehicle(playerid) || GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
 	    return SendServerMessage(playerid, "You need to be in the driver seat of a vehicle.");
 
+	if(gettime() - LastEngineToggle[playerid] < 10)
+		return SendErrorMessage(playerid, "Please wait 10 seconds before toggling the engine again.");
+
 	new vehicleid = GetPlayerVehicleID(playerid), id = -1, Float:vhealth, bool:canstart;
 
 	if(!IsEngineVehicle(vehicleid))
@@ -12534,6 +12553,7 @@ CMD:engine(playerid, params[])
 
 					format(string, sizeof(string), "* %s starts hotwiring the vehicle.", ReturnName(playerid, 0));
 					SetPlayerChatBubble(playerid, string, COLOR_PURPLE, 20.0, 6000);						
+					LastEngineToggle[playerid] = gettime();
 				}
 			}
 			else
@@ -12575,6 +12595,7 @@ CMD:engine(playerid, params[])
 					SetEngineStatus(vehicleid, true);
 					GameTextForPlayer(playerid, "~g~Engine On", 2000, 4);
 					SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s started the engine of the %s.", ReturnName(playerid, 0), ReturnVehicleName(vehicleid));
+					LastEngineToggle[playerid] = gettime();
 				}
 				else if(vhealth < 390)
 				{
@@ -12620,6 +12641,7 @@ CMD:engine(playerid, params[])
 
 					GameTextForPlayer(playerid, "~g~Engine On", 2000, 4);
 					SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s started the engine of the %s.", ReturnName(playerid, 0), ReturnVehicleName(vehicleid));
+					LastEngineToggle[playerid] = gettime();
 				}
 			}
 			case true:
@@ -12629,6 +12651,7 @@ CMD:engine(playerid, params[])
 				GameTextForPlayer(playerid, "~r~Engine Off", 2000, 4);
 				SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s stopped the engine of the %s.", ReturnName(playerid, 0), ReturnVehicleName(vehicleid));
                 StopCarBoomBox(vehicleid);
+				LastEngineToggle[playerid] = gettime();
 			}
 		}
 	}
