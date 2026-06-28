@@ -2897,7 +2897,7 @@ public e_COMMAND_ERRORS:OnPlayerCommandReceived(playerid, cmdtext[], e_COMMAND_E
 	if(success != COMMAND_OK)
 	{
 	    SendClientMessage(playerid, COLOR_WHITE, "{ADC3E7}Error: {FFFFFF}Sorry, that command does not exist. {ADC3E7}/help{FFFFFF} or {ADC3E7}/helpme{FFFFFF} if you're in need of assistance.");
-	    return COMMAND_OK;
+	    return success;
 	}
 
     if(PlayerData[playerid][pID] == -1)
@@ -2911,6 +2911,12 @@ public e_COMMAND_ERRORS:OnPlayerCommandReceived(playerid, cmdtext[], e_COMMAND_E
 		return COMMAND_DENIED;		
 	}
 
+	return COMMAND_OK;
+}
+
+// ponytail: Always return COMMAND_OK to suppress SA-MP's default "SERVER: Unknown Command" message.
+public e_COMMAND_ERRORS:OnPlayerCommandPerformed(playerid, cmdtext[], e_COMMAND_ERRORS:success)
+{
 	return COMMAND_OK;
 }
 
