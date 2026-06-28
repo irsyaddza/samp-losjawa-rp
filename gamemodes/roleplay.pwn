@@ -17263,6 +17263,8 @@ FindFreeATM()
 	return -1;
 }
 
+new GPS_BizzList[MAX_PLAYERS][MAX_BUSINESS];
+
 CMD:gps(playerid, params[])
 {
 	Dialog_Show(playerid, SA_MAPS, DIALOG_STYLE_LIST, "GPS - Main Menu", "Find Street\nFind Property\nFind Nearest Gas Station\nFind Nearest 24/7\nFind Nearest Bar/Club\nFind Nearest Fast Food\nAll Businesses\nPoints of Interest", "Next", "Exit");
@@ -17375,7 +17377,16 @@ Dialog:SA_MAPS(playerid, response, listitem, inputtext[])
 	        }
 	        case 6: // All Businesses
 	        {
-	        
+				gstr[0] = EOS;
+				new count = 0;
+				foreach (new i : Business)
+				{
+					GPS_BizzList[playerid][count] = i;
+					format(gstr, sizeof(gstr), "%s%s (ID: %d)\n", gstr, ClearGameTextColor(BusinessData[i][bInfo]), i);
+					count++;
+				}
+				if(!count) return SendErrorMessage(playerid, "No businesses found in the city.");
+				Dialog_Show(playerid, GPS_AllBizz, DIALOG_STYLE_LIST, "GPS - All Businesses", gstr, "Go", "Back");
 	        }
 			case 7: // Points of Interest
 			{
@@ -17400,6 +17411,17 @@ Dialog:POIS(playerid, response, listitem, inputtext[])
 	if(listitem < 0 || listitem >= sizeof(PointsOfInterest)) return false;
 	
 	SetPath(playerid, PointsOfInterest[listitem][pointArea][0], PointsOfInterest[listitem][pointArea][1], PointsOfInterest[listitem][pointArea][2], PointsOfInterest[listitem][poiName]);
+	return true;
+}
+
+Dialog:GPS_AllBizz(playerid, response, listitem, inputtext[])
+{
+	if(!response) return Dialog_Show(playerid, SA_MAPS, DIALOG_STYLE_LIST, "GPS - Main Menu", "Find Street\nFind Property\nFind Nearest Gas Station\nFind Nearest 24/7\nFind Nearest Bar/Club\nFind Nearest Fast Food\nAll Businesses\nPoints of Interest", "Next", "Exit");
+	
+	new bizid = GPS_BizzList[playerid][listitem];
+	if(!Iter_Contains(Business, bizid)) return SendErrorMessage(playerid, "Business no longer exists.");
+
+	SetPath(playerid, BusinessData[bizid][bEntranceX], BusinessData[bizid][bEntranceY], BusinessData[bizid][bEntranceZ], ClearGameTextColor(BusinessData[bizid][bInfo]));
 	return true;
 }
 
