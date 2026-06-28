@@ -27,8 +27,6 @@
 #include <timestamptodate>
 #include <evi>
 #include <sort>
-#include <discord-connector>
-#include <discord-cmd>
 
 #define DIALOG_STATS 15000  
 
@@ -41,9 +39,7 @@
 #define DIALOG_MISC_COMMANDS 9506
 
 
-#define DCMD_PREFIX '!'
-new DCC_Channel: createacc;
-new DCC_Channel: secureChannel;
+// Discord Connector & CMD features removed
 
 #define MAX_COMMANDS 800
 #define YSI_NO_HEAP_MALLOC
@@ -2104,9 +2100,6 @@ forward RefreshTutorial(playerid);
 
 public OnGameModeInit()
 {
-	createacc = DCC_FindChannelById("1322504649768702034");
-	secureChannel = DCC_FindChannelById("1322504649768702034");
-
 	mysql_log(ERROR);
 
 	SQL_Connect();
@@ -17640,142 +17633,7 @@ string_replace(const search[], const replace[], const source[])
 	return newnick;
 }
 
-/*FUNX::DCC_OnChannelMessage(DCC_Channel:channel, const author[], const message[])
-{
-	new channel_name[32];
-	DCC_GetChannelName(channel, channel_name);
-
-	new str[145];
-	format(str, sizeof str, "[Discord/%s] %s: %s", channel_name, author, message);
-	SendClientMessageToAll(-1, str);
-	return 1;
-}
-
-public DCC_OnMessageCreate(DCC_Message:message)
-{
-	if(systemVariables[DiscordStatus])
-	    return true;
-
-    new DCC_Channel:channel;
-
-    DCC_GetMessageChannel(message, channel);
-
-    if(channel != botCommandChannel)
-        return true;
-
-    new string[256];
-    DCC_GetMessageContent(message, string);
-
-    if(!strcmp(string, "&players", true))
-	{
-	    DCC_SendChannelMessage(botCommandChannel, "Players online:");
-
-		foreach (new i : Player)
-		{
-		    format(sgstr, sizeof(sgstr), "(ID %i) %s | Level: %i", i, ReturnName(i), PlayerData[i][pLevel]);
-
-            DCC_SendChannelMessage(botCommandChannel, sgstr);
-		}
-
-		return true;
-    }
-    else if(!strcmp(string, "&admins", true))
-	{
-	    DCC_SendChannelMessage(botCommandChannel, "Admins online:");
-
-		foreach (new i : Player)
-		{
-		    if(PlayerData[i][pAdmin] >= 1)
-		    {
-		        format(sgstr, sizeof(sgstr), "(Level: %d) %s (ID: %d) Adminduty: %s", PlayerData[i][pAdmin], AccountName(i), i, AdminDuty{i} ? ("Yes") : ("No"));
-
-            	DCC_SendChannelMessage(botCommandChannel, sgstr);
-			}
-		}
-
-		return true;
-    }
-	return true;
-}
-
-public DCC_OnMessageCreate(DCC_Message:message)
-{
-    new DCC_Channel:channel;
-
-    DCC_GetMessageChannel(message, channel);
-
-    // This if condition checks that if the channel is not the command channel then it will do nothing and return 1 //
-    if(channel != commandChannel)
-        return 1;
-
-    // But before that we need to save who actually sent the message //
-    new DCC_User:author;
-    DCC_GetMessageAuthor(message, author);
-
-    // We need to check if the author is a bot or not //
-
-    new bool:isBot;
-    DCC_IsUserBot(author, isBot);
-
-    // If the author is a bot then nothing will happen //
-    if(isBot){
-        return 1;
-    }
-
-    // Now we will fetch if the author has the required role or not! //
-    new bool:hasRole;
-    DCC_HasGuildMemberRole(guildName, author, adminRole, hasRole);
-
-    // If the author does not have the role then don't do anything //
-    if(!hasRole){
-        DCC_SendChannelMessage(commandChannel, "You do not have the role required");
-        return 1;
-    }
-
-    // Now to actually make a command after all the checks are done //
-    new str[256];
-    new command[32], params[128];
-
-    DCC_GetMessageContent(message, str); // Storing the entire message of the author in the variable str //
-
-    // Now seperating the command and the params //
-
-    sscanf(str, "s[32]s[128]", command, params);
-
-    // Now we will check the command //
-
-    if(!strcmp(command, "&chat", true))
-	{
-        new playerID, _message[128];
-
-        sscanf(params, "us[128]", playerID, _message); // Seperating the playerID and the message //
-
-        if(!IsPlayerConnected(playerID))
-            return DCC_SendChannelMessage(channel, "The player is not online!");
-
-        SendClientMessage(playerID, -1, _message);
-    }
-
-    // DONE !!! //
-
-    return 1;
-}
-
-VehicleBoloMatch(playerid, plate[])
-{
-	if(ALPR_Hit{playerid}) return true;
-
-    TextDrawShowForPlayer(playerid, ALPR_UI[0]);
-	TextDrawShowForPlayer(playerid, ALPR_UI[1]);
-
-	PlayerTextDrawSetString(playerid, ALPR_Plate[playerid], plate);
-	PlayerTextDrawShow(playerid, ALPR_Plate[playerid]);
-
-	ALPR_Hit{playerid} = true;
-
-	SetTimerEx("HideALPR", 8000, false, "d", playerid);
-	return true;
-}*/
+// Commented DCC blocks removed
 
 FUNX::HideALPR(playerid)
 {
