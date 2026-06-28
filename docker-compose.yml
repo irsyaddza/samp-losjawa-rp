@@ -55,6 +55,29 @@ services:
     networks:
       - samp_net
 
+  # ─────────────────────────────────────────────
+  #  Next.js Web Portal & UCP
+  # ─────────────────────────────────────────────
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: ljrp-web
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: mysql
+      DB_USER: ${MYSQL_USER:-samp}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-samppassword}
+      DB_DATABASE: ${MYSQL_DATABASE:-jawa}
+      JWT_SECRET: ${JWT_SECRET:-losjawaroleplaysecretkey123}
+    networks:
+      - samp_net
+
 volumes:
   mysql_data:
     driver: local
@@ -62,3 +85,4 @@ volumes:
 networks:
   samp_net:
     driver: bridge
+
