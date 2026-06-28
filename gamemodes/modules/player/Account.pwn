@@ -528,8 +528,11 @@ public OnQueryFinished(extraid, threadid)
 		            PlayerData[extraid][pLevel] = 1;
 		            PlayerData[extraid][pSHealth] = 50.0;
 		            PlayerData[extraid][pHealth] = 150.0;
+		            PlayerData[extraid][pTutorialStep] = 1;
 
-		            initiateTutorial(extraid);
+					SetSpawnInfo(extraid, NO_TEAM, PlayerData[extraid][pModel], PlayerData[extraid][pPos][0], PlayerData[extraid][pPos][1], PlayerData[extraid][pPos][2], PlayerData[extraid][pPos][3], 0, 0, 0, 0, 0, 0);
+					TogglePlayerSpectating(extraid, false);
+					TogglePlayerControllable(extraid, false);
 
 					UpdateLastLoginData(extraid);
 			        return true;

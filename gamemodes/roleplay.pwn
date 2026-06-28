@@ -1201,7 +1201,7 @@ new nearProperty_var[MAX_PLAYERS];
 new nearApartment_var[MAX_PLAYERS];
 new PropertyViewPage[MAX_PLAYERS];
 new PropertyViewPageIndexes[30][2];
-new TutorialDelay[MAX_PLAYERS];
+new TutorialDelay[MAX_PLAYERS];   // countdown seconds remaining for tutorial auto-advance
 
 new
 	pToAccept[MAX_PLAYERS],
@@ -2088,6 +2088,7 @@ new Iterator:sv_activevehicles<MAX_VEHICLES>;
 #include "modules/MobileDataComputer.pwn"
 #include "modules/VehicleParts.pwn"
 #include "modules/timers/Server.pwn"
+forward RefreshTutorial(playerid);
 #include "modules/timers/Player.pwn"
 #include "modules/timers/Vehicle.pwn"
 #include "modules/Anticheat.pwn"
@@ -5817,6 +5818,11 @@ public OnPlayerSpawn(playerid)
 		SetPlayerWeather(playerid, globalWeather);
 		SetPlayerSpawn(playerid);
 
+		if(PlayerData[playerid][pTutorialStep] == 1)
+		{
+			initiateTutorial(playerid);
+		}
+
 		if(FinishedTutorial{playerid})
 		{
 		    FinishedTutorial{playerid} = false;
@@ -5934,7 +5940,10 @@ SetPlayerSpawn(playerid)
 				SetPlayerVirtualWorld(playerid, PlayerData[playerid][pWorld]);
 			}
 
-			SetCameraBehindPlayer(playerid);
+			if(!PlayerData[playerid][pTutorialStep])
+			{
+				SetCameraBehindPlayer(playerid);
+			}
 
 			if(PlayerData[playerid][pTimeout])
 			{
@@ -8910,34 +8919,7 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 		}
     }
 
-	if(PlayerData[playerid][pTutorialStep])
-	{
-		if((gettime() - TutorialDelay[playerid]) > 2)
-		{
-			if(Released(KEY_SPRINT)) // Forward
-			{
-				PlayerData[playerid][pTutorialStep]++;
-
-				ClearChatBox(playerid);
-
-				RefreshTutorial(playerid);
-			}
-			else if(Released(KEY_JUMP)) // Backward
-			{
-				if(PlayerData[playerid][pTutorialStep] == 1)
-				{
-					PlayerPlaySound(playerid, 1055, 0.0, 0.0, 0.0);
-					return true;
-				}
-
-				PlayerData[playerid][pTutorialStep]--;
-
-				ClearChatBox(playerid);
-
-				RefreshTutorial(playerid);
-			}
-		}
-    }
+	// Tutorial auto-advances via ptask Players; no manual key input needed.
 	return true;
 }
 
@@ -8945,7 +8927,11 @@ RefreshTutorial(playerid)
 {
     if(PlayerData[playerid][pTutorialStep])
     {
-		TutorialDelay[playerid] = gettime();
+		TutorialDelay[playerid] = 5; // countdown: 5 seconds per step
+
+		new szTimer[24];
+		format(szTimer, sizeof(szTimer), "~w~Tutorial~n~~y~%d~n~~w~seconds", TutorialDelay[playerid]);
+		GameTextForPlayer(playerid, szTimer, 6000, 1);
 
     	switch(PlayerData[playerid][pTutorialStep])
         {
@@ -14054,6 +14040,7 @@ initiateTutorial(playerid)
 
 	SetPlayerCameraPos(playerid, 1541.1512, -2287.1345, 91.9661);
 	SetPlayerCameraLookAt(playerid, 1623.3582, -2288.0413, 77.9914);
+	SetPlayerVirtualWorld(playerid, playerid + 1000);
 	return true;
 }
 

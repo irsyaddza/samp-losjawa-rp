@@ -22,6 +22,26 @@ ptask Players[1000](i)
 
 	if(PlayerData[i][pID] == -1) return true;
 
+	if(PlayerData[i][pTutorialStep])
+	{
+		if(TutorialDelay[i] > 0)
+		{
+			TutorialDelay[i]--;
+			if(TutorialDelay[i] <= 0)
+			{
+				PlayerData[i][pTutorialStep]++;
+				ClearChatBox(i);
+				RefreshTutorial(i);
+			}
+			else
+			{
+				new szTimer[32];
+				format(szTimer, sizeof(szTimer), "~w~Tutorial~n~~y~%d~n~~w~seconds", TutorialDelay[i]);
+				GameTextForPlayer(i, szTimer, 1200, 1);
+			}
+		}
+	}
+
 	new playerState = GetPlayerState(i), vehicleid = GetPlayerVehicleID(i), timestamp = gettime();
 
 	PlayerData[i][pPlayingSeconds]++;
