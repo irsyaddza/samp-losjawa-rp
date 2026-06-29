@@ -27,6 +27,7 @@
 #include <timestamptodate>
 #include <evi>
 #include <sort>
+#include <samp_bcrypt>
 
 #define DIALOG_STATS 15000  
 

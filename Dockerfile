@@ -49,6 +49,7 @@ COPY plugins/mysql.so               ./plugins/mysql.so
 COPY plugins/Whirlpool.so           ./plugins/Whirlpool.so
 COPY plugins/pawnregex.so           ./plugins/pawnregex.so
 COPY plugins/discord-connector.so   ./plugins/discord-connector.so
+COPY plugins/samp_bcrypt.so         ./plugins/samp_bcrypt.so
 COPY plugins/pawnregex.cfg          ./plugins/pawnregex.cfg
 
 COPY log-core.so                    ./log-core.so

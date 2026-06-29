@@ -42,6 +42,76 @@ UpdateLastLoginData(extraid)
 	return mysql_tquery(dbCon, query);
 }
 
+HandleFailedLogin(extraid)
+{
+	LoginAttempts[extraid]--;
+
+	if(LoginAttempts[extraid] == 0)
+	{
+		SendClientMessage(extraid, COLOR_LIGHTRED, "[SERVER]: You were kicked for bad password attempts.");
+		return KickEx(extraid);
+	}
+
+	new str[256];
+	format(str, sizeof(str), "Hello,\n\nPlease enter your password below to access character selection.\n\nIf you are not currently registered with LosJawa-RP, you can create\n\nyour account at losjawa-rp.net.\n\n\n{FF0000}Attempts remaining: %d", LoginAttempts[extraid]);
+	return Dialog_Show(extraid, LoginScreen, DIALOG_STYLE_PASSWORD, "Welcome to Los Jawa Roleplay", str, "Submit", "Exit");
+}
+
+HandleSuccessfulLogin(extraid)
+{
+	new query[256];
+	if(isnull(AccountData[extraid][aSecretWord]))
+	{
+ 		Dialog_Show(extraid, AddSecretWord, DIALOG_STYLE_PASSWORD,
+			"Welcome to Los Jawa Roleplay",
+			"{FFFFFF}SECURITY PRECAUTION:\n\nWe have introduced a SECRET CONFIRMATION CODE, this is basically a secret word that you will be presented with if any connection conditions changes.\n\n\
+			You have not yet filled this out, so please take your time and fill in a secret word you {FF0000}will have to remember.\n\n{FFFFFF}IT IS ADVICED THAT THIS IS NOT YOUR PASSWORD!",
+			"Enter", "Cancel"
+		);
+	}
+	else
+	{
+		if(strcmp(LastSerial[extraid], PlayerSerial[extraid], false) != 0)
+		{
+	 		Dialog_Show(extraid, SecretWord, DIALOG_STYLE_PASSWORD, "Welcome to Los Jawa Roleplay", "{FF0000}POSSIBLE SECURITY BREACH\n\n{FFFFFF}The server has flagged you as possibly not being this account's owner, please write the secret word of this account in the box below to confirm it is yours.", "Enter", "Cancel");
+		}
+		else
+		{
+			format(query, sizeof(query), "UPDATE `accounts` SET `Online` = 1, `LoginDate` = '%d', `LastIP` = '%s', `Serial` = '%s' WHERE `ID` = '%d' LIMIT 1", gettime(), PlayerData[extraid][pIP], PlayerSerial[extraid], AccountData[extraid][aUserid]), mysql_pquery(dbCon, query);
+
+            SQL_LoadCharacters(extraid);
+		}
+	}
+	return 1;
+}
+
+forward OnBcryptVerifyLogin(extraid, bool:success);
+public OnBcryptVerifyLogin(extraid, bool:success)
+{
+	if(success)
+	{
+		HandleSuccessfulLogin(extraid);
+	}
+	else
+	{
+		HandleFailedLogin(extraid);
+	}
+	return 1;
+}
+
+forward OnBcryptPasswordUpgrade(extraid);
+public OnBcryptPasswordUpgrade(extraid)
+{
+	new hash[BCRYPT_HASH_LENGTH], query[256];
+	bcrypt_get_hash(hash);
+
+	mysql_format(dbCon, query, sizeof(query), "UPDATE `accounts` SET `Password` = '%e' WHERE `ID` = %d LIMIT 1", hash, AccountData[extraid][aUserid]);
+	mysql_pquery(dbCon, query);
+
+	printf("[Bcrypt Upgrade]: Successfully migrated password hash to Bcrypt for account %s (ID: %d)", AccountData[extraid][aUsername], AccountData[extraid][aUserid]);
+	return 1;
+}
+
 forward OnQueryFinished(extraid, threadid);
 public OnQueryFinished(extraid, threadid)
 {
@@ -133,85 +203,45 @@ public OnQueryFinished(extraid, threadid)
 		        Dialog_Show(extraid, LoginScreen, DIALOG_STYLE_PASSWORD, "Welcome to Los Jawa Roleplay", "Hello,\n\nPlease enter your password below to access character selection.\n\nIf you are not currently registered with Losjawa-RP, you can create\n\nyour account at losjawa-rp.net.", "Submit", "Exit");
 			}
 		}
-     	case THREAD_LOGIN:
+      	case THREAD_LOGIN:
    		{
-    	    cache_get_row_count(rows);
+     	    cache_get_row_count(rows);
+ 
+     	    if(!rows)
+     	    {
+				return HandleFailedLogin(extraid);
+ 			}
+ 			else
+ 			{
+ 			    new stored_hash[129];
+ 			    cache_get_value_name(0, "Password", stored_hash, sizeof(stored_hash));
 
-    	    if(!rows)
-    	    {
-				LoginAttempts[extraid]--;
+ 			    new entered_pass[129];
+ 			    GetPVarString(extraid, "temp_login_pass", entered_pass, sizeof(entered_pass));
+ 			    DeletePVar(extraid, "temp_login_pass");
 
-				if(LoginAttempts[extraid] == 0)
-				{
-					SendClientMessage(extraid, COLOR_LIGHTRED, "[SERVER]: You were kicked for bad password attempts.");
-					return KickEx(extraid);
-				}
-
-				new
-				    str[256]
-				;
-
-				format(str, sizeof(str), "Hello,\n\nPlease enter your password below to access character selection.\n\nIf you are not currently registered with LosJawa-RP, you can create\n\nyour account at losjawa-rp.net.\n\n\n{FF0000}Attempts remaining: %d", LoginAttempts[extraid]);
-				return Dialog_Show(extraid, LoginScreen, DIALOG_STYLE_PASSWORD, "Welcome to Los Jawa Roleplay", str, "Submit", "Exit");
-			}
-			else
-			{
-                /*if(LastLogin[extraid] != 0 && (gettime() - LastLogin[extraid]) >= 1209600) // 14 days or 2 weeks
-                {
-					new email[64], str[64], end, len;
-
-					format(email, 64, "%.1s", AccountData[extraid][aEmail]);
-
-					end = strfind(AccountData[extraid][aEmail], "@", true) - 1;
-
-					if(end == -1) // Invalid Email Address
-					{
-						SendClientMessage(extraid, COLOR_YELLOW, "It seems you have specified an invalid email address for your account.");
-						SendClientMessage(extraid, COLOR_YELLOW, "Update it using the UCP (legacy-rp.net) and then try log back in.");
-						return KickEx(extraid);
-					}
-
-					strmid(str, AccountData[extraid][aEmail], 1, end);
-
-					len = strlen(str);
-
-					for(new i = 0; i < len; ++i) strcat(email, "*");
-
-					format(email, 64, "%s%s", email, AccountData[extraid][aEmail][end]);
-
-					SendClientMessage(extraid, COLOR_YELLOW, "Two Factor Authentication");
-					SendClientMessage(extraid, COLOR_YELLOW, "  You haven't played in a while! For security measures, we need to verify your account before you can play.");
-					SendClientMessageEx(extraid, COLOR_YELLOW, "  An email was sent to %s with instructions on how to verify your account.", email);
-					SendClientMessage(extraid, COLOR_YELLOW, "  This should take up to two minutes. Make sure to check your spam folder.");
-
-					//format(query,sizeof(query),"ip=%s&time=%d&id=%d&username=%s", PlayerData[extraid][pIP], gettime(), PlayerData[extraid][pID], AccountData[extraid][aUsername]);
-				    //HTTP(extraid, HTTP_POST, "localhost/verify_email.php", query, "HttpVerifyRequest");
-				}*/
-
-				if(isnull(AccountData[extraid][aSecretWord]))
-				{
-			 		Dialog_Show(extraid, AddSecretWord, DIALOG_STYLE_PASSWORD,
-						"Welcome to Los Jawa Roleplay",
-						"{FFFFFF}SECURITY PRECAUTION:\n\nWe have introduced a SECRET CONFIRMATION CODE, this is basically a secret word that you will be presented with if any connection conditions changes.\n\n\
-						You have not yet filled this out, so please take your time and fill in a secret word you {FF0000}will have to remember.\n\n{FFFFFF}IT IS ADVICED THAT THIS IS NOT YOUR PASSWORD!",
-						"Enter", "Cancel"
-					);
-				}
-				else
-				{
-					if(strcmp(LastSerial[extraid], PlayerSerial[extraid], false) != 0)
-					{
-				 		Dialog_Show(extraid, SecretWord, DIALOG_STYLE_PASSWORD, "Welcome to Los Jawa Roleplay", "{FF0000}POSSIBLE SECURITY BREACH\n\n{FFFFFF}The server has flagged you as possibly not being this account's owner, please write the secret word of this account in the box below to confirm it is yours.", "Enter", "Cancel");
-					}
-					else
-					{
-						format(query, sizeof(query), "UPDATE `accounts` SET `Online` = 1, `LoginDate` = '%d', `LastIP` = '%s', `Serial` = '%s' WHERE `ID` = '%d' LIMIT 1", gettime(), PlayerData[extraid][pIP], PlayerSerial[extraid], AccountData[extraid][aUserid]), mysql_pquery(dbCon, query);
-
-	                    SQL_LoadCharacters(extraid);
-					}
-				}
-			}
-		}
+ 			    if(strlen(stored_hash) == 128)
+ 			    {
+ 			        new wp_hash_buffer[129];
+ 			        WP_Hash(wp_hash_buffer, sizeof(wp_hash_buffer), entered_pass);
+ 			        
+ 			        if(!strcmp(stored_hash, wp_hash_buffer, false))
+ 			        {
+ 			            bcrypt_hash(extraid, "OnBcryptPasswordUpgrade", entered_pass, 12);
+ 			            return HandleSuccessfulLogin(extraid);
+ 			        }
+ 			        else
+ 			        {
+ 			            return HandleFailedLogin(extraid);
+ 			        }
+ 			    }
+ 			    else
+ 			    {
+ 			        bcrypt_verify(extraid, "OnBcryptVerifyLogin", entered_pass, stored_hash);
+ 			        return 1;
+ 			    }
+ 			}
+ 		}
 		case THREAD_LOAD_CHARACTER:
 		{
 		    //, active;
