@@ -5682,8 +5682,12 @@ public OnPlayerRequestDownload(playerid, type, crc)
 
     if(foundfilename)
     {
-        format(fullurl, 256, "%s/%s", modelsURL, dlfilename);
-        RedirectDownload(playerid, fullurl);
+        if(modelsURL[0] != '\0')
+        {
+            format(fullurl, 256, "%s/%s", modelsURL, dlfilename);
+            RedirectDownload(playerid, fullurl);
+        }
+        return true;
     }
 
     return false;

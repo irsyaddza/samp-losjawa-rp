@@ -45,8 +45,8 @@ services:
       - "7777:7777/udp"
       - "7777:7777/tcp"
     volumes:
-      - ./logs:/samp/logs
-      - ./scriptfiles:/samp/scriptfiles
+      - samp_logs:/samp/logs
+      - samp_scriptfiles:/samp/scriptfiles
     environment:
       MYSQL_HOST: mysql
       MYSQL_USER: ${MYSQL_USER:-samp}
@@ -80,6 +80,10 @@ services:
 
 volumes:
   mysql_data:
+    driver: local
+  samp_logs:
+    driver: local
+  samp_scriptfiles:
     driver: local
 
 networks:
