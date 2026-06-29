@@ -8947,10 +8947,6 @@ RefreshTutorial(playerid)
     {
 		TutorialDelay[playerid] = 5; // countdown: 5 seconds per step
 
-		new szTimer[24];
-		format(szTimer, sizeof(szTimer), "~w~Tutorial~n~~y~%d~n~~w~seconds", TutorialDelay[playerid]);
-		GameTextForPlayer(playerid, szTimer, 6000, 1);
-
     	switch(PlayerData[playerid][pTutorialStep])
         {
             case 1:
@@ -9092,7 +9088,9 @@ RefreshTutorial(playerid)
 				SetSpawnInfo(playerid, NO_TEAM, PlayerData[playerid][pModel], PlayerData[playerid][pPos][0], PlayerData[playerid][pPos][1], PlayerData[playerid][pPos][2], PlayerData[playerid][pPos][3], 0, 0, 0, 0, 0, 0);
 
 				TogglePlayerSpectating(playerid, false);
-				TogglePlayerControllable(playerid, false);
+				SetCameraBehindPlayer(playerid);
+				SetPlayerVirtualWorld(playerid, 0);
+				TogglePlayerControllable(playerid, true);
 
 				SendClientMessageEx(playerid, COLOR_LIGHTRED, "Welcome to Los Jawa Roleplay, %s.", ReturnName(playerid, 0));
 			}
@@ -14050,15 +14048,9 @@ initiateTutorial(playerid)
     ClearChatBox(playerid);
     
 	PlayerData[playerid][pTutorialStep] = 1;
-
-	SendClientMessage(playerid, COLOR_WHITE, ">> Welcome to Los Jawa Roleplay!");
-	SendClientMessage(playerid, COLOR_GRAD2, "This video tutorial will guide you for your first steps on LosJawa-RP.");
-	SendClientMessage(playerid, COLOR_GRAD2, "The tutorial will go through on its own.");
-	SendClientMessage(playerid, COLOR_GRAD2, "We highly recommend you to take your time reading the text in the chat box.");	
-
-	SetPlayerCameraPos(playerid, 1541.1512, -2287.1345, 91.9661);
-	SetPlayerCameraLookAt(playerid, 1623.3582, -2288.0413, 77.9914);
 	SetPlayerVirtualWorld(playerid, playerid + 1000);
+
+	RefreshTutorial(playerid);
 	return true;
 }
 

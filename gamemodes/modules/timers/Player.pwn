@@ -33,12 +33,7 @@ ptask Players[1000](i)
 				ClearChatBox(i);
 				RefreshTutorial(i);
 			}
-			else
-			{
-				new szTimer[32];
-				format(szTimer, sizeof(szTimer), "~w~Tutorial~n~~y~%d~n~~w~seconds", TutorialDelay[i]);
-				GameTextForPlayer(i, szTimer, 1200, 1);
-			}
+			// Silent auto-advance
 		}
 	}
 
