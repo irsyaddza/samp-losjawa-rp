@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { whirlpool } from '@/lib/hash';
 import { setSessionCookie } from '@/lib/auth';
+import bcrypt from 'bcryptjs';
 import { RowDataPacket } from 'mysql2';
 
 export async function POST(request: Request) {
@@ -29,10 +30,31 @@ export async function POST(request: Request) {
     }
 
     const account = rows[0];
-    const hashedPassword = whirlpool(password);
+    let isPasswordValid = false;
+    const isBcrypt = account.Password.startsWith('$2a$') || account.Password.startsWith('$2y$') || account.Password.startsWith('$2b$');
 
-    // Compare Whirlpool hashes
-    if (account.Password.toUpperCase() !== hashedPassword) {
+    if (isBcrypt) {
+      isPasswordValid = await bcrypt.compare(password, account.Password);
+    } else {
+      const hashedPassword = whirlpool(password);
+      isPasswordValid = (account.Password.toUpperCase() === hashedPassword);
+
+      // If legacy check is successful, upgrade to Bcrypt immediately
+      if (isPasswordValid) {
+        try {
+          const salt = await bcrypt.genSalt(12);
+          const newBcryptHash = await bcrypt.hash(password, salt);
+          await pool.execute(
+            'UPDATE accounts SET Password = ? WHERE ID = ?',
+            [newBcryptHash, account.ID]
+          );
+        } catch (upgradeError) {
+          console.error('Password hash upgrade failed:', upgradeError);
+        }
+      }
+    }
+
+    if (!isPasswordValid) {
       return NextResponse.json(
         { error: 'Invalid username or password' },
         { status: 401 }

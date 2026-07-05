@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
-import { whirlpool } from '@/lib/hash';
+import bcrypt from 'bcryptjs';
 import { setSessionCookie } from '@/lib/auth';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 
@@ -42,8 +42,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Hash the password using Whirlpool
-    const hashedPassword = whirlpool(password);
+    // Hash the password using Bcrypt
+    const salt = await bcrypt.genSalt(12);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
     // Insert user into accounts table
     const [result] = await pool.execute<ResultSetHeader>(

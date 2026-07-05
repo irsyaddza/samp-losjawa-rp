@@ -6,6 +6,7 @@ import { RowDataPacket } from 'mysql2';
 import { ArrowLeft, User, Shield, Calendar, Landmark, Coins, Heart, FileText, CheckCircle, XCircle, Car, Home, Briefcase, Lock, Unlock, Zap, Gauge } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { getSkinImageUrl, getVehicleImageUrl } from '@/lib/assets';
+import DeleteCharacterButton from '@/components/DeleteCharacterButton';
 
 // Helper mapping for Factions
 const FACTION_NAMES: Record<number, string> = {
@@ -178,7 +179,7 @@ export default async function CharacterDetailsPage({ params }: PageProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-6 relative z-10 w-full md:w-auto justify-between md:justify-end">
+          <div className="flex items-center gap-4 relative z-10 w-full md:w-auto justify-between md:justify-end">
             <span
               className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold ${
                 char.Online
@@ -188,6 +189,8 @@ export default async function CharacterDetailsPage({ params }: PageProps) {
             >
               {char.Online ? 'Sedang Online' : 'Offline'}
             </span>
+
+            <DeleteCharacterButton charId={char.ID} charName={char.char_name} />
           </div>
         </div>
 
