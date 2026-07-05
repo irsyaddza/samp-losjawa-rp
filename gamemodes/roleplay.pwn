@@ -2084,6 +2084,7 @@ new Iterator:sv_activevehicles<MAX_VEHICLES>;
 #include "modules/Weapons.pwn"
 #include "modules/Death.pwn"
 #include "modules/Clothing.pwn"
+#include "modules/player/LoginUI.pwn"
 #include "modules/player/Account.pwn"
 #include "modules/Faction.pwn"
 #include "modules/Graffiti.pwn"
@@ -2218,6 +2219,8 @@ public OnPlayerConnect(playerid)
   	RemoveBuilding(playerid);
   	CreateTextdraws(playerid);
 	CreateClothingShopTDs(playerid);
+	CreateLoginTDs(playerid);
+	StartLoginLoading(playerid);
 
 	// PONYTAIL: Reset color selection state and hide textdraws on connect
 	ColorSelectShow{playerid} = false;
@@ -2262,6 +2265,7 @@ public OnPlayerDisconnect(playerid, reason)
 	PlayerTextDrawDestroy(playerid, TD_ServerLocation[playerid]);
 	PlayerTextDrawDestroy(playerid, TD_ServerFPS[playerid]);
 	DestroyClothingShopTDs(playerid);
+	DestroyLoginTDs(playerid);
 	new str[128], szDisconnectReason[3][10] = {"Timeout", "Leaving", "Kicked"};
 
 	format(str, sizeof(str), "** %s (%s)", ReturnName(playerid), szDisconnectReason[reason]);
@@ -5835,6 +5839,15 @@ public OnPlayerSpawn(playerid)
 		SetPlayerTeam(playerid, 1);
 		SetPlayerWeather(playerid, globalWeather);
 		SetPlayerSpawn(playerid);
+
+		new Float:px, Float:py, Float:pz;
+		GetPlayerPos(playerid, px, py, pz);
+		SetPlayerCameraPos(playerid, px + 5.000, py + 5.000, pz + 180.000);
+		SetPlayerCameraLookAt(playerid, px, py, pz);
+		TogglePlayerControllable(playerid, false);
+		InterpolateCameraPos(playerid, px + 5.000, py + 5.000, pz + 180.000, px + 3.000, py + 3.000, pz + 3.000, 4000, CAMERA_MOVE);
+		InterpolateCameraLookAt(playerid, px, py, pz, px, py, pz + 1.000, 4000, CAMERA_MOVE);
+		SetTimerEx("OnPlayerGtaVSpawnFinish", 4000, false, "d", playerid);
 
 		if(PlayerData[playerid][pTutorialStep] == 1)
 		{
@@ -10564,6 +10577,15 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 				break;
 			}
 		}
+	}
+	if(playertextid == PlayerText:INVALID_TEXT_DRAW && LoginScreenReady[playerid])
+	{
+		SelectTextDraw(playerid, 0xFFD60380);
+		return true;
+	}
+	if(LoginScreenReady[playerid])
+	{
+		if(OnLoginClickPlayerTD(playerid, playertextid)) return true;
 	}
 	if(playertextid == PlayerText:INVALID_TEXT_DRAW && PlayerShopPage[playerid] != -1)
 	{

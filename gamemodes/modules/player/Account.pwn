@@ -46,19 +46,30 @@ HandleFailedLogin(extraid)
 {
 	LoginAttempts[extraid]--;
 
-	if(LoginAttempts[extraid] == 0)
+	if(LoginAttempts[extraid] <= 0)
 	{
 		SendClientMessage(extraid, COLOR_LIGHTRED, "[SERVER]: You were kicked for bad password attempts.");
-		return KickEx(extraid);
+		PlayerTextDrawSetString(extraid, LoginTD_Status[extraid], "Error: Too many failed attempts. Kicking...");
+		SetTimerEx("OnPlayerKickTimer", 3000, false, "d", extraid);
+		return 1;
 	}
 
-	new str[256];
-	format(str, sizeof(str), "Hello,\n\nPlease enter your password below to access character selection.\n\nIf you are not currently registered with LosJawa-RP, you can create\n\nyour account at losjawa-rp.net.\n\n\n{FF0000}Attempts remaining: %d", LoginAttempts[extraid]);
-	return Dialog_Show(extraid, LoginScreen, DIALOG_STYLE_PASSWORD, "Welcome to Los Jawa Roleplay", str, "Submit", "Exit");
+	LoginPasswordEntered[extraid] = false;
+	LoginPass[extraid][0] = '\0';
+	PlayerTextDrawSetString(extraid, LoginTD_Password[extraid], "Password");
+	PlayerTextDrawShow(extraid, LoginTD_Password[extraid]);
+
+	new str[128];
+	format(str, sizeof(str), "Error: Invalid password. (%d attempts remaining)", LoginAttempts[extraid]);
+	PlayerTextDrawSetString(extraid, LoginTD_Status[extraid], str);
+	PlayerPlaySound(extraid, 1085, 0.0, 0.0, 0.0);
+	return 1;
 }
 
 HandleSuccessfulLogin(extraid)
 {
+	DestroyLoginTDs(extraid);
+
 	new query[256];
 	if(isnull(AccountData[extraid][aSecretWord]))
 	{
@@ -199,8 +210,7 @@ public OnQueryFinished(extraid, threadid)
 		    else
 			{
 			    SafeTime[extraid] = 60;
-
-		        Dialog_Show(extraid, LoginScreen, DIALOG_STYLE_PASSWORD, "Welcome to Los Jawa Roleplay", "Hello,\n\nPlease enter your password below to access character selection.\n\nIf you are not currently registered with Losjawa-RP, you can create\n\nyour account at losjawa-rp.net.", "Submit", "Exit");
+				SetLoginScreenReady(extraid);
 			}
 		}
       	case THREAD_LOGIN:
