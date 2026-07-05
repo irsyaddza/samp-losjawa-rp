@@ -84,7 +84,7 @@
         "player_marker_sync_rate": 2500,
         "player_timeout": 10000,
         "port": 7777,
-        "public_addr": "127.0.0.1", // ponytail: ganti ke LAN IP (192.168.1.x) saat deploy ke production
+        "public_addr": "",
         "stream_radius": 200.0,
         "stream_rate": 1000,
         "time_sync_rate": 30000,

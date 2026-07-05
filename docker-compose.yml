@@ -100,11 +100,11 @@ services:
   #  Playit.gg — Tunneling Khusus Game
   # ─────────────────────────────────────────────
   playit:
-    image: playit/playit:latest
+    image: ghcr.io/playit-cloud/playit-agent:latest
     container_name: ljrp-playit
     restart: unless-stopped
-    volumes:
-      - ./playit:/etc/playit
+    environment:
+      SECRET_KEY: ${PLAYIT_SECRET_KEY}
     networks:
       - samp_net
 
