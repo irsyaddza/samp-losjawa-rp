@@ -17,12 +17,11 @@ RUN dpkg --add-architecture i386 && \
         libssl3:i386 \
         zlib1g:i386 \
         libatomic1:i386 \
+        dos2unix \
     && rm -rf /var/lib/apt/lists/*
 
-# ── Install libmysqlclient18:i386 secara manual ────────────────────
-# mysql.so membutuhkan libmysqlclient.so.18 (MySQL 5.x 32-bit)
-COPY libmysqlclient18.deb /tmp/libmysqlclient18.deb
-RUN dpkg -x /tmp/libmysqlclient18.deb /tmp/libmysqlclient18 && \
+RUN wget -q -O /tmp/libmysqlclient18.deb http://launchpadlibrarian.net/247514894/libmysqlclient18_5.6.28-1ubuntu3_i386.deb && \
+    dpkg -x /tmp/libmysqlclient18.deb /tmp/libmysqlclient18 && \
     cp -r /tmp/libmysqlclient18/usr/lib/i386-linux-gnu/* /usr/lib/i386-linux-gnu/ && \
     rm -rf /tmp/libmysqlclient18* /tmp/libmysqlclient18.deb && \
     ldconfig
@@ -40,6 +39,7 @@ COPY components/          ./components/
 # ── Copy konfigurasi open.mp ──────────────────────────────────────────────────
 COPY bans.json            ./bans.json
 COPY artconfig.txt        ./artconfig.txt
+RUN dos2unix ./artconfig.txt  # ponytail: CRLF→LF, fix custom models tidak load di Linux
 COPY rus.txt              ./rus.txt
 
 # ── Copy plugin .so (Linux) ──────────────────────────────────────────────────
@@ -61,10 +61,10 @@ COPY gamemodes/     ./gamemodes/
 COPY filterscripts/ ./filterscripts/
 COPY scriptfiles/   ./scriptfiles/
 COPY models/        ./models/
+RUN dos2unix ./models/artconfig.txt  # ponytail: CRLF→LF di models/artconfig.txt, ini yang dibaca CustomModels
 
-# ── Copy entrypoint ──────────────────────────────────────────────────────────
 COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN dos2unix /entrypoint.sh && chmod +x /entrypoint.sh
 
 EXPOSE 7777/udp
 EXPOSE 7777/tcp

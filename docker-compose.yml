@@ -78,6 +78,21 @@ services:
     networks:
       - samp_net
 
+  # ─────────────────────────────────────────────
+  #  HTTP CDN — serve /models untuk download client
+  #  ponytail: nginx:alpine, static file serve
+  # ─────────────────────────────────────────────
+  models-cdn:
+    image: nginx:alpine
+    container_name: ljrp-models-cdn
+    restart: unless-stopped
+    ports:
+      - "7778:80"
+    volumes:
+      - ./models:/usr/share/nginx/html:ro
+    networks:
+      - samp_net
+
 volumes:
   mysql_data:
     driver: local
