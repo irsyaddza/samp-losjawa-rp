@@ -21,7 +21,7 @@ AddSimpleModel(-1, 19475, -1407, "lssd6.dff", "lssd.txd");
 AddSimpleModel(-1, 19475, -1408, "lssd7.dff", "lssd.txd");
 AddSimpleModel(-1, 19475, -1409, "lssd8.dff", "lssd.txd");
 AddSimpleModel(-1, 19475, -1401, "lssdtruck.dff", "lssd.txd");
-AddSimpleModel(-1, 19475, -1402, "logo.dff", "logo.txd");
+AddSimpleModel(-1, 19475, -1410, "logo.dff", "logo.txd");
 
 // Custom Skins
 AddCharModel(280, 20001, "lvpdpc2.dff", "lvpdpc2.txd");

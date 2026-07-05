@@ -68,11 +68,10 @@ SQL_CreateCharacter(playerid, const character[])
 
 SQL_AttemptLogin(playerid, const password[])
 {
-	new query[300], buffer[129];
-	WP_Hash(buffer, sizeof(buffer), password);
-
-	mysql_format(dbCon, query, sizeof(query), "SELECT Null FROM `accounts` WHERE `Username` = '%e' AND `Password` = '%e'", ReturnName(playerid), buffer);
-    mysql_tquery(dbCon, query, "OnQueryFinished", "dd", playerid, THREAD_LOGIN);
+	new query[300];
+	mysql_format(dbCon, query, sizeof(query), "SELECT `Password` FROM `accounts` WHERE `Username` = '%e' LIMIT 1", ReturnName(playerid));
+	SetPVarString(playerid, "temp_login_pass", password);
+	mysql_tquery(dbCon, query, "OnQueryFinished", "dd", playerid, THREAD_LOGIN);
 }
 
 SQL_SecretLogin(playerid, password[])

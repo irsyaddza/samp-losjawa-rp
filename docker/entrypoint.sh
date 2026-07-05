@@ -24,7 +24,7 @@ until nc -z "$MYSQL_HOST" "$MYSQL_PORT" 2>/dev/null; do
     ELAPSED=$((ELAPSED + 2))
 done
 
-echo "[ENTRYPOINT] MySQL siap! Memulai SA-MP server..."
+echo "[ENTRYPOINT] MySQL siap! Memulai open.mp server..."
 
-# Jalankan SA-MP server
-exec ./samp-server
+# Jalankan open.mp server
+exec ./omp-server

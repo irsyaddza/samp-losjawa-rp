@@ -27,6 +27,8 @@
 #include <timestamptodate>
 #include <evi>
 #include <sort>
+#include <samp_bcrypt>
+#include <map-zones>
 
 #define DIALOG_STATS 15000  
 
@@ -1251,6 +1253,12 @@ new Text:TD_PhoneCover[9];
 new Text:Store_Frame[4];
 new Text:ALPR_UI[2];
 
+new Text:TD_ServerLogo;
+new Text:TD_ServerDate;
+new Text:TD_ServerTime;
+new PlayerText:TD_ServerFPS[MAX_PLAYERS];
+new PlayerText:TD_ServerLocation[MAX_PLAYERS];
+
 new bool:MDC_Created[MAX_PLAYERS char];
 new bool:UsingMDC[MAX_PLAYERS char];
 new bool:ALPR_Hit[MAX_PLAYERS char];
@@ -2249,6 +2257,8 @@ public OnPlayerConnect(playerid)
 
 public OnPlayerDisconnect(playerid, reason)
 {	
+	PlayerTextDrawDestroy(playerid, TD_ServerLocation[playerid]);
+	PlayerTextDrawDestroy(playerid, TD_ServerFPS[playerid]);
 	new str[128], szDisconnectReason[3][10] = {"Timeout", "Leaving", "Kicked"};
 
 	format(str, sizeof(str), "** %s (%s)", ReturnName(playerid), szDisconnectReason[reason]);
@@ -5682,8 +5692,12 @@ public OnPlayerRequestDownload(playerid, type, crc)
 
     if(foundfilename)
     {
-        format(fullurl, 256, "%s/%s", modelsURL, dlfilename);
-        RedirectDownload(playerid, fullurl);
+        if(modelsURL[0] != '\0')
+        {
+            format(fullurl, 256, "%s/%s", modelsURL, dlfilename);
+            RedirectDownload(playerid, fullurl);
+        }
+        return true;
     }
 
     return false;
@@ -5796,6 +5810,12 @@ public OnPlayerSpawn(playerid)
     if(!Spawned{playerid})
 	{
         Spawned{playerid} = true;
+
+        TextDrawShowForPlayer(playerid, TD_ServerLogo);
+        TextDrawShowForPlayer(playerid, TD_ServerDate);
+        TextDrawShowForPlayer(playerid, TD_ServerTime);
+        PlayerTextDrawShow(playerid, TD_ServerFPS[playerid]);
+        PlayerTextDrawShow(playerid, TD_ServerLocation[playerid]);
 
         LastSpawn[playerid] = gettime();
 

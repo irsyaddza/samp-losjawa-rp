@@ -127,3 +127,19 @@ IndustryTime()
         }
 	}
 }
+
+task ServerDateTimer[1000]()
+{
+    new string[128], year, month, day, hours, minutes, seconds;
+    getdate(year, month, day);
+    gettime(hours, minutes, seconds);
+
+    // Adjust to GMT+7 (WIB)
+    hours = (hours + 7) % 24;
+
+    format(string, sizeof(string), "%02d/%02d/%d", day, month, year);
+    TextDrawSetString(TD_ServerDate, string);
+
+    format(string, sizeof(string), "%02d:%02d:%02d", hours, minutes, seconds);
+    TextDrawSetString(TD_ServerTime, string);
+}

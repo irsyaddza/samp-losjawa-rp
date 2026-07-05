@@ -4263,12 +4263,28 @@ CMD:createaccount(playerid, params[])
 	if(quiz < 0 || quiz > 1)
 		return SendErrorMessage(playerid, "Quiz value must be either 0 or 1.");
 
-	new buffer[129];
-	WP_Hash(buffer, sizeof(buffer), password);
+	SetPVarString(playerid, "ca_username", username);
+	SetPVarInt(playerid, "ca_quiz", quiz);
 
-	mysql_format(dbCon, gquery, sizeof(gquery), "INSERT INTO accounts (Username, Password, Quiz) VALUES ('%e', '%e', %d)", username, buffer, quiz);
-	mysql_tquery(dbCon, gquery, "OnAccountCreated", "ds", playerid, username);
+	bcrypt_hash(playerid, "OnAdminCreateAccountHash", password, 12);
 	return true;
+}
+
+forward OnAdminCreateAccountHash(playerid);
+public OnAdminCreateAccountHash(playerid)
+{
+    new hash[BCRYPT_HASH_LENGTH], username[MAX_PLAYER_NAME], quiz;
+    bcrypt_get_hash(hash);
+    
+    GetPVarString(playerid, "ca_username", username, sizeof(username));
+    quiz = GetPVarInt(playerid, "ca_quiz");
+    
+    DeletePVar(playerid, "ca_username");
+    DeletePVar(playerid, "ca_quiz");
+
+    mysql_format(dbCon, gquery, sizeof(gquery), "INSERT INTO accounts (Username, Password, Quiz) VALUES ('%e', '%e', %d)", username, hash, quiz);
+    mysql_tquery(dbCon, gquery, "OnAccountCreated", "ds", playerid, username);
+    return 1;
 }
 
 CMD:createcharacter(playerid, params[])
