@@ -18,6 +18,7 @@ RUN dpkg --add-architecture i386 && \
         zlib1g:i386 \
         libatomic1:i386 \
         dos2unix \
+        tzdata \
     && rm -rf /var/lib/apt/lists/*
 
 RUN wget -q -O /tmp/libmysqlclient18.deb http://launchpadlibrarian.net/247514894/libmysqlclient18_5.6.28-1ubuntu3_i386.deb && \

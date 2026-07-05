@@ -11,6 +11,7 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE:-jawa}
       MYSQL_USER: ${MYSQL_USER:-samp}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-samppassword}
+      TZ: Asia/Jakarta
     ports:
       - "3306:3306"          # buka ke host (untuk HeidiSQL/dev tools)
     volumes:
@@ -52,6 +53,7 @@ services:
       MYSQL_USER: ${MYSQL_USER:-samp}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-samppassword}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-jawa}
+      TZ: Asia/Jakarta
     networks:
       - samp_net
 
@@ -75,6 +77,7 @@ services:
       DB_PASSWORD: ${MYSQL_PASSWORD:-samppassword}
       DB_DATABASE: ${MYSQL_DATABASE:-jawa}
       JWT_SECRET: ${JWT_SECRET:-losjawaroleplaysecretkey123}
+      TZ: Asia/Jakarta
     networks:
       - samp_net
 
@@ -90,6 +93,18 @@ services:
       - "7778:80"
     volumes:
       - ./models:/usr/share/nginx/html:ro
+    networks:
+      - samp_net
+
+  # ─────────────────────────────────────────────
+  #  Playit.gg — Tunneling Khusus Game
+  # ─────────────────────────────────────────────
+  playit:
+    image: playit/playit:latest
+    container_name: ljrp-playit
+    restart: unless-stopped
+    volumes:
+      - ./playit:/etc/playit
     networks:
       - samp_net
 

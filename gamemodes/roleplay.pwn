@@ -5400,12 +5400,16 @@ Relog_Player(playerid)
 	// 8. Cancel any active TextDraw selection mode
 	CancelSelectTextDraw(playerid);
 
-	// 9. Destroy ALL 13 CharSelectionTD slots so CreateCharacterMenuTD starts fresh.
-	//    Without this, old TextDraw IDs remain and new ones overlap/conflict → broken clicks.
+	// 9. Destroy ALL 13 CharSelectionTD slots and status textdraws so they don't stack up
 	for(new i = 0; i < 13; ++i)
 	{
 		PlayerTextDrawDestroy(playerid, CharSelectionTD[playerid][i]);
+		CharSelectionTD[playerid][i] = PlayerText:INVALID_TEXT_DRAW;
 	}
+	PlayerTextDrawDestroy(playerid, TD_ServerFPS[playerid]);
+	TD_ServerFPS[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	PlayerTextDrawDestroy(playerid, TD_ServerLocation[playerid]);
+	TD_ServerLocation[playerid] = PlayerText:INVALID_TEXT_DRAW;
 
 	// 10. Re-create the base CharSelectionTD layout (same as first connect)
 	CreateTextdraws(playerid);
@@ -5839,6 +5843,7 @@ public OnPlayerSpawn(playerid)
 		SetPlayerTeam(playerid, 1);
 		SetPlayerWeather(playerid, globalWeather);
 		SetPlayerSpawn(playerid);
+		SetPlayerTime(playerid, ghour, gminute);
 
 		new Float:px, Float:py, Float:pz;
 		GetPlayerPos(playerid, px, py, pz);

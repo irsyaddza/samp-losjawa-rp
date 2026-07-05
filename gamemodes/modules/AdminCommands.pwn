@@ -1105,13 +1105,9 @@ CMD:makeadmin(playerid, params[])
     if(PlayerData[playerid][pAdmin] < 1337)
         return SendUnauthMessage(playerid, "You're not authorized to use this command.");
 
-    new
-        userid,
-		adminlevel
-	;
-
-	if(sscanf(params, "ud", userid, adminlevel))
-        return SendSyntaxMessage(playerid, "/makeadmin [playerid/PartOfName] [admin-level]");
+    new userid;
+	if(sscanf(params, "u", userid))
+        return SendSyntaxMessage(playerid, "/makeadmin [playerid/PartOfName]");
 
 	if(!IsPlayerConnected(userid))
 		return SendErrorMessage(playerid, "The player you specified isn't connected.");
@@ -1119,22 +1115,60 @@ CMD:makeadmin(playerid, params[])
 	if(!SQL_IsLogged(userid))
 		return SendErrorMessage(playerid, "The player you specified isn't logged in.");
 
+    SetPVarInt(playerid, "makeadmin_target", userid);
 
-	if(PlayerData[userid][pAdmin] == adminlevel)
-	    return SendErrorMessage(playerid, "Player is already that level.");
+    new dialog_str[512];
+    strcat(dialog_str, "Pemain Biasa (Level 0)\n");
+    strcat(dialog_str, "Intern (Level 1)\n");
+    strcat(dialog_str, "Junior Admin (Level 2)\n");
+    strcat(dialog_str, "Senior Admin (Level 3)\n");
+    strcat(dialog_str, "Senior Admin 2 (Level 4)\n");
+    strcat(dialog_str, "Deputy Head Admin (Level 1336)\n");
+    strcat(dialog_str, "Head Admin (Level 1337)");
 
-	if(adminlevel < 0)
-	    return SendErrorMessage(playerid, "Invalid level specified.");
-
-	PlayerData[userid][pAdmin] = adminlevel;
-
-	SendServerMessage(userid, "Admin %s has set your admin level to %d.", ReturnName(playerid, 0), adminlevel);
-
-	SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmCmd: %s set %s's admin level to %d.", ReturnName(playerid), ReturnName(userid), adminlevel);
-
-	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `accounts` SET `Admin` = '%d' WHERE `ID` = %d LIMIT 1", adminlevel, AccountData[userid][aUserid]);
-	mysql_pquery(dbCon, gquery);
+    Dialog_Show(playerid, MakeAdminDialog, DIALOG_STYLE_LIST, "Make Admin - Pilih Pangkat", dialog_str, "Pilih", "Batal");
 	return true;
+}
+
+Dialog:MakeAdminDialog(playerid, response, listitem, inputtext[])
+{
+    new userid = GetPVarInt(playerid, "makeadmin_target");
+    DeletePVar(playerid, "makeadmin_target");
+
+    if(!response)
+        return 1;
+
+    if(!IsPlayerConnected(userid) || !SQL_IsLogged(userid))
+        return SendErrorMessage(playerid, "Pemain target sudah tidak terhubung.");
+
+    new adminlevel = 0;
+    new rank_name[32];
+
+    switch(listitem)
+    {
+        case 0: { adminlevel = 0; rank_name = "Pemain Biasa"; }
+        case 1: { adminlevel = 1; rank_name = "Intern"; }
+        case 2: { adminlevel = 2; rank_name = "Junior Admin"; }
+        case 3: { adminlevel = 3; rank_name = "Senior Admin"; }
+        case 4: { adminlevel = 4; rank_name = "Senior Admin 2"; }
+        case 5: { adminlevel = 1336; rank_name = "Deputy Head Admin"; }
+        case 6: { adminlevel = 1337; rank_name = "Head Admin"; }
+    }
+
+    if(PlayerData[userid][pAdmin] == adminlevel)
+        return SendErrorMessage(playerid, "Player sudah memiliki pangkat tersebut.");
+
+    PlayerData[userid][pAdmin] = adminlevel;
+
+    SendServerMessage(userid, "Admin %s telah mengatur pangkat admin Anda menjadi: %s (Level %d).", ReturnName(playerid, 0), rank_name, adminlevel);
+    SendServerMessage(playerid, "Anda telah mengatur pangkat admin %s menjadi: %s (Level %d).", ReturnName(userid, 0), rank_name, adminlevel);
+
+    SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmCmd: %s mengatur pangkat %s menjadi %s (Level %d).", ReturnName(playerid), ReturnName(userid), rank_name, adminlevel);
+
+    new query[256];
+    mysql_format(dbCon, query, sizeof(query), "UPDATE `accounts` SET `Admin` = '%d' WHERE `ID` = %d LIMIT 1", adminlevel, AccountData[userid][aUserid]);
+    mysql_pquery(dbCon, query);
+    return 1;
 }
 
 CMD:maketester(playerid, params[])
@@ -9711,11 +9745,12 @@ stock ShowAdminHelpMain(playerid)
 {
 	new string[512];
 	strcat(string, "Admin duty guidelines\n");
-	strcat(string, "Level 1: Junior Admin / Helper / Tester\n");
-	strcat(string, "Level 2: General Admin\n");
+	strcat(string, "Level 1: Intern\n");
+	strcat(string, "Level 2: Junior Admin\n");
 	strcat(string, "Level 3: Senior Admin\n");
-	strcat(string, "Level 4: Head Admin / Manager\n");
-	strcat(string, "Level 1337: Developer / Owner\n");
+	strcat(string, "Level 4: Senior Admin 2\n");
+	strcat(string, "Level 1336: Deputy Head Admin\n");
+	strcat(string, "Level 1337: Head Admin\n");
 	strcat(string, "Category: Vehicle Management\n");
 	strcat(string, "Category: Property & Business\n");
 	strcat(string, "Category: Faction & Gate Management\n");
@@ -9746,18 +9781,19 @@ Dialog:AdminHelpMain(playerid, response, listitem, inputtext[])
 	new targetVal = -1;
 	new bool:isCategory = false;
 	
-	if(listitem >= 1 && listitem <= 5) // Level
+	if(listitem >= 1 && listitem <= 6) // Level
 	{
 		if(listitem == 1) targetVal = 1;
 		else if(listitem == 2) targetVal = 2;
 		else if(listitem == 3) targetVal = 3;
 		else if(listitem == 4) targetVal = 4;
-		else if(listitem == 5) targetVal = 1337;
+		else if(listitem == 5) targetVal = 1336;
+		else if(listitem == 6) targetVal = 1337;
 		isCategory = false;
 	}
-	else if(listitem >= 6) // Category
+	else if(listitem >= 7) // Category
 	{
-		targetVal = listitem - 5; // 1: Veh, 2: Prop, 3: Faction, 4: Player, 5: Teleport
+		targetVal = listitem - 6; // 1: Veh, 2: Prop, 3: Faction, 4: Player, 5: Teleport
 		isCategory = true;
 	}
 	
@@ -9863,23 +9899,24 @@ Dialog:AdminHelpDetail(playerid, response, listitem, inputtext[])
 	new targetVal = -1;
 	new bool:isCategory = false;
 	
-	if(lastListitem >= 1 && lastListitem <= 5) // Level
+	if(lastListitem >= 1 && lastListitem <= 6) // Level
 	{
-		if(lastListitem == 1) { targetVal = 1; format(titleText, 64, "Level 1: Junior Admin / Helper / Tester"); }
-		else if(lastListitem == 2) { targetVal = 2; format(titleText, 64, "Level 2: General Admin"); }
+		if(lastListitem == 1) { targetVal = 1; format(titleText, 64, "Level 1: Intern"); }
+		else if(lastListitem == 2) { targetVal = 2; format(titleText, 64, "Level 2: Junior Admin"); }
 		else if(lastListitem == 3) { targetVal = 3; format(titleText, 64, "Level 3: Senior Admin"); }
-		else if(lastListitem == 4) { targetVal = 4; format(titleText, 64, "Level 4: Head Admin / Manager"); }
-		else if(lastListitem == 5) { targetVal = 1337; format(titleText, 64, "Level 1337: Developer / Owner"); }
+		else if(lastListitem == 4) { targetVal = 4; format(titleText, 64, "Level 4: Senior Admin 2"); }
+		else if(lastListitem == 5) { targetVal = 1336; format(titleText, 64, "Level 1336: Deputy Head Admin"); }
+		else if(lastListitem == 6) { targetVal = 1337; format(titleText, 64, "Level 1337: Head Admin"); }
 		isCategory = false;
 	}
-	else if(lastListitem >= 6) // Category
+	else if(lastListitem >= 7) // Category
 	{
-		targetVal = lastListitem - 5; // 1: Veh, 2: Prop, 3: Faction, 4: Player, 5: Teleport
-		if(lastListitem == 6) format(titleText, 64, "Category: Vehicle Management");
-		else if(lastListitem == 7) format(titleText, 64, "Category: Property & Business");
-		else if(lastListitem == 8) format(titleText, 64, "Category: Faction & Gate Management");
-		else if(lastListitem == 9) format(titleText, 64, "Category: Player Management & Punishment");
-		else if(lastListitem == 10) format(titleText, 64, "Category: Teleport & Navigation");
+		targetVal = lastListitem - 6; // 1: Veh, 2: Prop, 3: Faction, 4: Player, 5: Teleport
+		if(lastListitem == 7) format(titleText, 64, "Category: Vehicle Management");
+		else if(lastListitem == 8) format(titleText, 64, "Category: Property & Business");
+		else if(lastListitem == 9) format(titleText, 64, "Category: Faction & Gate Management");
+		else if(lastListitem == 10) format(titleText, 64, "Category: Player Management & Punishment");
+		else if(lastListitem == 11) format(titleText, 64, "Category: Teleport & Navigation");
 		isCategory = true;
 	}
 	

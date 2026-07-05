@@ -17141,6 +17141,22 @@ CMD:vehiclefines(playerid, params[])
 	return true;
 }*/
 
+stock ReturnAdminRankName(level)
+{
+    new name[32];
+    switch(level)
+    {
+        case 1: name = "Intern";
+        case 2, 1338: name = "Junior Admin";
+        case 3: name = "Senior Admin";
+        case 4: name = "Senior Admin 2";
+        case 1336: name = "Deputy Head Admin";
+        case 1337: name = "Head Admin";
+        default: name = "Unknown";
+    }
+    return name;
+}
+
 CMD:admins(playerid, params[])
 {
 	SendClientMessage(playerid, COLOR_GREY, "Admins Online:");
@@ -17153,7 +17169,7 @@ CMD:admins(playerid, params[])
 	{
 		if(PlayerData[i][pAdmin] > 0)
 		{
-		    SendClientMessageEx(playerid, AdminDuty{i} ? COLOR_GREEN : COLOR_GRAD2, " (Level: %d) %s (ID: %d) Adminduty: %s", PlayerData[i][pAdmin] == 1338 ? 2 : PlayerData[i][pAdmin], AccountName(i), i, AdminDuty{i} ? "Yes" : "No");
+		    SendClientMessageEx(playerid, AdminDuty{i} ? COLOR_GREEN : COLOR_GRAD2, " [%s] %s (ID: %d) Adminduty: %s", ReturnAdminRankName(PlayerData[i][pAdmin]), AccountName(i), i, AdminDuty{i} ? "Yes" : "No");
 
 			count++;
 		}

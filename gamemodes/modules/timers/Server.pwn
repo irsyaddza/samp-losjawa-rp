@@ -32,6 +32,18 @@ task Server[60000]()
 	FixHour(tmphour);
 	tmphour = shifthour;
 
+	foreach (new i : Player)
+	{
+		if(PlayerData[i][pJailed] == PUNISHMENT_TYPE_PRISON)
+		{
+			SetPlayerTime(i, 15, 0);
+		}
+		else
+		{
+			SetPlayerTime(i, tmphour, tmpminute);
+		}
+	}
+
 	if((tmphour > ghour) || (tmphour == 0 && ghour == 23))
 	{
 	    //TollsLocked = 0;
@@ -45,14 +57,6 @@ task Server[60000]()
 		ghour = tmphour;
 
 		SetWorldTime(tmphour);
-
-		foreach (new i : Player)
-		{
-			if(PlayerData[i][pJailed] == PUNISHMENT_TYPE_PRISON)
-			{
-				SetPlayerTime(i, 15, 0);
-			}
-		}
 
 		MDC_Global_Cache[PoliceCalls] = 0;
 		MDC_Global_Cache[Arrests] = 0;
@@ -133,9 +137,6 @@ task ServerDateTimer[1000]()
     new string[128], year, month, day, hours, minutes, seconds;
     getdate(year, month, day);
     gettime(hours, minutes, seconds);
-
-    // Adjust to GMT+7 (WIB)
-    hours = (hours + 7) % 24;
 
     format(string, sizeof(string), "%02d/%02d/%d", day, month, year);
     TextDrawSetString(TD_ServerDate, string);
