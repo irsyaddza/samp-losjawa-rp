@@ -651,3 +651,565 @@ stock AddPlayerClothing(playerid,modelid,Float:fOffsetX,Float:fOffsetY,Float:fOf
 
 	return -1;
 }
+
+// Skin Shop System Integration
+#define MAX_SHOP_SKINS (500)
+
+enum E_SHOP_SKIN_DATA
+{
+    ss_id,
+    ss_price
+};
+
+new ShopSkins[MAX_SHOP_SKINS][E_SHOP_SKIN_DATA];
+new TotalShopSkins = 0;
+
+new PlayerShopSkins[MAX_PLAYERS][MAX_SHOP_SKINS];
+new TotalPlayerShopSkins[MAX_PLAYERS] = 0;
+new PlayerShopPage[MAX_PLAYERS] = -1;
+new PlayerShopSelectedSlot[MAX_PLAYERS] = -1;
+
+// Textdraw declarations
+new PlayerText:ShopTD_Background[MAX_PLAYERS];
+new PlayerText:ShopTD_Header[MAX_PLAYERS];
+new PlayerText:ShopTD_Title[MAX_PLAYERS];
+new PlayerText:ShopTD_Page[MAX_PLAYERS];
+new PlayerText:ShopTD_Close[MAX_PLAYERS];
+new PlayerText:ShopTD_Footer[MAX_PLAYERS];
+new PlayerText:ShopTD_PrevPage[MAX_PLAYERS];
+new PlayerText:ShopTD_NextPage[MAX_PLAYERS];
+
+new PlayerText:ShopTD_Card[MAX_PLAYERS][16];
+new PlayerText:ShopTD_Btn[MAX_PLAYERS][16];
+new PlayerText:ShopTD_BtnTxt[MAX_PLAYERS][16];
+new PlayerText:ShopTD_Preview[MAX_PLAYERS][16];
+new PlayerText:ShopTD_Price[MAX_PLAYERS][16];
+
+// Helper functions for skin validation and gender
+stock IsSkinFemale(skinid)
+{
+    switch(skinid)
+    {
+        case 9, 10, 11, 12, 13, 31, 38, 39, 40, 41, 53, 54, 55, 56, 63, 64, 69, 75, 76, 77, 85, 87, 88, 89, 90, 91, 92, 93, 129, 130, 131, 138, 139, 140, 141, 145, 148, 150, 151, 152, 157, 169, 172, 178, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 201, 205, 207, 211, 214, 215, 216, 218, 219, 224, 225, 226, 231, 232, 233, 237, 238, 243, 244, 245, 246, 251, 256, 257, 263, 298, 306, 307, 308, 309: return 1;
+        case 20003, 20004, 20009, 20010, 20011, 20012, 20025, 20026, 20028, 20045, 20052, 20055, 20056, 20069, 20070, 20071, 20072, 20073, 20074, 20075, 20078, 20079, 20080, 20081, 20082, 20083, 20101, 20103, 20104, 20108, 20121, 20122, 20123, 20140, 20143, 20144, 20145, 20150, 20153, 20154, 20155, 20156, 20157, 20158, 20159, 20160, 20161, 20164, 20165, 20174, 20176, 20177, 20178, 20184, 20196, 20197, 20198, 20201, 20216, 20217, 20224, 20226, 20230, 20237, 20240, 20241, 20242, 20252, 20255, 20256: return 1;
+    }
+    return 0;
+}
+
+stock IsDefaultCivilianSkin(skinid)
+{
+    if (skinid < 1 || skinid > 311) return 0;
+    // Exclude invalid skins
+    switch (skinid)
+    {
+        case 3..8, 32..34, 74, 86, 119, 149, 208, 268, 273, 289: return 0;
+    }
+    // Exclude government/faction skins
+    switch (skinid)
+    {
+        case 265..267, 274..279, 280..285, 286, 287, 288: return 0;
+    }
+    return 1;
+}
+
+forward OnCreateShopSkinsTable();
+public OnCreateShopSkinsTable()
+{
+    mysql_tquery(dbCon, "SELECT COUNT(*) FROM `clothing_shop_skins`", "OnCheckShopSkinsCount");
+    return 1;
+}
+
+forward OnCheckShopSkinsCount();
+public OnCheckShopSkinsCount()
+{
+    new count = 0;
+    cache_get_value_name_int(0, "COUNT(*)", count);
+    if (count == 0)
+    {
+        new query[512];
+        for (new i = 1; i <= 311; i++)
+        {
+            if (IsDefaultCivilianSkin(i))
+            {
+                mysql_format(dbCon, query, sizeof(query), "INSERT INTO `clothing_shop_skins` (`skin_id`, `price`) VALUES (%d, 5000)", i);
+                mysql_tquery(dbCon, query);
+            }
+        }
+        printf("[SERVER]: Populated default civilian skins in clothing_shop_skins table.");
+    }
+    LoadShopSkins();
+    return 1;
+}
+
+forward LoadShopSkins();
+public LoadShopSkins()
+{
+    mysql_tquery(dbCon, "SELECT * FROM `clothing_shop_skins` ORDER BY `skin_id` ASC", "OnLoadShopSkins");
+}
+
+forward OnLoadShopSkins();
+public OnLoadShopSkins()
+{
+    new rows = cache_num_rows();
+    TotalShopSkins = 0;
+    for (new i = 0; i < rows && i < MAX_SHOP_SKINS; i++)
+    {
+        cache_get_value_name_int(i, "skin_id", ShopSkins[i][ss_id]);
+        cache_get_value_name_int(i, "price", ShopSkins[i][ss_price]);
+        TotalShopSkins++;
+    }
+    printf("[SERVER]: Loaded %d skins for clothing shop.", TotalShopSkins);
+    return 1;
+}
+
+stock CreateClothingShopTDs(playerid)
+{
+    // Background
+    ShopTD_Background[playerid] = CreatePlayerTextDraw(playerid, 406.000, 173.000, "LD_OTB:blue");
+    PlayerTextDrawTextSize(playerid, ShopTD_Background[playerid], 193.000, 224.000);
+    PlayerTextDrawAlignment(playerid, ShopTD_Background[playerid], 1);
+    PlayerTextDrawColor(playerid, ShopTD_Background[playerid], 204); // 0x000000CC (black transparent)
+    PlayerTextDrawSetShadow(playerid, ShopTD_Background[playerid], 0);
+    PlayerTextDrawSetOutline(playerid, ShopTD_Background[playerid], 0);
+    PlayerTextDrawBackgroundColor(playerid, ShopTD_Background[playerid], 255);
+    PlayerTextDrawFont(playerid, ShopTD_Background[playerid], 4);
+    PlayerTextDrawSetProportional(playerid, ShopTD_Background[playerid], 1);
+
+    // Header
+    ShopTD_Header[playerid] = CreatePlayerTextDraw(playerid, 406.000, 152.000, "LD_OTB:blue");
+    PlayerTextDrawTextSize(playerid, ShopTD_Header[playerid], 193.000, 18.000);
+    PlayerTextDrawAlignment(playerid, ShopTD_Header[playerid], 1);
+    PlayerTextDrawColor(playerid, ShopTD_Header[playerid], 204); // 0x000000CC
+    PlayerTextDrawSetShadow(playerid, ShopTD_Header[playerid], 0);
+    PlayerTextDrawSetOutline(playerid, ShopTD_Header[playerid], 0);
+    PlayerTextDrawBackgroundColor(playerid, ShopTD_Header[playerid], 255);
+    PlayerTextDrawFont(playerid, ShopTD_Header[playerid], 4);
+    PlayerTextDrawSetProportional(playerid, ShopTD_Header[playerid], 1);
+
+    // Title
+    ShopTD_Title[playerid] = CreatePlayerTextDraw(playerid, 408.000, 156.000, "Clothing");
+    PlayerTextDrawLetterSize(playerid, ShopTD_Title[playerid], 0.270, 1.099);
+    PlayerTextDrawAlignment(playerid, ShopTD_Title[playerid], 1);
+    PlayerTextDrawColor(playerid, ShopTD_Title[playerid], -1);
+    PlayerTextDrawSetShadow(playerid, ShopTD_Title[playerid], 1);
+    PlayerTextDrawSetOutline(playerid, ShopTD_Title[playerid], 1);
+    PlayerTextDrawBackgroundColor(playerid, ShopTD_Title[playerid], 150);
+    PlayerTextDrawFont(playerid, ShopTD_Title[playerid], 3);
+    PlayerTextDrawSetProportional(playerid, ShopTD_Title[playerid], 1);
+
+    // Page Text
+    ShopTD_Page[playerid] = CreatePlayerTextDraw(playerid, 536.000, 156.000, "Page 1/1");
+    PlayerTextDrawLetterSize(playerid, ShopTD_Page[playerid], 0.270, 1.099);
+    PlayerTextDrawAlignment(playerid, ShopTD_Page[playerid], 1);
+    PlayerTextDrawColor(playerid, ShopTD_Page[playerid], -1);
+    PlayerTextDrawSetShadow(playerid, ShopTD_Page[playerid], 1);
+    PlayerTextDrawSetOutline(playerid, ShopTD_Page[playerid], 1);
+    PlayerTextDrawBackgroundColor(playerid, ShopTD_Page[playerid], 150);
+    PlayerTextDrawFont(playerid, ShopTD_Page[playerid], 3);
+    PlayerTextDrawSetProportional(playerid, ShopTD_Page[playerid], 1);
+
+    // Close Button "X"
+    ShopTD_Close[playerid] = CreatePlayerTextDraw(playerid, 587.000, 156.000, "X");
+    PlayerTextDrawLetterSize(playerid, ShopTD_Close[playerid], 0.270, 1.099);
+    PlayerTextDrawAlignment(playerid, ShopTD_Close[playerid], 1);
+    PlayerTextDrawColor(playerid, ShopTD_Close[playerid], -602653441);
+    PlayerTextDrawSetShadow(playerid, ShopTD_Close[playerid], 1);
+    PlayerTextDrawSetOutline(playerid, ShopTD_Close[playerid], 1);
+    PlayerTextDrawBackgroundColor(playerid, ShopTD_Close[playerid], 150);
+    PlayerTextDrawFont(playerid, ShopTD_Close[playerid], 3);
+    PlayerTextDrawSetProportional(playerid, ShopTD_Close[playerid], 1);
+    PlayerTextDrawSetSelectable(playerid, ShopTD_Close[playerid], 1);
+
+    // Footer background
+    ShopTD_Footer[playerid] = CreatePlayerTextDraw(playerid, 550.000, 401.000, "LD_OTB:blue");
+    PlayerTextDrawTextSize(playerid, ShopTD_Footer[playerid], 49.000, 18.000);
+    PlayerTextDrawAlignment(playerid, ShopTD_Footer[playerid], 1);
+    PlayerTextDrawColor(playerid, ShopTD_Footer[playerid], 204); // 0x000000CC
+    PlayerTextDrawSetShadow(playerid, ShopTD_Footer[playerid], 0);
+    PlayerTextDrawSetOutline(playerid, ShopTD_Footer[playerid], 0);
+    PlayerTextDrawBackgroundColor(playerid, ShopTD_Footer[playerid], 255);
+    PlayerTextDrawFont(playerid, ShopTD_Footer[playerid], 4);
+    PlayerTextDrawSetProportional(playerid, ShopTD_Footer[playerid], 1);
+
+    // Prev Page Button "<<"
+    ShopTD_PrevPage[playerid] = CreatePlayerTextDraw(playerid, 555.000, 405.000, "<<");
+    PlayerTextDrawLetterSize(playerid, ShopTD_PrevPage[playerid], 0.270, 1.099);
+    PlayerTextDrawAlignment(playerid, ShopTD_PrevPage[playerid], 1);
+    PlayerTextDrawColor(playerid, ShopTD_PrevPage[playerid], -602653441);
+    PlayerTextDrawSetShadow(playerid, ShopTD_PrevPage[playerid], 1);
+    PlayerTextDrawSetOutline(playerid, ShopTD_PrevPage[playerid], 1);
+    PlayerTextDrawBackgroundColor(playerid, ShopTD_PrevPage[playerid], 150);
+    PlayerTextDrawFont(playerid, ShopTD_PrevPage[playerid], 3);
+    PlayerTextDrawSetProportional(playerid, ShopTD_PrevPage[playerid], 1);
+    PlayerTextDrawSetSelectable(playerid, ShopTD_PrevPage[playerid], 1);
+
+    // Next Page Button ">>"
+    ShopTD_NextPage[playerid] = CreatePlayerTextDraw(playerid, 581.000, 405.000, ">>");
+    PlayerTextDrawLetterSize(playerid, ShopTD_NextPage[playerid], 0.270, 1.099);
+    PlayerTextDrawAlignment(playerid, ShopTD_NextPage[playerid], 1);
+    PlayerTextDrawColor(playerid, ShopTD_NextPage[playerid], -602653441);
+    PlayerTextDrawSetShadow(playerid, ShopTD_NextPage[playerid], 1);
+    PlayerTextDrawSetOutline(playerid, ShopTD_NextPage[playerid], 1);
+    PlayerTextDrawBackgroundColor(playerid, ShopTD_NextPage[playerid], 150);
+    PlayerTextDrawFont(playerid, ShopTD_NextPage[playerid], 3);
+    PlayerTextDrawSetProportional(playerid, ShopTD_NextPage[playerid], 1);
+    PlayerTextDrawSetSelectable(playerid, ShopTD_NextPage[playerid], 1);
+
+    // Grid slots loop (4x4)
+    for (new i = 0; i < 16; i++)
+    {
+        new col = i % 4;
+        new row = i / 4;
+        new Float:x = 408.000 + (col * 48.000);
+        new Float:y = 176.000 + (row * 55.000);
+
+        // Card slot background
+        ShopTD_Card[playerid][i] = CreatePlayerTextDraw(playerid, x, y, "LD_BUM:blkdot");
+        PlayerTextDrawTextSize(playerid, ShopTD_Card[playerid][i], 44.000, 39.000);
+        PlayerTextDrawAlignment(playerid, ShopTD_Card[playerid][i], 1);
+        PlayerTextDrawColor(playerid, ShopTD_Card[playerid][i], 335552445); // 0x141414FD
+        PlayerTextDrawSetShadow(playerid, ShopTD_Card[playerid][i], 0);
+        PlayerTextDrawSetOutline(playerid, ShopTD_Card[playerid][i], 0);
+        PlayerTextDrawBackgroundColor(playerid, ShopTD_Card[playerid][i], 255);
+        PlayerTextDrawFont(playerid, ShopTD_Card[playerid][i], 4);
+        PlayerTextDrawSetProportional(playerid, ShopTD_Card[playerid][i], 1);
+        PlayerTextDrawSetSelectable(playerid, ShopTD_Card[playerid][i], 1);
+
+        // Purchase button background
+        ShopTD_Btn[playerid][i] = CreatePlayerTextDraw(playerid, x, y + 43.000, "LD_BUM:blkdot");
+        PlayerTextDrawTextSize(playerid, ShopTD_Btn[playerid][i], 44.000, 11.000);
+        PlayerTextDrawAlignment(playerid, ShopTD_Btn[playerid][i], 1);
+        PlayerTextDrawColor(playerid, ShopTD_Btn[playerid][i], -2686721); // 0xFFD603FF
+        PlayerTextDrawSetShadow(playerid, ShopTD_Btn[playerid][i], 0);
+        PlayerTextDrawSetOutline(playerid, ShopTD_Btn[playerid][i], 0);
+        PlayerTextDrawBackgroundColor(playerid, ShopTD_Btn[playerid][i], 255);
+        PlayerTextDrawFont(playerid, ShopTD_Btn[playerid][i], 4);
+        PlayerTextDrawSetProportional(playerid, ShopTD_Btn[playerid][i], 1);
+
+        // Purchase button text
+        ShopTD_BtnTxt[playerid][i] = CreatePlayerTextDraw(playerid, x + 5.000, y + 45.000, "PURCHASE");
+        PlayerTextDrawLetterSize(playerid, ShopTD_BtnTxt[playerid][i], 0.210, 0.899);
+        PlayerTextDrawAlignment(playerid, ShopTD_BtnTxt[playerid][i], 1);
+        PlayerTextDrawColor(playerid, ShopTD_BtnTxt[playerid][i], -1);
+        PlayerTextDrawSetShadow(playerid, ShopTD_BtnTxt[playerid][i], 1);
+        PlayerTextDrawSetOutline(playerid, ShopTD_BtnTxt[playerid][i], 1);
+        PlayerTextDrawBackgroundColor(playerid, ShopTD_BtnTxt[playerid][i], 255);
+        PlayerTextDrawFont(playerid, ShopTD_BtnTxt[playerid][i], 3);
+        PlayerTextDrawSetProportional(playerid, ShopTD_BtnTxt[playerid][i], 1);
+
+        // Model preview
+        ShopTD_Preview[playerid][i] = CreatePlayerTextDraw(playerid, x - 17.000, y - 3.000, "_");
+        PlayerTextDrawTextSize(playerid, ShopTD_Preview[playerid][i], 53.000, 43.000);
+        PlayerTextDrawAlignment(playerid, ShopTD_Preview[playerid][i], 1);
+        PlayerTextDrawColor(playerid, ShopTD_Preview[playerid][i], -1);
+        PlayerTextDrawSetShadow(playerid, ShopTD_Preview[playerid][i], 0);
+        PlayerTextDrawSetOutline(playerid, ShopTD_Preview[playerid][i], 0);
+        PlayerTextDrawBackgroundColor(playerid, ShopTD_Preview[playerid][i], 0);
+        PlayerTextDrawFont(playerid, ShopTD_Preview[playerid][i], 5);
+        PlayerTextDrawSetProportional(playerid, ShopTD_Preview[playerid][i], 0);
+        PlayerTextDrawSetPreviewModel(playerid, ShopTD_Preview[playerid][i], 1);
+        PlayerTextDrawSetPreviewRot(playerid, ShopTD_Preview[playerid][i], 0.000, 0.000, 0.000, 1.000);
+
+        // Price text
+        ShopTD_Price[playerid][i] = CreatePlayerTextDraw(playerid, x + 21.000, y + 3.000, "$5,000");
+        PlayerTextDrawLetterSize(playerid, ShopTD_Price[playerid][i], 0.150, 0.799);
+        PlayerTextDrawAlignment(playerid, ShopTD_Price[playerid][i], 1);
+        PlayerTextDrawColor(playerid, ShopTD_Price[playerid][i], -1);
+        PlayerTextDrawSetShadow(playerid, ShopTD_Price[playerid][i], 1);
+        PlayerTextDrawSetOutline(playerid, ShopTD_Price[playerid][i], 1);
+        PlayerTextDrawBackgroundColor(playerid, ShopTD_Price[playerid][i], 150);
+        PlayerTextDrawFont(playerid, ShopTD_Price[playerid][i], 3);
+        PlayerTextDrawSetProportional(playerid, ShopTD_Price[playerid][i], 1);
+    }
+    return 1;
+}
+
+stock DestroyClothingShopTDs(playerid)
+{
+    PlayerTextDrawDestroy(playerid, ShopTD_Background[playerid]);
+    PlayerTextDrawDestroy(playerid, ShopTD_Header[playerid]);
+    PlayerTextDrawDestroy(playerid, ShopTD_Title[playerid]);
+    PlayerTextDrawDestroy(playerid, ShopTD_Page[playerid]);
+    PlayerTextDrawDestroy(playerid, ShopTD_Close[playerid]);
+    PlayerTextDrawDestroy(playerid, ShopTD_Footer[playerid]);
+    PlayerTextDrawDestroy(playerid, ShopTD_PrevPage[playerid]);
+    PlayerTextDrawDestroy(playerid, ShopTD_NextPage[playerid]);
+
+    for (new i = 0; i < 16; i++)
+    {
+        PlayerTextDrawDestroy(playerid, ShopTD_Card[playerid][i]);
+        PlayerTextDrawDestroy(playerid, ShopTD_Btn[playerid][i]);
+        PlayerTextDrawDestroy(playerid, ShopTD_BtnTxt[playerid][i]);
+        PlayerTextDrawDestroy(playerid, ShopTD_Preview[playerid][i]);
+        PlayerTextDrawDestroy(playerid, ShopTD_Price[playerid][i]);
+    }
+    return 1;
+}
+
+stock UpdateClothingShopPage(playerid)
+{
+    new page = PlayerShopPage[playerid];
+    if (page == -1) return 0;
+
+    new total_pages = (TotalPlayerShopSkins[playerid] + 15) / 16;
+    if (total_pages < 1) total_pages = 1;
+
+    new str[64];
+    format(str, sizeof(str), "Page %d/%d", page + 1, total_pages);
+    PlayerTextDrawSetString(playerid, ShopTD_Page[playerid], str);
+
+    new start_idx = page * 16;
+    for (new i = 0; i < 16; i++)
+    {
+        new skin_idx = start_idx + i;
+        if (skin_idx < TotalPlayerShopSkins[playerid])
+        {
+            new global_idx = PlayerShopSkins[playerid][skin_idx];
+            new skin_id = ShopSkins[global_idx][ss_id];
+            new price = ShopSkins[global_idx][ss_price];
+
+            // Reset card highlighting
+            PlayerTextDrawColor(playerid, ShopTD_Card[playerid][i], 335552445); // reset to dark gray
+            PlayerTextDrawShow(playerid, ShopTD_Card[playerid][i]);
+
+            PlayerTextDrawShow(playerid, ShopTD_Btn[playerid][i]);
+            PlayerTextDrawShow(playerid, ShopTD_BtnTxt[playerid][i]);
+
+            PlayerTextDrawSetPreviewModel(playerid, ShopTD_Preview[playerid][i], skin_id);
+            PlayerTextDrawShow(playerid, ShopTD_Preview[playerid][i]);
+
+            format(str, sizeof(str), "$%s", FormatNumber(price));
+            PlayerTextDrawSetString(playerid, ShopTD_Price[playerid][i], str);
+            PlayerTextDrawShow(playerid, ShopTD_Price[playerid][i]);
+        }
+        else
+        {
+            PlayerTextDrawHide(playerid, ShopTD_Card[playerid][i]);
+            PlayerTextDrawHide(playerid, ShopTD_Btn[playerid][i]);
+            PlayerTextDrawHide(playerid, ShopTD_BtnTxt[playerid][i]);
+            PlayerTextDrawHide(playerid, ShopTD_Preview[playerid][i]);
+            PlayerTextDrawHide(playerid, ShopTD_Price[playerid][i]);
+        }
+    }
+    return 1;
+}
+
+stock OpenClothingShop(playerid)
+{
+    new is_female = IsSkinFemale(PlayerData[playerid][pModel]);
+    TotalPlayerShopSkins[playerid] = 0;
+    for (new i = 0; i < TotalShopSkins; i++)
+    {
+        if (IsSkinFemale(ShopSkins[i][ss_id]) == is_female)
+        {
+            PlayerShopSkins[playerid][TotalPlayerShopSkins[playerid]] = i;
+            TotalPlayerShopSkins[playerid]++;
+        }
+    }
+
+    PlayerShopPage[playerid] = 0;
+    PlayerShopSelectedSlot[playerid] = -1;
+
+    PlayerTextDrawShow(playerid, ShopTD_Background[playerid]);
+    PlayerTextDrawShow(playerid, ShopTD_Header[playerid]);
+    PlayerTextDrawShow(playerid, ShopTD_Title[playerid]);
+    PlayerTextDrawShow(playerid, ShopTD_Page[playerid]);
+    PlayerTextDrawShow(playerid, ShopTD_Close[playerid]);
+    PlayerTextDrawShow(playerid, ShopTD_Footer[playerid]);
+    PlayerTextDrawShow(playerid, ShopTD_PrevPage[playerid]);
+    PlayerTextDrawShow(playerid, ShopTD_NextPage[playerid]);
+
+    UpdateClothingShopPage(playerid);
+    SelectTextDraw(playerid, 0x00000080);
+    return 1;
+}
+
+stock CloseClothingShop(playerid)
+{
+    PlayerShopPage[playerid] = -1;
+    PlayerShopSelectedSlot[playerid] = -1;
+
+    PlayerTextDrawHide(playerid, ShopTD_Background[playerid]);
+    PlayerTextDrawHide(playerid, ShopTD_Header[playerid]);
+    PlayerTextDrawHide(playerid, ShopTD_Title[playerid]);
+    PlayerTextDrawHide(playerid, ShopTD_Page[playerid]);
+    PlayerTextDrawHide(playerid, ShopTD_Close[playerid]);
+    PlayerTextDrawHide(playerid, ShopTD_Footer[playerid]);
+    PlayerTextDrawHide(playerid, ShopTD_PrevPage[playerid]);
+    PlayerTextDrawHide(playerid, ShopTD_NextPage[playerid]);
+
+    for (new i = 0; i < 16; i++)
+    {
+        PlayerTextDrawHide(playerid, ShopTD_Card[playerid][i]);
+        PlayerTextDrawHide(playerid, ShopTD_Btn[playerid][i]);
+        PlayerTextDrawHide(playerid, ShopTD_BtnTxt[playerid][i]);
+        PlayerTextDrawHide(playerid, ShopTD_Preview[playerid][i]);
+        PlayerTextDrawHide(playerid, ShopTD_Price[playerid][i]);
+    }
+
+    CancelSelectTextDraw(playerid);
+    return 1;
+}
+
+stock Clothing_OnClickPlayerTD(playerid, PlayerText:playertextid)
+{
+    if (playertextid == ShopTD_Close[playerid])
+    {
+        CloseClothingShop(playerid);
+        return 1;
+    }
+
+    if (playertextid == ShopTD_PrevPage[playerid])
+    {
+        if (PlayerShopPage[playerid] > 0)
+        {
+            PlayerShopPage[playerid]--;
+            UpdateClothingShopPage(playerid);
+            PlayerPlaySound(playerid, 1084, 0.0, 0.0, 0.0);
+        }
+        return 1;
+    }
+
+    if (playertextid == ShopTD_NextPage[playerid])
+    {
+        new total_pages = (TotalPlayerShopSkins[playerid] + 15) / 16;
+        if (PlayerShopPage[playerid] + 1 < total_pages)
+        {
+            PlayerShopPage[playerid]++;
+            UpdateClothingShopPage(playerid);
+            PlayerPlaySound(playerid, 1084, 0.0, 0.0, 0.0);
+        }
+        return 1;
+    }
+
+    new start_idx = PlayerShopPage[playerid] * 16;
+    for (new i = 0; i < 16; i++)
+    {
+        new skin_idx = start_idx + i;
+        if (skin_idx >= TotalPlayerShopSkins[playerid]) break;
+
+        if (playertextid == ShopTD_Card[playerid][i])
+        {
+            PlayerShopSelectedSlot[playerid] = skin_idx;
+            for (new j = 0; j < 16; j++)
+            {
+                PlayerTextDrawColor(playerid, ShopTD_Card[playerid][j], (j == i) ? (-2686721) : (335552445));
+                PlayerTextDrawShow(playerid, ShopTD_Card[playerid][j]);
+            }
+            PlayerPlaySound(playerid, 1083, 0.0, 0.0, 0.0);
+
+            // Trigger confirm dialog for selected skin
+            new global_idx = PlayerShopSkins[playerid][skin_idx];
+            new skin_id = ShopSkins[global_idx][ss_id];
+            new price = ShopSkins[global_idx][ss_price];
+
+            new str[128];
+            format(str, sizeof(str), "Are you sure you want to buy Skin ID %d for $%s?", skin_id, FormatNumber(price));
+            SetPVarInt(playerid, "BuySkinID", skin_id);
+            SetPVarInt(playerid, "BuySkinPrice", price);
+            Dialog_Show(playerid, BuySkinConfirm, DIALOG_STYLE_MSGBOX, "Confirm Skin Purchase", str, "Yes", "No");
+            return 1;
+        }
+    }
+    return 0;
+}
+
+Dialog:BuySkinConfirm(playerid, response, listitem, inputtext[])
+{
+    if (!response)
+    {
+        return 1;
+    }
+
+    new skin_id = GetPVarInt(playerid, "BuySkinID");
+    new price = GetPVarInt(playerid, "BuySkinPrice");
+    DeletePVar(playerid, "BuySkinID");
+    DeletePVar(playerid, "BuySkinPrice");
+
+    if (PlayerData[playerid][pCash] < price)
+    {
+        SendErrorMessage(playerid, "You don't have enough cash.");
+        return 1;
+    }
+
+    TakePlayerMoney(playerid, price);
+    PlayerData[playerid][pModel] = skin_id;
+    SetPlayerSkin(playerid, skin_id);
+
+    new query[128];
+    mysql_format(dbCon, query, sizeof(query), "UPDATE `characters` SET `Model` = '%d' WHERE `ID` = '%d'", skin_id, PlayerData[playerid][pID]);
+    mysql_tquery(dbCon, query);
+
+    SendClientMessageEx(playerid, COLOR_GREEN, "You have purchased Skin ID %d for $%s.", skin_id, FormatNumber(price));
+    PlayerPlaySound(playerid, 1052, 0.0, 0.0, 0.0);
+
+    CloseClothingShop(playerid);
+    return 1;
+}
+
+Dialog:ClothingShopSelect(playerid, response, listitem, inputtext[])
+{
+    if (!response) return 1;
+
+    if (listitem == 0) // Clothes (Baju)
+    {
+        OpenClothingShop(playerid);
+    }
+    else if (listitem == 1) // Accessories (Aksesoris)
+    {
+        ShowClothingDialog(playerid, 0);
+    }
+    return 1;
+}
+
+CMD:addskintoshop(playerid, params[])
+{
+    if (PlayerData[playerid][pAdmin] < 4)
+        return SendErrorMessage(playerid, "You're not authorized to use this command.");
+
+    new skinid, price;
+    if (sscanf(params, "dd", skinid, price))
+        return SendSyntaxMessage(playerid, "/addskintoshop [skinid] [price]");
+
+    if (skinid < 1 || skinid > 30000)
+        return SendErrorMessage(playerid, "Invalid skin ID specified.");
+
+    if (price < 1)
+        return SendErrorMessage(playerid, "Invalid price specified.");
+
+    new query[256];
+    mysql_format(dbCon, query, sizeof(query), "INSERT INTO `clothing_shop_skins` (`skin_id`, `price`) VALUES (%d, %d) ON DUPLICATE KEY UPDATE `price` = %d", skinid, price, price);
+    mysql_tquery(dbCon, query, "OnAdminAddSkin", "ddd", playerid, skinid, price);
+    return 1;
+}
+
+forward OnAdminAddSkin(playerid, skinid, price);
+public OnAdminAddSkin(playerid, skinid, price)
+{
+    SendClientMessageEx(playerid, COLOR_GREEN, "You have added Skin ID %d to the clothing shop for $%s.", skinid, FormatNumber(price));
+    LoadShopSkins();
+    return 1;
+}
+
+CMD:removeskinfromshop(playerid, params[])
+{
+    if (PlayerData[playerid][pAdmin] < 4)
+        return SendErrorMessage(playerid, "You're not authorized to use this command.");
+
+    new skinid;
+    if (sscanf(params, "d", skinid))
+        return SendSyntaxMessage(playerid, "/removeskinfromshop [skinid]");
+
+    new query[256];
+    mysql_format(dbCon, query, sizeof(query), "DELETE FROM `clothing_shop_skins` WHERE `skin_id` = %d", skinid);
+    mysql_tquery(dbCon, query, "OnAdminRemoveSkin", "dd", playerid, skinid);
+    return 1;
+}
+
+forward OnAdminRemoveSkin(playerid, skinid);
+public OnAdminRemoveSkin(playerid, skinid)
+{
+    SendClientMessageEx(playerid, COLOR_GREEN, "You have removed Skin ID %d from the clothing shop.", skinid);
+    LoadShopSkins();
+    return 1;
+}

@@ -3812,6 +3812,9 @@ CMD:buy(playerid, params[])
 				category = BUYZIP; // Default to ZIP
 			}
 			cl_buying[playerid] = category;
+
+			Dialog_Show(playerid, ClothingShopSelect, DIALOG_STYLE_LIST, "Clothing Shop Menu", "1. Clothes\n2. Accessories", "Select", "Cancel");
+			return true;
 		}
 		else return SendErrorMessage(playerid, "You can't purchase anything here.");
     }

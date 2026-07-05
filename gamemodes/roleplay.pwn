@@ -2132,6 +2132,7 @@ public OnGameModeInit()
 	mysql_tquery(dbCon, "SELECT * FROM `motd` LIMIT 1", "LoadMOTD");
 	mysql_tquery(dbCon, "UPDATE characters SET Online = 0 WHERE Online = 1");
     mysql_tquery(dbCon, "UPDATE accounts SET Online = 0 WHERE Online = 1");
+	mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `clothing_shop_skins` (`skin_id` INT PRIMARY KEY, `price` INT NOT NULL DEFAULT 5000)", "OnCreateShopSkinsTable");
 
     #include "modules/mapping/Misc.pwn"
     #include "modules/mapping/Main.pwn"
@@ -2216,6 +2217,7 @@ public OnPlayerConnect(playerid)
 
   	RemoveBuilding(playerid);
   	CreateTextdraws(playerid);
+	CreateClothingShopTDs(playerid);
 
 	// PONYTAIL: Reset color selection state and hide textdraws on connect
 	ColorSelectShow{playerid} = false;
@@ -2259,6 +2261,7 @@ public OnPlayerDisconnect(playerid, reason)
 {	
 	PlayerTextDrawDestroy(playerid, TD_ServerLocation[playerid]);
 	PlayerTextDrawDestroy(playerid, TD_ServerFPS[playerid]);
+	DestroyClothingShopTDs(playerid);
 	new str[128], szDisconnectReason[3][10] = {"Timeout", "Leaving", "Kicked"};
 
 	format(str, sizeof(str), "** %s (%s)", ReturnName(playerid), szDisconnectReason[reason]);
@@ -10561,6 +10564,15 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 				break;
 			}
 		}
+	}
+	if(playertextid == PlayerText:INVALID_TEXT_DRAW && PlayerShopPage[playerid] != -1)
+	{
+		CloseClothingShop(playerid);
+		return true;
+	}
+	if(PlayerShopPage[playerid] != -1)
+	{
+		Clothing_OnClickPlayerTD(playerid, playertextid);
 	}
     return true;
 }
