@@ -3,6 +3,7 @@
 new PlayerText:LoginTD_Bg[MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
 new PlayerText:LoginTD_Box[MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
 new PlayerText:LoginTD_Username[MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
+new PlayerText:LoginTD_PasswordBtn[MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
 new PlayerText:LoginTD_Password[MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
 new PlayerText:LoginTD_Btn[MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
 new PlayerText:LoginTD_BtnTxt[MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
@@ -42,26 +43,37 @@ stock CreateLoginTDs(playerid)
     new name_str[64];
     format(name_str, sizeof(name_str), "%s", ReturnName(playerid));
     LoginTD_Username[playerid] = CreatePlayerTextDraw(playerid, 275.000, 167.000, name_str);
-    PlayerTextDrawLetterSize(playerid, LoginTD_Username[playerid], 0.260, 1.299);
+    PlayerTextDrawLetterSize(playerid, LoginTD_Username[playerid], 0.259, 1.299);
     PlayerTextDrawAlignment(playerid, LoginTD_Username[playerid], 1);
     PlayerTextDrawColor(playerid, LoginTD_Username[playerid], -1);
     PlayerTextDrawSetShadow(playerid, LoginTD_Username[playerid], 1);
     PlayerTextDrawSetOutline(playerid, LoginTD_Username[playerid], 1);
     PlayerTextDrawBackgroundColor(playerid, LoginTD_Username[playerid], 150);
-    PlayerTextDrawFont(playerid, LoginTD_Username[playerid], 2);
+    PlayerTextDrawFont(playerid, LoginTD_Username[playerid], 3);
     PlayerTextDrawSetProportional(playerid, LoginTD_Username[playerid], 1);
 
-    // Password Text (Selectable!)
+    // Password Box Background blkdot (Selectable!)
+    LoginTD_PasswordBtn[playerid] = CreatePlayerTextDraw(playerid, 271.000, 186.000, "LD_BUM:blkdot");
+    PlayerTextDrawTextSize(playerid, LoginTD_PasswordBtn[playerid], 121.000, 17.000);
+    PlayerTextDrawAlignment(playerid, LoginTD_PasswordBtn[playerid], 1);
+    PlayerTextDrawColor(playerid, LoginTD_PasswordBtn[playerid], -256);
+    PlayerTextDrawSetShadow(playerid, LoginTD_PasswordBtn[playerid], 0);
+    PlayerTextDrawSetOutline(playerid, LoginTD_PasswordBtn[playerid], 0);
+    PlayerTextDrawBackgroundColor(playerid, LoginTD_PasswordBtn[playerid], 255);
+    PlayerTextDrawFont(playerid, LoginTD_PasswordBtn[playerid], 4);
+    PlayerTextDrawSetProportional(playerid, LoginTD_PasswordBtn[playerid], 1);
+    PlayerTextDrawSetSelectable(playerid, LoginTD_PasswordBtn[playerid], 1);
+
+    // Password Text
     LoginTD_Password[playerid] = CreatePlayerTextDraw(playerid, 275.000, 188.000, "Password");
-    PlayerTextDrawLetterSize(playerid, LoginTD_Password[playerid], 0.260, 1.299);
+    PlayerTextDrawLetterSize(playerid, LoginTD_Password[playerid], 0.259, 1.299);
     PlayerTextDrawAlignment(playerid, LoginTD_Password[playerid], 1);
     PlayerTextDrawColor(playerid, LoginTD_Password[playerid], -1);
     PlayerTextDrawSetShadow(playerid, LoginTD_Password[playerid], 1);
     PlayerTextDrawSetOutline(playerid, LoginTD_Password[playerid], 1);
     PlayerTextDrawBackgroundColor(playerid, LoginTD_Password[playerid], 150);
-    PlayerTextDrawFont(playerid, LoginTD_Password[playerid], 2);
+    PlayerTextDrawFont(playerid, LoginTD_Password[playerid], 3);
     PlayerTextDrawSetProportional(playerid, LoginTD_Password[playerid], 1);
-    PlayerTextDrawSetSelectable(playerid, LoginTD_Password[playerid], 1);
 
     // Login Button blkdot (Selectable!)
     LoginTD_Btn[playerid] = CreatePlayerTextDraw(playerid, 293.000, 218.000, "LD_BUM:blkdot");
@@ -88,7 +100,7 @@ stock CreateLoginTDs(playerid)
 
     // Status Text
     LoginTD_Status[playerid] = CreatePlayerTextDraw(playerid, 12.000, 414.000, "Please wait");
-    PlayerTextDrawLetterSize(playerid, LoginTD_Status[playerid], 0.579, 2.799);
+    PlayerTextDrawLetterSize(playerid, LoginTD_Status[playerid], 0.578, 2.799);
     PlayerTextDrawAlignment(playerid, LoginTD_Status[playerid], 1);
     PlayerTextDrawColor(playerid, LoginTD_Status[playerid], -1);
     PlayerTextDrawSetShadow(playerid, LoginTD_Status[playerid], 1);
@@ -107,12 +119,21 @@ stock DestroyLoginTDs(playerid)
     }
 
     PlayerTextDrawDestroy(playerid, LoginTD_Bg[playerid]);
+    LoginTD_Bg[playerid] = PlayerText:INVALID_TEXT_DRAW;
     PlayerTextDrawDestroy(playerid, LoginTD_Box[playerid]);
+    LoginTD_Box[playerid] = PlayerText:INVALID_TEXT_DRAW;
     PlayerTextDrawDestroy(playerid, LoginTD_Username[playerid]);
+    LoginTD_Username[playerid] = PlayerText:INVALID_TEXT_DRAW;
+    PlayerTextDrawDestroy(playerid, LoginTD_PasswordBtn[playerid]);
+    LoginTD_PasswordBtn[playerid] = PlayerText:INVALID_TEXT_DRAW;
     PlayerTextDrawDestroy(playerid, LoginTD_Password[playerid]);
+    LoginTD_Password[playerid] = PlayerText:INVALID_TEXT_DRAW;
     PlayerTextDrawDestroy(playerid, LoginTD_Btn[playerid]);
+    LoginTD_Btn[playerid] = PlayerText:INVALID_TEXT_DRAW;
     PlayerTextDrawDestroy(playerid, LoginTD_BtnTxt[playerid]);
+    LoginTD_BtnTxt[playerid] = PlayerText:INVALID_TEXT_DRAW;
     PlayerTextDrawDestroy(playerid, LoginTD_Status[playerid]);
+    LoginTD_Status[playerid] = PlayerText:INVALID_TEXT_DRAW;
 }
 
 stock ClearChatForPlayer(playerid)
@@ -156,12 +177,25 @@ stock SetLoginScreenReady(playerid)
     // Show the rest of the textdraws
     PlayerTextDrawShow(playerid, LoginTD_Box[playerid]);
     PlayerTextDrawShow(playerid, LoginTD_Username[playerid]);
+    PlayerTextDrawShow(playerid, LoginTD_PasswordBtn[playerid]);
     PlayerTextDrawShow(playerid, LoginTD_Password[playerid]);
     PlayerTextDrawShow(playerid, LoginTD_Btn[playerid]);
     PlayerTextDrawShow(playerid, LoginTD_BtnTxt[playerid]);
 
     // Turn on cursor selection mode
     SelectTextDraw(playerid, 0xFFD60380);
+}
+
+stock HideLoginInputs(playerid)
+{
+    // Hide all input textdraws but keep the background active
+    PlayerTextDrawHide(playerid, LoginTD_Box[playerid]);
+    PlayerTextDrawHide(playerid, LoginTD_Username[playerid]);
+    PlayerTextDrawHide(playerid, LoginTD_PasswordBtn[playerid]);
+    PlayerTextDrawHide(playerid, LoginTD_Password[playerid]);
+    PlayerTextDrawHide(playerid, LoginTD_Btn[playerid]);
+    PlayerTextDrawHide(playerid, LoginTD_BtnTxt[playerid]);
+    PlayerTextDrawHide(playerid, LoginTD_Status[playerid]);
 }
 
 forward OnLoginLoadingTimer(playerid);
@@ -184,7 +218,8 @@ public OnLoginLoadingTimer(playerid)
 
 stock OnLoginClickPlayerTD(playerid, PlayerText:playertextid)
 {
-    if (playertextid == LoginTD_Password[playerid])
+    // Click on the yellow password box background (LoginTD_PasswordBtn)
+    if (playertextid == LoginTD_PasswordBtn[playerid])
     {
         Dialog_Show(playerid, LoginScreenTD, DIALOG_STYLE_PASSWORD, "Enter Password", "Please enter your password:", "Submit", "Cancel");
         PlayerPlaySound(playerid, 1083, 0.0, 0.0, 0.0);

@@ -68,7 +68,7 @@ HandleFailedLogin(extraid)
 
 HandleSuccessfulLogin(extraid)
 {
-	DestroyLoginTDs(extraid);
+	HideLoginInputs(extraid);
 
 	new query[256];
 	if(isnull(AccountData[extraid][aSecretWord]))
