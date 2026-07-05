@@ -135,15 +135,11 @@ task ServerDateTimer[1000]()
     gettime(hours, minutes, seconds);
 
     // Adjust to GMT+7 (WIB)
-    hours = hours + 7;
-    if(hours >= 24)
-    {
-        hours -= 24;
-    }
+    hours = (hours + 7) % 24;
 
-    format(string, sizeof(string), "%d/%02d/%d", day, month, year);
+    format(string, sizeof(string), "%02d/%02d/%d", day, month, year);
     TextDrawSetString(TD_ServerDate, string);
 
-    format(string, sizeof(string), "%02d:%02d", hours, minutes);
+    format(string, sizeof(string), "%02d:%02d:%02d", hours, minutes, seconds);
     TextDrawSetString(TD_ServerTime, string);
 }
