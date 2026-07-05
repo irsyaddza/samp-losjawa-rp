@@ -22,6 +22,13 @@ ptask Players[1000](i)
 
 	if(PlayerData[i][pID] == -1) return true;
 
+	new MapZone:zone = GetPlayerMapZone(i);
+    new zoneName[MAX_MAP_ZONE_NAME];
+    GetMapZoneName(zone, zoneName);
+	new locString[128];
+    format(locString, sizeof(locString), "%s", zoneName);
+	PlayerTextDrawSetString(i, TD_ServerLocation[i], locString);
+
 	if(PlayerData[i][pTutorialStep])
 	{
 		if(TutorialDelay[i] > 0)

@@ -19,12 +19,12 @@ RUN dpkg --add-architecture i386 && \
         libatomic1:i386 \
     && rm -rf /var/lib/apt/lists/*
 
-# ── Download & install libmysqlclient18:i386 secara manual ────────────────────
+# ── Install libmysqlclient18:i386 secara manual ────────────────────
 # mysql.so membutuhkan libmysqlclient.so.18 (MySQL 5.x 32-bit)
-RUN wget -q "http://launchpadlibrarian.net/247514894/libmysqlclient18_5.6.28-1ubuntu3_i386.deb" -O /tmp/libmysqlclient18.deb && \
-    dpkg -x /tmp/libmysqlclient18.deb /tmp/libmysqlclient18 && \
+COPY libmysqlclient18.deb /tmp/libmysqlclient18.deb
+RUN dpkg -x /tmp/libmysqlclient18.deb /tmp/libmysqlclient18 && \
     cp -r /tmp/libmysqlclient18/usr/lib/i386-linux-gnu/* /usr/lib/i386-linux-gnu/ && \
-    rm -rf /tmp/libmysqlclient18* && \
+    rm -rf /tmp/libmysqlclient18* /tmp/libmysqlclient18.deb && \
     ldconfig
 
 # ── Buat folder kerja ────────────────────────────────────────────────────────
@@ -50,6 +50,7 @@ COPY plugins/Whirlpool.so           ./plugins/Whirlpool.so
 COPY plugins/pawnregex.so           ./plugins/pawnregex.so
 COPY plugins/discord-connector.so   ./plugins/discord-connector.so
 COPY plugins/samp_bcrypt.so         ./plugins/samp_bcrypt.so
+COPY plugins/crashdetect.so          ./plugins/crashdetect.so
 COPY plugins/pawnregex.cfg          ./plugins/pawnregex.cfg
 
 COPY log-core.so                    ./log-core.so

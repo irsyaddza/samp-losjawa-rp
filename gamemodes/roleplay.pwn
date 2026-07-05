@@ -28,6 +28,7 @@
 #include <evi>
 #include <sort>
 #include <samp_bcrypt>
+#include <map-zones>
 
 #define DIALOG_STATS 15000  
 
@@ -1252,6 +1253,13 @@ new Text:TD_PhoneCover[9];
 new Text:Store_Frame[4];
 new Text:ALPR_UI[2];
 
+new Text:TD_ServerDate;
+new Text:TD_ServerTime;
+new Text:TD_ServerStrip;
+new Text:TD_ServerLosJawa;
+new Text:TD_ServerRolePlay;
+new PlayerText:TD_ServerLocation[MAX_PLAYERS];
+
 new bool:MDC_Created[MAX_PLAYERS char];
 new bool:UsingMDC[MAX_PLAYERS char];
 new bool:ALPR_Hit[MAX_PLAYERS char];
@@ -2250,6 +2258,7 @@ public OnPlayerConnect(playerid)
 
 public OnPlayerDisconnect(playerid, reason)
 {	
+	PlayerTextDrawDestroy(playerid, TD_ServerLocation[playerid]);
 	new str[128], szDisconnectReason[3][10] = {"Timeout", "Leaving", "Kicked"};
 
 	format(str, sizeof(str), "** %s (%s)", ReturnName(playerid), szDisconnectReason[reason]);
@@ -5801,6 +5810,13 @@ public OnPlayerSpawn(playerid)
     if(!Spawned{playerid})
 	{
         Spawned{playerid} = true;
+
+        TextDrawShowForPlayer(playerid, TD_ServerDate);
+        TextDrawShowForPlayer(playerid, TD_ServerTime);
+        TextDrawShowForPlayer(playerid, TD_ServerStrip);
+        TextDrawShowForPlayer(playerid, TD_ServerLosJawa);
+        TextDrawShowForPlayer(playerid, TD_ServerRolePlay);
+        PlayerTextDrawShow(playerid, TD_ServerLocation[playerid]);
 
         LastSpawn[playerid] = gettime();
 

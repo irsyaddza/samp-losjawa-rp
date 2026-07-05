@@ -231,6 +231,76 @@ CreateGlobalTextDraws()
 	TextDrawBackgroundColor(ALPR_UI[1], 255);
 	TextDrawFont(ALPR_UI[1], 2);
 	TextDrawSetProportional(ALPR_UI[1], 1);
+
+	TD_ServerDate = TextDrawCreate(324.000000, 18.000000, "00.00.0000");
+	TextDrawFont(TD_ServerDate, 1);
+	TextDrawLetterSize(TD_ServerDate, 0.241666, 1.149999);
+	TextDrawTextSize(TD_ServerDate, 400.000000, 17.000000);
+	TextDrawSetOutline(TD_ServerDate, 1);
+	TextDrawSetShadow(TD_ServerDate, 0);
+	TextDrawAlignment(TD_ServerDate, 1);
+	TextDrawColor(TD_ServerDate, -741092353);
+	TextDrawBackgroundColor(TD_ServerDate, 255);
+	TextDrawBoxColor(TD_ServerDate, 50);
+	TextDrawUseBox(TD_ServerDate, 0);
+	TextDrawSetProportional(TD_ServerDate, 1);
+	TextDrawSetSelectable(TD_ServerDate, 0);
+
+	TD_ServerTime = TextDrawCreate(324.000000, 6.000000, "00:00");
+	TextDrawFont(TD_ServerTime, 1);
+	TextDrawLetterSize(TD_ServerTime, 0.229158, 1.199998);
+	TextDrawTextSize(TD_ServerTime, 397.500000, 14.500000);
+	TextDrawSetOutline(TD_ServerTime, 1);
+	TextDrawSetShadow(TD_ServerTime, 0);
+	TextDrawAlignment(TD_ServerTime, 1);
+	TextDrawColor(TD_ServerTime, -741092353);
+	TextDrawBackgroundColor(TD_ServerTime, 255);
+	TextDrawBoxColor(TD_ServerTime, 50);
+	TextDrawUseBox(TD_ServerTime, 0);
+	TextDrawSetProportional(TD_ServerTime, 1);
+	TextDrawSetSelectable(TD_ServerTime, 0);
+
+	TD_ServerStrip = TextDrawCreate(320.000000, -8.000000, "[");
+	TextDrawFont(TD_ServerStrip, 1);
+	TextDrawLetterSize(TD_ServerStrip, 0.079167, 5.850005);
+	TextDrawTextSize(TD_ServerStrip, 400.000000, 17.000000);
+	TextDrawSetOutline(TD_ServerStrip, 1);
+	TextDrawSetShadow(TD_ServerStrip, 0);
+	TextDrawAlignment(TD_ServerStrip, 1);
+	TextDrawColor(TD_ServerStrip, -1);
+	TextDrawBackgroundColor(TD_ServerStrip, 255);
+	TextDrawBoxColor(TD_ServerStrip, 50);
+	TextDrawUseBox(TD_ServerStrip, 0);
+	TextDrawSetProportional(TD_ServerStrip, 1);
+	TextDrawSetSelectable(TD_ServerStrip, 0);
+
+	TD_ServerLosJawa = TextDrawCreate(255.000000, 5.000000, "los jawa");
+	TextDrawFont(TD_ServerLosJawa, 3);
+	TextDrawLetterSize(TD_ServerLosJawa, 0.362500, 2.499999);
+	TextDrawTextSize(TD_ServerLosJawa, 400.000000, 17.000000);
+	TextDrawSetOutline(TD_ServerLosJawa, 2);
+	TextDrawSetShadow(TD_ServerLosJawa, 0);
+	TextDrawAlignment(TD_ServerLosJawa, 1);
+	TextDrawColor(TD_ServerLosJawa, -741092353);
+	TextDrawBackgroundColor(TD_ServerLosJawa, 255);
+	TextDrawBoxColor(TD_ServerLosJawa, 50);
+	TextDrawUseBox(TD_ServerLosJawa, 0);
+	TextDrawSetProportional(TD_ServerLosJawa, 1);
+	TextDrawSetSelectable(TD_ServerLosJawa, 0);
+
+	TD_ServerRolePlay = TextDrawCreate(263.000000, 19.000000, "RolePlay");
+	TextDrawFont(TD_ServerRolePlay, 0);
+	TextDrawLetterSize(TD_ServerRolePlay, 0.433333, 2.000000);
+	TextDrawTextSize(TD_ServerRolePlay, 400.000000, 17.000000);
+	TextDrawSetOutline(TD_ServerRolePlay, 2);
+	TextDrawSetShadow(TD_ServerRolePlay, 0);
+	TextDrawAlignment(TD_ServerRolePlay, 1);
+	TextDrawColor(TD_ServerRolePlay, -741092353);
+	TextDrawBackgroundColor(TD_ServerRolePlay, 255);
+	TextDrawBoxColor(TD_ServerRolePlay, 50);
+	TextDrawUseBox(TD_ServerRolePlay, 0);
+	TextDrawSetProportional(TD_ServerRolePlay, 1);
+	TextDrawSetSelectable(TD_ServerRolePlay, 0);
 }
 
 CreateCharacterMenuTD(playerid, rows)
@@ -320,6 +390,19 @@ CreateCharacterMenuTD(playerid, rows)
 
 CreateTextdraws(playerid)
 {
+	TD_ServerLocation[playerid] = CreatePlayerTextDraw(playerid, 324.000000, 30.000000, "Los Santos International");
+	PlayerTextDrawFont(playerid, TD_ServerLocation[playerid], 1);
+	PlayerTextDrawLetterSize(playerid, TD_ServerLocation[playerid], 0.291666, 1.049998);
+	PlayerTextDrawTextSize(playerid, TD_ServerLocation[playerid], 733.000000, 17.000000);
+	PlayerTextDrawSetOutline(playerid, TD_ServerLocation[playerid], 1);
+	PlayerTextDrawSetShadow(playerid, TD_ServerLocation[playerid], 0);
+	PlayerTextDrawAlignment(playerid, TD_ServerLocation[playerid], 1);
+	PlayerTextDrawColor(playerid, TD_ServerLocation[playerid], -2686721);
+	PlayerTextDrawBackgroundColor(playerid, TD_ServerLocation[playerid], 255);
+	PlayerTextDrawBoxColor(playerid, TD_ServerLocation[playerid], 50);
+	PlayerTextDrawUseBox(playerid, TD_ServerLocation[playerid], 0);
+	PlayerTextDrawSetProportional(playerid, TD_ServerLocation[playerid], 1);
+	PlayerTextDrawSetSelectable(playerid, TD_ServerLocation[playerid], 0);
 
 	//txd sel
 	CharSelectionTD[playerid][0] = CreatePlayerTextDraw(playerid, 160.666656, 119.740737, "");

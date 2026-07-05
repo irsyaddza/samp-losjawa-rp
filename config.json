@@ -84,7 +84,7 @@
         "player_marker_sync_rate": 2500,
         "player_timeout": 10000,
         "port": 7777,
-        "public_addr": "10.167.91.67",
+        "public_addr": "192.168.1.3",
         "stream_radius": 200.0,
         "stream_rate": 1000,
         "time_sync_rate": 30000,
@@ -103,6 +103,7 @@
     "password": "",
     "pawn": {
         "legacy_plugins": [
+            "crashdetect.so",
             "streamer.so",
             "sscanf.so",
             "mysql.so",
@@ -114,7 +115,6 @@
             "roleplay 1"
         ],
         "side_scripts": [
-            "TD"
         ]
     },
     "rcon": {
