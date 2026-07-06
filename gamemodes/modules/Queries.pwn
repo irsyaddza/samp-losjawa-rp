@@ -55,7 +55,7 @@ SQL_CheckBanAccount(playerid)
 SQL_LoadCharacters(playerid)
 {
 	DestroyLoginTDs(playerid);
-	mysql_format(dbCon, gquery, sizeof(gquery), "SELECT `ID`, `char_name`, `Level`, `Model` FROM `characters` WHERE `master` = '%d' LIMIT 6", AccountData[playerid][aUserid]);
+	mysql_format(dbCon, gquery, sizeof(gquery), "SELECT `ID`, `char_name`, `Level`, `Model`, `LastLogin` FROM `characters` WHERE `master` = '%d' LIMIT 6", AccountData[playerid][aUserid]);
 	mysql_tquery(dbCon, gquery, "OnQueryFinished", "dd", playerid, THREAD_CHECK_CHARACTER);
 }
 

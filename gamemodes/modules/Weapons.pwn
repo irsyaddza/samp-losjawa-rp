@@ -659,6 +659,9 @@ cl_RemoveWeapons(playerid)
 
 cl_DressHoldWeapon(playerid, weaponid = 0)
 {
+	if(PlayerData[playerid][pID] == -1)
+		return true;
+
 	RemovePlayerAttachedObject(playerid, 5);
 	RemovePlayerAttachedObject(playerid, 6);
 	RemovePlayerAttachedObject(playerid, 7);

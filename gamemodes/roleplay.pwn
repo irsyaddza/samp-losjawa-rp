@@ -1381,7 +1381,27 @@ new bool:UI_Purchase[MAX_PLAYERS char];
 new bool:HudStatus[MAX_PLAYERS char];
 
 // Player TextDraws
+// Old grid char selection TDs (kept for reference during transition)
 new PlayerText:CharSelectionTD[MAX_PLAYERS][13];
+
+// New Cinematic Character Selection TDs (redesigned UI)
+// Index: 0=card_bg, 1=right_arrow, 2=left_arrow, 3=spawn_bg, 4=spawn_text,
+//        5=char_name, 6=char_age, 7=char_lastseen
+new PlayerText:CharSelTD[MAX_PLAYERS][8];
+
+// Character Selection Cache & State
+enum E_CHARSEL_CACHE
+{
+    csID,
+    csName[MAX_PLAYER_NAME],
+    csLevel,
+    csSkin,
+    csLastLogin
+};
+new CharSelCache[MAX_PLAYERS][6][E_CHARSEL_CACHE];
+new SelectedSlot[MAX_PLAYERS];
+new CharSelTotalSlots[MAX_PLAYERS];
+new CharSelActor[MAX_PLAYERS][6];
 new PlayerText:PTD_Restaurant[MAX_PLAYERS][9];
 new PlayerText:TD_PhoneCoverModel[MAX_PLAYERS];
 
@@ -2212,6 +2232,11 @@ public OnPlayerConnect(playerid)
 {
 	LastEngineToggle[playerid] = 0;
 	HasSeenPassengerMessage[playerid] = false;
+
+	for(new i = 0; i < 6; i++)
+	{
+		CharSelActor[playerid][i] = INVALID_ACTOR_ID;
+	}
 
 	FinishedDownloadingModels{playerid} = false;
 	AnimationsPreloaded{playerid} = false;
@@ -4697,6 +4722,10 @@ ResetStatistics(playerid) // Clear player Stats
     LastSerial[playerid][0] = EOS;
     LastLogin[playerid] = 0;
 
+    // Reset cinematic char selection state
+    SelectedSlot[playerid] = 0;
+    CharSelTotalSlots[playerid] = 0;
+
     PlayerCell[playerid] = -1;
 
     CallSign[playerid][0] = EOS;
@@ -4799,12 +4828,27 @@ ResetStatistics(playerid) // Clear player Stats
 			CharacterCache[playerid][i] = -1;
 			VehicleCache[playerid][i] = -1;
 
+			// Reset cinematic char selection cache
+			CharSelCache[playerid][i][csID] = 0;
+			CharSelCache[playerid][i][csName][0] = EOS;
+			CharSelCache[playerid][i][csLevel] = 0;
+			CharSelCache[playerid][i][csSkin] = 0;
+			CharSelCache[playerid][i][csLastLogin] = 0;
+
+			// Destroy selection 3D Actor if valid
+			if(CharSelActor[playerid][i] != INVALID_ACTOR_ID)
+			{
+				DestroyActor(CharSelActor[playerid][i]);
+				CharSelActor[playerid][i] = INVALID_ACTOR_ID;
+			}
+
 			VDealerData[playerid][i][0] = 0;
 			VDealerData[playerid][i][1] = -1;
 			VDealerData[playerid][i][2] = -1;
 			VDealerData[playerid][i][3] = 0;
 			VDealerData[playerid][i][4] = 0;
 		}
+
 
 		if(i < MAX_MARKERS)
 		{
@@ -4928,7 +4972,7 @@ ResetStatistics(playerid) // Clear player Stats
 	ConvoID[playerid] = INVALID_PLAYER_ID;
 	MedicBill[playerid] = 0;
 	gLastCar[playerid] = 0;
-	SafeTime[playerid] = 60;
+	SafeTime[playerid] = 120;
 	DeathMode{playerid} = false;
 	DeathTimer[playerid] = 120;
     TaxiDuty{playerid} = false;
@@ -5385,8 +5429,24 @@ Relog_Player(playerid)
 	ResetPlayerWeapons(playerid);
 	ClearAnimations(playerid);
 
+	// Remove all attached objects (weapons on back, accessories, etc.)
+	for(new i = 0; i < 10; i++)
+	{
+		if(IsPlayerAttachedObjectSlotUsed(playerid, i))
+		{
+			RemovePlayerAttachedObject(playerid, i);
+		}
+	}
+
+	// Reset internal weapon variables so server doesn't think they still hold weapons
+	for(new i = 0; i < 13; i++)
+	{
+		PlayerData[playerid][pGuns][i] = 0;
+	}
+
 	// 4. Reset in-game flags
 	Spawned{playerid} = false;
+	LoggedIn{playerid} = false;
 
 	// 5. Mark character as not selected (pID = -1 means "at char select screen")
 	PlayerData[playerid][pID] = -1;
@@ -5400,22 +5460,24 @@ Relog_Player(playerid)
 	// 8. Cancel any active TextDraw selection mode
 	CancelSelectTextDraw(playerid);
 
-	// 9. Destroy ALL 13 CharSelectionTD slots and status textdraws so they don't stack up
+	// Destroy any existing selection actors to prevent duplication
+	for(new i = 0; i < 6; i++)
+	{
+		if(CharSelActor[playerid][i] != INVALID_ACTOR_ID)
+		{
+			DestroyActor(CharSelActor[playerid][i]);
+			CharSelActor[playerid][i] = INVALID_ACTOR_ID;
+		}
+	}
+
+	// 9. Destroy ALL 13 old CharSelectionTD slots so they don't stack up
 	for(new i = 0; i < 13; ++i)
 	{
 		PlayerTextDrawDestroy(playerid, CharSelectionTD[playerid][i]);
 		CharSelectionTD[playerid][i] = PlayerText:INVALID_TEXT_DRAW;
 	}
-	PlayerTextDrawDestroy(playerid, TD_ServerFPS[playerid]);
-	TD_ServerFPS[playerid] = PlayerText:INVALID_TEXT_DRAW;
-	PlayerTextDrawDestroy(playerid, TD_ServerLocation[playerid]);
-	TD_ServerLocation[playerid] = PlayerText:INVALID_TEXT_DRAW;
-
-	// 10. Re-create the base CharSelectionTD layout (same as first connect)
-	CreateTextdraws(playerid);
-
-	// 11. Set login camera
-	RandomLoginScreen(playerid);
+	PlayerTextDrawHide(playerid, TD_ServerFPS[playerid]);
+	PlayerTextDrawHide(playerid, TD_ServerLocation[playerid]);
 
 	// 12. Reload character list from DB → triggers THREAD_CHECK_CHARACTER → TextDraw char selection
 	SQL_LoadCharacters(playerid);
@@ -5669,20 +5731,25 @@ public OnPlayerRequestClass(playerid, classid)
 	if(!AccountChecked{playerid})
 	    return true;
 
-	if(!SQL_IsLogged(playerid))
+	if(GetPVarInt(playerid, "UCP_Logged") == 0)
 	{
 	    TogglePlayerSpectating(playerid, true);
 		SetPlayerColor(playerid, COLOR_GRAD2);
 		AccountCheck(playerid);
 		RemovePlayerClothing(playerid);
-	}
-	else 
-	{
-		SetSpawnInfo(playerid, NO_TEAM, PlayerData[playerid][pModel], PlayerData[playerid][pPos][0], PlayerData[playerid][pPos][1], PlayerData[playerid][pPos][2], PlayerData[playerid][pPos][3], 0, 0, 0, 0, 0, 0);
-		Spawned{playerid} = false;
-		SpawnPlayer(playerid);					
+		return true;
 	}
 
+	if(PlayerData[playerid][pID] == -1)
+	{
+		// Logged into UCP but currently at character selection screen.
+		// Keep them at the selection screen with camera/textdraw UI active.
+		return true;
+	}
+
+	SetSpawnInfo(playerid, NO_TEAM, PlayerData[playerid][pModel], PlayerData[playerid][pPos][0], PlayerData[playerid][pPos][1], PlayerData[playerid][pPos][2], PlayerData[playerid][pPos][3], 0, 0, 0, 0, 0, 0);
+	Spawned{playerid} = false;
+	SpawnPlayer(playerid);					
 	return true;
 }
 
@@ -5846,7 +5913,9 @@ public OnPlayerSpawn(playerid)
 		SetPlayerTime(playerid, ghour, gminute);
 
 		new Float:px, Float:py, Float:pz;
-		GetPlayerPos(playerid, px, py, pz);
+		px = PlayerData[playerid][pPos][0];
+		py = PlayerData[playerid][pPos][1];
+		pz = PlayerData[playerid][pPos][2];
 		SetPlayerCameraPos(playerid, px + 5.000, py + 5.000, pz + 180.000);
 		SetPlayerCameraLookAt(playerid, px, py, pz);
 		TogglePlayerControllable(playerid, false);
@@ -9492,41 +9561,86 @@ public OnPlayerClickTextDraw(playerid, Text:clickedid)
 
 public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 {
-	//Character Selection
-	if(PlayerData[playerid][pID] == -1)
+	//Character Selection — Cinematic Mode
+	if(PlayerData[playerid][pID] == -1 && CharSelTotalSlots[playerid] > 0)
 	{
-		for(new i = 0; i < 6; ++i)
+	    // Right arrow — next character
+	    if(playertextid == CharSelTD[playerid][1])
 		{
-		    if(playertextid == CharSelectionTD[playerid][i])
+			new total = CharSelTotalSlots[playerid];
+			new prev_slot = SelectedSlot[playerid];
+			SelectedSlot[playerid] = (SelectedSlot[playerid] + 1) % total;
+			SelectedCharacter[playerid] = SelectedSlot[playerid];
+
+			// Smooth camera interpolation sideways to next character (sliding to the right/East)
+			new Float:prev_x = 835.5000 + (prev_slot * 2.5000);
+			new Float:new_x = 835.5000 + (SelectedSlot[playerid] * 2.5000);
+			InterpolateCameraPos(playerid, prev_x, -2066.5000, 13.5000, new_x, -2066.5000, 13.5000, 450, CAMERA_MOVE);
+			InterpolateCameraLookAt(playerid, prev_x, -2061.5000, 13.1000, new_x, -2061.5000, 13.1000, 450, CAMERA_MOVE);
+
+			// Refresh info text
+			UpdateCharSelectionUI(playerid);
+			return true;
+	    }
+
+	    // Left arrow — previous character
+	    if(playertextid == CharSelTD[playerid][2])
+		{
+			new total = CharSelTotalSlots[playerid];
+			new prev_slot = SelectedSlot[playerid];
+			SelectedSlot[playerid] = (SelectedSlot[playerid] - 1 + total) % total;
+			SelectedCharacter[playerid] = SelectedSlot[playerid];
+
+			// Smooth camera interpolation sideways to previous character (sliding to the left/West)
+			new Float:prev_x = 835.5000 + (prev_slot * 2.5000);
+			new Float:new_x = 835.5000 + (SelectedSlot[playerid] * 2.5000);
+			InterpolateCameraPos(playerid, prev_x, -2066.5000, 13.5000, new_x, -2066.5000, 13.5000, 450, CAMERA_MOVE);
+			InterpolateCameraLookAt(playerid, prev_x, -2061.5000, 13.1000, new_x, -2061.5000, 13.1000, 450, CAMERA_MOVE);
+
+			// Refresh info text
+			UpdateCharSelectionUI(playerid);
+			return true;
+	    }
+
+	    // Spawn button (card background is also selectable)
+	    if(playertextid == CharSelTD[playerid][3])
+		{
+			new slot = SelectedSlot[playerid];
+			new charid = CharSelCache[playerid][slot][csID];
+
+			// Guard: character must be valid
+			if(charid <= 0) return true;
+
+			// Check if this character is already online on another slot
+			foreach (new x : Player)
 			{
-				if(CharacterCache[playerid][i] == -1) return KickEx(playerid);
-
-	            CancelSelectTextDraw(playerid);
-
-				for(new t = 0; t < 13; ++t)
+			    if(playerid == x) continue;
+			    if(AccountData[playerid][aUserid] == AccountData[x][aUserid])
 				{
-				    PlayerTextDrawDestroy(playerid, CharSelectionTD[playerid][t]);
+			        SendErrorMessage(playerid, "Login unsuccessful (character already logged in?)");
+			        return true;
 				}
-
-				SelectedCharacter[playerid] = i;
-
-				foreach (new x : Player)
-				{
-				    if(playerid == x) continue;
-
-				    if(AccountData[playerid][aUserid] == AccountData[x][aUserid])
-				    {
-				        SendErrorMessage(playerid, "Login unsuccessful (character already logged in?)");
-				        return true;
-					}
-				}
-
-				new query[180];
-				mysql_format(dbCon, query, sizeof(query), "SELECT * FROM `characters` WHERE `ID` = '%d' LIMIT 1", CharacterCache[playerid][i]);
-    			mysql_tquery(dbCon, query, "OnQueryFinished", "dd", playerid, THREAD_LOAD_CHARACTER);
-				return true;
 			}
-		}
+
+			// Hide the UI (leave camera & world as is during load transition)
+			HideCharSelectionUI(playerid);
+
+			// Destroy the 3D actors immediately so they disappear when transitioning to spawn
+			for(new i = 0; i < 6; i++)
+			{
+				if(CharSelActor[playerid][i] != INVALID_ACTOR_ID)
+				{
+					DestroyActor(CharSelActor[playerid][i]);
+					CharSelActor[playerid][i] = INVALID_ACTOR_ID;
+				}
+			}
+
+			// Load the selected character
+			new query[180];
+			mysql_format(dbCon, query, sizeof(query), "SELECT * FROM `characters` WHERE `ID` = '%d' LIMIT 1", charid);
+			mysql_tquery(dbCon, query, "OnQueryFinished", "dd", playerid, THREAD_LOAD_CHARACTER);
+			return true;
+	    }
 	}
 
 	//Store Buy

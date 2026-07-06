@@ -13,9 +13,9 @@ ptask Players[1000](i)
 
 				if(SafeTime[i] == 1)
 				{
-					SendAdminAlert(COLOR_LIGHTRED, JUNIOR_ADMINS, "AdmCmd: %s was kicked by SYSTEM, Reason: You've been kicked, not logging on in 60 seconds.", ReturnName(i));
+					SendAdminAlert(COLOR_LIGHTRED, JUNIOR_ADMINS, "AdmCmd: %s was kicked by SYSTEM, Reason: You've been kicked, not logging on in 120 seconds.", ReturnName(i));
 
-					SendClientMessage(i, COLOR_LIGHTRED, "You've been kicked, not logging on in 60 seconds."), KickEx(i);
+					SendClientMessage(i, COLOR_LIGHTRED, "You've been kicked, not logging on in 120 seconds."), KickEx(i);
 				}
 			}
 		}

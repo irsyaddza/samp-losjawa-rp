@@ -68,6 +68,7 @@ HandleFailedLogin(extraid)
 
 HandleSuccessfulLogin(extraid)
 {
+	SetPVarInt(extraid, "UCP_Logged", 1);
 	HideLoginInputs(extraid);
 
 	new query[256];
@@ -581,6 +582,7 @@ public OnQueryFinished(extraid, threadid)
 		            PlayerData[extraid][pTutorialStep] = 1;
 
 					SetSpawnInfo(extraid, NO_TEAM, PlayerData[extraid][pModel], PlayerData[extraid][pPos][0], PlayerData[extraid][pPos][1], PlayerData[extraid][pPos][2], PlayerData[extraid][pPos][3], 0, 0, 0, 0, 0, 0);
+					TogglePlayerSpectating(extraid, true);
 					TogglePlayerSpectating(extraid, false);
 					TogglePlayerControllable(extraid, false);
 
@@ -589,6 +591,7 @@ public OnQueryFinished(extraid, threadid)
 				}
 
 				SetSpawnInfo(extraid, NO_TEAM, PlayerData[extraid][pModel], PlayerData[extraid][pPos][0], PlayerData[extraid][pPos][1], PlayerData[extraid][pPos][2], PlayerData[extraid][pPos][3], 0, 0, 0, 0, 0, 0);
+				TogglePlayerSpectating(extraid, true);
 				TogglePlayerSpectating(extraid, false);
 				TogglePlayerControllable(extraid, false);
 
@@ -755,53 +758,43 @@ public OnQueryFinished(extraid, threadid)
 
 		    if(!rows)
 			{
-			    if(RegistrationEnabled)
-					return Dialog_Show(extraid, CreateCharacter, DIALOG_STYLE_INPUT, "Character Creation", "Since you have no characters created, you're eligible to create one in-game.\n\nYou can create one right now by typing the name you wish to use down below\n\n{FF0000}**Be sure to type a realistic name or you'll get banned without any questions**", "Create", "Exit");
-
-				SendErrorMessage(extraid, "You don't have any characters created, go to the UCP and create one.");
-				return KickEx(extraid);
+			    // No characters — direct to UCP (no in-game character creation)
+			    SendErrorMessage(extraid, "You don't have any characters. Please create one at ucp.rusdi-bot.site");
+			    return KickEx(extraid);
 			}
 
-			CreateCharacterMenuTD(extraid, rows);
-
-		    new
-				playerSQLID,
-				playerName[MAX_PLAYER_NAME],
-				playerLevel,
-				playerSkin,
-				count = 0,
-				string[256]
-			;
+		    // Cache all character data for the cinematic selection UI
+		    CharSelTotalSlots[extraid] = rows;
+		    SelectedSlot[extraid] = 0;
 
 		    for(new i = 0; i != rows; ++i)
 		    {
-		        cache_get_value_name_int(i, "ID", playerSQLID);
-		        cache_get_value_name(i, "char_name", playerName);
-		        cache_get_value_name_int(i, "Level", playerLevel);
-		        cache_get_value_name_int(i, "Model", playerSkin);
+		        cache_get_value_name_int(i, "ID",        CharSelCache[extraid][i][csID]);
+		        cache_get_value_name(i,     "char_name", CharSelCache[extraid][i][csName]);
+		        cache_get_value_name_int(i, "Level",     CharSelCache[extraid][i][csLevel]);
+		        cache_get_value_name_int(i, "Model",     CharSelCache[extraid][i][csSkin]);
+		        cache_get_value_name_int(i, "LastLogin", CharSelCache[extraid][i][csLastLogin]);
 
-		    	CharacterCache[extraid][count] = playerSQLID;
+		        // Keep CharacterCache populated for spawn compatibility
+		        CharacterCache[extraid][i] = CharSelCache[extraid][i][csID];
 
-		    	format(string, sizeof(string), "%s~n~Level: %d", playerName, playerLevel);
-		    	PlayerTextDrawSetPreviewModel(extraid, CharSelectionTD[extraid][count], playerSkin);
-		    	PlayerTextDrawSetString(extraid, CharSelectionTD[extraid][count + 6], string);
-
-		    	AccountData[extraid][aCombinedLevel][0] += 1;
-				AccountData[extraid][aCombinedLevel][1] += playerLevel;
-
-		    	count++;
+		        AccountData[extraid][aCombinedLevel][0] += 1;
+		        AccountData[extraid][aCombinedLevel][1] += CharSelCache[extraid][i][csLevel];
 		    }
 
-		    PlayerTextDrawShow(extraid, CharSelectionTD[extraid][12]);
+		    printf("[DEBUG] THREAD_CHECK_CHARACTER: playerid=%d total_chars=%d", extraid, rows);
 
-		    for(new i = 0; i != count; ++i)
-		    {
-		        PlayerTextDrawShow(extraid, CharSelectionTD[extraid][i]);
-		        PlayerTextDrawShow(extraid, CharSelectionTD[extraid][i + 6]);
-		    }
+		    // Set spawn info at Santa Maria Beach Pier (Exterior, Interior 0)
+		    SetSpawnInfo(extraid, 0,
+		        CharSelCache[extraid][0][csSkin],
+		        835.5000, -2061.5000, 12.8600, 180.0,
+		        0, 0, 0, 0, 0, 0
+		    );
 
-		    SelectTextDraw(extraid, 0x000000CC);
+		    // Set a 500ms timer to defer spectate-off and camera setup (avoids relog packet race condition)
+		    SetTimerEx("OnPlayerSetupCharSel", 500, false, "d", extraid);
 		}
+
   		case THREAD_PLAYER_DRUGS:
   		{
 			for(new i = 0; i < cache_num_rows(); ++i)
@@ -925,4 +918,50 @@ public OnQueryFinished(extraid, threadid)
   		}
 	}
 	return true;
+}
+
+forward OnPlayerSetupCharSel(playerid);
+public OnPlayerSetupCharSel(playerid)
+{
+    if(!IsPlayerConnected(playerid)) return 1;
+
+    printf("[DEBUG] OnPlayerSetupCharSel: playerid=%d (setting up character selection camera/actors)", playerid);
+
+    new vw = playerid + 3000;
+    
+    // Set Interior & VW first (Interior 0 = Real World/Exterior)
+    SetPlayerInterior(playerid, 0);
+    SetPlayerVirtualWorld(playerid, vw);
+
+    // Set cinematic time & weather (warm sunset theme)
+    SetPlayerTime(playerid, 18, 0);
+    SetPlayerWeather(playerid, 10);
+
+    // Destroy any existing actors to prevent duplication
+    for(new i = 0; i < 6; i++)
+    {
+        if(CharSelActor[playerid][i] != INVALID_ACTOR_ID)
+        {
+            DestroyActor(CharSelActor[playerid][i]);
+            CharSelActor[playerid][i] = INVALID_ACTOR_ID;
+        }
+    }
+
+    // Spawn 3D Actors side-by-side for all characters the player owns
+    new total = CharSelTotalSlots[playerid];
+    for(new i = 0; i < total; i++)
+    {
+        new Float:x_pos = 835.5000 + (i * 2.5000);
+        CharSelActor[playerid][i] = CreateActor(CharSelCache[playerid][i][csSkin], x_pos, -2061.5000, 12.8600, 180.0);
+        SetActorVirtualWorld(CharSelActor[playerid][i], vw);
+    }
+
+    // Position camera looking at the first character actor (camera at 835.50, -2066.50 is to the South of first actor, looking North)
+    SetCameraBehindPlayer(playerid);
+    SetPlayerCameraPos(playerid, 835.5000, -2066.5000, 13.5000);
+    SetPlayerCameraLookAt(playerid, 835.5000, -2061.5000, 13.1000, CAMERA_MOVE);
+
+    // Render the UI
+    ShowCharSelectionUI(playerid);
+    return 1;
 }
