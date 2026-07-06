@@ -484,6 +484,22 @@ public OnQueryFinished(extraid, threadid)
 
 				SetPlayerFaction(extraid);
 
+				// Initialize player vehicle menu variables for first login
+				PCarPage[extraid] = 1;
+				PCarType[extraid] = 0;
+				PCarOpening{extraid} = false;
+				VDealerSelectCatalog[extraid] = -1;
+			
+				for(new i = 0; i < 6; ++i)
+				{
+					VehicleCache[extraid][i] = -1;
+					for(new j = 0; j < 5; ++j)
+					{
+						VDealerData[extraid][i][j] = 0;
+					}
+					CarNames[extraid][i][0] = EOS;
+				}
+
 				LoggedIn{extraid} = true;
 
 				if(PlayerData[extraid][pAdmin] > 0)
