@@ -2910,7 +2910,7 @@ public e_COMMAND_ERRORS:OnPlayerCommandReceived(playerid, cmdtext[], e_COMMAND_E
 	if(success != COMMAND_OK)
 	{
 	    SendClientMessage(playerid, COLOR_WHITE, "{ADC3E7}Error: {FFFFFF}Sorry, that command does not exist. {ADC3E7}/help{FFFFFF} or {ADC3E7}/helpme{FFFFFF} if you're in need of assistance.");
-	    return success;
+	    return COMMAND_OK;
 	}
 
     if(PlayerData[playerid][pID] == -1)
@@ -11179,6 +11179,12 @@ Dialog:ReportConfirm(playerid, response, listitem, inputtext[])
 		else SendAdminAlert(COLOR_LIGHTRED, JUNIOR_ADMINS, "[Report: %d] {FF9900}%s (%d) reported: %s", playerid, ReturnName(playerid), playerid, PlayerData[playerid][pReportMessage]);
 	}
 
+	return true;
+}
+
+Dialog:UCPNotRegistered(playerid, response, listitem, inputtext[])
+{
+	KickEx(playerid);
 	return true;
 }
 

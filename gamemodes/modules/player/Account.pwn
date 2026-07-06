@@ -169,7 +169,17 @@ public OnQueryFinished(extraid, threadid)
 		 		SendErrorMessage(extraid, "%s is not a valid account name.", ReturnNameEx(extraid));
 
 		 		SendNoticeMessage(extraid, "Make sure you're using your (main) account name, not a character name to log in!");
-			  	SendNoticeMessage(extraid, "To create an account, please visit https://losjawa-rp.net/"), KickEx(extraid);
+			  	SendNoticeMessage(extraid, "To create an account, please visit https://losjawa-rp.net/");
+
+			  	new info_str[512];
+			  	format(info_str, sizeof(info_str), \
+			  	    "{FF0000}ERROR: {FFFFFF}The UCP account name \"{7E98B6}%s{FFFFFF}\" is not registered in our database.\n\n\
+			  	    To play on Los Jawa Roleplay, you must first register your account on our User Control Panel (UCP).\n\n\
+			  	    Website: {FFBF00}ucp.rusdi-bot.site{FFFFFF}\n\n\
+			  	    Please register your UCP account there and reconnect with the registered UCP username.", \
+			  	    ReturnNameEx(extraid)
+			  	);
+			  	Dialog_Show(extraid, UCPNotRegistered, DIALOG_STYLE_MSGBOX, "Account Not Registered", info_str, "Close", "");
 			}
   		}
 		case THREAD_BAN_LOOKUP:
