@@ -2471,12 +2471,11 @@ ClosePlayerCarMenu(playerid, force = 0)
 
 	    PlayerTextDrawDestroy(playerid, PCARTextLeft[playerid]);
 	    PlayerTextDrawDestroy(playerid, PCARTextRight[playerid]);
-
 		if(PCarType[playerid] == 0)
 		{
-			for(new i = 0; i < 6; ++i)
+			for(new i = 0; i < 50; ++i)
 			{
-			    if(VehicleCache[playerid][i] != -1)
+			    if(i < 6 && VehicleCache[playerid][i] != -1)
 			    {
 			        PlayerTextDrawDestroy(playerid, PCARTextSlot[playerid][i]);
 					PlayerTextDrawDestroy(playerid, PCARTextName[playerid][i]);

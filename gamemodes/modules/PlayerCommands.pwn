@@ -13462,7 +13462,7 @@ CMD:v(playerid, params[])
 		vehicleid,
 		carkey,
 		carid,
-		query[128],
+		query[256],
 		cf[16],
 		cf2[16],
 		cf3[16];
@@ -14444,7 +14444,6 @@ CMD:v(playerid, params[])
 
 	return true;
 }
-
 // ponytail: Simple vehicle list dialog callback - replaces broken textdraw system
 forward ShowPlayerVehicleList(playerid);
 public ShowPlayerVehicleList(playerid)
@@ -14454,10 +14453,21 @@ public ShowPlayerVehicleList(playerid)
 	if(!rows)
 		return SendServerMessage(playerid, "You don't have any vehicles.");
 	
-	new dialog_text[4096], model, color1, model_name[64], ui_tag[15];
+	static dialog_text[2048];
+	new model, color1, model_name[64], ui_tag[15];
 	
+	dialog_text[0] = EOS;
+	PCarPage[playerid] = 1;
+	PCarType[playerid] = 0;
+
+	for(new i = 0; i < 50; ++i)
+	{
+		VehicleCache[playerid][i] = -1;
+	}
+
 	for(new i = 0; i < rows && i < 50; ++i)
 	{
+		cache_get_value_name_int(i, "carID", VehicleCache[playerid][i]);
 		cache_get_value_name_int(i, "carModel", model);
 		cache_get_value_name_int(i, "carColor1", color1);
 		cache_get_value_name(i, "carName", ui_tag, 15);
@@ -14472,6 +14482,15 @@ public ShowPlayerVehicleList(playerid)
 	
 	Dialog_Show(playerid, PlayerVehicles, DIALOG_STYLE_LIST, "My Vehicles", dialog_text, "Select", "Close");
 	return true;
+}
+
+Dialog:PlayerVehicles(playerid, response, listitem, inputtext[])
+{
+	if(!response) return 1;
+	
+	PCarOpening{playerid} = true;
+	SpawnPlayerCar(playerid, listitem);
+	return 1;
 }
 
 CMD:hood(playerid, params[])
@@ -17523,7 +17542,7 @@ Dialog:PlayerVehMain(playerid, response, listitem, inputtext[])
 	
 	switch(listitem)
 	{
-		case 0: // Manage Spawned Vehicles (Graphic GUI)
+		case 0: // Manage Spawned Vehicles (Graphic GUI -> Dialog List)
 		{
 			if(UsingMDC{playerid})
 				return SendServerMessage(playerid, "You can't do this right now.");
@@ -17531,8 +17550,9 @@ Dialog:PlayerVehMain(playerid, response, listitem, inputtext[])
 			if(!CountPlayerVehicles(playerid))
 				return SendServerMessage(playerid, "You do not own any vehicles.");
 
-			PCarPage[playerid] = 1;
-			ShowPlayerCarMenu(playerid);
+			new query[256];
+			mysql_format(dbCon, query, sizeof(query), "SELECT `carID`, `carModel`, `carColor1`, `carColor2`, `carName`, `carUItag` FROM `cars` WHERE `carOwner` = '%d' ORDER BY `carDate` ASC LIMIT 50", PlayerData[playerid][pID]);
+			mysql_tquery(dbCon, query, "ShowPlayerVehicleList", "d", playerid);
 		}
 		case 1: // Lock/Unlock
 		{

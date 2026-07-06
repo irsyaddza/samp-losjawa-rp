@@ -1699,7 +1699,7 @@ new LoginAttempts[MAX_PLAYERS];
 new DeathTimer[MAX_PLAYERS];
 new DeathStamp[MAX_PLAYERS];
 new CharacterCache[MAX_PLAYERS][6];
-new VehicleCache[MAX_PLAYERS][6];
+new VehicleCache[MAX_PLAYERS][50];
 new BrokenLegTimer[MAX_PLAYERS];
 new LastKnockout[MAX_PLAYERS];
 new DeathReason[MAX_PLAYERS];
