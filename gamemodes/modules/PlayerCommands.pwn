@@ -14,6 +14,26 @@ CMD:relog(playerid, params[])
 	return true;
 }
 
+CMD:togmusic(playerid, params[])
+{
+	if(GetPVarInt(playerid, "LobbyMusicOff") == 1)
+	{
+		SetPVarInt(playerid, "LobbyMusicOff", 0);
+		SendClientMessage(playerid, COLOR_YELLOW, "Lobby/character selection music has been enabled.");
+		if(PlayerData[playerid][pID] == -1)
+		{
+			PlayAudioStreamForPlayer(playerid, "http://files.catbox.moe/4gddc4.mp3");
+		}
+	}
+	else
+	{
+		SetPVarInt(playerid, "LobbyMusicOff", 1);
+		SendClientMessage(playerid, COLOR_YELLOW, "Lobby/character selection music has been disabled.");
+		StopAudioStreamForPlayer(playerid);
+	}
+	return true;
+}
+
 CMD:stats(playerid, params[])
 {
 	new

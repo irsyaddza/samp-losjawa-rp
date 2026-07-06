@@ -2282,11 +2282,17 @@ public OnPlayerConnect(playerid)
 
     SQL_LogConnection(playerid);
     SQL_CheckAccount(playerid);
+
+	if(GetPVarInt(playerid, "LobbyMusicOff") == 0)
+	{
+		PlayAudioStreamForPlayer(playerid, "http://files.catbox.moe/4gddc4.mp3");
+	}
 	return true;
 }
 
 public OnPlayerDisconnect(playerid, reason)
 {	
+	StopAudioStreamForPlayer(playerid);
 	PlayerTextDrawDestroy(playerid, TD_ServerLocation[playerid]);
 	PlayerTextDrawDestroy(playerid, TD_ServerFPS[playerid]);
 	DestroyClothingShopTDs(playerid);
@@ -5482,6 +5488,10 @@ Relog_Player(playerid)
 	// 12. Reload character list from DB → triggers THREAD_CHECK_CHARACTER → TextDraw char selection
 	SQL_LoadCharacters(playerid);
 
+	if(GetPVarInt(playerid, "LobbyMusicOff") == 0)
+	{
+		PlayAudioStreamForPlayer(playerid, "http://files.catbox.moe/4gddc4.mp3");
+	}
 	return 1;
 }
 
@@ -5888,6 +5898,7 @@ public OnPlayerSpawn(playerid)
     if(!Spawned{playerid})
 	{
         Spawned{playerid} = true;
+        StopAudioStreamForPlayer(playerid);
 
         TextDrawShowForPlayer(playerid, TD_ServerLogo);
         TextDrawShowForPlayer(playerid, TD_ServerDate);
@@ -17656,7 +17667,7 @@ FUNX::WT()
 public OnPlayerFinishedDownloading(playerid, virtualworld)
 {
     FinishedDownloadingModels{playerid} = true;
-	SendClientMessage(playerid,COLOR_WHITE,"Downloads Finished");
+	SendClientMessage(playerid, COLOR_WHITE, "{ADC3E7}Assets: {FFFFFF}Custom models and assets have been downloaded successfully!");
     return true;
 }
 
