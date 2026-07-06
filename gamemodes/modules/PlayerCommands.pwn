@@ -13481,9 +13481,9 @@ CMD:v(playerid, params[])
 		if(!CountPlayerVehicles(playerid))
 		    return SendServerMessage(playerid, "You do not own any vehicles.");
 
-		PCarPage[playerid] = 1;
-
-		ShowPlayerCarMenu(playerid);
+		// ponytail: Skip textdraw complexity, use simple dialog list
+		mysql_format(dbCon, query, sizeof(query), "SELECT `carID`, `carModel`, `carColor1`, `carColor2`, `carName`, `carUItag` FROM `cars` WHERE `carOwner` = '%d' ORDER BY `carDate` ASC LIMIT 50", PlayerData[playerid][pID]);
+		mysql_tquery(dbCon, query, "ShowPlayerVehicleList", "d", playerid);
 	}
 	else if(!strcmp(type, "sell", true))
 	{
@@ -14442,6 +14442,35 @@ CMD:v(playerid, params[])
 	}
 	else SendServerMessage(playerid, "Invalid Parameter.");
 
+	return true;
+}
+
+// ponytail: Simple vehicle list dialog callback - replaces broken textdraw system
+forward ShowPlayerVehicleList(playerid);
+public ShowPlayerVehicleList(playerid)
+{
+	new rows = cache_num_rows();
+	
+	if(!rows)
+		return SendServerMessage(playerid, "You don't have any vehicles.");
+	
+	new dialog_text[4096], model, color1, model_name[64], ui_tag[15];
+	
+	for(new i = 0; i < rows && i < 50; ++i)
+	{
+		cache_get_value_name_int(i, "carModel", model);
+		cache_get_value_name_int(i, "carColor1", color1);
+		cache_get_value_name(i, "carName", ui_tag, 15);
+		
+		if(strlen(ui_tag) >= 3)
+			format(model_name, sizeof(model_name), "%s", ui_tag);
+		else
+			format(model_name, sizeof(model_name), "%s", ReturnVehicleModelNameEx(model));
+		
+		format(dialog_text, sizeof(dialog_text), "%s%s\n", dialog_text, model_name);
+	}
+	
+	Dialog_Show(playerid, PlayerVehicles, DIALOG_STYLE_LIST, "My Vehicles", dialog_text, "Select", "Close");
 	return true;
 }
 
