@@ -926,22 +926,23 @@ stock CreateClothingShopTDs(playerid)
 
 stock DestroyClothingShopTDs(playerid)
 {
-    PlayerTextDrawDestroy(playerid, ShopTD_Background[playerid]);
-    PlayerTextDrawDestroy(playerid, ShopTD_Header[playerid]);
-    PlayerTextDrawDestroy(playerid, ShopTD_Title[playerid]);
-    PlayerTextDrawDestroy(playerid, ShopTD_Page[playerid]);
-    PlayerTextDrawDestroy(playerid, ShopTD_Close[playerid]);
-    PlayerTextDrawDestroy(playerid, ShopTD_Footer[playerid]);
-    PlayerTextDrawDestroy(playerid, ShopTD_PrevPage[playerid]);
-    PlayerTextDrawDestroy(playerid, ShopTD_NextPage[playerid]);
+    // PONYTAIL: Safe destroy - only destroy valid TDs and reset to INVALID
+    if(ShopTD_Background[playerid] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, ShopTD_Background[playerid]); ShopTD_Background[playerid] = PlayerText:INVALID_TEXT_DRAW; }
+    if(ShopTD_Header[playerid] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, ShopTD_Header[playerid]); ShopTD_Header[playerid] = PlayerText:INVALID_TEXT_DRAW; }
+    if(ShopTD_Title[playerid] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, ShopTD_Title[playerid]); ShopTD_Title[playerid] = PlayerText:INVALID_TEXT_DRAW; }
+    if(ShopTD_Page[playerid] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, ShopTD_Page[playerid]); ShopTD_Page[playerid] = PlayerText:INVALID_TEXT_DRAW; }
+    if(ShopTD_Close[playerid] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, ShopTD_Close[playerid]); ShopTD_Close[playerid] = PlayerText:INVALID_TEXT_DRAW; }
+    if(ShopTD_Footer[playerid] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, ShopTD_Footer[playerid]); ShopTD_Footer[playerid] = PlayerText:INVALID_TEXT_DRAW; }
+    if(ShopTD_PrevPage[playerid] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, ShopTD_PrevPage[playerid]); ShopTD_PrevPage[playerid] = PlayerText:INVALID_TEXT_DRAW; }
+    if(ShopTD_NextPage[playerid] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, ShopTD_NextPage[playerid]); ShopTD_NextPage[playerid] = PlayerText:INVALID_TEXT_DRAW; }
 
     for (new i = 0; i < 16; i++)
     {
-        PlayerTextDrawDestroy(playerid, ShopTD_Card[playerid][i]);
-        PlayerTextDrawDestroy(playerid, ShopTD_Btn[playerid][i]);
-        PlayerTextDrawDestroy(playerid, ShopTD_BtnTxt[playerid][i]);
-        PlayerTextDrawDestroy(playerid, ShopTD_Preview[playerid][i]);
-        PlayerTextDrawDestroy(playerid, ShopTD_Price[playerid][i]);
+        if(ShopTD_Card[playerid][i] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, ShopTD_Card[playerid][i]); ShopTD_Card[playerid][i] = PlayerText:INVALID_TEXT_DRAW; }
+        if(ShopTD_Btn[playerid][i] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, ShopTD_Btn[playerid][i]); ShopTD_Btn[playerid][i] = PlayerText:INVALID_TEXT_DRAW; }
+        if(ShopTD_BtnTxt[playerid][i] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, ShopTD_BtnTxt[playerid][i]); ShopTD_BtnTxt[playerid][i] = PlayerText:INVALID_TEXT_DRAW; }
+        if(ShopTD_Preview[playerid][i] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, ShopTD_Preview[playerid][i]); ShopTD_Preview[playerid][i] = PlayerText:INVALID_TEXT_DRAW; }
+        if(ShopTD_Price[playerid][i] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, ShopTD_Price[playerid][i]); ShopTD_Price[playerid][i] = PlayerText:INVALID_TEXT_DRAW; }
     }
     return 1;
 }
@@ -978,7 +979,7 @@ stock UpdateClothingShopPage(playerid)
             PlayerTextDrawSetPreviewModel(playerid, ShopTD_Preview[playerid][i], skin_id);
             PlayerTextDrawShow(playerid, ShopTD_Preview[playerid][i]);
 
-            format(str, sizeof(str), "$%s", FormatNumber(price));
+            format(str, sizeof(str), "%s", FormatNumber(price));
             PlayerTextDrawSetString(playerid, ShopTD_Price[playerid][i], str);
             PlayerTextDrawShow(playerid, ShopTD_Price[playerid][i]);
         }
@@ -1010,6 +1011,10 @@ stock OpenClothingShop(playerid)
     PlayerShopPage[playerid] = 0;
     PlayerShopSelectedSlot[playerid] = -1;
 
+    // PONYTAIL: Create TDs dynamically when shop is opened
+    DestroyClothingShopTDs(playerid); // cleanup stale TDs if any
+    CreateClothingShopTDs(playerid);
+
     PlayerTextDrawShow(playerid, ShopTD_Background[playerid]);
     PlayerTextDrawShow(playerid, ShopTD_Header[playerid]);
     PlayerTextDrawShow(playerid, ShopTD_Title[playerid]);
@@ -1029,25 +1034,10 @@ stock CloseClothingShop(playerid)
     PlayerShopPage[playerid] = -1;
     PlayerShopSelectedSlot[playerid] = -1;
 
-    PlayerTextDrawHide(playerid, ShopTD_Background[playerid]);
-    PlayerTextDrawHide(playerid, ShopTD_Header[playerid]);
-    PlayerTextDrawHide(playerid, ShopTD_Title[playerid]);
-    PlayerTextDrawHide(playerid, ShopTD_Page[playerid]);
-    PlayerTextDrawHide(playerid, ShopTD_Close[playerid]);
-    PlayerTextDrawHide(playerid, ShopTD_Footer[playerid]);
-    PlayerTextDrawHide(playerid, ShopTD_PrevPage[playerid]);
-    PlayerTextDrawHide(playerid, ShopTD_NextPage[playerid]);
-
-    for (new i = 0; i < 16; i++)
-    {
-        PlayerTextDrawHide(playerid, ShopTD_Card[playerid][i]);
-        PlayerTextDrawHide(playerid, ShopTD_Btn[playerid][i]);
-        PlayerTextDrawHide(playerid, ShopTD_BtnTxt[playerid][i]);
-        PlayerTextDrawHide(playerid, ShopTD_Preview[playerid][i]);
-        PlayerTextDrawHide(playerid, ShopTD_Price[playerid][i]);
-    }
-
     CancelSelectTextDraw(playerid);
+
+    // PONYTAIL: Destroy TDs dynamically when shop is closed to free slots
+    DestroyClothingShopTDs(playerid);
     return 1;
 }
 
@@ -1104,7 +1094,7 @@ stock Clothing_OnClickPlayerTD(playerid, PlayerText:playertextid)
             new price = ShopSkins[global_idx][ss_price];
 
             new str[128];
-            format(str, sizeof(str), "Are you sure you want to buy Skin ID %d for $%s?", skin_id, FormatNumber(price));
+            format(str, sizeof(str), "Are you sure you want to buy Skin ID %d for %s?", skin_id, FormatNumber(price));
             SetPVarInt(playerid, "BuySkinID", skin_id);
             SetPVarInt(playerid, "BuySkinPrice", price);
             Dialog_Show(playerid, BuySkinConfirm, DIALOG_STYLE_MSGBOX, "Confirm Skin Purchase", str, "Yes", "No");
@@ -1140,7 +1130,7 @@ Dialog:BuySkinConfirm(playerid, response, listitem, inputtext[])
     mysql_format(dbCon, query, sizeof(query), "UPDATE `characters` SET `Model` = '%d' WHERE `ID` = '%d'", skin_id, PlayerData[playerid][pID]);
     mysql_tquery(dbCon, query);
 
-    SendClientMessageEx(playerid, COLOR_GREEN, "You have purchased Skin ID %d for $%s.", skin_id, FormatNumber(price));
+    SendClientMessageEx(playerid, COLOR_GREEN, "You have purchased Skin ID %d for %s.", skin_id, FormatNumber(price));
     PlayerPlaySound(playerid, 1052, 0.0, 0.0, 0.0);
 
     CloseClothingShop(playerid);
@@ -1186,7 +1176,7 @@ CMD:addskintoshop(playerid, params[])
 forward OnAdminAddSkin(playerid, skinid, price);
 public OnAdminAddSkin(playerid, skinid, price)
 {
-    SendClientMessageEx(playerid, COLOR_GREEN, "You have added Skin ID %d to the clothing shop for $%s.", skinid, FormatNumber(price));
+    SendClientMessageEx(playerid, COLOR_GREEN, "You have added Skin ID %d to the clothing shop for %s.", skinid, FormatNumber(price));
     LoadShopSkins();
     return 1;
 }

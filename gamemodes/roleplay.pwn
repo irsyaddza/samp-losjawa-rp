@@ -512,146 +512,102 @@ new const VehicleMenuInfo[][] =
 
 new VehicleDealership[][] =
 {
-	{511, 0},
-	{593, 0},
+	// --- Air Vehicles (Category 0 -> dealerType 4) ---
+	{511, 0}, // Beagle
+	{593, 0}, // Dodo
+	{487, 0}, // Maverick
+	{519, 0}, // Shamal
 
-	{417, 1},
-	{487, 1},
-	{488, 1},
+	// --- Bikes (Category 2 -> dealerType 1) ---
+	{462, 2}, // Faggio
+	{463, 2}, // Freeway
+	{468, 2}, // Sanchez
+	{471, 2}, // Quad
+	{481, 2}, // BMX
+	{509, 2}, // Bike
+	{521, 2}, // FCR-900
+	{586, 2}, // Wayfarer
 
-	{462, 2},
-	{463, 2},
-	{468, 2},
-	{471, 2},
-	{481, 2},
-	{509, 2},
-	{521, 2},
-	{586, 2},
+	// --- Boats (Category 13 -> dealerType 3) ---
+	{446, 13}, // Squalo
+	{453, 13}, // Reefer
+	{454, 13}, // Tropic
+	{473, 13}, // Dinghy
+	{484, 13}, // Marquis
+	{493, 13}, // Jetmax
 
-	{480, 3},
-	{533, 3},
-	{555, 3},
+	// --- Industrial (Category 4 -> dealerType 2) ---
+	{403, 4}, // Linerunner
+	{414, 4}, // Mule
+	{499, 4}, // Benson
+	{456, 4}, // Yankee
+	{422, 4}, // Bobcat
+	{440, 4}, // Rumpo
+	{413, 4}, // Pony
+	{455, 4}, // Flatbed
+	{478, 4}, // Walton
+	{482, 4}, // Burrito
+	{498, 4}, // Boxville
+	{514, 4}, // Tanker (Petrol Tanker)
+	{554, 4}, // Yosemite
+	{543, 4}, // Sadler
+	{515, 4}, // Roadtrain
+	{600, 4}, // Picador
+	{438, 4}, // Cabbie
+	{420, 4}, // Taxi
+	{525, 4}, // Tow Truck
 
-	{403, 4},
-	{408, 4},
-	{413, 4},
-	{414, 4},
-	{422, 4},
-	{440, 4},
-	{443, 4},
-	{455, 4},
-	{456, 4},
-	{459, 4},
-	{478, 4},
-	{482, 4},
-	{498, 4}, // ... 609
-	{499, 4},
-	{514, 4},
-	{515, 4},
-	{543, 4}, // ...605
-	{554, 4},
-	{578, 4},
-	{582, 4},
-	{600, 4},
-
-	{412, 5},
-	{439, 5},
-	{534, 5},
-	{535, 5},
-	{536, 5},
-	{566, 5},
-	{567, 5},
-	{575, 5},
-	{576, 5},
-
-	{400, 6},
-	{489, 6},
-	{500, 6},
-	{579, 6},
-
-	{420, 7},
-	{438, 7},
-
-	{490, 8},
-	{497, 8},
-	{523, 8},
-	{528, 8},
-	{596, 8},
-	{597, 8},
-	{598, 8},
-	{599, 8},
-	{601, 8},
-
-	{416, 9},
-
-	{401, 10},
-	{405, 10},
-	{410, 10},
-	{419, 10},
-	{421, 10},
-	{426, 10},
-	{436, 10},
-	{445, 10},
-	{466, 10}, //... 604
-	{467, 10},
-	{474, 10},
-	{491, 10},
-	{492, 10},
-	{507, 10},
-	{516, 10},
-	{517, 10},
-	{518, 10},
-	{526, 10},
-	{527, 10},
-	{529, 10},
-	{540, 10},
-	{542, 10},
-	{546, 10},
-	{547, 10},
-	{549, 10},
-	{550, 10},
-	{551, 10},
-	{560, 10},
-	{562, 10},
-	{580, 10},
-	{585, 10},
-
-	{402, 11},
-	{415, 11},
-	{429, 11},
-	{475, 11},
-	{477, 11},
-	{496, 11},
-	{541, 11},
-	{558, 11},
-	{559, 11},
-	{565, 11},
-	{587, 11},
-	{589, 11},
-	{602, 11},
-	{603, 11},
-
-	{404, 12},
-	{418, 12},
-	{458, 12},
-	{479, 12},
-	{561, 12},
-
-	{446, 13},
-	{453, 13},
-	{454, 13},
-	{472, 13},
-	{473, 13},
-	{484, 13},
-
-	{409, 14},
-	{423, 14},
-	{483, 14},
-	{508, 14},
-	{525, 14},
-	{532, 14},
-	{545, 14},
-	{588, 14}
+	// --- Daily Car (Category 3 -> dealerType 0) ---
+	{480, 3}, // Comet
+	{533, 3}, // Feltzer
+	{555, 3}, // Windsor
+	{412, 3}, // Voodoo
+	{439, 3}, // Stallion
+	{535, 3}, // Remington
+	{536, 3}, // Slamvan
+	{534, 3}, // Blade
+	{566, 3}, // Tahoma
+	{567, 3}, // Savanna
+	{575, 3}, // Broadway
+	{576, 3}, // Tornado
+	{400, 3}, // Landstalker
+	{489, 3}, // Rancher
+	{500, 3}, // Mesa
+	{579, 3}, // Huntley
+	{401, 3}, // Bravura
+	{405, 3}, // Sentinel
+	{421, 3}, // Washington
+	{426, 3}, // Premier
+	{445, 3}, // Admiral
+	{474, 3}, // Hermes
+	{492, 3}, // Greenwood
+	{507, 3}, // Elegant
+	{516, 3}, // Nebula
+	{529, 3}, // Willard
+	{540, 3}, // Vincent
+	{550, 3}, // Sunrise
+	{542, 3}, // Clover
+	{560, 3}, // Sultan
+	{562, 3}, // Elegy
+	{580, 3}, // Stafford
+	{402, 3}, // Buffalo
+	{415, 3}, // Cheetah
+	{429, 3}, // Banshee
+	{475, 3}, // Sabre
+	{477, 3}, // ZR-350
+	{496, 3}, // Blista Compact
+	{541, 3}, // Bullet
+	{558, 3}, // Uranus
+	{559, 3}, // Jester
+	{565, 3}, // Flash
+	{587, 3}, // Euros
+	{589, 3}, // Club
+	{602, 3}, // Alpha
+	{603, 3}, // Phoenix
+	{561, 3}, // Stratum
+	{483, 3}, // Camper
+	{508, 3}, // Journey
+	{545, 3}  // Hustler
 };
 
 new const g_arrVehicleNames[][] =
@@ -1471,6 +1427,21 @@ new
 	PlayerText:PCARTextLeft[MAX_PLAYERS],
 	PlayerText:PCARTextRight[MAX_PLAYERS],
 
+	// PONYTAIL: Dealership V3 Player Textdraws
+	PlayerText:VDealerBase[MAX_PLAYERS],
+	PlayerText:VDealerCatBG[MAX_PLAYERS],
+	PlayerText:VDealerCatName[MAX_PLAYERS],
+	PlayerText:VDealerPageText[MAX_PLAYERS],
+	PlayerText:VDealerLeftBtn[MAX_PLAYERS],
+	PlayerText:VDealerRightBtn[MAX_PLAYERS],
+	PlayerText:VDealerCloseBtn[MAX_PLAYERS],
+	PlayerText:VDealerCloseLogo[MAX_PLAYERS],
+	PlayerText:VDealerVehBG[MAX_PLAYERS][6],
+	PlayerText:VDealerVehModel[MAX_PLAYERS][6],
+	PlayerText:VDealerVehNameBG[MAX_PLAYERS][6],
+	PlayerText:VDealerVehPrice[MAX_PLAYERS][6],
+	PlayerText:VDealerVehName[MAX_PLAYERS][6],
+
 	// Tuning
 	PlayerText:TDTuning_Component[MAX_PLAYERS],
 	PlayerText:TDTuning_Dots[MAX_PLAYERS],
@@ -2243,7 +2214,55 @@ public OnPlayerConnect(playerid)
 
   	RemoveBuilding(playerid);
   	CreateTextdraws(playerid);
-	CreateClothingShopTDs(playerid);
+	// PONYTAIL: Clothing shop TDs are now created dynamically (on OpenClothingShop) to save slots
+	// Initialize all clothing shop TD vars to INVALID_TEXT_DRAW
+	ShopTD_Background[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	ShopTD_Header[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	ShopTD_Title[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	ShopTD_Page[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	ShopTD_Close[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	ShopTD_Footer[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	ShopTD_PrevPage[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	ShopTD_NextPage[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	for(new _si = 0; _si < 16; ++_si)
+	{
+		ShopTD_Card[playerid][_si] = PlayerText:INVALID_TEXT_DRAW;
+		ShopTD_Btn[playerid][_si] = PlayerText:INVALID_TEXT_DRAW;
+		ShopTD_BtnTxt[playerid][_si] = PlayerText:INVALID_TEXT_DRAW;
+		ShopTD_Preview[playerid][_si] = PlayerText:INVALID_TEXT_DRAW;
+		ShopTD_Price[playerid][_si] = PlayerText:INVALID_TEXT_DRAW;
+	}
+	// PONYTAIL: Initialize MDC TD variables to INVALID_TEXT_DRAW
+	for(new _mi = 0; _mi < 39; ++_mi) MDC_UI[playerid][_mi] = PlayerText:INVALID_TEXT_DRAW;
+	for(new _mi = 0; _mi < 6; ++_mi) MDC_MenuUI[playerid][_mi] = PlayerText:INVALID_TEXT_DRAW;
+	for(new _mi = 0; _mi < 4; ++_mi) MDC_VehicleUI[playerid][_mi] = PlayerText:INVALID_TEXT_DRAW;
+	for(new _mi = 0; _mi < 41; ++_mi) MDC_ChargesUI[playerid][_mi] = PlayerText:INVALID_TEXT_DRAW;
+	for(new _mi = 0; _mi < 37; ++_mi) MDC_LicensesUI[playerid][_mi] = PlayerText:INVALID_TEXT_DRAW;
+	for(new _mi = 0; _mi < 40; ++_mi) MDC_PenalCodeUI[playerid][_mi] = PlayerText:INVALID_TEXT_DRAW;
+	for(new _mi = 0; _mi < 20; ++_mi) MDC_PropertiesUI[playerid][_mi] = PlayerText:INVALID_TEXT_DRAW;
+	for(new _mi = 0; _mi < 27; ++_mi) MDC_Emergency[playerid][_mi] = PlayerText:INVALID_TEXT_DRAW;
+	for(new _mi = 0; _mi < 24; ++_mi) MDC_RosterUI[playerid][_mi] = PlayerText:INVALID_TEXT_DRAW;
+	for(new _mi = 0; _mi < 11; ++_mi) MDC_VehicleBOLO[playerid][_mi] = PlayerText:INVALID_TEXT_DRAW;
+	MDC_Created{playerid} = false;
+
+	// PONYTAIL: Initialize dealership V3 variables to INVALID_TEXT_DRAW
+	VDealerBase[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	VDealerCatBG[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	VDealerCatName[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	VDealerPageText[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	VDealerLeftBtn[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	VDealerRightBtn[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	VDealerCloseBtn[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	VDealerCloseLogo[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	for(new _di = 0; _di < 6; ++_di)
+	{
+		VDealerVehBG[playerid][_di] = PlayerText:INVALID_TEXT_DRAW;
+		VDealerVehModel[playerid][_di] = PlayerText:INVALID_TEXT_DRAW;
+		VDealerVehNameBG[playerid][_di] = PlayerText:INVALID_TEXT_DRAW;
+		VDealerVehPrice[playerid][_di] = PlayerText:INVALID_TEXT_DRAW;
+		VDealerVehName[playerid][_di] = PlayerText:INVALID_TEXT_DRAW;
+	}
+
 	CreateLoginTDs(playerid);
 	StartLoginLoading(playerid);
 
@@ -2297,6 +2316,8 @@ public OnPlayerDisconnect(playerid, reason)
 	PlayerTextDrawDestroy(playerid, TD_ServerFPS[playerid]);
 	DestroyClothingShopTDs(playerid);
 	DestroyLoginTDs(playerid);
+	DestroyMDC(playerid);
+	DestroyDealershipTDs(playerid);
 	new str[128], szDisconnectReason[3][10] = {"Timeout", "Leaving", "Kicked"};
 
 	format(str, sizeof(str), "** %s (%s)", ReturnName(playerid), szDisconnectReason[reason]);
@@ -10091,76 +10112,50 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 				}
 			}
 		}
-	    else if(PCarType[playerid] == 1)
+		else if(PCarType[playerid] == 1)
 		{
-			if(playertextid == PCARTextLeft[playerid])
+			if(playertextid == VDealerLeftBtn[playerid])
 			{
 			    if(PCarPage[playerid] > 1)
 			    {
 			        PCarPage[playerid] --;
-
 					ShowPlayerDealershipMenu(playerid);
 			    }
 			}
-			else if(playertextid == PCARTextRight[playerid])
+			else if(playertextid == VDealerRightBtn[playerid])
 			{
-			    new caramount;
-
-			    if(VDealerSelectCatalog[playerid] == -1)
+				new caramount = 0;
+				new bizid = Business_Nearest(playerid);
+				new dealerType = (bizid != -1) ? BusinessData[bizid][bsubType] : 0;
+				for(new x = 0; x != sizeof(VehicleDealership); ++x)
 				{
-					new bizid = Business_Nearest(playerid);
-					new dealerType = (bizid != -1) ? BusinessData[bizid][bsubType] : 0; // PONYTAIL: 0 = Harian, 1 = Roda Dua, 2 = Kerja
-
-					for(new cat = 0; cat < sizeof(VehicleMenuInfo); ++cat)
+					if(GetCategoryDealerType(VehicleDealership[x][1]) == dealerType)
 					{
-						if(GetCategoryDealerType(cat) == dealerType) caramount++;
+						caramount++;
 					}
 				}
-			    else
-				{
-					for(new x = 0; x != sizeof(VehicleDealership); ++x)
-					{
-						if(VehicleDealership[x][1] == VDealerSelectCatalog[playerid])
-						{
-							caramount++;
-						}
-					}
-				}
-
-			    if(floatround(caramount/(PCarPage[playerid] * 6), floatround_ceil) && caramount % 6 != 0)
+				new totalPages = (caramount + 5) / 6;
+			    if(PCarPage[playerid] < totalPages)
 			    {
 			        PCarPage[playerid]++;
 					ShowPlayerDealershipMenu(playerid);
 			    }
 			}
-			else if(playertextid == PCARTextHeader[playerid])
+			else if(playertextid == VDealerCloseBtn[playerid])
 			{
-			    if(VDealerSelectCatalog[playerid] != -1)
-			    {
-				    VDealerSelectCatalog[playerid] = -1;
-				    PCarPage[playerid] = 1;
-
-				    ShowPlayerDealershipMenu(playerid);
-			    }
-			    else ClosePlayerCarMenu(playerid);
+				ClosePlayerCarMenu(playerid);
 			}
 			else
 			{
-				for(new i = 0; i != 6; ++i)
+				for(new i = 0; i < 6; ++i)
 				{
-					if(playertextid == PCARTextSlot[playerid][i])
+					if(playertextid == VDealerVehBG[playerid][i])
 					{
-					    if(VDealerSelectCatalog[playerid] == -1)
-					    {
-							VDealerSelectCatalog[playerid] = VDealerData[playerid][i][1]; // PONYTAIL: Retrieve original category index
-							PCarPage[playerid] = 1;
-		                    ShowPlayerDealershipMenu(playerid);
-	                    }
-	                    else
-	                    {
+						if(VDealerData[playerid][i][0] != 0)
+						{
 							PutPlayerSettingVehicle(playerid, VDealerData[playerid][i][0], VDealerData[playerid][i][4]);
-                            ClosePlayerCarMenu(playerid);
-	                    }
+							ClosePlayerCarMenu(playerid);
+						}
 						break;
 					}
 				}

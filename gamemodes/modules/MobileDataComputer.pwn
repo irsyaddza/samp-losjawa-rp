@@ -1924,6 +1924,26 @@ stock MDC_CreatePage(playerid, page)
 	return true;
 }
 
+// PONYTAIL: Destroy all MDC textdraws and free the player TD slots
+stock DestroyMDC(playerid)
+{
+	if(!MDC_Created{playerid}) return true;
+
+	for(new i = 0; i < 39; i++) { if(MDC_UI[playerid][i] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, MDC_UI[playerid][i]); MDC_UI[playerid][i] = PlayerText:INVALID_TEXT_DRAW; } }
+	for(new i = 0; i < 6; i++) { if(MDC_MenuUI[playerid][i] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, MDC_MenuUI[playerid][i]); MDC_MenuUI[playerid][i] = PlayerText:INVALID_TEXT_DRAW; } }
+	for(new i = 0; i < 4; i++) { if(MDC_VehicleUI[playerid][i] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, MDC_VehicleUI[playerid][i]); MDC_VehicleUI[playerid][i] = PlayerText:INVALID_TEXT_DRAW; } }
+	for(new i = 0; i < 41; i++) { if(MDC_ChargesUI[playerid][i] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, MDC_ChargesUI[playerid][i]); MDC_ChargesUI[playerid][i] = PlayerText:INVALID_TEXT_DRAW; } }
+	for(new i = 0; i < 37; i++) { if(MDC_LicensesUI[playerid][i] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, MDC_LicensesUI[playerid][i]); MDC_LicensesUI[playerid][i] = PlayerText:INVALID_TEXT_DRAW; } }
+	for(new i = 0; i < 40; i++) { if(MDC_PenalCodeUI[playerid][i] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, MDC_PenalCodeUI[playerid][i]); MDC_PenalCodeUI[playerid][i] = PlayerText:INVALID_TEXT_DRAW; } }
+	for(new i = 0; i < 20; i++) { if(MDC_PropertiesUI[playerid][i] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, MDC_PropertiesUI[playerid][i]); MDC_PropertiesUI[playerid][i] = PlayerText:INVALID_TEXT_DRAW; } }
+	for(new i = 0; i < 27; i++) { if(MDC_Emergency[playerid][i] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, MDC_Emergency[playerid][i]); MDC_Emergency[playerid][i] = PlayerText:INVALID_TEXT_DRAW; } }
+	for(new i = 0; i < 24; i++) { if(MDC_RosterUI[playerid][i] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, MDC_RosterUI[playerid][i]); MDC_RosterUI[playerid][i] = PlayerText:INVALID_TEXT_DRAW; } }
+	for(new i = 0; i < 11; i++) { if(MDC_VehicleBOLO[playerid][i] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, MDC_VehicleBOLO[playerid][i]); MDC_VehicleBOLO[playerid][i] = PlayerText:INVALID_TEXT_DRAW; } }
+
+	MDC_Created{playerid} = false;
+	return true;
+}
+
 TogglePlayerMDC(playerid, bool:Toggle, bool:Save = false)
 {
     new cached_page = GetPVarInt(playerid, "LastPage_ID");
@@ -2012,6 +2032,7 @@ TogglePlayerMDC(playerid, bool:Toggle, bool:Save = false)
 		}
 
         UsingMDC{playerid} = false;
+        DestroyMDC(playerid); // PONYTAIL: free all 249 MDC textdraw slots
 	}
 	return true;
 }

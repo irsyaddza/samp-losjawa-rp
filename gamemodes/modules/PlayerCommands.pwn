@@ -16277,7 +16277,11 @@ CMD:mdc(playerid, params[])
 		    return SendErrorMessage(playerid, "You can't use the MDC here.");
 	}
 
-	if(!MDC_Created{playerid}) return true;
+	// PONYTAIL: Initialize MDC dynamically on first use instead of at spawn
+	if(!MDC_Created{playerid})
+	{
+		InitMDC(playerid);
+	}
 
 	if(UsingMDC{playerid}) TogglePlayerMDC(playerid, false);
 

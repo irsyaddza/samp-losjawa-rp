@@ -553,7 +553,8 @@ public OnQueryFinished(extraid, threadid)
 				    TextHud_Update(extraid);
 				}
 
-				if(IsPolice(extraid) || PlayerData[extraid][pAdmin]) InitMDC(extraid);
+				// PONYTAIL: MDC TDs are now created dynamically when player uses /mdc to save textdraw slots
+				// if(IsPolice(extraid) || PlayerData[extraid][pAdmin]) InitMDC(extraid);
 
 				CheckFightingStyle(extraid);
 
