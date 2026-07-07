@@ -18,7 +18,7 @@ new bool:LoginScreenReady[MAX_PLAYERS] = {false, ...};
 stock CreateLoginTDs(playerid)
 {
     // Background sprite: myserver:loading
-    LoginTD_Bg[playerid] = CreatePlayerTextDraw(playerid, 0.000, -2.000, "myserver:loading");
+    LoginTD_Bg[playerid] = CreatePlayerTextDraw(playerid, 0.000, -2.000, "mdl-1410:loading");
     PlayerTextDrawTextSize(playerid, LoginTD_Bg[playerid], 640.000, 456.000);
     PlayerTextDrawAlignment(playerid, LoginTD_Bg[playerid], 1);
     PlayerTextDrawColor(playerid, LoginTD_Bg[playerid], -1);
@@ -29,7 +29,7 @@ stock CreateLoginTDs(playerid)
     PlayerTextDrawSetProportional(playerid, LoginTD_Bg[playerid], 1);
 
     // Login box sprite: myserver:login
-    LoginTD_Box[playerid] = CreatePlayerTextDraw(playerid, 249.000, 161.000, "myserver:login");
+    LoginTD_Box[playerid] = CreatePlayerTextDraw(playerid, 249.000, 161.000, "mdl-1410:login");
     PlayerTextDrawTextSize(playerid, LoginTD_Box[playerid], 144.000, 47.000);
     PlayerTextDrawAlignment(playerid, LoginTD_Box[playerid], 1);
     PlayerTextDrawColor(playerid, LoginTD_Box[playerid], -1);

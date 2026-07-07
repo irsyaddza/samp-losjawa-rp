@@ -17719,7 +17719,22 @@ FUNX::WT()
 public OnPlayerFinishedDownloading(playerid, virtualworld)
 {
     FinishedDownloadingModels{playerid} = true;
-	SendClientMessage(playerid, COLOR_WHITE, "{ADC3E7}Assets: {FFFFFF}Custom models and assets have been downloaded successfully!");
+    SendClientMessage(playerid, COLOR_WHITE, "{ADC3E7}Assets: {FFFFFF}Custom models and assets have been downloaded successfully!");
+
+    // Refresh custom login/loading screen sprites if player is not logged in yet
+    if(!LoggedIn{playerid})
+    {
+        if(LoginTD_Bg[playerid] != PlayerText:INVALID_TEXT_DRAW)
+        {
+            PlayerTextDrawHide(playerid, LoginTD_Bg[playerid]);
+            PlayerTextDrawShow(playerid, LoginTD_Bg[playerid]);
+        }
+        if(LoginScreenReady[playerid] && LoginTD_Box[playerid] != PlayerText:INVALID_TEXT_DRAW)
+        {
+            PlayerTextDrawHide(playerid, LoginTD_Box[playerid]);
+            PlayerTextDrawShow(playerid, LoginTD_Box[playerid]);
+        }
+    }
     return true;
 }
 

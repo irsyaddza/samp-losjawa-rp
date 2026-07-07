@@ -90,7 +90,7 @@ GetWindLong(Float:angle, dest[], size)
 CreateHudV2GlobalTDs()
 {
     // ── Server Logo ───────────────────────────────────────────────────
-    HV2_Logo = TextDrawCreate(265.000, 4.000, "myserver:logo");
+    HV2_Logo = TextDrawCreate(265.000, 4.000, "mdl-1410:logo");
     TextDrawTextSize(HV2_Logo, 95.000, 36.000);
     TextDrawAlignment(HV2_Logo, TEXT_DRAW_ALIGN_LEFT);
     TextDrawColour(HV2_Logo, -1);
@@ -191,7 +191,7 @@ CreateHudV2PlayerTDs(playerid)
     PlayerTextDrawSetProportional(playerid, HV2_BaseSpeed[playerid], true);
 
     // ── Ignition ON ───────────────────────────────────────────────────
-    HV2_IgnOn[playerid] = CreatePlayerTextDraw(playerid, 542.000, 413.000, "myserver:ignition_on");
+    HV2_IgnOn[playerid] = CreatePlayerTextDraw(playerid, 542.000, 413.000, "mdl-1410:ignition_on");
     PlayerTextDrawTextSize(playerid, HV2_IgnOn[playerid], 22.000, 21.000);
     PlayerTextDrawAlignment(playerid, HV2_IgnOn[playerid], TEXT_DRAW_ALIGN_LEFT);
     PlayerTextDrawColour(playerid, HV2_IgnOn[playerid], -1);
@@ -202,7 +202,7 @@ CreateHudV2PlayerTDs(playerid)
     PlayerTextDrawSetProportional(playerid, HV2_IgnOn[playerid], true);
 
     // ── Ignition OFF ──────────────────────────────────────────────────
-    HV2_IgnOff[playerid] = CreatePlayerTextDraw(playerid, 542.000, 413.000, "myserver:ignition_off");
+    HV2_IgnOff[playerid] = CreatePlayerTextDraw(playerid, 542.000, 413.000, "mdl-1410:ignition_off");
     PlayerTextDrawTextSize(playerid, HV2_IgnOff[playerid], 22.000, 21.000);
     PlayerTextDrawAlignment(playerid, HV2_IgnOff[playerid], TEXT_DRAW_ALIGN_LEFT);
     PlayerTextDrawColour(playerid, HV2_IgnOff[playerid], -1);
@@ -213,7 +213,7 @@ CreateHudV2PlayerTDs(playerid)
     PlayerTextDrawSetProportional(playerid, HV2_IgnOff[playerid], true);
 
     // ── Lock ──────────────────────────────────────────────────────────
-    HV2_LockCar[playerid] = CreatePlayerTextDraw(playerid, 567.000, 415.000, "myserver:lock");
+    HV2_LockCar[playerid] = CreatePlayerTextDraw(playerid, 567.000, 415.000, "mdl-1410:lock");
     PlayerTextDrawTextSize(playerid, HV2_LockCar[playerid], 15.000, 17.000);
     PlayerTextDrawAlignment(playerid, HV2_LockCar[playerid], TEXT_DRAW_ALIGN_LEFT);
     PlayerTextDrawColour(playerid, HV2_LockCar[playerid], -1);
@@ -224,7 +224,7 @@ CreateHudV2PlayerTDs(playerid)
     PlayerTextDrawSetProportional(playerid, HV2_LockCar[playerid], true);
 
     // ── Unlock ────────────────────────────────────────────────────────
-    HV2_UnlockCar[playerid] = CreatePlayerTextDraw(playerid, 567.000, 415.000, "myserver:unlock");
+    HV2_UnlockCar[playerid] = CreatePlayerTextDraw(playerid, 567.000, 415.000, "mdl-1410:unlock");
     PlayerTextDrawTextSize(playerid, HV2_UnlockCar[playerid], 15.000, 17.000);
     PlayerTextDrawAlignment(playerid, HV2_UnlockCar[playerid], TEXT_DRAW_ALIGN_LEFT);
     PlayerTextDrawColour(playerid, HV2_UnlockCar[playerid], -1);
