@@ -764,9 +764,9 @@ public OnQueryFinished(extraid, threadid)
 			    return KickEx(extraid);
 			}
 
-		    // Cache all character data for the cinematic selection UI
 		    CharSelTotalSlots[extraid] = rows;
 		    SelectedSlot[extraid] = 0;
+		    SelectedCharacter[extraid] = 0;
 
 		    for(new i = 0; i != rows; ++i)
 		    {

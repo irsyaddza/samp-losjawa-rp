@@ -9666,6 +9666,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 		{
 			new slot = SelectedSlot[playerid];
 			new charid = CharSelCache[playerid][slot][csID];
+			SelectedCharacter[playerid] = slot;
 
 			// Guard: character must be valid
 			if(charid <= 0) return true;
