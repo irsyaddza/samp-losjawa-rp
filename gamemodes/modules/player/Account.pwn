@@ -550,7 +550,7 @@ public OnQueryFinished(extraid, threadid)
 
 				if(!PlayerFlags[extraid][toggleHUD])
 				{
-				    TextHud_Update(extraid);
+				    ShowHudV2Full(extraid);
 				}
 
 				// PONYTAIL: MDC TDs are now created dynamically when player uses /mdc to save textdraw slots

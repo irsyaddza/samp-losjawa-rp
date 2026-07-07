@@ -15888,32 +15888,7 @@ CMD:setstyle(playerid, params[])
 		}
 		else if(option == 3)
 		{
-			new style;
-
-			if(sscanf(params, "{d}d", style) || (style < 0 || style > 4))
-			{
-				SendSyntaxMessage(playerid, "/setstyle 3 [StyleID]");
-				SendClientMessage(playerid, COLOR_WHITE, "HUD Styles: 0 1 4");
-				SendClientMessage(playerid, COLOR_WHITE, "HUD Styles: 2 3 [Vehicles Only]");				
-				//SendClientMessage(playerid, COLOR_WHITE, "HUD Styles: 0 1 3 4");
-				//SendClientMessage(playerid, COLOR_WHITE, "HUD Styles: 2 5 [Vehicles Only]");
-				return true;
-			}
-
-			PlayerFlags[playerid][toggleHUD] = true;
-
-			ToggleHudTextdraw(playerid, false);
-			PlayerTextDrawHide(playerid, MaskTD[playerid]);
-
-			PlayerData[playerid][pHUDStyle] = style;
-
-			CreatePlayerHUD(playerid);
-
-			SendClientMessageEx(playerid, COLOR_YELLOW, "Your HUD Style is now %d!", style);
-			SendClientMessage(playerid, COLOR_YELLOW, "/toghud to turn it back on!");
-
-			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `characters` SET `pHUDStyle` = '%d' WHERE `ID` = '%d'", style, PlayerData[playerid][pID]);
-			mysql_pquery(dbCon, gquery);
+			SendClientMessage(playerid, COLOR_YELLOW, "HUD style selection is not available. Use /toghud to toggle your HUD.");
 		}
 		else if(option == 4)
 		{
@@ -15975,8 +15950,8 @@ CMD:toghud(playerid, params[])
 	{
 		PlayerFlags[playerid][toggleHUD] = true;
 
-		ToggleHudTextdraw(playerid, false);
-        PlayerTextDrawHide(playerid, MaskTD[playerid]);
+		HideHudV2Full(playerid);
+		PlayerTextDrawHide(playerid, MaskTD[playerid]);
 
  		SendClientMessage(playerid, COLOR_YELLOW, "HUD togged off.");
 	}
@@ -15984,7 +15959,7 @@ CMD:toghud(playerid, params[])
 	{
 		PlayerFlags[playerid][toggleHUD] = false;
 
-		ToggleHudTextdraw(playerid, true);
+		ShowHudV2Full(playerid);
 
 		if(IsMasked{playerid})
 		{

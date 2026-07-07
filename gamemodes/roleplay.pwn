@@ -1217,11 +1217,7 @@ new Text:TD_PhoneCover[9];
 new Text:Store_Frame[4];
 new Text:ALPR_UI[2];
 
-new Text:TD_ServerLogo;
-new Text:TD_ServerDate;
-new Text:TD_ServerTime;
-new PlayerText:TD_ServerFPS[MAX_PLAYERS];
-new PlayerText:TD_ServerLocation[MAX_PLAYERS];
+
 
 new bool:MDC_Created[MAX_PLAYERS char];
 new bool:UsingMDC[MAX_PLAYERS char];
@@ -1408,7 +1404,7 @@ new PlayerText:blindfold[MAX_PLAYERS];
 new PlayerText:ALPR_Plate[MAX_PLAYERS];
 new PlayerText:LicensesUI[MAX_PLAYERS][10];
 
-new PlayerText:HudTextDraw[MAX_PLAYERS];
+
 
 // Mobile Data Computer
 new
@@ -2105,6 +2101,7 @@ new LastEngineToggle[MAX_PLAYERS];
 #include "modules/Animations.pwn"
 #include "modules/Queries.pwn"
 #include "modules/Textdraws.pwn"
+#include "modules/HudV2.pwn"
 #include "modules/police/Fines.pwn"
 
 public OnGameModeInit()
@@ -2180,6 +2177,7 @@ public OnGameModeInit()
 
 	CreateTextLabels();
 	CreateGlobalTextDraws();
+	CreateHudV2GlobalTDs();
 	CreateRentalVehicles();
 	CreateLicenseVehicles();
 	CreatePenalCode();
@@ -2197,6 +2195,7 @@ public OnGameModeInit()
 public OnGameModeExit()
 {
 	mysql_close(dbCon);
+	DestroyHudV2GlobalTDs();
 
     /*for(new i = 0; i < NUM_SHIP_ATTACHMENTS; ++i)
 	{
@@ -2320,8 +2319,8 @@ public OnPlayerConnect(playerid)
 public OnPlayerDisconnect(playerid, reason)
 {	
 	StopAudioStreamForPlayer(playerid);
-	PlayerTextDrawDestroy(playerid, TD_ServerLocation[playerid]);
-	PlayerTextDrawDestroy(playerid, TD_ServerFPS[playerid]);
+
+	DestroyHudV2PlayerTDs(playerid);
 	DestroyClothingShopTDs(playerid);
 	DestroyLoginTDs(playerid);
 	DestroyMDC(playerid);
@@ -5511,8 +5510,7 @@ Relog_Player(playerid)
 		PlayerTextDrawDestroy(playerid, CharSelectionTD[playerid][i]);
 		CharSelectionTD[playerid][i] = PlayerText:INVALID_TEXT_DRAW;
 	}
-	PlayerTextDrawHide(playerid, TD_ServerFPS[playerid]);
-	PlayerTextDrawHide(playerid, TD_ServerLocation[playerid]);
+
 
 	// 12. Reload character list from DB → triggers THREAD_CHECK_CHARACTER → TextDraw char selection
 	SQL_LoadCharacters(playerid);
@@ -5929,11 +5927,7 @@ public OnPlayerSpawn(playerid)
         Spawned{playerid} = true;
         StopAudioStreamForPlayer(playerid);
 
-        TextDrawShowForPlayer(playerid, TD_ServerLogo);
-        TextDrawShowForPlayer(playerid, TD_ServerDate);
-        TextDrawShowForPlayer(playerid, TD_ServerTime);
-        PlayerTextDrawShow(playerid, TD_ServerFPS[playerid]);
-        PlayerTextDrawShow(playerid, TD_ServerLocation[playerid]);
+
 
         LastSpawn[playerid] = gettime();
 
@@ -7097,6 +7091,11 @@ public OnPlayerEnterVehicle(playerid, vehicleid, ispassenger)
 			}
 		}
 	}
+
+	if(!PlayerFlags[playerid][toggleHUD] && HUD_Created{playerid})
+	{
+		ShowHudV2Vehicle(playerid, vehicleid);
+	}
 	return true;
 }
 
@@ -7133,6 +7132,11 @@ public OnPlayerExitVehicle(playerid, vehicleid)
 		gPlayerCheckpointStatus[playerid] = CHECKPOINT_NONE;
 		gPlayerCheckpointValue[playerid] = -1;
 		SetVehicleToRespawn(vehicleid);
+	}
+
+	if(!PlayerFlags[playerid][toggleHUD] && HUD_Created{playerid})
+	{
+		HideHudV2Vehicle(playerid);
 	}
 	return true;
 }

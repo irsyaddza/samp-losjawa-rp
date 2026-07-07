@@ -37,19 +37,9 @@ ptask Players[1000](i)
 		if (fps >= 0 && fps < 300)
 		{
 			PlayerFPS[i] = fps;
-			new fpsStr[32];
-			format(fpsStr, sizeof(fpsStr), "FPS: %d", fps);
-			PlayerTextDrawSetString(i, TD_ServerFPS[i], fpsStr);
 		}
 	}
 	PlayerDrunkLevelLast[i] = GetPlayerDrunkLevel(i);
-
-	new MapZone:zone = GetPlayerMapZone(i);
-    new zoneName[MAX_MAP_ZONE_NAME];
-    GetMapZoneName(zone, zoneName);
-	new locString[128];
-    format(locString, sizeof(locString), "%s", zoneName);
-	PlayerTextDrawSetString(i, TD_ServerLocation[i], locString);
 
 	if(PlayerData[i][pTutorialStep])
 	{

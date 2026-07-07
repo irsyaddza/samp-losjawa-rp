@@ -134,13 +134,6 @@ IndustryTime()
 
 task ServerDateTimer[1000]()
 {
-    new string[128], year, month, day, hours, minutes, seconds;
-    getdate(year, month, day);
-    gettime(hours, minutes, seconds);
-
-    format(string, sizeof(string), "%02d/%02d/%d", day, month, year);
-    TextDrawSetString(TD_ServerDate, string);
-
-    format(string, sizeof(string), "%02d:%02d:%02d", hours, minutes, seconds);
-    TextDrawSetString(TD_ServerTime, string);
+    // Update HudV2 global date/time textdraws
+    UpdateHudV2Time();
 }

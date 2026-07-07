@@ -232,36 +232,6 @@ CreateGlobalTextDraws()
 	TextDrawFont(ALPR_UI[1], 2);
 	TextDrawSetProportional(ALPR_UI[1], 1);
 
-	TD_ServerLogo = TextDrawCreate(265.000, 4.000, "mdl-1410:logo");
-	TextDrawTextSize(TD_ServerLogo, 89.000, 35.000);
-	TextDrawAlignment(TD_ServerLogo, 1);
-	TextDrawColor(TD_ServerLogo, -1);
-	TextDrawSetShadow(TD_ServerLogo, 0);
-	TextDrawSetOutline(TD_ServerLogo, 0);
-	TextDrawBackgroundColor(TD_ServerLogo, 255);
-	TextDrawFont(TD_ServerLogo, 4);
-	TextDrawSetProportional(TD_ServerLogo, 1);
-
-	TD_ServerTime = TextDrawCreate(547.000, 23.000, "00:00:00");
-	TextDrawLetterSize(TD_ServerTime, 0.439, 2.098);
-	TextDrawTextSize(TD_ServerTime, 1.000, 22.000);
-	TextDrawAlignment(TD_ServerTime, 1);
-	TextDrawColor(TD_ServerTime, -1);
-	TextDrawSetShadow(TD_ServerTime, 1);
-	TextDrawSetOutline(TD_ServerTime, 1);
-	TextDrawBackgroundColor(TD_ServerTime, 150);
-	TextDrawFont(TD_ServerTime, 3);
-	TextDrawSetProportional(TD_ServerTime, 1);
-
-	TD_ServerDate = TextDrawCreate(547.000, 9.000, "01/02/2026");
-	TextDrawLetterSize(TD_ServerDate, 0.300, 1.500);
-	TextDrawAlignment(TD_ServerDate, 1);
-	TextDrawColor(TD_ServerDate, -1);
-	TextDrawSetShadow(TD_ServerDate, 101);
-	TextDrawSetOutline(TD_ServerDate, 1);
-	TextDrawBackgroundColor(TD_ServerDate, 150);
-	TextDrawFont(TD_ServerDate, 3);
-	TextDrawSetProportional(TD_ServerDate, 1);
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -440,26 +410,6 @@ HideCharSelectionUI(playerid)
 
 CreateTextdraws(playerid)
 {
-	TD_ServerFPS[playerid] = CreatePlayerTextDraw(playerid, 606.000, 437.000, "FPS: 000");
-	PlayerTextDrawLetterSize(playerid, TD_ServerFPS[playerid], 0.210, 0.999);
-	PlayerTextDrawAlignment(playerid, TD_ServerFPS[playerid], 1);
-	PlayerTextDrawColor(playerid, TD_ServerFPS[playerid], -1);
-	PlayerTextDrawSetShadow(playerid, TD_ServerFPS[playerid], 1);
-	PlayerTextDrawSetOutline(playerid, TD_ServerFPS[playerid], 1);
-	PlayerTextDrawBackgroundColor(playerid, TD_ServerFPS[playerid], 150);
-	PlayerTextDrawFont(playerid, TD_ServerFPS[playerid], 3);
-	PlayerTextDrawSetProportional(playerid, TD_ServerFPS[playerid], 1);
-
-	TD_ServerLocation[playerid] = CreatePlayerTextDraw(playerid, 3.000, 433.000, "Los Santos International Airport");
-	PlayerTextDrawLetterSize(playerid, TD_ServerLocation[playerid], 0.230, 1.399);
-	PlayerTextDrawAlignment(playerid, TD_ServerLocation[playerid], 1);
-	PlayerTextDrawColor(playerid, TD_ServerLocation[playerid], -1);
-	PlayerTextDrawSetShadow(playerid, TD_ServerLocation[playerid], 1);
-	PlayerTextDrawSetOutline(playerid, TD_ServerLocation[playerid], 1);
-	PlayerTextDrawBackgroundColor(playerid, TD_ServerLocation[playerid], 150);
-	PlayerTextDrawFont(playerid, TD_ServerLocation[playerid], 2);
-	PlayerTextDrawSetProportional(playerid, TD_ServerLocation[playerid], 1);
-
 	//txd sel
 	CharSelectionTD[playerid][0] = CreatePlayerTextDraw(playerid, 160.666656, 119.740737, "");
 	PlayerTextDrawTextSize(playerid, CharSelectionTD[playerid][0], 100.000000, 100.000000);
@@ -1121,17 +1071,10 @@ CreateTextdraws(playerid)
 	PlayerTextDrawSetProportional(playerid, ColorSelectRight2[playerid], 1);
 	PlayerTextDrawSetSelectable(playerid, ColorSelectRight2[playerid], true);
 
-	HudTextDraw[playerid] = CreatePlayerTextDraw(playerid, 545.000000, 110.000000, "~b~RADIO INFO~n~~b~Chan: ~g~0~n~~b~Slot: ~g~1");
-	PlayerTextDrawLetterSize(playerid, HudTextDraw[playerid], 0.480000, 1.120000);
-	PlayerTextDrawTextSize(playerid, HudTextDraw[playerid], 60.000000, 100.000000);
-	PlayerTextDrawAlignment(playerid, HudTextDraw[playerid], 2);
-	PlayerTextDrawColor(playerid, HudTextDraw[playerid], -1);
-	PlayerTextDrawSetShadow(playerid, HudTextDraw[playerid], 2);
-	PlayerTextDrawSetOutline(playerid, HudTextDraw[playerid], 0);
-	PlayerTextDrawBackgroundColor(playerid, HudTextDraw[playerid], 255);
-	PlayerTextDrawFont(playerid, HudTextDraw[playerid], 3);
-	PlayerTextDrawSetProportional(playerid, HudTextDraw[playerid], 1);
-	PlayerTextDrawSetSelectable(playerid, HudTextDraw[playerid], false);
+
+	// HUD textdraw handled by HudV2.pwn (CreateHudV2PlayerTDs)
+
+
 
 /*
 TextDraw ID: 2063, Text: ~b~RADIO INFO~n~~b~Chan: ~g~0~n~~b~Slot: ~g~1
