@@ -78,10 +78,10 @@ export default async function AdminPortalPage() {
         <div className="mb-8">
           <h2 className="text-2xl font-black text-white flex items-center gap-2">
             <Shield className="h-6 w-6 text-amber-500" />
-            Review Pembuatan Karakter
+            Portal Administrator
           </h2>
           <p className="text-xs text-zinc-400 mt-1">
-            Portal untuk meninjau kuis roleplay dan kisah latar belakang karakter baru yang diajukan pemain.
+            Tinjau pengajuan karakter baru dan kelola status donatur pengguna secara langsung.
           </p>
         </div>
 

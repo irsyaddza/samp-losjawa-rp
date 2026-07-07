@@ -9,6 +9,9 @@ CMD:relog(playerid, params[])
 	if(IsBrutallyWounded(playerid))
 		return SendErrorMessage(playerid, "You cannot relog while critically injured.");
 
+	if(!PlayerData[playerid][pAdmin] && !PlayerData[playerid][pDonateRank])
+		return SendUnauthMessage(playerid, "This command is only available for Donators and Admins.");
+
 	SendClientMessage(playerid, COLOR_YELLOW, "SERVER: Returning you to character selection...");
 	Relog_Player(playerid);
 	return true;
@@ -12547,8 +12550,8 @@ CMD:engine(playerid, params[])
 	if(!IsPlayerInAnyVehicle(playerid) || GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
 	    return SendServerMessage(playerid, "You need to be in the driver seat of a vehicle.");
 
-	if(gettime() - LastEngineToggle[playerid] < 10)
-		return SendErrorMessage(playerid, "Please wait 10 seconds before toggling the engine again.");
+	if(gettime() - LastEngineToggle[playerid] < 5)
+		return SendErrorMessage(playerid, "Please wait 5 seconds before toggling the engine again.");
 
 	new vehicleid = GetPlayerVehicleID(playerid), id = -1, Float:vhealth, bool:canstart;
 
@@ -13533,7 +13536,7 @@ CMD:v(playerid, params[])
 		if(CountVehicleKeys(userid) >= MaxVehiclesSpawned(userid))
             return SendServerMessage(playerid, "This player already has a vehicle spawned.");
 
-		if(CountPlayerVehicles(userid) >= 12)
+		if(CountPlayerVehicles(userid) >= MaxOwnedVehicles(userid))
 			return SendClientMessage(playerid, COLOR_LIGHTRED, "This player the has maxium amount of vehicles.");
 
 		if(price < 0)
@@ -15840,9 +15843,6 @@ CMD:setstyle(playerid, params[])
 	{
 		if(option == 1)
 		{
-		    if(PlayerData[playerid][pDonateRank] < 1)
-				return SendUnauthMessage(playerid, "Sorry but Walk Styles are for Donators only. Check out losjawa-rp.net to purchase premium!");
-
 			new style;
 
 			if(sscanf(params, "{d}d", style))
@@ -15867,9 +15867,6 @@ CMD:setstyle(playerid, params[])
 		}
 		else if(option == 2)
 		{
-		    if(PlayerData[playerid][pDonateRank] < 1)
-				return SendUnauthMessage(playerid, "Sorry but Chat Styles are for Donators only. Check out losjawa-rp.net to purchase premium!");
-
 			new style;
 
 			if(sscanf(params, "{d}d", style) || (style < 0 || style > 8))
@@ -15891,9 +15888,6 @@ CMD:setstyle(playerid, params[])
 		}
 		else if(option == 3)
 		{
-		    if(PlayerData[playerid][pDonateRank] < 1)
-    			return SendUnauthMessage(playerid, "Sorry but HUD Styles are for Donators only. Check out losjawa-rp.net to purchase premium!");
-
 			new style;
 
 			if(sscanf(params, "{d}d", style) || (style < 0 || style > 4))

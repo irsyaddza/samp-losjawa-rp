@@ -16,7 +16,7 @@ interface NavbarProps {
 const navLinks = [
   { href: '/#features', label: 'Features' },
   { href: '/#stats', label: 'Stats' },
-  { href: '/#community', label: 'Community' },
+  { href: '/donator', label: 'Donator' },
 ];
 
 export default function Navbar({ session }: NavbarProps) {

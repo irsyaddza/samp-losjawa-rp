@@ -517,6 +517,9 @@ new VehicleDealership[][] =
 	{593, 0}, // Dodo
 	{487, 0}, // Maverick
 	{519, 0}, // Shamal
+	{447, 0}, // Seasparrow (Bronze Donator)
+	{513, 0}, // Stuntplane (Silver Donator)
+	{460, 0}, // Skimmer (Gold Donator)
 
 	// --- Bikes (Category 2 -> dealerType 1) ---
 	{462, 2}, // Faggio
@@ -527,6 +530,7 @@ new VehicleDealership[][] =
 	{509, 2}, // Bike
 	{521, 2}, // FCR-900
 	{586, 2}, // Wayfarer
+	{522, 2}, // NRG-500 (Silver Donator)
 
 	// --- Boats (Category 13 -> dealerType 3) ---
 	{446, 13}, // Squalo
@@ -556,6 +560,7 @@ new VehicleDealership[][] =
 	{438, 4}, // Cabbie
 	{420, 4}, // Taxi
 	{525, 4}, // Tow Truck
+	{573, 4}, // Duneride (Gold Donator)
 
 	// --- Daily Car (Category 3 -> dealerType 0) ---
 	{480, 3}, // Comet
@@ -607,7 +612,10 @@ new VehicleDealership[][] =
 	{561, 3}, // Stratum
 	{483, 3}, // Camper
 	{508, 3}, // Journey
-	{545, 3}  // Hustler
+	{545, 3},  // Hustler
+	{502, 3}, // Hotring Racer 2 (Silver Donator)
+	{411, 3}, // Infernus (Gold Donator)
+	{451, 3}  // Turismo (Gold Donator)
 };
 
 new const g_arrVehicleNames[][] =
@@ -13941,20 +13949,37 @@ IsDonateCar(model)
 {
 	switch(model)
 	{
-	    case 481, 509:
+	    // Bronze (Level 1): Mountain Bike, Seasparrow, Marquis
+	    case 509, 447, 484:
 	    {
 	        return 1;
 	    }
- 	    case 477, 471:
+	    // Silver (Level 2): NRG-500, Stuntplane, Hotring Racer 2
+ 	    case 522, 513, 502:
 	    {
 	        return 2;
 	    }
- 	    case 429, 541, 521, 468:
+	    // Gold (Level 3): Infernus, Bullet, Turismo, Shamal, Duneride, Skimmer
+ 	    case 411, 541, 451, 519, 573, 460:
 	    {
 	        return 3;
 	    }
 	}
 	return false;
+}
+
+MaxOwnedVehicles(playerid)
+{
+    if(PlayerData[playerid][pAdmin])
+        return 12;
+
+    switch(PlayerData[playerid][pDonateRank])
+    {
+        case 1: return 4;   // Bronze
+        case 2: return 6;   // Silver
+        case 3: return 12;  // Gold
+    }
+    return 3; // Non-donatur
 }
 
 IsCopCar(model)

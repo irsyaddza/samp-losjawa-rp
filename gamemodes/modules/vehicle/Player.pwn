@@ -1440,7 +1440,7 @@ Dialog:DealercarConfirm(playerid, response, listitem, inputtext[])
 				}
 			}
 
-			if(CountPlayerVehicles(playerid) >= 12)
+			if(CountPlayerVehicles(playerid) >= MaxOwnedVehicles(playerid))
 		 	{
 		 		SendClientMessage(playerid, COLOR_LIGHTRED, "You have the maximum number of vehicles owned.");
 		 		ExitSettingVehicle(playerid);
@@ -3040,10 +3040,12 @@ MaxVehiclesSpawned(playerid)
 	if(PlayerData[playerid][pAdmin])
 		return 3;
 
-	if(PlayerData[playerid][pDonateRank] == 3)
-		return 3;
-
-	return 1;
+	switch(PlayerData[playerid][pDonateRank])
+	{
+	    case 2: return 2;   // Silver
+	    case 3: return 3;   // Gold
+	}
+	return 1; // Non-donatur & Bronze
 }
 
 SpawnPlayerCar(playerid, slot)
