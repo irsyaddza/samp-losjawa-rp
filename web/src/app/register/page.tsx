@@ -61,7 +61,7 @@ export default function RegisterPage() {
         {/* Left Side: Artwork (Inspired by GTA SA / Los Jawa aesthetic) */}
         <div 
           className="relative hidden md:flex md:w-1/2 flex-col justify-between p-10 text-white overflow-hidden bg-cover bg-center rounded-[24px] m-3 shadow-inner"
-          style={{ backgroundImage: "url('/login_artwork.jpg')" }}
+          style={{ backgroundImage: "url('/login_artwork.png')" }}
         >
           {/* Overlay to ensure text readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/95 via-zinc-950/40 to-zinc-950/70 pointer-events-none rounded-[24px]" />
