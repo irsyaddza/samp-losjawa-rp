@@ -12354,7 +12354,7 @@ Dialog:SetFactionSpawn(playerid, response, listitem, inputtext[])
 CMD:setspawn(playerid, params[])
 {
 	if(isnull(params))
-		return SendSyntaxMessage(playerid, "/changespawn [type (0-Normal, 1-Faction, 2-House)]");
+		return SendSyntaxMessage(playerid, "/setspawn [type (0-Normal, 1-Faction, 2-House, 3-Last Location)]");
 
 	new type = strval(params);
 
@@ -12392,9 +12392,18 @@ CMD:setspawn(playerid, params[])
 	    {
 	        SendErrorMessage(playerid, "To change your spawn to a property you own, go to the entrance on foot and /changespawn.");
 	    }
+	    case 3: // Last Location
+	    {
+	        PlayerData[playerid][pSpawnPoint] = 4;
+
+	        SendClientMessage(playerid, COLOR_YELLOW, "You will now spawn at your last location.");
+
+	        mysql_format(dbCon, sgstr, sizeof(sgstr), "UPDATE `characters` SET `SpawnPoint` = '4' WHERE `ID` = '%d' LIMIT 1", PlayerData[playerid][pID]);
+	        mysql_tquery(dbCon, sgstr);
+	    }
 	    default:
 		{
-	        SendSyntaxMessage(playerid, "/changespawn [type (0-Normal, 1-Faction, 2-House)]");
+	        SendSyntaxMessage(playerid, "/setspawn [type (0-Normal, 1-Faction, 2-House, 3-Last Location)]");
 	    }
 	}
 	return true;

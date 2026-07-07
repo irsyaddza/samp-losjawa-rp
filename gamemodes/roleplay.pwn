@@ -6364,7 +6364,34 @@ SetPlayerSpawn(playerid)
 
 							PlayerData[playerid][pLocal] = house + LOCAL_APARTMENT;
 						}
-				    }				
+					}
+				}
+				case 4: // Last Location
+				{
+					SetPlayerToTeamColor(playerid);
+					SetPlayerPosEx(playerid, PlayerData[playerid][pPos][0], PlayerData[playerid][pPos][1], PlayerData[playerid][pPos][2]);
+					SetPlayerFacingAngle(playerid, PlayerData[playerid][pPos][3]);
+					SetPlayerInteriorEx(playerid, PlayerData[playerid][pInterior]);
+					SetPlayerVirtualWorldEx(playerid, PlayerData[playerid][pWorld]);
+
+					new local = PlayerData[playerid][pLocal];
+					if(local >= LOCAL_APARTMENT)
+					{
+						InApartment[playerid] = local - LOCAL_APARTMENT;
+					}
+					else if(local >= LOCAL_HOUSE)
+					{
+						InProperty[playerid] = local - LOCAL_HOUSE;
+					}
+					else if(local >= LOCAL_BIZZ)
+					{
+						InBusiness[playerid] = local - LOCAL_BIZZ;
+					}
+					else if(local >= LOCAL_GARAGE)
+					{
+						InGarage[playerid] = local - LOCAL_GARAGE;
+					}
+					SyncPrisonInterior(playerid);
 				}
 				default:
 				{
