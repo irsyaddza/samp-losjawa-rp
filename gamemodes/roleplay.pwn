@@ -2102,6 +2102,7 @@ new LastEngineToggle[MAX_PLAYERS];
 #include "modules/Queries.pwn"
 #include "modules/Textdraws.pwn"
 #include "modules/HudV2.pwn"
+#include "modules/MappingRequest.pwn"
 #include "modules/police/Fines.pwn"
 
 public OnGameModeInit()
@@ -2203,6 +2204,9 @@ public OnGameModeExit()
 	}
 
     DestroyObject(gMainShipObjectId);*/
+    
+    // Load approved property mappings dynamically after server startup
+    SetTimer("LoadAllPropertyMappings", 10000, false);
 	return true;
 }
 
@@ -2319,6 +2323,7 @@ public OnPlayerConnect(playerid)
 public OnPlayerDisconnect(playerid, reason)
 {	
 	StopAudioStreamForPlayer(playerid);
+	ClearPreviewObjects(playerid);
 
 	DestroyHudV2PlayerTDs(playerid);
 	DestroyClothingShopTDs(playerid);
@@ -12519,6 +12524,9 @@ public OnAdminSellHouse(houseid)
 	format(PropertyData[houseid][hOwner], MAX_PLAYER_NAME, "The State");
 
 	Property_Refresh(houseid);
+
+	// Auto-remove custom mapping when sold back to the state
+	OnPropertySold(1, PropertyData[houseid][hID]);
 	return true;
 }
 
@@ -15197,6 +15205,11 @@ ShowMainMenuDialog(playerid)
 
 public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 {   
+    if (OnMappingRequestDialogResponse(playerid, dialogid, response, listitem, inputtext))
+    {
+        return 1;
+    }
+
 	switch (dialogid)
 	{
 		case DIALOG_MAIN_MENU:

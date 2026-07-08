@@ -11825,6 +11825,9 @@ CMD:sellbiz(playerid, params[])
 
 			Business_Save(house);
 
+			// Auto-remove custom mapping when business is sold
+			OnPropertySold(2, BusinessData[house][bID]);
+
 			if(InBusiness[playerid] == house)
 			{
 				SetCameraBehindPlayer(playerid);

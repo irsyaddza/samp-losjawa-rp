@@ -3,7 +3,7 @@ import Link from 'next/link';
 import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { RowDataPacket } from 'mysql2';
-import { User, Shield, Calendar, Landmark, Coins, LogOut, ArrowLeft, Gamepad2, Settings, UserPlus, ShieldAlert, CheckCircle2, Clock, Users, Mail } from 'lucide-react';
+import { User, Shield, Calendar, Landmark, Coins, LogOut, ArrowLeft, Gamepad2, Settings, UserPlus, ShieldAlert, CheckCircle2, Clock, Users, Mail, Home } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { getSkinImageUrl } from '@/lib/assets';
 
@@ -135,6 +135,13 @@ export default async function DashboardPage() {
                 >
                   <Settings className="h-4 w-4 text-zinc-400" />
                   Pengaturan Keamanan
+                </Link>
+                <Link
+                  href="/dashboard/mapping"
+                  className="flex items-center gap-2.5 w-full rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-850 text-white px-4 py-3 text-xs font-semibold transition"
+                >
+                  <Home className="h-4 w-4 text-amber-500" />
+                  Request Mapping Rumah
                 </Link>
                 <Link
                   href="/dashboard/online"

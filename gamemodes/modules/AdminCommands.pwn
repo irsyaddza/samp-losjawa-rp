@@ -3342,6 +3342,9 @@ CMD:removeapt(playerid, params[])
 	mysql_format(dbCon, gquery, sizeof(gquery), "DELETE FROM `apartments` WHERE `ID` = '%d' LIMIT 1", appid);
 	mysql_tquery(dbCon, gquery);
 
+	// Auto-remove custom mapping when apartment is destroyed/removed
+	OnPropertySold(3, appid);
+
 	SendClientMessageEx(playerid, COLOR_GREEN, "Apartment ID %d has been successfully removed from the database.", houseid);
 	return true;
 }

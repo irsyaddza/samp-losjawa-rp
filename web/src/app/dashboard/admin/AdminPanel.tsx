@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   Check,
   X,
@@ -192,6 +193,12 @@ export default function AdminPanel({ initialApps }: AdminPanelProps) {
         >
           Manage Donators (Character-based)
         </button>
+        <Link
+          href="/dashboard/admin/mapping"
+          className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-zinc-400 hover:text-white transition"
+        >
+          Review Property Mappings
+        </Link>
       </div>
 
       {activeTab === 'applications' ? (
