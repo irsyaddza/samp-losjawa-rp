@@ -347,7 +347,7 @@ ShowHudV2Vehicle(playerid, vehicleid)
     PlayerTextDrawShow(playerid, HV2_Speed[playerid]);
 
     // Ignition state
-    if(CoreVehicles[vehicleid][vHasEngine])
+    if(CoreVehicles[vehicleid][vehicleEngineStatus])
     {
         PlayerTextDrawShow(playerid, HV2_IgnOn[playerid]);
         PlayerTextDrawHide(playerid, HV2_IgnOff[playerid]);
@@ -474,13 +474,17 @@ UpdateHudV2Player(playerid, vehicleid)
     // ── Vehicle ────────────────────────────────────────────────
     if(vehicleid)
     {
+        // Always ensure background + speed are visible while in vehicle
+        PlayerTextDrawShow(playerid, HV2_BaseSpeed[playerid]);
+
         new Float:mph = CoreVehicles[vehicleid][vSpeed] * 121.30;
         new speedStr[16];
         format(speedStr, sizeof(speedStr), "%d MPH", floatround(mph));
         PlayerTextDrawSetString(playerid, HV2_Speed[playerid], speedStr);
+        PlayerTextDrawShow(playerid, HV2_Speed[playerid]);
 
-        // Ignition toggle
-        if(CoreVehicles[vehicleid][vHasEngine])
+        // Ignition toggle — use actual engine ON/OFF status
+        if(CoreVehicles[vehicleid][vehicleEngineStatus])
         {
             PlayerTextDrawShow(playerid, HV2_IgnOn[playerid]);
             PlayerTextDrawHide(playerid, HV2_IgnOff[playerid]);
@@ -504,5 +508,15 @@ UpdateHudV2Player(playerid, vehicleid)
             PlayerTextDrawHide(playerid, HV2_LockCar[playerid]);
             PlayerTextDrawShow(playerid, HV2_UnlockCar[playerid]);
         }
+    }
+    else
+    {
+        // Player not in a vehicle — hide vehicle-only icons (radio stays visible)
+        PlayerTextDrawHide(playerid, HV2_BaseSpeed[playerid]);
+        PlayerTextDrawHide(playerid, HV2_Speed[playerid]);
+        PlayerTextDrawHide(playerid, HV2_IgnOn[playerid]);
+        PlayerTextDrawHide(playerid, HV2_IgnOff[playerid]);
+        PlayerTextDrawHide(playerid, HV2_LockCar[playerid]);
+        PlayerTextDrawHide(playerid, HV2_UnlockCar[playerid]);
     }
 }

@@ -5511,6 +5511,13 @@ Relog_Player(playerid)
 		CharSelectionTD[playerid][i] = PlayerText:INVALID_TEXT_DRAW;
 	}
 
+	// 10. Destroy HudV2 player textdraws to prevent duplication on re-spawn
+	if(HUD_Created{playerid})
+	{
+		HideHudV2Full(playerid);
+		DestroyHudV2PlayerTDs(playerid);
+		HUD_Created{playerid} = false;
+	}
 
 	// 12. Reload character list from DB → triggers THREAD_CHECK_CHARACTER → TextDraw char selection
 	SQL_LoadCharacters(playerid);
