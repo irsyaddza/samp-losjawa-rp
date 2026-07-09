@@ -1596,21 +1596,24 @@ HoldingKey(playerid, key)
 	return false;
 }
 
-ClearGameTextColor(const string[])
+stock ClearGameTextColor(const string[])
 {
-	new aaa[256];
-
-    new Regex:r = Regex_New("~.~");
-
-    if(r)
+    static aaa[256];
+    new len = 0;
+    
+    for(new i = 0; string[i] != '\0' && len < sizeof(aaa) - 1; )
     {
-        Regex_Replace(string, r, "+", aaa, MATCH_DEFAULT, sizeof(aaa));
-
-        Regex_Delete(r);
-	}
-
-	format(aaa, 256, "%s", str_replaceEx("+", aaa));
-	return aaa;
+        if(string[i] == '~' && string[i+1] != '\0' && string[i+2] == '~')
+        {
+            i += 3; // Skip the ~x~ color code
+        }
+        else
+        {
+            aaa[len++] = string[i++];
+        }
+    }
+    aaa[len] = '\0';
+    return aaa;
 }
 
 // Dialog HELP
