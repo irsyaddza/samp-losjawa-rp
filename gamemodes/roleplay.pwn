@@ -17521,10 +17521,15 @@ FindFreeATM()
 }
 
 new GPS_BizzList[MAX_PLAYERS][MAX_BUSINESS];
+#define MAX_GPS_LIST (128)
+new Float:PlayerGPSCoords[MAX_PLAYERS][MAX_GPS_LIST][3];
+new PlayerGPSNames[MAX_PLAYERS][MAX_GPS_LIST][64];
+new PlayerGPSCount[MAX_PLAYERS];
+new PlayerGPSDeleteID[MAX_PLAYERS][MAX_GPS_LIST];
 
 CMD:gps(playerid, params[])
 {
-	Dialog_Show(playerid, SA_MAPS, DIALOG_STYLE_LIST, "GPS - Main Menu", "Find Street\nFind Property\nFind Nearest Gas Station\nFind Nearest 24/7\nFind Nearest Bar/Club\nFind Nearest Fast Food\nAll Businesses\nPoints of Interest", "Next", "Exit");
+	Dialog_Show(playerid, SA_MAPS, DIALOG_STYLE_LIST, "GPS - Main Menu", "Find Street\nFind Property\nFind Nearest Gas Station\nFind Nearest 24/7\nFind Nearest Bar/Club\nFind Nearest Fast Food\nAll Businesses\nPublic Place\nJobs & Activity", "Next", "Exit");
 	return true;
 }
 
@@ -17645,41 +17650,216 @@ Dialog:SA_MAPS(playerid, response, listitem, inputtext[])
 				if(!count) return SendErrorMessage(playerid, "No businesses found in the city.");
 				Dialog_Show(playerid, GPS_AllBizz, DIALOG_STYLE_LIST, "GPS - All Businesses", gstr, "Go", "Back");
 	        }
-			case 7: // Points of Interest
-			{
-				gstr[0] = EOS;
-
-				for(new i = 0; i < sizeof(PointsOfInterest); ++i)
-				{
-				    format(gstr, sizeof(gstr), "%s\n%s", gstr, PointsOfInterest[i][poiName]);
-				}
-				
-				Dialog_Show(playerid, POIS, DIALOG_STYLE_LIST, "Points of Interest", gstr, "Go", "Back");
-			}
+	        case 7: // Public Place
+	        {
+				mysql_tquery(dbCon, "SELECT `id`, `name`, `x`, `y`, `z` FROM `gps_locations` WHERE `type` = 'public' ORDER BY `name` ASC LIMIT 128", "OnGPSLoadPublic", "d", playerid);
+	        }
+	        case 8: // Jobs & Activity
+	        {
+				mysql_tquery(dbCon, "SELECT `id`, `name`, `x`, `y`, `z` FROM `gps_locations` WHERE `type` = 'jobs' ORDER BY `name` ASC LIMIT 128", "OnGPSLoadJobs", "d", playerid);
+	        }
 	    }
 	}
 	return true;
 }
 
-Dialog:POIS(playerid, response, listitem, inputtext[])
+forward OnGPSLoadPublic(playerid);
+public OnGPSLoadPublic(playerid)
 {
-	if(!response) return true;
-	
-	if(listitem < 0 || listitem >= sizeof(PointsOfInterest)) return false;
-	
-	SetPath(playerid, PointsOfInterest[listitem][pointArea][0], PointsOfInterest[listitem][pointArea][1], PointsOfInterest[listitem][pointArea][2], PointsOfInterest[listitem][poiName]);
-	return true;
+    new rows = cache_num_rows();
+    if(rows == 0)
+    {
+        return SendErrorMessage(playerid, "No public places registered in GPS.");
+    }
+    
+    new list_str[2048];
+    list_str[0] = '\0';
+    PlayerGPSCount[playerid] = 0;
+    
+    for(new i = 0; i < rows && i < MAX_GPS_LIST; ++i)
+    {
+        new Float:x, Float:y, Float:z, name[64];
+        cache_get_value_name_float(i, "x", x);
+        cache_get_value_name_float(i, "y", y);
+        cache_get_value_name_float(i, "z", z);
+        cache_get_value_name(i, "name", name);
+        
+        PlayerGPSCoords[playerid][i][0] = x;
+        PlayerGPSCoords[playerid][i][1] = y;
+        PlayerGPSCoords[playerid][i][2] = z;
+        format(PlayerGPSNames[playerid][i], 64, "%s", name);
+        
+        format(list_str, sizeof(list_str), "%s%s\n", list_str, name);
+        PlayerGPSCount[playerid]++;
+    }
+    
+    Dialog_Show(playerid, GPS_PublicList, DIALOG_STYLE_LIST, "GPS - Public Places", list_str, "Go", "Back");
+    return 1;
+}
+
+Dialog:GPS_PublicList(playerid, response, listitem, inputtext[])
+{
+    if(!response) return Dialog_Show(playerid, SA_MAPS, DIALOG_STYLE_LIST, "GPS - Main Menu", "Find Street\nFind Property\nFind Nearest Gas Station\nFind Nearest 24/7\nFind Nearest Bar/Club\nFind Nearest Fast Food\nAll Businesses\nPublic Place\nJobs & Activity", "Next", "Exit");
+    
+    if(listitem >= 0 && listitem < PlayerGPSCount[playerid])
+    {
+        SetPath(playerid, PlayerGPSCoords[playerid][listitem][0], PlayerGPSCoords[playerid][listitem][1], PlayerGPSCoords[playerid][listitem][2], PlayerGPSNames[playerid][listitem]);
+    }
+    return 1;
+}
+
+forward OnGPSLoadJobs(playerid);
+public OnGPSLoadJobs(playerid)
+{
+    new rows = cache_num_rows();
+    if(rows == 0)
+    {
+        return SendErrorMessage(playerid, "No jobs or activities registered in GPS.");
+    }
+    
+    new list_str[2048];
+    list_str[0] = '\0';
+    PlayerGPSCount[playerid] = 0;
+    
+    for(new i = 0; i < rows && i < MAX_GPS_LIST; ++i)
+    {
+        new Float:x, Float:y, Float:z, name[64];
+        cache_get_value_name_float(i, "x", x);
+        cache_get_value_name_float(i, "y", y);
+        cache_get_value_name_float(i, "z", z);
+        cache_get_value_name(i, "name", name);
+        
+        PlayerGPSCoords[playerid][i][0] = x;
+        PlayerGPSCoords[playerid][i][1] = y;
+        PlayerGPSCoords[playerid][i][2] = z;
+        format(PlayerGPSNames[playerid][i], 64, "%s", name);
+        
+        format(list_str, sizeof(list_str), "%s%s\n", list_str, name);
+        PlayerGPSCount[playerid]++;
+    }
+    
+    Dialog_Show(playerid, GPS_JobsList, DIALOG_STYLE_LIST, "GPS - Jobs & Activity", list_str, "Go", "Back");
+    return 1;
+}
+
+Dialog:GPS_JobsList(playerid, response, listitem, inputtext[])
+{
+    if(!response) return Dialog_Show(playerid, SA_MAPS, DIALOG_STYLE_LIST, "GPS - Main Menu", "Find Street\nFind Property\nFind Nearest Gas Station\nFind Nearest 24/7\nFind Nearest Bar/Club\nFind Nearest Fast Food\nAll Businesses\nPublic Place\nJobs & Activity", "Next", "Exit");
+    
+    if(listitem >= 0 && listitem < PlayerGPSCount[playerid])
+    {
+        SetPath(playerid, PlayerGPSCoords[playerid][listitem][0], PlayerGPSCoords[playerid][listitem][1], PlayerGPSCoords[playerid][listitem][2], PlayerGPSNames[playerid][listitem]);
+    }
+    return 1;
 }
 
 Dialog:GPS_AllBizz(playerid, response, listitem, inputtext[])
 {
-	if(!response) return Dialog_Show(playerid, SA_MAPS, DIALOG_STYLE_LIST, "GPS - Main Menu", "Find Street\nFind Property\nFind Nearest Gas Station\nFind Nearest 24/7\nFind Nearest Bar/Club\nFind Nearest Fast Food\nAll Businesses\nPoints of Interest", "Next", "Exit");
+	if(!response) return Dialog_Show(playerid, SA_MAPS, DIALOG_STYLE_LIST, "GPS - Main Menu", "Find Street\nFind Property\nFind Nearest Gas Station\nFind Nearest 24/7\nFind Nearest Bar/Club\nFind Nearest Fast Food\nAll Businesses\nPublic Place\nJobs & Activity", "Next", "Exit");
 	
 	new bizid = GPS_BizzList[playerid][listitem];
 	if(!Iter_Contains(Business, bizid)) return SendErrorMessage(playerid, "Business no longer exists.");
 
 	SetPath(playerid, BusinessData[bizid][bEntranceX], BusinessData[bizid][bEntranceY], BusinessData[bizid][bEntranceZ], ClearGameTextColor(BusinessData[bizid][bInfo]));
 	return true;
+}
+
+CMD:addgps(playerid, params[])
+{
+    if(PlayerData[playerid][pAdmin] < 4)
+        return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+
+    new type[16], name[64];
+    if(sscanf(params, "s[16]s[64]", type, name))
+    {
+        return SendSyntaxMessage(playerid, "/addgps [public / jobs] [name]");
+    }
+
+    if(strcmp(type, "public", true) != 0 && strcmp(type, "jobs", true) != 0)
+    {
+        return SendErrorMessage(playerid, "Invalid type! Must be 'public' or 'jobs'.");
+    }
+
+    new Float:x, Float:y, Float:z;
+    GetPlayerPos(playerid, x, y, z);
+
+    new query[256];
+    mysql_format(dbCon, query, sizeof(query), "INSERT INTO `gps_locations` (`type`, `name`, `x`, `y`, `z`) VALUES ('%e', '%e', %f, %f, %f)", type, name, x, y, z);
+    mysql_tquery(dbCon, query);
+
+    SendNoticeMessage(playerid, "Successfully added GPS location '%s' to list '%s'.", name, type);
+    return true;
+}
+
+CMD:removegps(playerid, params[])
+{
+    if(PlayerData[playerid][pAdmin] < 4)
+        return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+
+    new type[16];
+    if(sscanf(params, "s[16]", type))
+    {
+        return SendSyntaxMessage(playerid, "/removegps [public / jobs]");
+    }
+
+    if(strcmp(type, "public", true) != 0 && strcmp(type, "jobs", true) != 0)
+    {
+        return SendErrorMessage(playerid, "Invalid type! Must be 'public' or 'jobs'.");
+    }
+
+    new query[256];
+    mysql_format(dbCon, query, sizeof(query), "SELECT `id`, `name` FROM `gps_locations` WHERE `type` = '%e' ORDER BY `name` ASC LIMIT 128", type);
+    mysql_tquery(dbCon, query, "OnGPSRemoveList", "ds", playerid, type);
+    return true;
+}
+
+forward OnGPSRemoveList(playerid, const type[]);
+public OnGPSRemoveList(playerid, const type[])
+{
+    new rows = cache_num_rows();
+    if(rows == 0)
+    {
+        return SendErrorMessage(playerid, "No locations found in list '%s'.", type);
+    }
+    
+    new list_str[2048];
+    list_str[0] = '\0';
+    PlayerGPSCount[playerid] = 0;
+    
+    for(new i = 0; i < rows && i < MAX_GPS_LIST; ++i)
+    {
+        new id, name[64];
+        cache_get_value_name_int(i, "id", id);
+        cache_get_value_name(i, "name", name);
+        
+        PlayerGPSDeleteID[playerid][i] = id;
+        format(PlayerGPSNames[playerid][i], 64, "%s", name);
+        
+        format(list_str, sizeof(list_str), "%s%s (ID: %d)\n", list_str, name, id);
+        PlayerGPSCount[playerid]++;
+    }
+    
+    new title[64];
+    format(title, sizeof(title), "Delete GPS - %s", type);
+    Dialog_Show(playerid, GPS_DeleteSelect, DIALOG_STYLE_LIST, title, list_str, "Delete", "Cancel");
+    return 1;
+}
+
+Dialog:GPS_DeleteSelect(playerid, response, listitem, inputtext[])
+{
+    if(!response) return 1;
+    
+    if(listitem >= 0 && listitem < PlayerGPSCount[playerid])
+    {
+        new db_id = PlayerGPSDeleteID[playerid][listitem];
+        
+        new query[128];
+        mysql_format(dbCon, query, sizeof(query), "DELETE FROM `gps_locations` WHERE `id` = %d", db_id);
+        mysql_tquery(dbCon, query);
+        
+        SendNoticeMessage(playerid, "Deleted GPS location '%s' (DB ID: %d) from database.", PlayerGPSNames[playerid][listitem], db_id);
+    }
+    return 1;
 }
 
 Dialog:FindProperty(playerid, response, listitem, inputtext[])
