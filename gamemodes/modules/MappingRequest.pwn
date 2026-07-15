@@ -9,6 +9,12 @@
 #if !defined DIALOG_MAPPING_REMOVE
     #define DIALOG_MAPPING_REMOVE 16101
 #endif
+#if !defined DIALOG_MAPPING_SAVED
+    #define DIALOG_MAPPING_SAVED 16102
+#endif
+#if !defined DIALOG_MAPPING_DELETE
+    #define DIALOG_MAPPING_DELETE 16103
+#endif
 
 #define MAPPING_OFFSET_APPROVED 200000
 #define MAPPING_OFFSET_PREVIEW 300000
@@ -726,6 +732,24 @@ CMD:reloadmappings(playerid, params[])
     return true;
 }
 
+CMD:savedmapping(playerid, params[])
+{
+    if(PlayerData[playerid][pAdmin] != 1336 && PlayerData[playerid][pAdmin] != 1337)
+        return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+
+    mysql_tquery(dbCon, "SELECT `id`, `ucp_name`, `property_type`, `property_id` FROM `property_mappings` WHERE `status` = 2 ORDER BY `id` ASC LIMIT 128", "OnLoadSavedMappingsList", "d", playerid);
+    return true;
+}
+
+CMD:deletemapping(playerid, params[])
+{
+    if(PlayerData[playerid][pAdmin] != 1336 && PlayerData[playerid][pAdmin] != 1337)
+        return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+
+    mysql_tquery(dbCon, "SELECT `id`, `ucp_name`, `property_type`, `property_id` FROM `property_mappings` WHERE `status` = 2 ORDER BY `id` ASC LIMIT 128", "OnLoadDeleteMappingsList", "d", playerid);
+    return true;
+}
+
 /* ── Callbacks ── */
 
 forward OnLoadPendingMappings(playerid);
@@ -802,6 +826,134 @@ public OnLoadApprovedMappingsList(playerid)
     return true;
 }
 
+forward OnLoadSavedMappingsList(playerid);
+public OnLoadSavedMappingsList(playerid)
+{
+    new rows = cache_num_rows();
+    if(rows == 0)
+    {
+        return SendErrorMessage(playerid, "There are no saved/removed custom mappings.");
+    }
+
+    new headers[256], item[128], db_id, prop_type, prop_id, ucp_name[32];
+    format(headers, sizeof(headers), "UCP Name\tProperty Type\tProperty ID\n");
+    
+    AdminPendingCount[playerid] = 0;
+    
+    for(new i = 0; i < rows && i < MAX_PENDING_LIST; ++i)
+    {
+        cache_get_value_name_int(i, "id", db_id);
+        cache_get_value_name_int(i, "property_type", prop_type);
+        cache_get_value_name_int(i, "property_id", prop_id);
+        cache_get_value_name(i, "ucp_name", ucp_name);
+
+        AdminPendingRequestID[playerid][i] = db_id;
+        AdminPendingCount[playerid]++;
+
+        new typeStr[16];
+        if(prop_type == 1) typeStr = "House";
+        else if(prop_type == 2) typeStr = "Business";
+        else typeStr = "Apartment";
+
+        format(item, sizeof(item), "%s\t%s\t%d\n", ucp_name, typeStr, prop_id);
+        strcat(headers, item);
+    }
+
+    ShowPlayerDialog(playerid, DIALOG_MAPPING_SAVED, DIALOG_STYLE_TABLIST_HEADERS, "Saved/Removed Mappings", headers, "Restore", "Close");
+    return true;
+}
+
+forward OnRestoreSelectedMapping(playerid, db_id);
+public OnRestoreSelectedMapping(playerid, db_id)
+{
+    new rows = cache_num_rows();
+    if(rows == 0) return SendErrorMessage(playerid, "Could not fetch mapping details for restoration.");
+
+    new prop_type, prop_id;
+    static code[16384];
+    cache_get_value_name_int(0, "property_type", prop_type);
+    cache_get_value_name_int(0, "property_id", prop_id);
+    cache_get_value_name(0, "mapping_code", code, sizeof(code));
+
+    new world = -1, interior = -1;
+    if(prop_type == 1) // House
+    {
+        new slot = Property_GetSlotByID(prop_id);
+        if(slot != -1)
+        {
+            world = PropertyData[slot][hWorld];
+            interior = PropertyData[slot][hInterior];
+        }
+    }
+    else if(prop_type == 2) // Business
+    {
+        new slot = Business_GetSlotByID(prop_id);
+        if(slot != -1)
+        {
+            world = BusinessData[slot][bWorld];
+            interior = BusinessData[slot][bInterior];
+        }
+    }
+    else if(prop_type == 3) // Apartment
+    {
+        new slot = Complex_GetSlotByID(prop_id);
+        if(slot != -1)
+        {
+            world = ComplexData[slot][aWorld];
+            interior = ComplexData[slot][aInterior];
+        }
+    }
+
+    if(world != -1)
+    {
+        DetectMappingLocation(prop_type, prop_id, code, world, interior);
+        new spawned = SpawnMappingObjects(code, world, interior, db_id);
+        SendNoticeMessage(playerid, "Restored mapping ID %d. Spawned %d objects.", db_id, spawned);
+    }
+    else
+    {
+        SendNoticeMessage(playerid, "Restored mapping ID %d in database, but the property is not loaded in-game.", db_id);
+    }
+    return true;
+}
+
+forward OnLoadDeleteMappingsList(playerid);
+public OnLoadDeleteMappingsList(playerid)
+{
+    new rows = cache_num_rows();
+    if(rows == 0)
+    {
+        return SendErrorMessage(playerid, "There are no saved/removed custom mappings to delete.");
+    }
+
+    new headers[256], item[128], db_id, prop_type, prop_id, ucp_name[32];
+    format(headers, sizeof(headers), "UCP Name\tProperty Type\tProperty ID\n");
+    
+    AdminPendingCount[playerid] = 0;
+    
+    for(new i = 0; i < rows && i < MAX_PENDING_LIST; ++i)
+    {
+        cache_get_value_name_int(i, "id", db_id);
+        cache_get_value_name_int(i, "property_type", prop_type);
+        cache_get_value_name_int(i, "property_id", prop_id);
+        cache_get_value_name(i, "ucp_name", ucp_name);
+
+        AdminPendingRequestID[playerid][i] = db_id;
+        AdminPendingCount[playerid]++;
+
+        new typeStr[16];
+        if(prop_type == 1) typeStr = "House";
+        else if(prop_type == 2) typeStr = "Business";
+        else typeStr = "Apartment";
+
+        format(item, sizeof(item), "%s\t%s\t%d\n", ucp_name, typeStr, prop_id);
+        strcat(headers, item);
+    }
+
+    ShowPlayerDialog(playerid, DIALOG_MAPPING_DELETE, DIALOG_STYLE_TABLIST_HEADERS, "Delete Custom Mapping", headers, "Delete", "Close");
+    return true;
+}
+
 forward OnPreviewSelectedMapping(playerid, db_id);
 public OnPreviewSelectedMapping(playerid, db_id)
 {
@@ -862,7 +1014,7 @@ public OnPreviewSelectedMapping(playerid, db_id)
 stock OnMappingRequestDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 {
     #pragma unused inputtext
-    if(dialogid == DIALOG_MAPPING_LOAD || dialogid == DIALOG_MAPPING_REMOVE)
+    if(dialogid == DIALOG_MAPPING_LOAD || dialogid == DIALOG_MAPPING_REMOVE || dialogid == DIALOG_MAPPING_SAVED || dialogid == DIALOG_MAPPING_DELETE)
     {
         if(PlayerData[playerid][pAdmin] != 1336 && PlayerData[playerid][pAdmin] != 1337)
             return SendUnauthMessage(playerid, "You're not authorized to perform this action.");
@@ -894,14 +1046,52 @@ stock OnMappingRequestDialogResponse(playerid, dialogid, response, listitem, inp
         {
             new db_id = AdminPendingRequestID[playerid][listitem];
             
-            // Delete from database
+            // Set status to 2 (Saved/Removed) instead of DELETE
             new query[128];
-            mysql_format(dbCon, query, sizeof(query), "DELETE FROM `property_mappings` WHERE `id` = %d", db_id);
+            mysql_format(dbCon, query, sizeof(query), "UPDATE `property_mappings` SET `status` = 2 WHERE `id` = %d", db_id);
             mysql_tquery(dbCon, query);
 
             // Destroy objects in-game
             new destroyed = DestroyApprovedMappingObjects(db_id);
-            SendNoticeMessage(playerid, "Removed custom mapping request ID %d. Destroyed %d active objects.", db_id, destroyed);
+            SendNoticeMessage(playerid, "Removed custom mapping request ID %d and moved it to Saved Mappings list. Destroyed %d active objects.", db_id, destroyed);
+        }
+        return 1;
+    }
+
+    if(dialogid == DIALOG_MAPPING_SAVED)
+    {
+        if(!response) return 1;
+
+        if(listitem >= 0 && listitem < AdminPendingCount[playerid])
+        {
+            new db_id = AdminPendingRequestID[playerid][listitem];
+            
+            // Set status to 1 (Approved/Active)
+            new query[128];
+            mysql_format(dbCon, query, sizeof(query), "UPDATE `property_mappings` SET `status` = 1 WHERE `id` = %d", db_id);
+            mysql_tquery(dbCon, query);
+
+            // Reload the restored mapping in-game
+            mysql_format(dbCon, query, sizeof(query), "SELECT `id`, `property_type`, `property_id`, `mapping_code` FROM `property_mappings` WHERE `id` = %d LIMIT 1", db_id);
+            mysql_tquery(dbCon, query, "OnRestoreSelectedMapping", "dd", playerid, db_id);
+        }
+        return 1;
+    }
+
+    if(dialogid == DIALOG_MAPPING_DELETE)
+    {
+        if(!response) return 1;
+
+        if(listitem >= 0 && listitem < AdminPendingCount[playerid])
+        {
+            new db_id = AdminPendingRequestID[playerid][listitem];
+            
+            // Delete permanently from database
+            new query[128];
+            mysql_format(dbCon, query, sizeof(query), "DELETE FROM `property_mappings` WHERE `id` = %d", db_id);
+            mysql_tquery(dbCon, query);
+
+            SendNoticeMessage(playerid, "Permanently deleted custom mapping request ID %d from Saved Mappings.", db_id);
         }
         return 1;
     }

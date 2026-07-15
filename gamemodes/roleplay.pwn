@@ -2192,6 +2192,9 @@ public OnGameModeInit()
 
 	ServerTime = gettime();
 
+    // Load approved property mappings dynamically after server startup
+    SetTimer("LoadAllPropertyMappings", 10000, false);
+
 	return true;
 
 }
@@ -2208,8 +2211,6 @@ public OnGameModeExit()
 
     DestroyObject(gMainShipObjectId);*/
     
-    // Load approved property mappings dynamically after server startup
-    SetTimer("LoadAllPropertyMappings", 10000, false);
 	return true;
 }
 
