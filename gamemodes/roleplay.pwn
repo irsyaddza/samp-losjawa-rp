@@ -9124,13 +9124,91 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 		}
 	}
 
-	if(newkeys & KEY_ACTION) // Press Left Alt (KEY_ACTION in vehicle) to turn engine on/off
+	if(newkeys & KEY_FIRE) // Press Left Alt (KEY_FIRE in vehicle)
 	{
 		if(GetPlayerState(playerid) == PLAYER_STATE_DRIVER)
 		{
-			new cmdText[10];
-			cmdText = "/engine";
+			if(newkeys & KEY_HANDBRAKE) // Alt + Space (KEY_FIRE + KEY_HANDBRAKE) to toggle lights
+			{
+				new cmdText[10];
+				cmdText = "/v lights";
+				Command_ReProcess(playerid, cmdText, 0);
+			}
+		}
+	}
+
+	if(newkeys & KEY_ACTION) // Press Left Ctrl (KEY_ACTION in vehicle)
+	{
+		if(GetPlayerState(playerid) == PLAYER_STATE_DRIVER)
+		{
+			new vehicleid = GetPlayerVehicleID(playerid);
+			if(newkeys & KEY_NO) // Ctrl + N (KEY_ACTION + KEY_NO) to turn engine OFF
+			{
+				if(GetEngineStatus(vehicleid)) // Only toggle if engine is currently ON
+				{
+					new cmdText[10];
+					cmdText = "/engine";
+					Command_ReProcess(playerid, cmdText, 0);
+				}
+			}
+			else if(!(oldkeys & KEY_ACTION)) // Ctrl only (just pressed) to turn engine ON
+			{
+				if(!GetEngineStatus(vehicleid)) // Only toggle if engine is currently OFF
+				{
+					new cmdText[10];
+					cmdText = "/engine";
+					Command_ReProcess(playerid, cmdText, 0);
+				}
+			}
+		}
+	}
+
+	if((newkeys & KEY_SUBMISSION) && !(oldkeys & KEY_SUBMISSION)) // Press 2 (KEY_SUBMISSION in vehicle) to lock/unlock vehicle
+	{
+		if(GetPlayerState(playerid) == PLAYER_STATE_DRIVER || GetPlayerState(playerid) == PLAYER_STATE_PASSENGER)
+		{
+			new cmdText[6];
+			cmdText = "/lock";
 			Command_ReProcess(playerid, cmdText, 0);
+		}
+	}
+
+	if(newkeys & KEY_CROUCH) // Press H / Horn (KEY_CROUCH in vehicle) to open tolls or gates
+	{
+		if(GetPlayerState(playerid) == PLAYER_STATE_DRIVER)
+		{
+			new bool:nearToll = false;
+			if(IsPlayerInRangeOfPoint(playerid, 10.0, 623.9500, -1183.9774, 19.2260) || IsPlayerInRangeOfPoint(playerid, 10.0, 607.9684, -1194.2866, 19.0043) ||
+			   IsPlayerInRangeOfPoint(playerid, 10.0, 39.7039, -1522.9891, 5.1995) || IsPlayerInRangeOfPoint(playerid, 10.0, 62.7378, -1539.9891, 5.0639) ||
+			   IsPlayerInRangeOfPoint(playerid, 10.0, 1795.9447, 704.2550, 15.0006) || IsPlayerInRangeOfPoint(playerid, 10.0, 1778.9886, 702.6728, 15.2574) ||
+			   IsPlayerInRangeOfPoint(playerid, 10.0, 612.53070, 346.59592, 17.92614) || IsPlayerInRangeOfPoint(playerid, 10.0, 604.37152, 346.88141, 17.92614) ||
+			   IsPlayerInRangeOfPoint(playerid, 10.0, -195.2768, 252.2416, 12.0781) || IsPlayerInRangeOfPoint(playerid, 10.0, -199.5153, 260.3405, 12.0781))
+			{
+				nearToll = true;
+			}
+
+			new bool:nearGate = false;
+			foreach (new x : Gates)
+			{
+				if(GetPlayerDistanceFromPoint(playerid, Gates[x][gatePosX], Gates[x][gatePosY], Gates[x][gatePosZ]) < 10.0)
+				{
+					nearGate = true;
+					break;
+				}
+			}
+
+			if(nearToll)
+			{
+				new cmdText[10];
+				cmdText = "/opentoll";
+				Command_ReProcess(playerid, cmdText, 0);
+			}
+			if(nearGate)
+			{
+				new cmdText[10];
+				cmdText = "/gates";
+				Command_ReProcess(playerid, cmdText, 0);
+			}
 		}
 	}
 
