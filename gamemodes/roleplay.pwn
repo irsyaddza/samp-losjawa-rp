@@ -6663,43 +6663,47 @@ ShowStatistics(playerid, targetid)
         ammo[0] = PlayerData[targetid][pAmmunation][2];
     }
 
-    new playerName[MAX_PLAYER_NAME], currentTime[64], header[256], string[2048];
+    new playerName[MAX_PLAYER_NAME], currentTime[64], string[2048];
     GetPlayerName(targetid, playerName, MAX_PLAYER_NAME);
     format(currentTime, 64, ReturnDateTime());
 
-    format(header, sizeof(header), 
-        "Category\tInformation\tValue\n\
-        {FFFFFF}________________________\t________________________\t________________________"
-    );
-
     format(string, sizeof(string),
-        "{33AA33}Character Info\t{FFFFFF}Name\t%s\n\
-        \tTime\t%s\n\
-        \tFaction\t[%d] %s\n\
-        \tRank\t%s\n\
-        \tJob\t%s\n\
-        \tPhone\t%d\n\
-        {33AA33}Company Info\t{FFFFFF}Company\t[0] Null\n\
-        \tRank\tUnknown\n\
-        {33AA33}Inventory\t{FFFFFF}Car Parts\t0\n\
-        \tRadio\t%s\n\
-        \tMelee Weapon\t%s\n\
-        {33AA33}Weapons\t{FFFFFF}Primary\t%s (Ammo: %d)\n\
-        \tSecondary\t%s (Ammo: %d)\n\
-        {33AA33}Level Info\t{FFFFFF}Level\t%d\n\
-        \tExperience\t%d/%d\n\
-        \tDonator Level\t%s\n\
-        {33AA33}Skills\t{FFFFFF}Health\t%.1f/150.0\n\
-        \tTime Played\t%d hours\n\
-        {33AA33}Money Info\t{FFFFFF}Cash\t%s\n\
-        \tBank\t%s\n\
-        \tSavings\t%s\n\
-        \tPayCheck\t%s\n\
-        {33AA33}Other Info\t{FFFFFF}Vehicle Keys\t%s\n\
-        \tSide Job\t%s\n\
-        \tRenting Car\t%d\n\
-        {33AA33}Business Info\t{FFFFFF}Owned Business\t%s\n\
-        \tHired Business\tNone",
+        "Category\tDetail\tValue\n\
+        {33CCFF}Character Info\t{CCCCCC}Name\t{FFFFFF}%s\n\
+        \t{CCCCCC}Time\t{FFFFFF}%s\n\
+        \t{CCCCCC}Faction\t{FFFFFF}[%d] %s\n\
+        \t{CCCCCC}Rank\t{FFFFFF}%s\n\
+        \t{CCCCCC}Job\t{FFFFFF}%s\n\
+        \t{CCCCCC}Phone\t{FFFFFF}%d\n\
+        \t\t\n\
+        {33CCFF}Company Info\t{CCCCCC}Company\t{FFFFFF}[0] Null\n\
+        \t{CCCCCC}Rank\t{FFFFFF}Unknown\n\
+        \t\t\n\
+        {33CCFF}Inventory\t{CCCCCC}Car Parts\t{FFFFFF}0\n\
+        \t{CCCCCC}Radio\t{FFFFFF}%s\n\
+        \t{CCCCCC}Melee Weapon\t{FFFFFF}%s\n\
+        \t\t\n\
+        {33CCFF}Weapons\t{CCCCCC}Primary\t{FFFFFF}%s (Ammo: %d)\n\
+        \t{CCCCCC}Secondary\t{FFFFFF}%s (Ammo: %d)\n\
+        \t\t\n\
+        {33CCFF}Level Info\t{CCCCCC}Level\t{FFFFFF}%d\n\
+        \t{CCCCCC}Experience\t{FFFFFF}%d/%d\n\
+        \t{CCCCCC}Donator Level\t{FFFFFF}%s\n\
+        \t\t\n\
+        {33CCFF}Skills\t{CCCCCC}Health\t{FFFFFF}%.1f/150.0\n\
+        \t{CCCCCC}Time Played\t{FFFFFF}%d hours\n\
+        \t\t\n\
+        {33CCFF}Money Info\t{CCCCCC}Cash\t{FFFFFF}%s\n\
+        \t{CCCCCC}Bank\t{FFFFFF}%s\n\
+        \t{CCCCCC}Savings\t{FFFFFF}%s\n\
+        \t{CCCCCC}PayCheck\t{FFFFFF}%s\n\
+        \t\t\n\
+        {33CCFF}Other Info\t{CCCCCC}Vehicle Keys\t{FFFFFF}%s\n\
+        \t{CCCCCC}Side Job\t{FFFFFF}%s\n\
+        \t{CCCCCC}Renting Car\t{FFFFFF}%d\n\
+        \t\t\n\
+        {33CCFF}Business Info\t{CCCCCC}Owned Business\t{FFFFFF}%s\n\
+        \t{CCCCCC}Hired Business\t{FFFFFF}None",
         playerName,
         currentTime,
         factionid,
@@ -6724,9 +6728,9 @@ ShowStatistics(playerid, targetid)
         FormatNumber(PlayerData[targetid][pSavingsCollect]),
         FormatNumber(PlayerData[targetid][pPayCheck]),
         keys,
-        ReturnJobName(playerid, PlayerData[targetid][pSideJob]),
+        ReturnJobName(targetid, PlayerData[targetid][pSideJob]),
         RentCarKey[targetid],
-        PlayerData[playerid][pPbiskey] == -1 ? "{FF0000}None" : ClearGameTextColor(BusinessData[ PlayerData[playerid][pPbiskey] ][bInfo])
+        PlayerData[targetid][pPbiskey] == -1 ? "{FF0000}None" : ClearGameTextColor(BusinessData[ PlayerData[targetid][pPbiskey] ][bInfo])
     );
 
     // If admin on duty, add admin information
@@ -6734,10 +6738,10 @@ ShowStatistics(playerid, targetid)
     {
         new adminInfo[512], houses[64], hcount;
         format(adminInfo, sizeof(adminInfo),
-            "\n{FF0000}Admin Info\t{FFFFFF}Business Key\t%d\n\
-            \tInterior\t%d\n\
-            \tWorld\t%d\n\
-            \tLocal\t%d",
+            "\n\t\t\n{FF3333}Admin Info\t{CCCCCC}Business Key\t{FFFFFF}%d\n\
+            \t{CCCCCC}Interior\t{FFFFFF}%d\n\
+            \t{CCCCCC}World\t{FFFFFF}%d\n\
+            \t{CCCCCC}Local\t{FFFFFF}%d",
             PlayerData[targetid][pPbiskey],
             PlayerData[targetid][pInterior],
             PlayerData[targetid][pWorld],
@@ -6760,7 +6764,7 @@ ShowStatistics(playerid, targetid)
                 hcount++;
             }
         }
-        format(adminInfo, sizeof(adminInfo), "\n\t{FFFFFF}Houses owned\t%s", houses);
+        format(adminInfo, sizeof(adminInfo), "\n\t{CCCCCC}Houses owned\t{FFFFFF}%s", houses);
         strcat(string, adminInfo);
     }
 
