@@ -2763,16 +2763,14 @@ CMD:businessenter(playerid, params[])
 	new Float:x, Float:y, Float:z;
 	GetPlayerPos(playerid, x, y, z);
 
-	DestroyDynamicPickup(BusinessData[bizid][bPickup]);
-
-	BusinessData[bizid][bPickup] = CreateDynamicPickup(1239, 2, x, y, z, -1, -1, -1, 100.0);
-
-	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_enX` = '%.4f', `biz_enY` = '%.4f', `biz_enZ` = '%.4f' WHERE `biz_id` = %d", x, y, z, BusinessData[bizid][bID]);
-	mysql_pquery(dbCon, gquery);
-
 	BusinessData[bizid][bEntranceX] = x;
 	BusinessData[bizid][bEntranceY] = y;
 	BusinessData[bizid][bEntranceZ] = z;
+
+	Business_Refresh(bizid);
+
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_enX` = '%.4f', `biz_enY` = '%.4f', `biz_enZ` = '%.4f' WHERE `biz_id` = %d", x, y, z, BusinessData[bizid][bID]);
+	mysql_pquery(dbCon, gquery);
 
 	SendClientMessage(playerid, COLOR_GRAD2, "Succeeded");
 	return true;
@@ -7744,7 +7742,7 @@ stock CreateNewBusiness(playerid, level, price, type)
 	}
 
 	BusinessData[bizid][bsubType] = 0;
-	BusinessData[bizid][bPickup] = CreateDynamicPickup(1239, 2, x, y, z, -1, -1, -1, 100.0);
+	Business_Refresh(bizid);
 
 	AddBizToFile(bizid, price, type, BusinessData[bizid][bOwner], BusinessData[bizid][bInfo], x, y, z);
 
@@ -7876,6 +7874,10 @@ stock ShowMbizMainDialog(playerid, bizid)
 	
 	strcat(string, "Teleport to Exit/Interior\n");
 	EditingBizOption[playerid][idx++] = 19;
+	
+	format(line, sizeof(line), "Pickup Model: %d\n", BusinessData[bizid][bPickupModel]);
+	strcat(string, line);
+	EditingBizOption[playerid][idx++] = 21;
 	
 	strcat(string, "{FF0000}Delete Business");
 	EditingBizOption[playerid][idx++] = 20;
@@ -8222,8 +8224,7 @@ Dialog:MbizMenu(playerid, response, listitem, inputtext[])
 			BusinessData[bizid][bEntranceX] = x;
 			BusinessData[bizid][bEntranceY] = y;
 			BusinessData[bizid][bEntranceZ] = z;
-			DestroyDynamicPickup(BusinessData[bizid][bPickup]);
-			BusinessData[bizid][bPickup] = CreateDynamicPickup(1239, 2, x, y, z, -1, -1, -1, 100.0);
+			Business_Refresh(bizid);
 			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_enX` = '%.4f', `biz_enY` = '%.4f', `biz_enZ` = '%.4f' WHERE `biz_id` = '%d'", x, y, z, BusinessData[bizid][bID]);
 			mysql_tquery(dbCon, gquery);
 			SendClientMessage(playerid, COLOR_GREEN, "Entrance location updated.");
@@ -8269,7 +8270,31 @@ Dialog:MbizMenu(playerid, response, listitem, inputtext[])
 		{
 			Dialog_Show(playerid, MbizDeleteConfirm, DIALOG_STYLE_MSGBOX, "Delete Business", "{FF0000}WARNING:{FFFFFF} Are you sure you want to delete this business entirely?", "Delete", "Cancel");
 		}
+		case 21: // Pickup Model
+		{
+			Dialog_Show(playerid, MbizEditPickupModel, DIALOG_STYLE_INPUT, "Set Pickup Model",
+				"Enter the pickup model ID for this business.\n(0 = use default based on business type)\nExample: 19607 for government-style pickup", "Save", "Back");
+		}
 	}
+	return 1;
+}
+
+Dialog:MbizEditPickupModel(playerid, response, listitem, inputtext[])
+{
+	new bizid = EditingBizID[playerid];
+	if(!response) return ShowMbizMainDialog(playerid, bizid);
+
+	new val = strval(inputtext);
+	if(val < 0 || val > 20000)
+		return Dialog_Show(playerid, MbizEditPickupModel, DIALOG_STYLE_INPUT, "Set Pickup Model",
+			"Enter the pickup model ID for this business.\n{FF0000}Must be between 0 and 20000! (0 = default)", "Save", "Back");
+
+	BusinessData[bizid][bPickupModel] = val;
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_pickup` = '%d' WHERE `biz_id` = '%d'", val, BusinessData[bizid][bID]);
+	mysql_tquery(dbCon, gquery);
+	Business_Refresh(bizid);
+	SendClientMessageEx(playerid, COLOR_GREEN, "Pickup model for business %d set to %d and refreshed.", bizid, val);
+	ShowMbizMainDialog(playerid, bizid);
 	return 1;
 }
 

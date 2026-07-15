@@ -25,7 +25,8 @@ enum E_ENTRANCE_DATA
 	pointType,
 	pointName[80],
 	pointLocked,
-	pointFaction
+	pointFaction,
+	pointPickup
 };
 
 static const PointTypes[][] =
@@ -137,6 +138,8 @@ Dialog:EditPoint_Faction(playerid, response, listitem, inputtext[])
 	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `points` SET `pointFaction` = '%d' WHERE `ID` = '%d' LIMIT 1", EntranceData[point][pointFaction], EntranceData[point][pointID]);
 	mysql_pquery(dbCon, gquery);
 
+	Point_Refresh(point);
+
 	SendClientMessageEx(playerid, COLOR_YELLOW, "-> You've successfully set Point %d's Faction to: %s", EntranceData[point][pointID], ReturnFactionNameByType(EntranceData[point][pointFaction]));
 
 	ShowPointSettings(playerid, point);
@@ -199,6 +202,8 @@ Dialog:EditPoint(playerid, response, listitem, inputtext[])
 			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `points` SET `outsideX` = '%f', `outsideY` = '%f', `outsideZ` = '%f', `outsideA` = '%f', `insideApartment` = '%d' WHERE `ID` = '%d' LIMIT 1", playerPos[0], playerPos[1], playerPos[2], playerPos[3], EntranceData[point][outsideApartmentSQL], EntranceData[point][pointID]);
 			mysql_pquery(dbCon, gquery);
 
+			Point_Refresh(point);
+
 	        SendClientMessageEx(playerid, COLOR_YELLOW, "-> Successfully edited Point %d's enter coordinates: %f, %f, %f", EntranceData[point][pointID], playerPos[0], playerPos[1], playerPos[2]);
 	        return true;
 	    }
@@ -259,6 +264,12 @@ Dialog:EditPoint(playerid, response, listitem, inputtext[])
 	    {
 	        DeletePVar(playerid, "EditingPoint");
 
+			if(IsValidDynamicPickup(EntranceData[point][pointPickup]))
+			{
+				DestroyDynamicPickup(EntranceData[point][pointPickup]);
+				EntranceData[point][pointPickup] = INVALID_STREAMER_ID;
+			}
+
 			mysql_format(dbCon, gquery, sizeof(gquery), "DELETE FROM `points` WHERE `ID` = '%d' LIMIT 1", EntranceData[point][pointID]);
 			mysql_pquery(dbCon, gquery);
 
@@ -273,4 +284,40 @@ Dialog:EditPoint(playerid, response, listitem, inputtext[])
 
     ShowPointSettings(playerid, point);
 	return true;
+}
+
+stock Point_Refresh(i)
+{
+    if(IsValidDynamicPickup(EntranceData[i][pointPickup]))
+    {
+        DestroyDynamicPickup(EntranceData[i][pointPickup]);
+        EntranceData[i][pointPickup] = INVALID_STREAMER_ID;
+    }
+    
+    new bool:is_gov = false;
+    if(EntranceData[i][pointFaction] == 1 || EntranceData[i][pointFaction] == 2 || EntranceData[i][pointFaction] == 3 || EntranceData[i][pointFaction] == 4 || EntranceData[i][pointFaction] == 6 || EntranceData[i][pointFaction] == 7)
+    {
+        is_gov = true;
+    }
+    else
+    {
+        new name_lower[80];
+        format(name_lower, sizeof(name_lower), "%s", EntranceData[i][pointName]);
+        for(new c = 0; name_lower[c] != '\0'; ++c) name_lower[c] = tolower(name_lower[c]);
+        
+        if(strfind(name_lower, "lspd") != -1 || strfind(name_lower, "lssd") != -1 || strfind(name_lower, "asgh") != -1 ||
+           strfind(name_lower, "hospital") != -1 || strfind(name_lower, "sana") != -1 || strfind(name_lower, "news") != -1 ||
+           strfind(name_lower, "prison") != -1 || strfind(name_lower, "doc") != -1 || strfind(name_lower, "city hall") != -1 ||
+           strfind(name_lower, "gov") != -1)
+        {
+            is_gov = true;
+        }
+    }
+    
+    if(is_gov)
+    {
+        new world = (EntranceData[i][outsideApartmentID] == -1) ? 0 : ComplexData[EntranceData[i][outsideApartmentID]][aWorld];
+        EntranceData[i][pointPickup] = CreateDynamicPickup(19130, 23, EntranceData[i][outsidePos][0], EntranceData[i][outsidePos][1], EntranceData[i][outsidePos][2], world, -1);
+    }
+    return 1;
 }

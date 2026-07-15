@@ -11811,6 +11811,12 @@ public OnBizInsert(BizzID)
 forward OnBizRemove(bizid);
 public OnBizRemove(bizid)
 {
+	if(IsValidDynamicPickup(BusinessData[bizid][bPickup]))
+	{
+		DestroyDynamicPickup(BusinessData[bizid][bPickup]);
+		BusinessData[bizid][bPickup] = INVALID_STREAMER_ID;
+	}
+
 	BusinessData[bizid][bEntranceX] = 0.0000;
 	BusinessData[bizid][bEntranceY] = 0.0000;
 	BusinessData[bizid][bEntranceZ] = 0.0000;
@@ -11856,6 +11862,7 @@ public OnAdminSellBusiness(bizid)
 	BusinessData[bizid][bLocked] = 1;
 
 	format(BusinessData[bizid][bOwner], 24, "The State");
+	Business_Refresh(bizid);
 	return true;
 }
 

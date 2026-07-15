@@ -47,6 +47,7 @@ enum E_BUSINESS_DATA
 	Float:bBuyingAirY,
 	Float:bBuyingAirZ,
 	Float:bBuyingAirA,
+	bPickupModel
 };
 
 new BusinessData[MAX_BUSINESS][E_BUSINESS_DATA];
@@ -95,20 +96,19 @@ Business_Refresh(bizid)
 
 		if(BusinessData[bizid][bType] == 13) return true; // Black Market
 
-		switch(BusinessData[bizid][bType])
+		new model = BusinessData[bizid][bPickupModel];
+		if(!model)
 		{
-		    case 2, 3, 6, 8:
-		    {
-		        BusinessData[bizid][bPickup] = CreateDynamicPickup(1239, 2, BusinessData[bizid][bEntranceX], BusinessData[bizid][bEntranceY], BusinessData[bizid][bEntranceZ]);
-		    }
-		    default:
-		    {
-				if(BusinessData[bizid][bOwned])
-					BusinessData[bizid][bPickup] = CreateDynamicPickup(1239, 2, BusinessData[bizid][bEntranceX], BusinessData[bizid][bEntranceY], BusinessData[bizid][bEntranceZ]);
-				else
-					BusinessData[bizid][bPickup] = CreateDynamicPickup(1272, 2, BusinessData[bizid][bEntranceX], BusinessData[bizid][bEntranceY], BusinessData[bizid][bEntranceZ]);
+			if(BusinessData[bizid][bType] == 2 || BusinessData[bizid][bType] == 3 || BusinessData[bizid][bType] == 6 || BusinessData[bizid][bType] == 8)
+			{
+				model = 1239;
+			}
+			else
+			{
+				model = BusinessData[bizid][bOwned] ? 1239 : 1272;
 			}
 		}
+		BusinessData[bizid][bPickup] = CreateDynamicPickup(model, 23, BusinessData[bizid][bEntranceX], BusinessData[bizid][bEntranceY], BusinessData[bizid][bEntranceZ], -1, -1, -1, 100.0);
 	}
 	return true;
 }

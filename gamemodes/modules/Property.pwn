@@ -46,7 +46,8 @@ enum E_HOUSE_DATA
     hradioURL[128],
     hComplexSQL,
 	hComplexID,
-    hShootingTimer
+    hShootingTimer,
+    hPickup
 };
 
 enum E_COMPLEX_DATA
@@ -261,6 +262,16 @@ Apartment_Nearest(playerid, Float:radius = 2.5, ignoreid = -1)
 
 Property_Refresh(houseid)
 {
+	if(IsValidDynamicPickup(PropertyData[houseid][hPickup]))
+	{
+		DestroyDynamicPickup(PropertyData[houseid][hPickup]);
+		PropertyData[houseid][hPickup] = INVALID_STREAMER_ID;
+	}
+
+	new model = PropertyData[houseid][hOwned] ? 19132 : 19522;
+	new world = (PropertyData[houseid][hComplexID] == -1) ? 0 : ComplexData[PropertyData[houseid][hComplexID]][aWorld];
+	PropertyData[houseid][hPickup] = CreateDynamicPickup(model, 23, PropertyData[houseid][hEntranceX], PropertyData[houseid][hEntranceY], PropertyData[houseid][hEntranceZ], world, -1);
+
 	if(!PropertyData[houseid][hOwned])
 	{
 	    if(!IsValidDynamic3DTextLabel(Text3D:PropertyData[houseid][hLabel]))

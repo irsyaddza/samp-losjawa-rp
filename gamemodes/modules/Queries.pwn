@@ -315,6 +315,7 @@ public Bizz_Load()
 		cache_get_value_name_float(i, "biz_airY", BusinessData[i][bBuyingAirY]);
 		cache_get_value_name_float(i, "biz_airZ", BusinessData[i][bBuyingAirZ]);
 		cache_get_value_name_float(i, "biz_airA", BusinessData[i][bBuyingAirA]);
+		cache_get_value_name_int(i, "biz_pickup", BusinessData[i][bPickupModel]);
 
 		Business_Refresh(i);
 
@@ -711,6 +712,7 @@ public Points_Load()
 
 			EntranceData[i][outsideApartmentID] = -1;
 			EntranceData[i][insideApartmentID] = -1;
+			EntranceData[i][pointPickup] = INVALID_STREAMER_ID;
 			
 			if(EntranceData[i][outsideApartmentSQL] != -1 || EntranceData[i][insideApartmentSQL] != -1)
 			{
@@ -729,6 +731,7 @@ public Points_Load()
 			}
 
 			Iter_Add(Entrance, i);
+			Point_Refresh(i);
 
 			totals++;
 	    }
@@ -804,6 +807,7 @@ public House_Load()
             cache_get_value_name_int(i, "complex", PropertyData[i][hComplexSQL]);
 
             PropertyData[i][hComplexID] = -1;
+            PropertyData[i][hPickup] = INVALID_STREAMER_ID;
 
             PropertyData[i][hInterior] = i + 1;
 
