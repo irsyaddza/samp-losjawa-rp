@@ -11007,8 +11007,7 @@ CMD:mechanicjob(playerid, params[])
 
 CMD:farmerjob(playerid, params[])
 {
-	if(PlayerData[playerid][pLevel] > 3)
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "This job is for level 3+ only.");
+
 
 	if(GetFactionType(playerid) != 0)
 	    return SendClientMessage(playerid, COLOR_WHITE, "Only civilians can have this job");
@@ -11102,8 +11101,7 @@ CMD:harvest(playerid, params[])
 	if(PlayerData[playerid][pJob] != JOB_FARMER)
 	    return SendClientMessage(playerid, COLOR_GRAD2, "City boys can not do that!");
 
-	if(PlayerData[playerid][pLevel] > 3)
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "This is for Level 1-3 only!!");
+
 
 	new vehicleid = GetPlayerVehicleID(playerid);
 

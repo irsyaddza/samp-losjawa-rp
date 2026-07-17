@@ -2076,6 +2076,7 @@ new Iterator:sv_activevehicles<MAX_VEHICLES>;
 #include "modules/vehicle/Player.pwn"
 #include "modules/vehicle/Functions.pwn"
 #include "modules/vehicle/Modshop.pwn"
+#include "modules/vehicle/HarvesterRental.pwn"
 #include "modules/Industry.pwn"
 #include "modules/Furniture.pwn"
 #include "modules/Drugs.pwn"
@@ -2134,6 +2135,7 @@ public OnGameModeInit()
 	mysql_tquery(dbCon, "UPDATE characters SET Online = 0 WHERE Online = 1");
     mysql_tquery(dbCon, "UPDATE accounts SET Online = 0 WHERE Online = 1");
 	mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `clothing_shop_skins` (`skin_id` INT PRIMARY KEY, `price` INT NOT NULL DEFAULT 5000)", "OnCreateShopSkinsTable");
+	HarvesterRental_Init();
 
     #include "modules/mapping/Misc.pwn"
     #include "modules/mapping/Main.pwn"
@@ -8025,19 +8027,7 @@ public OnPlayerEnterCheckpoint(playerid)
 
 				//Next Harvesting
 
-				if(PlayerData[playerid][pLevel] > 3)
-				{
-					gPlayerCheckpointX[playerid] = 0.0;
-					gPlayerCheckpointY[playerid] = 0.0;
-					gPlayerCheckpointZ[playerid] = 0.0;
-
-					DisablePlayerCheckpoint(playerid);
-					gPlayerCheckpointStatus[playerid] = CHECKPOINT_NONE;
-
-					far_start[playerid] = 0;
-					far_veh[playerid] = INVALID_VEHICLE_ID;
-				}
-				else StartHarvesting(playerid);
+				StartHarvesting(playerid);
 			}
 		}
 	}
@@ -14221,7 +14211,7 @@ SetPlayerCheckpointEx(playerid, Float:x, Float:y, Float:z, Float:distance, statu
 
 IsJobSide(jobid)
 {
-	if(jobid == JOB_NONE || jobid == JOB_MECHANIC)
+	if(jobid == JOB_NONE || jobid == JOB_MECHANIC || jobid == JOB_TAXI)
 		return true;
 
 	return false;
