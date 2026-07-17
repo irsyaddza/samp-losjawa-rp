@@ -8,10 +8,10 @@
         "web_server_bind": "0.0.0.0"
     },
     "banners": {
-        "dark": "",
-        "light": ""
+        "dark": "https://imgur.com/jKeBOWM.png",
+        "light": "https://imgur.com/jKeBOWM.png"
     },
-    "logo": "",
+    "logo": "https://imgur.com/8T1va4c.png",
     "discord": {
         "invite": ""
     },
@@ -124,5 +124,5 @@
     },
     "sleep": 5.0,
     "use_dyn_ticks": true,
-    "website": "losjawa-rp.net"
+    "website": "ucp.rusdi-bot.site"
 }
