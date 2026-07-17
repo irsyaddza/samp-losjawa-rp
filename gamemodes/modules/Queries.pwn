@@ -391,6 +391,7 @@ public Vehicle_Load()
 			cache_get_value_name_int(i, "vehicleModWheels", vehicleVariables[i][vVehicleModWheels]);
 			cache_get_value_name_int(i, "vehicleModNitro", vehicleVariables[i][vVehicleModNitro]);
 			cache_get_value_name_float(i, "vehicleHealth", vehicleVariables[i][vVehicleHealth]);
+			cache_get_value_name_int(i, "vehicleStaticSpawn", vehicleVariables[i][vVehicleStaticSpawn]);
 
 			Iter_Add(sv_servercar, i);
 

@@ -28,6 +28,7 @@ stock FactionStaticVeh_Init()
     mysql_tquery(dbCon, "ALTER TABLE `vehicles` ADD COLUMN `vehicleModWheels` INT NOT NULL DEFAULT '0'", "", "");
     mysql_tquery(dbCon, "ALTER TABLE `vehicles` ADD COLUMN `vehicleModNitro` INT NOT NULL DEFAULT '0'", "", "");
     mysql_tquery(dbCon, "ALTER TABLE `vehicles` ADD COLUMN `vehicleHealth` FLOAT NOT NULL DEFAULT '1000.0'", "", "");
+    mysql_tquery(dbCon, "ALTER TABLE `vehicles` ADD COLUMN `vehicleStaticSpawn` INT NOT NULL DEFAULT '0'", "", "");
 
     // Create the faction static spawns table
     mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `faction_static_spawns` (`id` INT AUTO_INCREMENT PRIMARY KEY, `factionId` INT NOT NULL, `posX` FLOAT NOT NULL, `posY` FLOAT NOT NULL, `posZ` FLOAT NOT NULL)", "OnFactionStaticSpawnsTableCheck", "");
@@ -174,12 +175,12 @@ Dialog:EditStaticVehMain(playerid, response, listitem, inputtext[])
         {
             new str[1024];
             str[0] = EOS;
-            format(str, sizeof(str), "(-1) None/No Faction\n");
+            format(str, sizeof(str), "-1 - None/No Faction\n");
             for(new i = 0; i < MAX_FACTIONS; i++)
             {
                 if(FactionData[i][factionExists])
                 {
-                    format(str, sizeof(str), "%s(%d) %s\n", str, i, FactionData[i][factionName]);
+                    format(str, sizeof(str), "%s%d - %s\n", str, i, FactionData[i][factionName]);
                 }
             }
             Dialog_Show(playerid, EditStaticVehFaction, DIALOG_STYLE_LIST, "Select Faction", str, "Select", "Back");
@@ -237,6 +238,26 @@ Dialog:EditStaticVehMain(playerid, response, listitem, inputtext[])
             // Re-show main dialog
             ShowEditStaticVehMain(playerid, id);
         }
+        case 8: // Spawn Point Selection
+        {
+            if(vehicleVariables[id][vVehicleFaction] == -1)
+            {
+                SendErrorMessage(playerid, "You must set the vehicle's faction first before assigning a spawn point.");
+                return ShowEditStaticVehMain(playerid, id);
+            }
+
+            new str[1024];
+            str[0] = EOS;
+            format(str, sizeof(str), "0 - None/Unassigned\n");
+            for(new i = 0; i < MAX_STATIC_SPAWNS; i++)
+            {
+                if(StaticSpawns[i][ssID] != 0 && StaticSpawns[i][ssFaction] == vehicleVariables[id][vVehicleFaction])
+                {
+                    format(str, sizeof(str), "%s%d - Spawn Point ID: %d\n", str, StaticSpawns[i][ssID], StaticSpawns[i][ssID]);
+                }
+            }
+            Dialog_Show(playerid, EditStaticVehSpawnPoint, DIALOG_STYLE_LIST, "Select Spawn Point", str, "Select", "Back");
+        }
     }
     return 1;
 }
@@ -254,18 +275,46 @@ stock ShowEditStaticVehMain(playerid, id)
     if(!vehicleVariables[id][vVehiclePlate][0]) format(plateStr, sizeof(plateStr), "None");
     else format(plateStr, sizeof(plateStr), "%s", vehicleVariables[id][vVehiclePlate]);
 
-    format(str, sizeof(str), "1. Set Faction (%s)\n2. Color (%d, %d)\n3. Plate (%s)\n4. Siren (%s)\n5. Paintjob (%d)\n6. Mods (Wheels/Nitro)\n7. Health (%.1f)\n8. Park Here",
+    new spawnPointStr[32];
+    if(vehicleVariables[id][vVehicleStaticSpawn] == 0) format(spawnPointStr, sizeof(spawnPointStr), "None");
+    else format(spawnPointStr, sizeof(spawnPointStr), "ID: %d", vehicleVariables[id][vVehicleStaticSpawn]);
+
+    format(str, sizeof(str), "1. Set Faction (%s)\n2. Color (%d, %d)\n3. Plate (%s)\n4. Siren (%s)\n5. Paintjob (%d)\n6. Mods (Wheels/Nitro)\n7. Health (%.1f)\n8. Park Here\n9. Spawn Point (%s)",
         facName,
         vehicleVariables[id][vVehicleColour][0],
         vehicleVariables[id][vVehicleColour][1],
         plateStr,
         vehicleVariables[id][vVehicleSiren] ? "Yes" : "No",
         vehicleVariables[id][vVehiclePaintjob],
-        vehicleVariables[id][vVehicleHealth]);
+        vehicleVariables[id][vVehicleHealth],
+        spawnPointStr);
         
     SetPVarInt(playerid, "EditingStaticVehIndex", id);
     Dialog_Show(playerid, EditStaticVehMain, DIALOG_STYLE_LIST, title, str, "Select", "Close");
     return 1;
+}
+
+Dialog:EditStaticVehSpawnPoint(playerid, response, listitem, inputtext[])
+{
+    new id = GetPVarInt(playerid, "EditingStaticVehIndex");
+    if(!response) return ShowEditStaticVehMain(playerid, id);
+
+    new spawnId = 0;
+    if(sscanf(inputtext, "d", spawnId))
+    {
+        SendErrorMessage(playerid, "Failed to parse Spawn Point ID.");
+        return ShowEditStaticVehMain(playerid, id);
+    }
+
+    vehicleVariables[id][vVehicleStaticSpawn] = spawnId;
+    Vehicle_Save(id);
+
+    if(spawnId == 0)
+        SendClientMessage(playerid, COLOR_GREEN, "Vehicle unassigned from specific static spawn point.");
+    else
+        SendClientMessageEx(playerid, COLOR_GREEN, "Vehicle assigned to static spawn point ID: %d.", spawnId);
+
+    return ShowEditStaticVehMain(playerid, id);
 }
 
 Dialog:EditStaticVehFaction(playerid, response, listitem, inputtext[])
@@ -274,10 +323,10 @@ Dialog:EditStaticVehFaction(playerid, response, listitem, inputtext[])
     if(!response) return ShowEditStaticVehMain(playerid, id);
 
     new facId = -1;
-    if(strcmp(inputtext, "(-1) None/No Faction", true) != 0)
+    if(sscanf(inputtext, "d", facId))
     {
-        if(sscanf(inputtext, "p<(>d", facId))
-            return SendErrorMessage(playerid, "Failed to parse Faction ID.");
+        SendErrorMessage(playerid, "Failed to parse Faction ID.");
+        return ShowEditStaticVehMain(playerid, id);
     }
 
     vehicleVariables[id][vVehicleFaction] = facId;
@@ -522,15 +571,16 @@ CMD:spawnstatic(playerid, params[])
         return SendErrorMessage(playerid, "You are not standing near a static vehicle spawn point.");
 
     new factionid = StaticSpawns[slot][ssFaction];
+    new spawnPointId = StaticSpawns[slot][ssID];
     if(PlayerData[playerid][pFaction] != factionid)
         return SendErrorMessage(playerid, "You do not belong to the faction associated with this spawn point.");
 
-    // List all vehicles assigned to this faction
+    // List all vehicles assigned to this faction and this specific spawn point
     new listStr[2048];
     format(listStr, sizeof(listStr), "Plate\tStatus\n");
     for(new i = 0; i < MAX_DYNAMIC_VEHICLES; i++)
     {
-        if(Iter_Contains(sv_servercar, i) && vehicleVariables[i][vVehicleFaction] == factionid)
+        if(Iter_Contains(sv_servercar, i) && vehicleVariables[i][vVehicleFaction] == factionid && vehicleVariables[i][vVehicleStaticSpawn] == spawnPointId)
         {
             new plate[32], status[16];
             if(!vehicleVariables[i][vVehiclePlate][0]) format(plate, sizeof(plate), "Static ID %d", vehicleVariables[i][vVehicleID]);
@@ -546,6 +596,7 @@ CMD:spawnstatic(playerid, params[])
     }
 
     SetPVarInt(playerid, "StaticSpawnFactionID", factionid);
+    SetPVarInt(playerid, "StaticSpawnPointID", spawnPointId);
     Dialog_Show(playerid, SpawnStaticVehSelect, DIALOG_STYLE_TABLIST_HEADERS, "Spawn Faction Vehicle", listStr, "Spawn", "Close");
     return 1;
 }
@@ -555,17 +606,20 @@ Dialog:SpawnStaticVehSelect(playerid, response, listitem, inputtext[])
     if(!response)
     {
         DeletePVar(playerid, "StaticSpawnFactionID");
+        DeletePVar(playerid, "StaticSpawnPointID");
         return 1;
     }
 
     new factionid = GetPVarInt(playerid, "StaticSpawnFactionID");
+    new spawnPointId = GetPVarInt(playerid, "StaticSpawnPointID");
     DeletePVar(playerid, "StaticSpawnFactionID");
+    DeletePVar(playerid, "StaticSpawnPointID");
 
-    // Find the listitem-th vehicle belonging to factionid
+    // Find the listitem-th vehicle belonging to factionid and spawnPointId
     new idx = -1, foundIndex = -1;
     for(new i = 0; i < MAX_DYNAMIC_VEHICLES; i++)
     {
-        if(Iter_Contains(sv_servercar, i) && vehicleVariables[i][vVehicleFaction] == factionid)
+        if(Iter_Contains(sv_servercar, i) && vehicleVariables[i][vVehicleFaction] == factionid && vehicleVariables[i][vVehicleStaticSpawn] == spawnPointId)
         {
             idx++;
             if(idx == listitem)
@@ -639,15 +693,16 @@ CMD:despawnstatic(playerid, params[])
         return SendErrorMessage(playerid, "You are not standing near a static vehicle spawn point.");
 
     new factionid = StaticSpawns[slot][ssFaction];
+    new spawnPointId = StaticSpawns[slot][ssID];
     if(PlayerData[playerid][pFaction] != factionid)
         return SendErrorMessage(playerid, "You do not belong to the faction associated with this spawn point.");
 
-    // List all spawned vehicles assigned to this faction
+    // List all spawned vehicles assigned to this faction and spawnPointId
     new listStr[2048];
     format(listStr, sizeof(listStr), "Plate\tStatus\n");
     for(new i = 0; i < MAX_DYNAMIC_VEHICLES; i++)
     {
-        if(Iter_Contains(sv_servercar, i) && vehicleVariables[i][vVehicleFaction] == factionid)
+        if(Iter_Contains(sv_servercar, i) && vehicleVariables[i][vVehicleFaction] == factionid && vehicleVariables[i][vVehicleStaticSpawn] == spawnPointId)
         {
             new plate[32], status[16];
             if(!vehicleVariables[i][vVehiclePlate][0]) format(plate, sizeof(plate), "Static ID %d", vehicleVariables[i][vVehicleID]);
@@ -662,6 +717,7 @@ CMD:despawnstatic(playerid, params[])
     }
 
     SetPVarInt(playerid, "StaticDespawnFactionID", factionid);
+    SetPVarInt(playerid, "StaticDespawnPointID", spawnPointId);
     Dialog_Show(playerid, DespawnStaticVehSelect, DIALOG_STYLE_TABLIST_HEADERS, "Despawn Faction Vehicle", listStr, "Despawn", "Close");
     return 1;
 }
@@ -671,17 +727,20 @@ Dialog:DespawnStaticVehSelect(playerid, response, listitem, inputtext[])
     if(!response)
     {
         DeletePVar(playerid, "StaticDespawnFactionID");
+        DeletePVar(playerid, "StaticDespawnPointID");
         return 1;
     }
 
     new factionid = GetPVarInt(playerid, "StaticDespawnFactionID");
+    new spawnPointId = GetPVarInt(playerid, "StaticDespawnPointID");
     DeletePVar(playerid, "StaticDespawnFactionID");
+    DeletePVar(playerid, "StaticDespawnPointID");
 
-    // Find the listitem-th spawned vehicle belonging to factionid
+    // Find the listitem-th spawned vehicle belonging to factionid and spawnPointId
     new idx = -1, foundIndex = -1;
     for(new i = 0; i < MAX_DYNAMIC_VEHICLES; i++)
     {
-        if(Iter_Contains(sv_servercar, i) && vehicleVariables[i][vVehicleFaction] == factionid)
+        if(Iter_Contains(sv_servercar, i) && vehicleVariables[i][vVehicleFaction] == factionid && vehicleVariables[i][vVehicleStaticSpawn] == spawnPointId)
         {
             if(vehicleVariables[i][vVehicleScriptID] != INVALID_VEHICLE_ID)
             {
