@@ -957,8 +957,10 @@ CMD:createpoint(playerid, params[])
 
 	EntranceData[point][insideApartmentSQL] = -1;
 	EntranceData[point][insideApartmentID] = -1;
+	EntranceData[point][outsideWorld] = GetPlayerVirtualWorld(playerid);
+	EntranceData[point][insideWorld] = 0;
 
-	AddPointToFile(point, name, playerPos[0], playerPos[1], playerPos[2], playerPos[3], EntranceData[point][outsideApartmentSQL], EntranceData[point][insideApartmentSQL]);
+	AddPointToFile(point, name, playerPos[0], playerPos[1], playerPos[2], playerPos[3], EntranceData[point][outsideApartmentSQL], EntranceData[point][insideApartmentSQL], EntranceData[point][outsideWorld], EntranceData[point][insideWorld]);
 
 	Iter_Add(Entrance, point);
 
@@ -966,10 +968,10 @@ CMD:createpoint(playerid, params[])
 	return true;
 }
 
-stock AddPointToFile(point, name[], Float:x, Float:y, Float:z, Float:a, outsideApt, insideApt)
+stock AddPointToFile(point, name[], Float:x, Float:y, Float:z, Float:a, outsideApt, insideApt, outsideW, insideW)
 {
 	new biggestQuery[500];
-	mysql_format(dbCon, biggestQuery, sizeof(biggestQuery), "INSERT INTO `points` (outsideX, outsideY, outsideZ, outsideA, outsideApartment, insideApartment, pointName) VALUES (%f, %f, %f, %f, %d, %d, '%e')", x, y, z, a, outsideApt, insideApt, name);
+	mysql_format(dbCon, biggestQuery, sizeof(biggestQuery), "INSERT INTO `points` (outsideX, outsideY, outsideZ, outsideA, outsideApartment, insideApartment, pointName, outsideWorld, insideWorld) VALUES (%f, %f, %f, %f, %d, %d, '%e', %d, %d)", x, y, z, a, outsideApt, insideApt, name, outsideW, insideW);
 	mysql_tquery(dbCon, biggestQuery, "OnPointInsert", "d", point);
 	return true;
 }

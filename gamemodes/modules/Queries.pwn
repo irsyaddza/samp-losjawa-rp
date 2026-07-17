@@ -707,10 +707,13 @@ public Points_Load()
 
 			cache_get_value_name_int(i, "pointLocked", EntranceData[i][pointLocked]);
 			cache_get_value_name_int(i, "pointFaction", EntranceData[i][pointFaction]);
+			cache_get_value_name_int(i, "outsideWorld", EntranceData[i][outsideWorld]);
+			cache_get_value_name_int(i, "insideWorld", EntranceData[i][insideWorld]);
 
 			EntranceData[i][outsideApartmentID] = -1;
 			EntranceData[i][insideApartmentID] = -1;
 			EntranceData[i][pointPickup] = INVALID_STREAMER_ID;
+			EntranceData[i][pointPickupInside] = INVALID_STREAMER_ID;
 			
 			if(EntranceData[i][outsideApartmentSQL] != -1 || EntranceData[i][insideApartmentSQL] != -1)
 			{

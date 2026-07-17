@@ -26,7 +26,10 @@ enum E_ENTRANCE_DATA
 	pointName[80],
 	pointLocked,
 	pointFaction,
-	pointPickup
+	pointPickup,
+	pointPickupInside,
+	outsideWorld,
+	insideWorld
 };
 
 static const PointTypes[][] =
@@ -187,6 +190,7 @@ Dialog:EditPoint(playerid, response, listitem, inputtext[])
 			EntranceData[point][outsidePos][1] = playerPos[1];
 			EntranceData[point][outsidePos][2] = playerPos[2];
 			EntranceData[point][outsidePos][3] = playerPos[3];
+			EntranceData[point][outsideWorld] = GetPlayerVirtualWorld(playerid);
 
 			if(apt == -1)
 			{
@@ -199,7 +203,7 @@ Dialog:EditPoint(playerid, response, listitem, inputtext[])
 				EntranceData[point][outsideApartmentID] = apt;
 			}
 
-			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `points` SET `outsideX` = '%f', `outsideY` = '%f', `outsideZ` = '%f', `outsideA` = '%f', `insideApartment` = '%d' WHERE `ID` = '%d' LIMIT 1", playerPos[0], playerPos[1], playerPos[2], playerPos[3], EntranceData[point][outsideApartmentSQL], EntranceData[point][pointID]);
+			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `points` SET `outsideX` = '%f', `outsideY` = '%f', `outsideZ` = '%f', `outsideA` = '%f', `outsideApartment` = '%d', `outsideWorld` = '%d' WHERE `ID` = '%d' LIMIT 1", playerPos[0], playerPos[1], playerPos[2], playerPos[3], EntranceData[point][outsideApartmentSQL], EntranceData[point][outsideWorld], EntranceData[point][pointID]);
 			mysql_pquery(dbCon, gquery);
 
 			Point_Refresh(point);
@@ -224,6 +228,7 @@ Dialog:EditPoint(playerid, response, listitem, inputtext[])
 			EntranceData[point][insidePos][1] = playerPos[1];
 			EntranceData[point][insidePos][2] = playerPos[2];
 			EntranceData[point][insidePos][3] = playerPos[3];
+			EntranceData[point][insideWorld] = GetPlayerVirtualWorld(playerid);
 
 			if(apt == -1)
 			{
@@ -236,7 +241,7 @@ Dialog:EditPoint(playerid, response, listitem, inputtext[])
 				EntranceData[point][insideApartmentID] = apt;
 			}
 
-			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `points` SET `insideX` = '%f', `insideY` = '%f', `insideZ` = '%f', `insideA` = '%f', `insideApartment` = '%d' WHERE `ID` = '%d' LIMIT 1", playerPos[0], playerPos[1], playerPos[2], playerPos[3], EntranceData[point][insideApartmentSQL], EntranceData[point][pointID]);
+			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `points` SET `insideX` = '%f', `insideY` = '%f', `insideZ` = '%f', `insideA` = '%f', `insideApartment` = '%d', `insideWorld` = '%d' WHERE `ID` = '%d' LIMIT 1", playerPos[0], playerPos[1], playerPos[2], playerPos[3], EntranceData[point][insideApartmentSQL], EntranceData[point][insideWorld], EntranceData[point][pointID]);
 			mysql_pquery(dbCon, gquery);
 
 	        SendClientMessageEx(playerid, COLOR_YELLOW, "-> Successfully edited Point %d's exit coordinates: %f, %f, %f", EntranceData[point][pointID], playerPos[0], playerPos[1], playerPos[2]);
@@ -269,6 +274,11 @@ Dialog:EditPoint(playerid, response, listitem, inputtext[])
 				DestroyDynamicPickup(EntranceData[point][pointPickup]);
 				EntranceData[point][pointPickup] = INVALID_STREAMER_ID;
 			}
+			if(IsValidDynamicPickup(EntranceData[point][pointPickupInside]))
+			{
+				DestroyDynamicPickup(EntranceData[point][pointPickupInside]);
+				EntranceData[point][pointPickupInside] = INVALID_STREAMER_ID;
+			}
 
 			mysql_format(dbCon, gquery, sizeof(gquery), "DELETE FROM `points` WHERE `ID` = '%d' LIMIT 1", EntranceData[point][pointID]);
 			mysql_pquery(dbCon, gquery);
@@ -293,31 +303,137 @@ stock Point_Refresh(i)
         DestroyDynamicPickup(EntranceData[i][pointPickup]);
         EntranceData[i][pointPickup] = INVALID_STREAMER_ID;
     }
-    
-    new bool:is_gov = false;
-    if(EntranceData[i][pointFaction] == 1 || EntranceData[i][pointFaction] == 2 || EntranceData[i][pointFaction] == 3 || EntranceData[i][pointFaction] == 4 || EntranceData[i][pointFaction] == 6 || EntranceData[i][pointFaction] == 7)
+    if(IsValidDynamicPickup(EntranceData[i][pointPickupInside]))
     {
-        is_gov = true;
+        DestroyDynamicPickup(EntranceData[i][pointPickupInside]);
+        EntranceData[i][pointPickupInside] = INVALID_STREAMER_ID;
     }
-    else
+    
+    // Outside/Enter Pickup (always active)
+    new outWorld = (EntranceData[i][outsideApartmentID] == -1) ? EntranceData[i][outsideWorld] : ComplexData[EntranceData[i][outsideApartmentID]][aWorld];
+    new outInterior = (EntranceData[i][outsideApartmentID] == -1) ? -1 : ComplexData[EntranceData[i][outsideApartmentID]][aInterior];
+    EntranceData[i][pointPickup] = CreateDynamicPickup(19130, 23, EntranceData[i][outsidePos][0], EntranceData[i][outsidePos][1], EntranceData[i][outsidePos][2], outWorld, outInterior);
+    
+    // Inside/Exit Pickup (only if exit coords set)
+    if(EntranceData[i][insidePos][0] != 0.0)
     {
-        new name_lower[80];
-        format(name_lower, sizeof(name_lower), "%s", EntranceData[i][pointName]);
-        for(new c = 0; name_lower[c] != '\0'; ++c) name_lower[c] = tolower(name_lower[c]);
-        
-        if(strfind(name_lower, "lspd") != -1 || strfind(name_lower, "lssd") != -1 || strfind(name_lower, "asgh") != -1 ||
-           strfind(name_lower, "hospital") != -1 || strfind(name_lower, "sana") != -1 || strfind(name_lower, "news") != -1 ||
-           strfind(name_lower, "prison") != -1 || strfind(name_lower, "doc") != -1 || strfind(name_lower, "city hall") != -1 ||
-           strfind(name_lower, "gov") != -1)
+        new inWorld = (EntranceData[i][insideApartmentID] == -1) ? EntranceData[i][insideWorld] : ComplexData[EntranceData[i][insideApartmentID]][aWorld];
+        new inInterior = (EntranceData[i][insideApartmentID] == -1) ? -1 : ComplexData[EntranceData[i][insideApartmentID]][aInterior];
+        EntranceData[i][pointPickupInside] = CreateDynamicPickup(19130, 23, EntranceData[i][insidePos][0], EntranceData[i][insidePos][1], EntranceData[i][insidePos][2], inWorld, inInterior);
+    }
+    return 1;
+}
+
+#include <YSI_Coding\y_hooks>
+hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
+{
+    if(GetPlayerState(playerid) == PLAYER_STATE_DRIVER)
+    {
+        if((newkeys & KEY_CROUCH) || (newkeys & KEY_CTRL_BACK))
         {
-            is_gov = true;
+            // Player is driver and pressed horn. Let's check if they are near a dynamic point.
+            new bool:entered = false;
+            foreach (new i : Entrance)
+            {
+                if(InApartment[playerid] != EntranceData[i][outsideApartmentID]) continue;
+
+                if(IsPlayerInRangeOfPoint(playerid, EntranceData[i][pointRange], EntranceData[i][outsidePos][0], EntranceData[i][outsidePos][1], EntranceData[i][outsidePos][2]))
+                {
+                    // Check point type allows vehicles
+                    if(EntranceData[i][pointType] == POINT_TYPE_VEHICLE || EntranceData[i][pointType] == POINT_TYPE_BOTH)
+                    {
+                        if(EntranceData[i][insidePos][0] == 0.0) continue;
+                        if(EntranceData[i][pointLocked]) continue;
+
+                        new vehicleid = GetPlayerVehicleID(playerid);
+                        SetVehicleDynamicPos(vehicleid, EntranceData[i][insidePos][0], EntranceData[i][insidePos][1], EntranceData[i][insidePos][2], playerid);
+                        SetVehicleZAngle(vehicleid, EntranceData[i][insidePos][3]);
+
+                        if(EntranceData[i][insideApartmentID] != -1)
+                        {
+                            LinkVehicleToInterior(vehicleid, ComplexData[ EntranceData[i][insideApartmentID] ][aInterior]);
+                            SetVehicleVirtualWorld(vehicleid, ComplexData[ EntranceData[i][insideApartmentID] ][aWorld]);
+                        }
+                        else
+                        {
+                            LinkVehicleToInterior(vehicleid, 0);
+                            SetVehicleVirtualWorld(vehicleid, EntranceData[i][insideWorld]);
+                        }
+
+                        if(PlayerData[playerid][pLocal] != 999)
+                        {
+                            if(EntranceData[i][insideApartmentID] != -1)
+                            {
+                                SetPlayerInteriorEx(playerid, ComplexData[ EntranceData[i][insideApartmentID] ][aInterior]);
+                                SetPlayerVirtualWorldEx(playerid, ComplexData[ EntranceData[i][insideApartmentID] ][aWorld]);
+                                PlayerData[playerid][pLocal] = EntranceData[i][insideApartmentID] + LOCAL_APARTMENT;
+                            }
+                            else
+                            {
+                                SetPlayerInterior(playerid, 0);
+                                SetPlayerVirtualWorldEx(playerid, EntranceData[i][insideWorld]);
+                                DesyncPlayerInterior(playerid);
+                            }
+                        }
+
+                        InApartment[playerid] = EntranceData[i][insideApartmentID];
+                        entered = true;
+                        break;
+                    }
+                }
+            }
+
+            if(!entered)
+            {
+                // Check exit:
+                foreach (new i : Entrance)
+                {
+                    if(InApartment[playerid] != EntranceData[i][insideApartmentID]) continue;
+
+                    if(IsPlayerInRangeOfPoint(playerid, EntranceData[i][pointRange], EntranceData[i][insidePos][0], EntranceData[i][insidePos][1], EntranceData[i][insidePos][2]))
+                    {
+                        if(EntranceData[i][pointType] == POINT_TYPE_VEHICLE || EntranceData[i][pointType] == POINT_TYPE_BOTH)
+                        {
+                            if(EntranceData[i][pointLocked]) continue;
+
+                            new vehicleid = GetPlayerVehicleID(playerid);
+                            SetVehicleDynamicPos(vehicleid, EntranceData[i][outsidePos][0], EntranceData[i][outsidePos][1], EntranceData[i][outsidePos][2], playerid);
+                            SetVehicleZAngle(vehicleid, EntranceData[i][outsidePos][3]);
+
+                            if(EntranceData[i][outsideApartmentID] != -1)
+                            {
+                                LinkVehicleToInterior(vehicleid, ComplexData[ EntranceData[i][outsideApartmentID] ][aInterior]);
+                                SetVehicleVirtualWorld(vehicleid, ComplexData[ EntranceData[i][outsideApartmentID] ][aWorld]);
+                            }
+                            else
+                            {
+                                LinkVehicleToInterior(vehicleid, 0);
+                                SetVehicleVirtualWorld(vehicleid, EntranceData[i][outsideWorld]);
+                            }
+
+                            if(PlayerData[playerid][pLocal] != 999)
+                            {
+                                if(EntranceData[i][outsideApartmentID] != -1)
+                                {
+                                    SetPlayerInteriorEx(playerid, ComplexData[ EntranceData[i][outsideApartmentID] ][aInterior]);
+                                    SetPlayerVirtualWorldEx(playerid, ComplexData[ EntranceData[i][outsideApartmentID] ][aWorld]);
+                                    PlayerData[playerid][pLocal] = EntranceData[i][outsideApartmentID] + LOCAL_APARTMENT;
+                                }
+                                else
+                                {
+                                    SetPlayerInterior(playerid, 0);
+                                    SetPlayerVirtualWorldEx(playerid, EntranceData[i][outsideWorld]);
+                                    DesyncPlayerInterior(playerid);
+                                }
+                            }
+
+                            InApartment[playerid] = EntranceData[i][outsideApartmentID];
+                            break;
+                        }
+                    }
+                }
+            }
         }
-    }
-    
-    if(is_gov)
-    {
-        new world = (EntranceData[i][outsideApartmentID] == -1) ? 0 : ComplexData[EntranceData[i][outsideApartmentID]][aWorld];
-        EntranceData[i][pointPickup] = CreateDynamicPickup(19130, 23, EntranceData[i][outsidePos][0], EntranceData[i][outsidePos][1], EntranceData[i][outsidePos][2], world, -1);
     }
     return 1;
 }

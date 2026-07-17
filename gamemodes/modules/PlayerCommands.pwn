@@ -5150,7 +5150,7 @@ CMD:elevator(playerid, params[])
 	        else
 			{
 				SetPlayerInterior(playerid, 0);
-				SetPlayerVirtualWorld(playerid, 0);
+				SetPlayerVirtualWorldEx(playerid, EntranceData[i][insideWorld]);
 
 				DesyncPlayerInterior(playerid);
 			}
@@ -5173,7 +5173,7 @@ CMD:elevator(playerid, params[])
 	        else
 			{
 				SetPlayerInterior(playerid, 0);
-				SetPlayerVirtualWorld(playerid, 0);
+				SetPlayerVirtualWorldEx(playerid, EntranceData[i][outsideWorld]);
 
 				DesyncPlayerInterior(playerid);
 			}
@@ -5451,6 +5451,11 @@ CMD:enter(playerid, params[])
 			            LinkVehicleToInterior(vehicleid, ComplexData[ EntranceData[i][insideApartmentID] ][aInterior]);
 			            SetVehicleVirtualWorld(vehicleid, ComplexData[ EntranceData[i][insideApartmentID] ][aWorld]);
 			        }
+			        else
+			        {
+			            LinkVehicleToInterior(vehicleid, 0);
+			            SetVehicleVirtualWorld(vehicleid, EntranceData[i][insideWorld]);
+			        }
 				}
 				case POINT_TYPE_BOTH:
 				{
@@ -5465,6 +5470,11 @@ CMD:enter(playerid, params[])
 				        {
 				            LinkVehicleToInterior(vehicleid, ComplexData[ EntranceData[i][insideApartmentID] ][aInterior]);
 				            SetVehicleVirtualWorld(vehicleid, ComplexData[ EntranceData[i][insideApartmentID] ][aWorld]);
+				        }
+				        else
+				        {
+				            LinkVehicleToInterior(vehicleid, 0);
+				            SetVehicleVirtualWorld(vehicleid, EntranceData[i][insideWorld]);
 				        }
 				    }
 				    else
@@ -5489,7 +5499,7 @@ CMD:enter(playerid, params[])
 	        else
 			{
 				SetPlayerInterior(playerid, 0);
-				SetPlayerVirtualWorld(playerid, 0);
+				SetPlayerVirtualWorldEx(playerid, EntranceData[i][insideWorld]);
 
 				DesyncPlayerInterior(playerid);
 			}
@@ -5974,10 +5984,15 @@ CMD:exit(playerid, params[])
 					SetVehicleDynamicPos(vehicleid, EntranceData[i][outsidePos][0], EntranceData[i][outsidePos][1], EntranceData[i][outsidePos][2], playerid);
 					SetVehicleZAngle(vehicleid, EntranceData[i][outsidePos][3]);
 
-			        if(EntranceData[i][insideApartmentID] != -1)
+			        if(EntranceData[i][outsideApartmentID] != -1)
 			        {
 			            LinkVehicleToInterior(vehicleid, ComplexData[ EntranceData[i][outsideApartmentID] ][aInterior]);
 			            SetVehicleVirtualWorld(vehicleid, ComplexData[ EntranceData[i][outsideApartmentID] ][aWorld]);
+			        }
+			        else
+			        {
+			            LinkVehicleToInterior(vehicleid, 0);
+			            SetVehicleVirtualWorld(vehicleid, EntranceData[i][outsideWorld]);
 			        }
 				}
 				case POINT_TYPE_BOTH:
@@ -5989,10 +6004,15 @@ CMD:exit(playerid, params[])
 						SetVehicleDynamicPos(vehicleid, EntranceData[i][outsidePos][0], EntranceData[i][outsidePos][1], EntranceData[i][outsidePos][2], playerid);
 						SetVehicleZAngle(vehicleid, EntranceData[i][outsidePos][3]);
 
-				        if(EntranceData[i][insideApartmentID] != -1)
+				        if(EntranceData[i][outsideApartmentID] != -1)
 				        {
 				            LinkVehicleToInterior(vehicleid, ComplexData[ EntranceData[i][outsideApartmentID] ][aInterior]);
 				            SetVehicleVirtualWorld(vehicleid, ComplexData[ EntranceData[i][outsideApartmentID] ][aWorld]);
+				        }
+				        else
+				        {
+				            LinkVehicleToInterior(vehicleid, 0);
+				            SetVehicleVirtualWorld(vehicleid, EntranceData[i][outsideWorld]);
 				        }
 				    }
 				    else
@@ -6017,7 +6037,7 @@ CMD:exit(playerid, params[])
 	        else
 			{
 				SetPlayerInterior(playerid, 0);
-				SetPlayerVirtualWorld(playerid, 0);
+				SetPlayerVirtualWorldEx(playerid, EntranceData[i][outsideWorld]);
 
 				DesyncPlayerInterior(playerid);
 			}
