@@ -10503,6 +10503,43 @@ CMD:lock(playerid, params[])
 	return true;
 }*/
 
+CMD:setbuycomp(playerid, params[])
+{
+	if(PlayerData[playerid][pAdmin] < 4)
+		return SendErrorMessage(playerid, "You are not authorized to use this command.");
+
+	new Float:x, Float:y, Float:z;
+	GetPlayerPos(playerid, x, y, z);
+
+	new compid = 60; // Component storage index
+
+	StorageData[compid][in_posx] = x;
+	StorageData[compid][in_posy] = y;
+	StorageData[compid][in_posz] = z;
+
+	if(IsValidDynamicPickup(StorageData[compid][in_pickup]))
+		DestroyDynamicPickup(StorageData[compid][in_pickup]);
+
+	if(IsValidDynamic3DTextLabel(StorageData[compid][in_label]))
+		DestroyDynamic3DTextLabel(StorageData[compid][in_label]);
+
+	if(!IndustryData[StorageData[compid][in_industryid]][in_close])
+	{
+		StorageData[compid][in_pickup] = CreateDynamicPickup(1318, 23, x, y, z, 0, 0);
+
+		new msg[128];
+		format(msg, sizeof(msg), "[{E5FF00}%s{FFFFFF}]\nStorage: %d / %d\nPrice: %s / unit", GetBusinessCargoDesc(StorageData[compid][in_item]), StorageData[compid][in_stock], StorageData[compid][in_maximum], FormatNumber(StorageData[compid][in_price]));
+		StorageData[compid][in_label] = CreateDynamic3DTextLabel(msg, -1, x, y, z, 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, -1, -1, -1, 100.0);
+	}
+
+	new query[256];
+	mysql_format(dbCon, query, sizeof(query), "UPDATE `industry` SET `posx` = %f, `posy` = %f, `posz` = %f WHERE `id` = %d", x, y, z, StorageData[compid][in_id]);
+	mysql_tquery(dbCon, query, "", "");
+
+	SendClientMessageEx(playerid, COLOR_GREEN, "Component purchase location has been set to your current position (Storage DB ID: %d).", StorageData[compid][in_id]);
+	return 1;
+}
+
 CMD:buycomp(playerid, params[])
 {
 	new compid = 60;
