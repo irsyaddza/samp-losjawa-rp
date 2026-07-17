@@ -1,13 +1,7 @@
 /*
- * HudV2.pwn — LJRP HUD V2 (open.mp)
- *
- * Layout:
- *   [GLOBAL] Server logo, separator line, date, time
- *   [PLAYER] Wind direction (short + long), location name
- *   [VEHICLE] Background sprite, ignition on/off, lock/unlock, speed (MPH)
- *   [RADIO]   Background sprite, channel name, slot
- *
- * Toggle: /toghud (uses PlayerFlags[playerid][toggleHUD])
+ * HudV2.pwn — LJRP HUD V6.7 (open.mp)
+ * Overwritten/Upgraded to HUD V6.7 using mdl-1410: assets
+ * Position fixes and removed siren icons.
  */
 
 #if !defined TEXT_DRAW_ALIGN_LEFT
@@ -36,57 +30,38 @@
 #define PlayerTextDrawBackgroundColour PlayerTextDrawBackgroundColor
 
 /* ─────────────────────────── Global TDs ─────────────────────────── */
-new Text:HV2_Logo;
-new Text:HV2_Line;
-new Text:HV2_Date;
-new Text:HV2_Time;
+new Text:HV2_Logo = Text:INVALID_TEXT_DRAW;
+new Text:HV2_Line = Text:INVALID_TEXT_DRAW;
+new Text:HV2_Date = Text:INVALID_TEXT_DRAW;
+new Text:HV2_Time = Text:INVALID_TEXT_DRAW;
 
 /* ─────────────────────────── Per-Player TDs ─────────────────────── */
 new PlayerText:HV2_WindShort  [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
 new PlayerText:HV2_WindLong   [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
 new PlayerText:HV2_Location   [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
 
-/* Vehicle HUD */
-new PlayerText:HV2_BaseSpeed  [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
-new PlayerText:HV2_IgnOn      [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
-new PlayerText:HV2_IgnOff     [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
-new PlayerText:HV2_LockCar    [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
-new PlayerText:HV2_UnlockCar  [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
-new PlayerText:HV2_Speed      [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
-
 /* Radio HUD */
 new PlayerText:HV2_BaseRadio  [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
-new PlayerText:HV2_RadioChan  [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
 new PlayerText:HV2_RadioSlot  [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
+new PlayerText:HV2_RadioChan  [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
 
-/* ─────────────────────── Helper: Wind Direction ─────────────────── */
-GetWindShort(Float:angle, dest[], size)
-{
-    if     (angle >= 337.5 || angle <  22.5)  strcat(dest, "N",  size);
-    else if(angle >=  22.5 && angle <  67.5)  strcat(dest, "NE", size);
-    else if(angle >=  67.5 && angle < 112.5)  strcat(dest, "E",  size);
-    else if(angle >= 112.5 && angle < 157.5)  strcat(dest, "SE", size);
-    else if(angle >= 157.5 && angle < 202.5)  strcat(dest, "S",  size);
-    else if(angle >= 202.5 && angle < 247.5)  strcat(dest, "SW", size);
-    else if(angle >= 247.5 && angle < 292.5)  strcat(dest, "W",  size);
-    else                                       strcat(dest, "NW", size);
-}
+/* Vehicle HUD */
+new PlayerText:HV2_BaseSpeed  [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
+new PlayerText:HV2_Speed      [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
+new PlayerText:HV2_Mph        [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
+new PlayerText:HV2_Miles      [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
+new PlayerText:HV2_FuelNorm   [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
+new PlayerText:HV2_FuelRed    [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
+new PlayerText:HV2_FuelPercent[MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
+new PlayerText:HV2_LightsOff  [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
+new PlayerText:HV2_LightsOn   [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
+new PlayerText:HV2_Lock       [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
+new PlayerText:HV2_Unlock     [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
 
-GetWindLong(Float:angle, dest[], size)
-{
-    if     (angle >= 337.5 || angle <  22.5)  strcat(dest, "north",      size);
-    else if(angle >=  22.5 && angle <  67.5)  strcat(dest, "north east", size);
-    else if(angle >=  67.5 && angle < 112.5)  strcat(dest, "east",       size);
-    else if(angle >= 112.5 && angle < 157.5)  strcat(dest, "south east", size);
-    else if(angle >= 157.5 && angle < 202.5)  strcat(dest, "south",      size);
-    else if(angle >= 202.5 && angle < 247.5)  strcat(dest, "south west", size);
-    else if(angle >= 247.5 && angle < 292.5)  strcat(dest, "west",       size);
-    else                                       strcat(dest, "north west", size);
-}
+
 
 /* ════════════════════════ CREATE / DESTROY ══════════════════════════ */
 
-/* Called once in OnGameModeInit */
 CreateHudV2GlobalTDs()
 {
     // ── Server Logo ───────────────────────────────────────────────────
@@ -102,7 +77,7 @@ CreateHudV2GlobalTDs()
 
     // ── Separator Line ────────────────────────────────────────────────
     HV2_Line = TextDrawCreate(173.000, 398.000, "I");
-    TextDrawLetterSize(HV2_Line, 0.190, 4.999);
+    TextDrawLetterSize(HV2_Line, 0.189, 4.999);
     TextDrawAlignment(HV2_Line, TEXT_DRAW_ALIGN_LEFT);
     TextDrawColour(HV2_Line, -56);
     TextDrawSetShadow(HV2_Line, 1);
@@ -112,8 +87,8 @@ CreateHudV2GlobalTDs()
     TextDrawSetProportional(HV2_Line, true);
 
     // ── Date ─────────────────────────────────────────────────────────
-    HV2_Date = TextDrawCreate(181.000, 419.000, "01/01/2025");
-    TextDrawLetterSize(HV2_Date, 0.170, 0.889);
+    HV2_Date = TextDrawCreate(181.000, 419.000, "01/02/2026");
+    TextDrawLetterSize(HV2_Date, 0.170, 0.888);
     TextDrawAlignment(HV2_Date, TEXT_DRAW_ALIGN_LEFT);
     TextDrawColour(HV2_Date, -56);
     TextDrawSetShadow(HV2_Date, 1);
@@ -124,7 +99,7 @@ CreateHudV2GlobalTDs()
 
     // ── Time ─────────────────────────────────────────────────────────
     HV2_Time = TextDrawCreate(181.000, 410.000, "00:00:00");
-    TextDrawLetterSize(HV2_Time, 0.170, 0.889);
+    TextDrawLetterSize(HV2_Time, 0.170, 0.888);
     TextDrawAlignment(HV2_Time, TEXT_DRAW_ALIGN_LEFT);
     TextDrawColour(HV2_Time, -56);
     TextDrawSetShadow(HV2_Time, 1);
@@ -134,7 +109,6 @@ CreateHudV2GlobalTDs()
     TextDrawSetProportional(HV2_Time, true);
 }
 
-/* Called once in OnGameModeExit */
 DestroyHudV2GlobalTDs()
 {
     if(HV2_Logo != Text:INVALID_TEXT_DRAW) TextDrawDestroy(HV2_Logo);
@@ -143,12 +117,11 @@ DestroyHudV2GlobalTDs()
     if(HV2_Time != Text:INVALID_TEXT_DRAW) TextDrawDestroy(HV2_Time);
 }
 
-/* Called per player on character spawn */
 CreateHudV2PlayerTDs(playerid)
 {
     // ── Wind Direction (short) ────────────────────────────────────────
-    HV2_WindShort[playerid] = CreatePlayerTextDraw(playerid, 147.000, 411.000, "N");
-    PlayerTextDrawLetterSize(playerid, HV2_WindShort[playerid], 0.289, 1.499);
+    HV2_WindShort[playerid] = CreatePlayerTextDraw(playerid, 147.000, 411.000, "SE");
+    PlayerTextDrawLetterSize(playerid, HV2_WindShort[playerid], 0.289, 1.498);
     PlayerTextDrawAlignment(playerid, HV2_WindShort[playerid], TEXT_DRAW_ALIGN_CENTER);
     PlayerTextDrawColour(playerid, HV2_WindShort[playerid], -56);
     PlayerTextDrawSetShadow(playerid, HV2_WindShort[playerid], 1);
@@ -158,7 +131,7 @@ CreateHudV2PlayerTDs(playerid)
     PlayerTextDrawSetProportional(playerid, HV2_WindShort[playerid], true);
 
     // ── Wind Direction (long) ─────────────────────────────────────────
-    HV2_WindLong[playerid] = CreatePlayerTextDraw(playerid, 147.000, 428.000, "north");
+    HV2_WindLong[playerid] = CreatePlayerTextDraw(playerid, 147.000, 428.000, "south east");
     PlayerTextDrawLetterSize(playerid, HV2_WindLong[playerid], 0.179, 0.898);
     PlayerTextDrawAlignment(playerid, HV2_WindLong[playerid], TEXT_DRAW_ALIGN_CENTER);
     PlayerTextDrawColour(playerid, HV2_WindLong[playerid], -56);
@@ -169,8 +142,8 @@ CreateHudV2PlayerTDs(playerid)
     PlayerTextDrawSetProportional(playerid, HV2_WindLong[playerid], true);
 
     // ── Location ──────────────────────────────────────────────────────
-    HV2_Location[playerid] = CreatePlayerTextDraw(playerid, 181.000, 429.000, "Los Santos");
-    PlayerTextDrawLetterSize(playerid, HV2_Location[playerid], 0.170, 0.889);
+    HV2_Location[playerid] = CreatePlayerTextDraw(playerid, 181.000, 429.000, "Las Venturas");
+    PlayerTextDrawLetterSize(playerid, HV2_Location[playerid], 0.170, 0.888);
     PlayerTextDrawAlignment(playerid, HV2_Location[playerid], TEXT_DRAW_ALIGN_LEFT);
     PlayerTextDrawColour(playerid, HV2_Location[playerid], -56);
     PlayerTextDrawSetShadow(playerid, HV2_Location[playerid], 1);
@@ -179,128 +152,186 @@ CreateHudV2PlayerTDs(playerid)
     PlayerTextDrawFont(playerid, HV2_Location[playerid], TEXT_DRAW_FONT_3);
     PlayerTextDrawSetProportional(playerid, HV2_Location[playerid], true);
 
-    // ── Vehicle Speedo Background ─────────────────────────────────────
-    HV2_BaseSpeed[playerid] = CreatePlayerTextDraw(playerid, 539.000, 411.000, "LD_SPAC:white");
-    PlayerTextDrawTextSize(playerid, HV2_BaseSpeed[playerid], 84.000, 26.000);
-    PlayerTextDrawAlignment(playerid, HV2_BaseSpeed[playerid], TEXT_DRAW_ALIGN_LEFT);
-    PlayerTextDrawColour(playerid, HV2_BaseSpeed[playerid], 120);
-    PlayerTextDrawSetShadow(playerid, HV2_BaseSpeed[playerid], 0);
-    PlayerTextDrawSetOutline(playerid, HV2_BaseSpeed[playerid], 0);
-    PlayerTextDrawBackgroundColour(playerid, HV2_BaseSpeed[playerid], 255);
-    PlayerTextDrawFont(playerid, HV2_BaseSpeed[playerid], TEXT_DRAW_FONT_SPRITE_DRAW);
-    PlayerTextDrawSetProportional(playerid, HV2_BaseSpeed[playerid], true);
-
-    // ── Ignition ON ───────────────────────────────────────────────────
-    HV2_IgnOn[playerid] = CreatePlayerTextDraw(playerid, 542.000, 413.000, "mdl-1410:ignition_on");
-    PlayerTextDrawTextSize(playerid, HV2_IgnOn[playerid], 22.000, 21.000);
-    PlayerTextDrawAlignment(playerid, HV2_IgnOn[playerid], TEXT_DRAW_ALIGN_LEFT);
-    PlayerTextDrawColour(playerid, HV2_IgnOn[playerid], -1);
-    PlayerTextDrawSetShadow(playerid, HV2_IgnOn[playerid], 0);
-    PlayerTextDrawSetOutline(playerid, HV2_IgnOn[playerid], 0);
-    PlayerTextDrawBackgroundColour(playerid, HV2_IgnOn[playerid], 255);
-    PlayerTextDrawFont(playerid, HV2_IgnOn[playerid], TEXT_DRAW_FONT_SPRITE_DRAW);
-    PlayerTextDrawSetProportional(playerid, HV2_IgnOn[playerid], true);
-
-    // ── Ignition OFF ──────────────────────────────────────────────────
-    HV2_IgnOff[playerid] = CreatePlayerTextDraw(playerid, 542.000, 413.000, "mdl-1410:ignition_off");
-    PlayerTextDrawTextSize(playerid, HV2_IgnOff[playerid], 22.000, 21.000);
-    PlayerTextDrawAlignment(playerid, HV2_IgnOff[playerid], TEXT_DRAW_ALIGN_LEFT);
-    PlayerTextDrawColour(playerid, HV2_IgnOff[playerid], -1);
-    PlayerTextDrawSetShadow(playerid, HV2_IgnOff[playerid], 0);
-    PlayerTextDrawSetOutline(playerid, HV2_IgnOff[playerid], 0);
-    PlayerTextDrawBackgroundColour(playerid, HV2_IgnOff[playerid], 255);
-    PlayerTextDrawFont(playerid, HV2_IgnOff[playerid], TEXT_DRAW_FONT_SPRITE_DRAW);
-    PlayerTextDrawSetProportional(playerid, HV2_IgnOff[playerid], true);
-
-    // ── Lock ──────────────────────────────────────────────────────────
-    HV2_LockCar[playerid] = CreatePlayerTextDraw(playerid, 567.000, 415.000, "mdl-1410:lock");
-    PlayerTextDrawTextSize(playerid, HV2_LockCar[playerid], 15.000, 17.000);
-    PlayerTextDrawAlignment(playerid, HV2_LockCar[playerid], TEXT_DRAW_ALIGN_LEFT);
-    PlayerTextDrawColour(playerid, HV2_LockCar[playerid], -1);
-    PlayerTextDrawSetShadow(playerid, HV2_LockCar[playerid], 0);
-    PlayerTextDrawSetOutline(playerid, HV2_LockCar[playerid], 0);
-    PlayerTextDrawBackgroundColour(playerid, HV2_LockCar[playerid], 255);
-    PlayerTextDrawFont(playerid, HV2_LockCar[playerid], TEXT_DRAW_FONT_SPRITE_DRAW);
-    PlayerTextDrawSetProportional(playerid, HV2_LockCar[playerid], true);
-
-    // ── Unlock ────────────────────────────────────────────────────────
-    HV2_UnlockCar[playerid] = CreatePlayerTextDraw(playerid, 567.000, 415.000, "mdl-1410:unlock");
-    PlayerTextDrawTextSize(playerid, HV2_UnlockCar[playerid], 15.000, 17.000);
-    PlayerTextDrawAlignment(playerid, HV2_UnlockCar[playerid], TEXT_DRAW_ALIGN_LEFT);
-    PlayerTextDrawColour(playerid, HV2_UnlockCar[playerid], -1);
-    PlayerTextDrawSetShadow(playerid, HV2_UnlockCar[playerid], 0);
-    PlayerTextDrawSetOutline(playerid, HV2_UnlockCar[playerid], 0);
-    PlayerTextDrawBackgroundColour(playerid, HV2_UnlockCar[playerid], 255);
-    PlayerTextDrawFont(playerid, HV2_UnlockCar[playerid], TEXT_DRAW_FONT_SPRITE_DRAW);
-    PlayerTextDrawSetProportional(playerid, HV2_UnlockCar[playerid], true);
-
-    // ── Speed ─────────────────────────────────────────────────────────
-    HV2_Speed[playerid] = CreatePlayerTextDraw(playerid, 620.000, 422.000, "0 MPH");
-    PlayerTextDrawLetterSize(playerid, HV2_Speed[playerid], 0.230, 1.099);
-    PlayerTextDrawAlignment(playerid, HV2_Speed[playerid], TEXT_DRAW_ALIGN_RIGHT);
-    PlayerTextDrawColour(playerid, HV2_Speed[playerid], -56);
-    PlayerTextDrawSetShadow(playerid, HV2_Speed[playerid], 1);
-    PlayerTextDrawSetOutline(playerid, HV2_Speed[playerid], 1);
-    PlayerTextDrawBackgroundColour(playerid, HV2_Speed[playerid], 150);
-    PlayerTextDrawFont(playerid, HV2_Speed[playerid], TEXT_DRAW_FONT_3);
-    PlayerTextDrawSetProportional(playerid, HV2_Speed[playerid], true);
-
     // ── Radio Background ──────────────────────────────────────────────
-    HV2_BaseRadio[playerid] = CreatePlayerTextDraw(playerid, 539.000, 377.000, "LD_SPAC:white");
-    PlayerTextDrawTextSize(playerid, HV2_BaseRadio[playerid], 84.000, 26.000);
+    HV2_BaseRadio[playerid] = CreatePlayerTextDraw(playerid, 507.000, 100.000, "LD_SPAC:white");
+    PlayerTextDrawTextSize(playerid, HV2_BaseRadio[playerid], 99.000, 34.000);
     PlayerTextDrawAlignment(playerid, HV2_BaseRadio[playerid], TEXT_DRAW_ALIGN_LEFT);
-    PlayerTextDrawColour(playerid, HV2_BaseRadio[playerid], 120);
+    PlayerTextDrawColour(playerid, HV2_BaseRadio[playerid], 130);
     PlayerTextDrawSetShadow(playerid, HV2_BaseRadio[playerid], 0);
     PlayerTextDrawSetOutline(playerid, HV2_BaseRadio[playerid], 0);
     PlayerTextDrawBackgroundColour(playerid, HV2_BaseRadio[playerid], 255);
     PlayerTextDrawFont(playerid, HV2_BaseRadio[playerid], TEXT_DRAW_FONT_SPRITE_DRAW);
     PlayerTextDrawSetProportional(playerid, HV2_BaseRadio[playerid], true);
 
+    // ── Radio Slot ────────────────────────────────────────────────────
+    HV2_RadioSlot[playerid] = CreatePlayerTextDraw(playerid, 511.000, 103.000, "Slot: 1");
+    PlayerTextDrawLetterSize(playerid, HV2_RadioSlot[playerid], 0.300, 1.500);
+    PlayerTextDrawAlignment(playerid, HV2_RadioSlot[playerid], TEXT_DRAW_ALIGN_LEFT);
+    PlayerTextDrawColour(playerid, HV2_RadioSlot[playerid], -1);
+    PlayerTextDrawSetShadow(playerid, HV2_RadioSlot[playerid], 1);
+    PlayerTextDrawSetOutline(playerid, HV2_RadioSlot[playerid], 1);
+    PlayerTextDrawBackgroundColour(playerid, HV2_RadioSlot[playerid], 150);
+    PlayerTextDrawFont(playerid, HV2_RadioSlot[playerid], TEXT_DRAW_FONT_3);
+    PlayerTextDrawSetProportional(playerid, HV2_RadioSlot[playerid], true);
+
     // ── Radio Channel ─────────────────────────────────────────────────
-    HV2_RadioChan[playerid] = CreatePlayerTextDraw(playerid, 543.000, 381.000, "Radio: --");
-    PlayerTextDrawLetterSize(playerid, HV2_RadioChan[playerid], 0.200, 0.899);
+    HV2_RadioChan[playerid] = CreatePlayerTextDraw(playerid, 511.000, 118.000, "Channel: 1045");
+    PlayerTextDrawLetterSize(playerid, HV2_RadioChan[playerid], 0.300, 1.500);
     PlayerTextDrawAlignment(playerid, HV2_RadioChan[playerid], TEXT_DRAW_ALIGN_LEFT);
-    PlayerTextDrawColour(playerid, HV2_RadioChan[playerid], -56);
+    PlayerTextDrawColour(playerid, HV2_RadioChan[playerid], -1);
     PlayerTextDrawSetShadow(playerid, HV2_RadioChan[playerid], 1);
     PlayerTextDrawSetOutline(playerid, HV2_RadioChan[playerid], 1);
     PlayerTextDrawBackgroundColour(playerid, HV2_RadioChan[playerid], 150);
     PlayerTextDrawFont(playerid, HV2_RadioChan[playerid], TEXT_DRAW_FONT_3);
     PlayerTextDrawSetProportional(playerid, HV2_RadioChan[playerid], true);
 
-    // ── Radio Slot ────────────────────────────────────────────────────
-    HV2_RadioSlot[playerid] = CreatePlayerTextDraw(playerid, 543.000, 391.000, "Slot: -");
-    PlayerTextDrawLetterSize(playerid, HV2_RadioSlot[playerid], 0.200, 0.899);
-    PlayerTextDrawAlignment(playerid, HV2_RadioSlot[playerid], TEXT_DRAW_ALIGN_LEFT);
-    PlayerTextDrawColour(playerid, HV2_RadioSlot[playerid], -56);
-    PlayerTextDrawSetShadow(playerid, HV2_RadioSlot[playerid], 1);
-    PlayerTextDrawSetOutline(playerid, HV2_RadioSlot[playerid], 1);
-    PlayerTextDrawBackgroundColour(playerid, HV2_RadioSlot[playerid], 150);
-    PlayerTextDrawFont(playerid, HV2_RadioSlot[playerid], TEXT_DRAW_FONT_3);
-    PlayerTextDrawSetProportional(playerid, HV2_RadioSlot[playerid], true);
+    // ── Vehicle Speedo Background ─────────────────────────────────────
+    HV2_BaseSpeed[playerid] = CreatePlayerTextDraw(playerid, 541.000, 349.000, "mdl-1410:base_speedo");
+    PlayerTextDrawTextSize(playerid, HV2_BaseSpeed[playerid], 90.000, 98.000);
+    PlayerTextDrawAlignment(playerid, HV2_BaseSpeed[playerid], TEXT_DRAW_ALIGN_LEFT);
+    PlayerTextDrawColour(playerid, HV2_BaseSpeed[playerid], -1);
+    PlayerTextDrawSetShadow(playerid, HV2_BaseSpeed[playerid], 0);
+    PlayerTextDrawSetOutline(playerid, HV2_BaseSpeed[playerid], 0);
+    PlayerTextDrawBackgroundColour(playerid, HV2_BaseSpeed[playerid], 255);
+    PlayerTextDrawFont(playerid, HV2_BaseSpeed[playerid], TEXT_DRAW_FONT_SPRITE_DRAW);
+    PlayerTextDrawSetProportional(playerid, HV2_BaseSpeed[playerid], true);
+
+    // ── Speed Value ───────────────────────────────────────────────────
+    HV2_Speed[playerid] = CreatePlayerTextDraw(playerid, 587.000, 370.000, "0");
+    PlayerTextDrawLetterSize(playerid, HV2_Speed[playerid], 0.808, 2.798);
+    PlayerTextDrawAlignment(playerid, HV2_Speed[playerid], TEXT_DRAW_ALIGN_CENTER);
+    PlayerTextDrawColour(playerid, HV2_Speed[playerid], -1);
+    PlayerTextDrawSetShadow(playerid, HV2_Speed[playerid], 1);
+    PlayerTextDrawSetOutline(playerid, HV2_Speed[playerid], 1);
+    PlayerTextDrawBackgroundColour(playerid, HV2_Speed[playerid], 150);
+    PlayerTextDrawFont(playerid, HV2_Speed[playerid], TEXT_DRAW_FONT_3);
+    PlayerTextDrawSetProportional(playerid, HV2_Speed[playerid], true);
+
+    // ── MPH Unit Text ─────────────────────────────────────────────────
+    HV2_Mph[playerid] = CreatePlayerTextDraw(playerid, 587.000, 394.000, "mph");
+    PlayerTextDrawLetterSize(playerid, HV2_Mph[playerid], 0.270, 1.199);
+    PlayerTextDrawAlignment(playerid, HV2_Mph[playerid], TEXT_DRAW_ALIGN_CENTER);
+    PlayerTextDrawColour(playerid, HV2_Mph[playerid], -1);
+    PlayerTextDrawSetShadow(playerid, HV2_Mph[playerid], 1);
+    PlayerTextDrawSetOutline(playerid, HV2_Mph[playerid], 1);
+    PlayerTextDrawBackgroundColour(playerid, HV2_Mph[playerid], 150);
+    PlayerTextDrawFont(playerid, HV2_Mph[playerid], TEXT_DRAW_FONT_3);
+    PlayerTextDrawSetProportional(playerid, HV2_Mph[playerid], true);
+
+    // ── Mileage / Driven Miles ────────────────────────────────────────
+    HV2_Miles[playerid] = CreatePlayerTextDraw(playerid, 587.000, 414.000, "0.0 miles");
+    PlayerTextDrawLetterSize(playerid, HV2_Miles[playerid], 0.200, 0.898);
+    PlayerTextDrawAlignment(playerid, HV2_Miles[playerid], TEXT_DRAW_ALIGN_CENTER);
+    PlayerTextDrawColour(playerid, HV2_Miles[playerid], -1);
+    PlayerTextDrawSetShadow(playerid, HV2_Miles[playerid], 1);
+    PlayerTextDrawSetOutline(playerid, HV2_Miles[playerid], 1);
+    PlayerTextDrawBackgroundColour(playerid, HV2_Miles[playerid], 150);
+    PlayerTextDrawFont(playerid, HV2_Miles[playerid], TEXT_DRAW_FONT_3);
+    PlayerTextDrawSetProportional(playerid, HV2_Miles[playerid], true);
+
+    // ── Fuel Icon Normal ──────────────────────────────────────────────
+    HV2_FuelNorm[playerid] = CreatePlayerTextDraw(playerid, 580.000, 417.000, "mdl-1410:bensin_norm");
+    PlayerTextDrawTextSize(playerid, HV2_FuelNorm[playerid], 31.000, 37.000);
+    PlayerTextDrawAlignment(playerid, HV2_FuelNorm[playerid], TEXT_DRAW_ALIGN_LEFT);
+    PlayerTextDrawColour(playerid, HV2_FuelNorm[playerid], -1);
+    PlayerTextDrawSetShadow(playerid, HV2_FuelNorm[playerid], 0);
+    PlayerTextDrawSetOutline(playerid, HV2_FuelNorm[playerid], 0);
+    PlayerTextDrawBackgroundColour(playerid, HV2_FuelNorm[playerid], 255);
+    PlayerTextDrawFont(playerid, HV2_FuelNorm[playerid], TEXT_DRAW_FONT_SPRITE_DRAW);
+    PlayerTextDrawSetProportional(playerid, HV2_FuelNorm[playerid], true);
+
+    // ── Fuel Icon Red ─────────────────────────────────────────────────
+    HV2_FuelRed[playerid] = CreatePlayerTextDraw(playerid, 580.000, 417.000, "mdl-1410:bensin_red");
+    PlayerTextDrawTextSize(playerid, HV2_FuelRed[playerid], 31.000, 37.000);
+    PlayerTextDrawAlignment(playerid, HV2_FuelRed[playerid], TEXT_DRAW_ALIGN_LEFT);
+    PlayerTextDrawColour(playerid, HV2_FuelRed[playerid], -1);
+    PlayerTextDrawSetShadow(playerid, HV2_FuelRed[playerid], 0);
+    PlayerTextDrawSetOutline(playerid, HV2_FuelRed[playerid], 0);
+    PlayerTextDrawBackgroundColour(playerid, HV2_FuelRed[playerid], 255);
+    PlayerTextDrawFont(playerid, HV2_FuelRed[playerid], TEXT_DRAW_FONT_SPRITE_DRAW);
+    PlayerTextDrawSetProportional(playerid, HV2_FuelRed[playerid], true);
+
+    // ── Fuel Percent Text ─────────────────────────────────────────────
+    HV2_FuelPercent[playerid] = CreatePlayerTextDraw(playerid, 588.000, 431.000, "99");
+    PlayerTextDrawLetterSize(playerid, HV2_FuelPercent[playerid], 0.170, 0.898);
+    PlayerTextDrawAlignment(playerid, HV2_FuelPercent[playerid], TEXT_DRAW_ALIGN_LEFT);
+    PlayerTextDrawColour(playerid, HV2_FuelPercent[playerid], -1);
+    PlayerTextDrawSetShadow(playerid, HV2_FuelPercent[playerid], 1);
+    PlayerTextDrawSetOutline(playerid, HV2_FuelPercent[playerid], 1);
+    PlayerTextDrawBackgroundColour(playerid, HV2_FuelPercent[playerid], 150);
+    PlayerTextDrawFont(playerid, HV2_FuelPercent[playerid], TEXT_DRAW_FONT_3);
+    PlayerTextDrawSetProportional(playerid, HV2_FuelPercent[playerid], true);
+
+    // ── Lights OFF Icon ───────────────────────────────────────────────
+    HV2_LightsOff[playerid] = CreatePlayerTextDraw(playerid, 558.000, 413.000, "mdl-1410:lampu_off");
+    PlayerTextDrawTextSize(playerid, HV2_LightsOff[playerid], 68.000, 71.000);
+    PlayerTextDrawAlignment(playerid, HV2_LightsOff[playerid], TEXT_DRAW_ALIGN_LEFT);
+    PlayerTextDrawColour(playerid, HV2_LightsOff[playerid], -1);
+    PlayerTextDrawSetShadow(playerid, HV2_LightsOff[playerid], 0);
+    PlayerTextDrawSetOutline(playerid, HV2_LightsOff[playerid], 0);
+    PlayerTextDrawBackgroundColour(playerid, HV2_LightsOff[playerid], 255);
+    PlayerTextDrawFont(playerid, HV2_LightsOff[playerid], TEXT_DRAW_FONT_SPRITE_DRAW);
+    PlayerTextDrawSetProportional(playerid, HV2_LightsOff[playerid], true);
+
+    // ── Lights ON Icon ────────────────────────────────────────────────
+    HV2_LightsOn[playerid] = CreatePlayerTextDraw(playerid, 558.000, 413.000, "mdl-1410:lampu_on");
+    PlayerTextDrawTextSize(playerid, HV2_LightsOn[playerid], 68.000, 71.000);
+    PlayerTextDrawAlignment(playerid, HV2_LightsOn[playerid], TEXT_DRAW_ALIGN_LEFT);
+    PlayerTextDrawColour(playerid, HV2_LightsOn[playerid], -1);
+    PlayerTextDrawSetShadow(playerid, HV2_LightsOn[playerid], 0);
+    PlayerTextDrawSetOutline(playerid, HV2_LightsOn[playerid], 0);
+    PlayerTextDrawBackgroundColour(playerid, HV2_LightsOn[playerid], 255);
+    PlayerTextDrawFont(playerid, HV2_LightsOn[playerid], TEXT_DRAW_FONT_SPRITE_DRAW);
+    PlayerTextDrawSetProportional(playerid, HV2_LightsOn[playerid], true);
+
+    // ── Lock Icon ─────────────────────────────────────────────────────
+    HV2_Lock[playerid] = CreatePlayerTextDraw(playerid, 607.000, 431.000, "mdl-1410:lock");
+    PlayerTextDrawTextSize(playerid, HV2_Lock[playerid], 7.000, 8.000);
+    PlayerTextDrawAlignment(playerid, HV2_Lock[playerid], TEXT_DRAW_ALIGN_LEFT);
+    PlayerTextDrawColour(playerid, HV2_Lock[playerid], -1);
+    PlayerTextDrawSetShadow(playerid, HV2_Lock[playerid], 0);
+    PlayerTextDrawSetOutline(playerid, HV2_Lock[playerid], 0);
+    PlayerTextDrawBackgroundColour(playerid, HV2_Lock[playerid], 255);
+    PlayerTextDrawFont(playerid, HV2_Lock[playerid], TEXT_DRAW_FONT_SPRITE_DRAW);
+    PlayerTextDrawSetProportional(playerid, HV2_Lock[playerid], true);
+
+    // ── Unlock Icon ───────────────────────────────────────────────────
+    HV2_Unlock[playerid] = CreatePlayerTextDraw(playerid, 607.000, 431.000, "mdl-1410:unlock");
+    PlayerTextDrawTextSize(playerid, HV2_Unlock[playerid], 7.000, 8.000);
+    PlayerTextDrawAlignment(playerid, HV2_Unlock[playerid], TEXT_DRAW_ALIGN_LEFT);
+    PlayerTextDrawColour(playerid, HV2_Unlock[playerid], -1);
+    PlayerTextDrawSetShadow(playerid, HV2_Unlock[playerid], 0);
+    PlayerTextDrawSetOutline(playerid, HV2_Unlock[playerid], 0);
+    PlayerTextDrawBackgroundColour(playerid, HV2_Unlock[playerid], 255);
+    PlayerTextDrawFont(playerid, HV2_Unlock[playerid], TEXT_DRAW_FONT_SPRITE_DRAW);
+    PlayerTextDrawSetProportional(playerid, HV2_Unlock[playerid], true);
 }
 
-/* Called in OnPlayerDisconnect */
 DestroyHudV2PlayerTDs(playerid)
 {
     #define _DESTROY_P(%0) if(%0[playerid] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, %0[playerid]); %0[playerid] = PlayerText:INVALID_TEXT_DRAW; }
     _DESTROY_P(HV2_WindShort)
     _DESTROY_P(HV2_WindLong)
     _DESTROY_P(HV2_Location)
-    _DESTROY_P(HV2_BaseSpeed)
-    _DESTROY_P(HV2_IgnOn)
-    _DESTROY_P(HV2_IgnOff)
-    _DESTROY_P(HV2_LockCar)
-    _DESTROY_P(HV2_UnlockCar)
-    _DESTROY_P(HV2_Speed)
     _DESTROY_P(HV2_BaseRadio)
-    _DESTROY_P(HV2_RadioChan)
     _DESTROY_P(HV2_RadioSlot)
+    _DESTROY_P(HV2_RadioChan)
+    _DESTROY_P(HV2_BaseSpeed)
+    _DESTROY_P(HV2_Speed)
+    _DESTROY_P(HV2_Mph)
+    _DESTROY_P(HV2_Miles)
+    _DESTROY_P(HV2_FuelNorm)
+    _DESTROY_P(HV2_FuelRed)
+    _DESTROY_P(HV2_FuelPercent)
+    _DESTROY_P(HV2_LightsOff)
+    _DESTROY_P(HV2_LightsOn)
+    _DESTROY_P(HV2_Lock)
+    _DESTROY_P(HV2_Unlock)
     #undef _DESTROY_P
 }
 
 /* ════════════════════════ SHOW / HIDE ══════════════════════════════ */
 
-/* Show the base (always-on) HUD for a player */
 ShowHudV2Base(playerid)
 {
     TextDrawShowForPlayer(playerid, HV2_Logo);
@@ -312,7 +343,6 @@ ShowHudV2Base(playerid)
     PlayerTextDrawShow(playerid, HV2_Location[playerid]);
 }
 
-/* Hide the base HUD */
 HideHudV2Base(playerid)
 {
     TextDrawHideForPlayer(playerid, HV2_Logo);
@@ -324,67 +354,87 @@ HideHudV2Base(playerid)
     PlayerTextDrawHide(playerid, HV2_Location[playerid]);
 }
 
-/* Show radio HUD */
 ShowHudV2Radio(playerid)
 {
     PlayerTextDrawShow(playerid, HV2_BaseRadio[playerid]);
-    PlayerTextDrawShow(playerid, HV2_RadioChan[playerid]);
     PlayerTextDrawShow(playerid, HV2_RadioSlot[playerid]);
+    PlayerTextDrawShow(playerid, HV2_RadioChan[playerid]);
 }
 
-/* Hide radio HUD */
 HideHudV2Radio(playerid)
 {
     PlayerTextDrawHide(playerid, HV2_BaseRadio[playerid]);
-    PlayerTextDrawHide(playerid, HV2_RadioChan[playerid]);
     PlayerTextDrawHide(playerid, HV2_RadioSlot[playerid]);
+    PlayerTextDrawHide(playerid, HV2_RadioChan[playerid]);
 }
 
-/* Show vehicle HUD (ignition + lock + speed) */
 ShowHudV2Vehicle(playerid, vehicleid)
 {
     PlayerTextDrawShow(playerid, HV2_BaseSpeed[playerid]);
     PlayerTextDrawShow(playerid, HV2_Speed[playerid]);
+    PlayerTextDrawShow(playerid, HV2_Mph[playerid]);
+    PlayerTextDrawShow(playerid, HV2_Miles[playerid]);
+    PlayerTextDrawShow(playerid, HV2_FuelPercent[playerid]);
 
-    // Ignition state
-    if(CoreVehicles[vehicleid][vehicleEngineStatus])
+    // Fuel State
+    new Float:maxFuel = GetVehicleDataFuel(GetVehicleModel(vehicleid));
+    new fuelPercent = (maxFuel > 0.0) ? floatround((CoreVehicles[vehicleid][vehFuel] / maxFuel) * 100.0) : 0;
+    if(fuelPercent < 0) fuelPercent = 0;
+    else if(fuelPercent > 100) fuelPercent = 100;
+
+    if(fuelPercent <= 20)
     {
-        PlayerTextDrawShow(playerid, HV2_IgnOn[playerid]);
-        PlayerTextDrawHide(playerid, HV2_IgnOff[playerid]);
+        PlayerTextDrawShow(playerid, HV2_FuelRed[playerid]);
+        PlayerTextDrawHide(playerid, HV2_FuelNorm[playerid]);
     }
     else
     {
-        PlayerTextDrawHide(playerid, HV2_IgnOn[playerid]);
-        PlayerTextDrawShow(playerid, HV2_IgnOff[playerid]);
+        PlayerTextDrawHide(playerid, HV2_FuelRed[playerid]);
+        PlayerTextDrawShow(playerid, HV2_FuelNorm[playerid]);
+    }
+
+    // Lights state
+    new eng, lights, alarm, doors, bonnet, boot, objective;
+    GetVehicleParamsEx(vehicleid, eng, lights, alarm, doors, bonnet, boot, objective);
+    if(lights == 1)
+    {
+        PlayerTextDrawShow(playerid, HV2_LightsOn[playerid]);
+        PlayerTextDrawHide(playerid, HV2_LightsOff[playerid]);
+    }
+    else
+    {
+        PlayerTextDrawHide(playerid, HV2_LightsOn[playerid]);
+        PlayerTextDrawShow(playerid, HV2_LightsOff[playerid]);
     }
 
     // Lock state
-    new eng, lights, alarm, doors, bonnet, boot, objective;
-    GetVehicleParamsEx(vehicleid, eng, lights, alarm, doors, bonnet, boot, objective);
     if(doors == 1)
     {
-        PlayerTextDrawShow(playerid, HV2_LockCar[playerid]);
-        PlayerTextDrawHide(playerid, HV2_UnlockCar[playerid]);
+        PlayerTextDrawShow(playerid, HV2_Lock[playerid]);
+        PlayerTextDrawHide(playerid, HV2_Unlock[playerid]);
     }
     else
     {
-        PlayerTextDrawHide(playerid, HV2_LockCar[playerid]);
-        PlayerTextDrawShow(playerid, HV2_UnlockCar[playerid]);
+        PlayerTextDrawHide(playerid, HV2_Lock[playerid]);
+        PlayerTextDrawShow(playerid, HV2_Unlock[playerid]);
     }
 }
 
-/* Hide vehicle HUD */
 HideHudV2Vehicle(playerid)
 {
     PlayerTextDrawHide(playerid, HV2_BaseSpeed[playerid]);
-    PlayerTextDrawHide(playerid, HV2_IgnOn[playerid]);
-    PlayerTextDrawHide(playerid, HV2_IgnOff[playerid]);
-    PlayerTextDrawHide(playerid, HV2_LockCar[playerid]);
-    PlayerTextDrawHide(playerid, HV2_UnlockCar[playerid]);
     PlayerTextDrawHide(playerid, HV2_Speed[playerid]);
+    PlayerTextDrawHide(playerid, HV2_Mph[playerid]);
+    PlayerTextDrawHide(playerid, HV2_Miles[playerid]);
+    PlayerTextDrawHide(playerid, HV2_FuelNorm[playerid]);
+    PlayerTextDrawHide(playerid, HV2_FuelRed[playerid]);
+    PlayerTextDrawHide(playerid, HV2_FuelPercent[playerid]);
+    PlayerTextDrawHide(playerid, HV2_LightsOff[playerid]);
+    PlayerTextDrawHide(playerid, HV2_LightsOn[playerid]);
+    PlayerTextDrawHide(playerid, HV2_Lock[playerid]);
+    PlayerTextDrawHide(playerid, HV2_Unlock[playerid]);
 }
 
-/* Full show – called after CreateHudV2PlayerTDs or /toghud on */
 ShowHudV2Full(playerid)
 {
     if(PlayerFlags[playerid][toggleHUD]) return;
@@ -396,7 +446,6 @@ ShowHudV2Full(playerid)
     if(vehicleid) ShowHudV2Vehicle(playerid, vehicleid);
 }
 
-/* Full hide – called by /toghud off */
 HideHudV2Full(playerid)
 {
     HideHudV2Base(playerid);
@@ -406,7 +455,6 @@ HideHudV2Full(playerid)
 
 /* ════════════════════════ UPDATE (called by timer) ═════════════════ */
 
-/* Update global date/time strings — called from the 1-second world timer */
 UpdateHudV2Time()
 {
     if(HV2_Time == Text:INVALID_TEXT_DRAW) return;
@@ -415,21 +463,16 @@ UpdateHudV2Time()
     gettime(h, m, s);
 
     new timeStr[12], dateStr[14];
-
-    // Time: use server-shifted game hour if desired; here we use real time
-    // ghour is the server-side game hour shift (available globally in roleplay.pwn)
     new dispH = (ghour) % 24;
     format(timeStr, sizeof(timeStr), "%02d:%02d:%02d", dispH, m, s);
     TextDrawSetString(HV2_Time, timeStr);
 
-    // Date: use real-world date
     new year, month, day;
     getdate(year, month, day);
     format(dateStr, sizeof(dateStr), "%02d/%02d/%04d", day, month, year);
     TextDrawSetString(HV2_Date, dateStr);
 }
 
-/* Update per-player dynamic data (wind direction, location, radio, vehicle) */
 UpdateHudV2Player(playerid, vehicleid)
 {
     if(PlayerFlags[playerid][toggleHUD]) return;
@@ -437,16 +480,38 @@ UpdateHudV2Player(playerid, vehicleid)
 
     // ── Wind Direction ─────────────────────────────────────────
     new Float:angle;
-    GetPlayerFacingAngle(playerid, angle);
-    // Convert from SA-MP facing angle (0=North, 90=West) to compass bearing
-    // SA-MP: 0 = facing north, increases clockwise; textdraw needs standard bearing
+    if(vehicleid)
+    {
+        GetVehicleZAngle(vehicleid, angle);
+    }
+    else
+    {
+        GetPlayerFacingAngle(playerid, angle);
+    }
+
     new Float:bearing = 360.0 - angle;
     if(bearing >= 360.0) bearing -= 360.0;
     if(bearing < 0.0) bearing += 360.0;
 
-    new windS[4], windL[24];
-    GetWindShort(bearing, windS, sizeof(windS));
-    GetWindLong(bearing, windL, sizeof(windL));
+    new windS[16], windL[32];
+    if     (bearing >= 337.5 || bearing <  22.5) format(windS, sizeof(windS), "N");
+    else if(bearing >=  22.5 && bearing <  67.5) format(windS, sizeof(windS), "NE");
+    else if(bearing >=  67.5 && bearing < 112.5) format(windS, sizeof(windS), "E");
+    else if(bearing >= 112.5 && bearing < 157.5) format(windS, sizeof(windS), "SE");
+    else if(bearing >= 157.5 && bearing < 202.5) format(windS, sizeof(windS), "S");
+    else if(bearing >= 202.5 && bearing < 247.5) format(windS, sizeof(windS), "SW");
+    else if(bearing >= 247.5 && bearing < 292.5) format(windS, sizeof(windS), "W");
+    else                                         format(windS, sizeof(windS), "NW");
+
+    if     (bearing >= 337.5 || bearing <  22.5) format(windL, sizeof(windL), "north");
+    else if(bearing >=  22.5 && bearing <  67.5) format(windL, sizeof(windL), "north east");
+    else if(bearing >=  67.5 && bearing < 112.5) format(windL, sizeof(windL), "east");
+    else if(bearing >= 112.5 && bearing < 157.5) format(windL, sizeof(windL), "south east");
+    else if(bearing >= 157.5 && bearing < 202.5) format(windL, sizeof(windL), "south");
+    else if(bearing >= 202.5 && bearing < 247.5) format(windL, sizeof(windL), "south west");
+    else if(bearing >= 247.5 && bearing < 292.5) format(windL, sizeof(windL), "west");
+    else                                         format(windL, sizeof(windL), "north west");
+
     PlayerTextDrawSetString(playerid, HV2_WindShort[playerid], windS);
     PlayerTextDrawSetString(playerid, HV2_WindLong[playerid],  windL);
 
@@ -462,61 +527,87 @@ UpdateHudV2Player(playerid, vehicleid)
     if(channel == -1) { slot = 0; channel = 0; }
 
     new chanStr[32], slotStr[16];
-    if(channel > 0)
-        format(chanStr, sizeof(chanStr), "Radio: %d", channel);
-    else
-        chanStr = "Radio: --";
     format(slotStr, sizeof(slotStr), "Slot: %d", slot);
+    if(channel > 0)
+        format(chanStr, sizeof(chanStr), "Channel: %d", channel);
+    else
+        chanStr = "Channel: --";
 
+    PlayerTextDrawSetString(playerid, HV2_RadioSlot[playerid], slotStr);
     PlayerTextDrawSetString(playerid, HV2_RadioChan[playerid], chanStr);
-    PlayerTextDrawSetString(playerid, HV2_RadioSlot[playerid],  slotStr);
 
     // ── Vehicle ────────────────────────────────────────────────
     if(vehicleid)
     {
-        // Always ensure background + speed are visible while in vehicle
         PlayerTextDrawShow(playerid, HV2_BaseSpeed[playerid]);
+        PlayerTextDrawShow(playerid, HV2_Mph[playerid]);
 
         new Float:mph = CoreVehicles[vehicleid][vSpeed] * 121.30;
         new speedStr[16];
-        format(speedStr, sizeof(speedStr), "%d MPH", floatround(mph));
+        format(speedStr, sizeof(speedStr), "%d", floatround(mph));
         PlayerTextDrawSetString(playerid, HV2_Speed[playerid], speedStr);
         PlayerTextDrawShow(playerid, HV2_Speed[playerid]);
 
-        // Ignition toggle — use actual engine ON/OFF status
-        if(CoreVehicles[vehicleid][vehicleEngineStatus])
+        // Mileage
+        new carid = CoreVehicles[vehicleid][vehicleCarID];
+        new milesStr[32];
+        if(carid != -1)
+            format(milesStr, sizeof(milesStr), "%.1f miles", CarData[carid][carMileage]);
+        else
+            format(milesStr, sizeof(milesStr), "0.0 miles");
+        PlayerTextDrawSetString(playerid, HV2_Miles[playerid], milesStr);
+        PlayerTextDrawShow(playerid, HV2_Miles[playerid]);
+
+        // Fuel
+        new Float:maxFuel = GetVehicleDataFuel(GetVehicleModel(vehicleid));
+        new fuelPercent = (maxFuel > 0.0) ? floatround((CoreVehicles[vehicleid][vehFuel] / maxFuel) * 100.0) : 0;
+        if(fuelPercent < 0) fuelPercent = 0;
+        else if(fuelPercent > 100) fuelPercent = 100;
+
+        new fuelStr[16];
+        format(fuelStr, sizeof(fuelStr), "%d", fuelPercent);
+        PlayerTextDrawSetString(playerid, HV2_FuelPercent[playerid], fuelStr);
+        PlayerTextDrawShow(playerid, HV2_FuelPercent[playerid]);
+
+        if(fuelPercent <= 20)
         {
-            PlayerTextDrawShow(playerid, HV2_IgnOn[playerid]);
-            PlayerTextDrawHide(playerid, HV2_IgnOff[playerid]);
+            PlayerTextDrawShow(playerid, HV2_FuelRed[playerid]);
+            PlayerTextDrawHide(playerid, HV2_FuelNorm[playerid]);
         }
         else
         {
-            PlayerTextDrawHide(playerid, HV2_IgnOn[playerid]);
-            PlayerTextDrawShow(playerid, HV2_IgnOff[playerid]);
+            PlayerTextDrawHide(playerid, HV2_FuelRed[playerid]);
+            PlayerTextDrawShow(playerid, HV2_FuelNorm[playerid]);
         }
 
-        // Lock toggle
+        // Lights
         new eng, lights, alarm, doors, bonnet, boot, objective;
         GetVehicleParamsEx(vehicleid, eng, lights, alarm, doors, bonnet, boot, objective);
-        if(doors == 1)
+        if(lights == 1)
         {
-            PlayerTextDrawShow(playerid, HV2_LockCar[playerid]);
-            PlayerTextDrawHide(playerid, HV2_UnlockCar[playerid]);
+            PlayerTextDrawShow(playerid, HV2_LightsOn[playerid]);
+            PlayerTextDrawHide(playerid, HV2_LightsOff[playerid]);
         }
         else
         {
-            PlayerTextDrawHide(playerid, HV2_LockCar[playerid]);
-            PlayerTextDrawShow(playerid, HV2_UnlockCar[playerid]);
+            PlayerTextDrawHide(playerid, HV2_LightsOn[playerid]);
+            PlayerTextDrawShow(playerid, HV2_LightsOff[playerid]);
+        }
+
+        // Lock
+        if(doors == 1)
+        {
+            PlayerTextDrawShow(playerid, HV2_Lock[playerid]);
+            PlayerTextDrawHide(playerid, HV2_Unlock[playerid]);
+        }
+        else
+        {
+            PlayerTextDrawHide(playerid, HV2_Lock[playerid]);
+            PlayerTextDrawShow(playerid, HV2_Unlock[playerid]);
         }
     }
     else
     {
-        // Player not in a vehicle — hide vehicle-only icons (radio stays visible)
-        PlayerTextDrawHide(playerid, HV2_BaseSpeed[playerid]);
-        PlayerTextDrawHide(playerid, HV2_Speed[playerid]);
-        PlayerTextDrawHide(playerid, HV2_IgnOn[playerid]);
-        PlayerTextDrawHide(playerid, HV2_IgnOff[playerid]);
-        PlayerTextDrawHide(playerid, HV2_LockCar[playerid]);
-        PlayerTextDrawHide(playerid, HV2_UnlockCar[playerid]);
+        HideHudV2Vehicle(playerid);
     }
 }
