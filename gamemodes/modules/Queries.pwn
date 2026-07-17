@@ -387,6 +387,11 @@ public Vehicle_Load()
 			cache_get_value_name(i, "vehiclePlate", vehicleVariables[i][vVehiclePlate]);
 			cache_get_value_name(i, "vehicleSign", vehicleVariables[i][vVehicleCarsign]);
 
+			cache_get_value_name_int(i, "vehiclePaintjob", vehicleVariables[i][vVehiclePaintjob]);
+			cache_get_value_name_int(i, "vehicleModWheels", vehicleVariables[i][vVehicleModWheels]);
+			cache_get_value_name_int(i, "vehicleModNitro", vehicleVariables[i][vVehicleModNitro]);
+			cache_get_value_name_float(i, "vehicleHealth", vehicleVariables[i][vVehicleHealth]);
+
 			Iter_Add(sv_servercar, i);
 
 			if(vehicleVariables[i][vVehicleColour][0] < 0)
@@ -399,42 +404,35 @@ public Vehicle_Load()
 				vehicleVariables[i][vVehicleColour][1] = random(126);
 			}
 
-			vehicleVariables[i][vVehicleScriptID] = CreateVehicle(vehicleVariables[i][vVehicleModelID], vehicleVariables[i][vVehiclePosition][0], vehicleVariables[i][vVehiclePosition][1], vehicleVariables[i][vVehiclePosition][2], vehicleVariables[i][vVehicleRotation], vehicleVariables[i][vVehicleColour][0], vehicleVariables[i][vVehicleColour][1], 60000, vehicleVariables[i][vVehicleSiren]);
-			ResetVehicle(vehicleVariables[i][vVehicleScriptID]);
-
-			if(!isnull(vehicleVariables[i][vVehicleCarsign]))
-			{
-			    new vehicleid = vehicleVariables[i][vVehicleScriptID];
-
-				CoreVehicles[vehicleid][vehSignText] = Create3DTextLabel(vehicleVariables[i][vVehicleCarsign], COLOR_WHITE, 0.0, 0.0, 0.0, 25.0, 0, 0);
-				Attach3DTextLabelToVehicle(CoreVehicles[vehicleid][vehSignText], vehicleid, -0.7, -1.9, -0.3);
-
-				CoreVehicles[vehicleid][vehSign] = 1;
-			}
-
 			if(vehicleVariables[i][vVehicleFaction] != -1)
 			{
-			    if(isnull(vehicleVariables[i][vVehiclePlate]))
-			    {
-					SetVehicleNumberPlate(vehicleVariables[i][vVehicleScriptID], GetInitials(FactionData[vehicleVariables[i][vVehicleFaction]][factionName]));
-				}
-				else
-				{
-					SetVehicleNumberPlate(vehicleVariables[i][vVehicleScriptID], vehicleVariables[i][vVehiclePlate]);
-				}
+				vehicleVariables[i][vVehicleScriptID] = INVALID_VEHICLE_ID;
 			}
 			else
 			{
+				vehicleVariables[i][vVehicleScriptID] = CreateVehicle(vehicleVariables[i][vVehicleModelID], vehicleVariables[i][vVehiclePosition][0], vehicleVariables[i][vVehiclePosition][1], vehicleVariables[i][vVehiclePosition][2], vehicleVariables[i][vVehicleRotation], vehicleVariables[i][vVehicleColour][0], vehicleVariables[i][vVehicleColour][1], 60000, vehicleVariables[i][vVehicleSiren]);
+				ResetVehicle(vehicleVariables[i][vVehicleScriptID]);
+
+				if(!isnull(vehicleVariables[i][vVehicleCarsign]))
+				{
+					new vehicleid = vehicleVariables[i][vVehicleScriptID];
+
+					CoreVehicles[vehicleid][vehSignText] = Create3DTextLabel(vehicleVariables[i][vVehicleCarsign], COLOR_WHITE, 0.0, 0.0, 0.0, 25.0, 0, 0);
+					Attach3DTextLabelToVehicle(CoreVehicles[vehicleid][vehSignText], vehicleid, -0.7, -1.9, -0.3);
+
+					CoreVehicles[vehicleid][vehSign] = 1;
+				}
+
 				new plate[8];
 				format(plate, 8, "%s", RandomVehiclePlate());
 				SetVehicleNumberPlate(vehicleVariables[i][vVehicleScriptID], plate);
+
+				Iter_Add(sv_vehicles, vehicleVariables[i][vVehicleScriptID]);
+
+				SetVehicleHealth(vehicleVariables[i][vVehicleScriptID], GetVehicleDataHealth(vehicleVariables[i][vVehicleModelID]));
+
+				systemVariables[vehicleCounts][0]++;
 			}
-
-    		Iter_Add(sv_vehicles, vehicleVariables[i][vVehicleScriptID]);
-
-			SetVehicleHealth(vehicleVariables[i][vVehicleScriptID], GetVehicleDataHealth(vehicleVariables[i][vVehicleModelID]));
-
-			systemVariables[vehicleCounts][0]++;
 		}
 		else
 		{

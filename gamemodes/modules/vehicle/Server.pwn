@@ -33,7 +33,11 @@ enum E_VEHICLE_DATA
 	vVehicleScriptID,
 	vVehiclePlate[24],
 	vVehicleSiren,
-	vVehicleCarsign[50]
+	vVehicleCarsign[50],
+	vVehiclePaintjob,
+	vVehicleModWheels,
+	vVehicleModNitro,
+	Float:vVehicleHealth
 };
 
 enum E_CORE_VEH_DATA
@@ -84,10 +88,11 @@ Vehicle_Save(id)
 {
 	if(Iter_Contains(sv_servercar, id))
 	{
-	    new queryString[400];
+	    new queryString[512];
 
-	    mysql_format(dbCon, queryString, sizeof(queryString), "UPDATE `vehicles` SET `vehicleModelID` = '%d', `vehiclePosX` = '%.4f', `vehiclePosY` = '%.4f', `vehiclePosZ` = '%.4f', `vehiclePosRotation` = '%.4f', `vehicleFaction` = '%d', `vehicleCol1` = '%d', `vehicleCol2` = '%d', `vehiclePlate` = '%e', `vehicleSiren` = '%d', `vehicleSign` = '%e' WHERE `vehicleID` = '%d' LIMIT 1", vehicleVariables[id][vVehicleModelID],	vehicleVariables[id][vVehiclePosition][0],
-		vehicleVariables[id][vVehiclePosition][1], vehicleVariables[id][vVehiclePosition][2], vehicleVariables[id][vVehicleRotation], vehicleVariables[id][vVehicleFaction], vehicleVariables[id][vVehicleColour][0], vehicleVariables[id][vVehicleColour][1], vehicleVariables[id][vVehiclePlate], vehicleVariables[id][vVehicleSiren], vehicleVariables[id][vVehicleCarsign], vehicleVariables[id][vVehicleID]);
+	    mysql_format(dbCon, queryString, sizeof(queryString), "UPDATE `vehicles` SET `vehicleModelID` = '%d', `vehiclePosX` = '%.4f', `vehiclePosY` = '%.4f', `vehiclePosZ` = '%.4f', `vehiclePosRotation` = '%.4f', `vehicleFaction` = '%d', `vehicleCol1` = '%d', `vehicleCol2` = '%d', `vehiclePlate` = '%e', `vehicleSiren` = '%d', `vehicleSign` = '%e', `vehiclePaintjob` = '%d', `vehicleModWheels` = '%d', `vehicleModNitro` = '%d', `vehicleHealth` = '%.4f' WHERE `vehicleID` = '%d' LIMIT 1",
+			vehicleVariables[id][vVehicleModelID],	vehicleVariables[id][vVehiclePosition][0], vehicleVariables[id][vVehiclePosition][1], vehicleVariables[id][vVehiclePosition][2], vehicleVariables[id][vVehicleRotation], vehicleVariables[id][vVehicleFaction], vehicleVariables[id][vVehicleColour][0], vehicleVariables[id][vVehicleColour][1], vehicleVariables[id][vVehiclePlate], vehicleVariables[id][vVehicleSiren], vehicleVariables[id][vVehicleCarsign],
+			vehicleVariables[id][vVehiclePaintjob], vehicleVariables[id][vVehicleModWheels], vehicleVariables[id][vVehicleModNitro], vehicleVariables[id][vVehicleHealth], vehicleVariables[id][vVehicleID]);
 		mysql_pquery(dbCon, queryString);
 	}
 	return true;

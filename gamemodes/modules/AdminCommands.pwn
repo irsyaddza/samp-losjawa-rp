@@ -6210,157 +6210,25 @@ CMD:editveh(playerid, params[])
 	if(PlayerData[playerid][pAdmin] < 4)
 	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
 
-	new
-	    id,
-	    type[24],
-	    string[128]
-	;
-
-	if(sscanf(params, "ds[24]S()[128]", id, type, string))
- 	{
-	 	SendSyntaxMessage(playerid, "/editveh [id] [name]");
-	    SendClientMessage(playerid, COLOR_GREY, "Available names: location, faction, color1, color2, siren, plate");
-		return true;
-	}
-
-	if((id = Vehicle_GetID(id)) != -1)
+	new id = -1;
+	if(sscanf(params, "d", id))
 	{
-		if(!strcmp(type, "location", true))
+		if(IsPlayerInAnyVehicle(playerid))
 		{
-		    if(GetPlayerVehicleID(playerid) == vehicleVariables[id][vVehicleScriptID])
-		    {
-				GetVehiclePos(vehicleVariables[id][vVehicleScriptID], vehicleVariables[id][vVehiclePosition][0], vehicleVariables[id][vVehiclePosition][1], vehicleVariables[id][vVehiclePosition][2]);
-				GetVehicleZAngle(vehicleVariables[id][vVehicleScriptID], vehicleVariables[id][vVehicleRotation]);
-			}
-			else
-			{
-		 		GetPlayerPos(playerid, vehicleVariables[id][vVehiclePosition][0], vehicleVariables[id][vVehiclePosition][1], vehicleVariables[id][vVehiclePosition][2]);
-				GetPlayerFacingAngle(playerid, vehicleVariables[id][vVehicleRotation]);
-			}
-
-			Vehicle_Save(id);
-			DestroyVehicle(vehicleVariables[id][vVehicleScriptID]);
-			Iter_Remove(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
-
-			vehicleVariables[id][vVehicleScriptID] = CreateVehicle(vehicleVariables[id][vVehicleModelID], vehicleVariables[id][vVehiclePosition][0], vehicleVariables[id][vVehiclePosition][1], vehicleVariables[id][vVehiclePosition][2], vehicleVariables[id][vVehicleRotation], vehicleVariables[id][vVehicleColour][0], vehicleVariables[id][vVehicleColour][1], 60000, vehicleVariables[id][vVehicleSiren]);
-
-		  	Iter_Add(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
-
-			SetPlayerPosEx(playerid, vehicleVariables[id][vVehiclePosition][0], vehicleVariables[id][vVehiclePosition][1], vehicleVariables[id][vVehiclePosition][2] + 2.0, 1000);
-			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn: %s adjusted vehicle %d's position.", ReturnName(playerid), vehicleVariables[id][vVehicleScriptID]);
-
-		}
-		else if(!strcmp(type, "faction", true))
-		{
-		    new typeint;
-
-		    if(sscanf(string, "d", typeint))
-		 	{
-		 	    SendSyntaxMessage(playerid, "/editcar [id] [faction] [id]");
-			 	return true;
-			}
-
-			vehicleVariables[id][vVehicleFaction] = typeint;
-
-			Vehicle_Save(id);
-
-			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn: %s adjusted vehicle %d's faction to: %d", ReturnName(playerid), vehicleVariables[id][vVehicleScriptID], typeint);
-		}
-		else if(!strcmp(type, "color1", true))
-		{
-		    new color1;
-
-		    if(sscanf(string, "d", color1))
-				return SendSyntaxMessage(playerid, "/editcar [id] [color1] [color]");
-
-			if(color1 < 0 || color1 > 255)
-			    return SendClientMessage(playerid, COLOR_GRAD1, "   Color must not be lower than 0 or than 255");
-
-			vehicleVariables[id][vVehicleColour][0] = color1;
-
-			DestroyVehicle(vehicleVariables[id][vVehicleScriptID]);
-			Iter_Remove(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
-
-			vehicleVariables[id][vVehicleScriptID] = CreateVehicle(vehicleVariables[id][vVehicleModelID], vehicleVariables[id][vVehiclePosition][0], vehicleVariables[id][vVehiclePosition][1], vehicleVariables[id][vVehiclePosition][2], vehicleVariables[id][vVehicleRotation], vehicleVariables[id][vVehicleColour][0], vehicleVariables[id][vVehicleColour][1], 60000, vehicleVariables[id][vVehicleSiren]);
-
-		  	Iter_Add(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
-
-			Vehicle_Save(id);
-			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn: %s adjusted vehicle %d's 1st color to: %d", ReturnName(playerid), vehicleVariables[id][vVehicleScriptID], color1);
-		}
-		else if(!strcmp(type, "color2", true))
-		{
-		    new color2;
-
-		    if(sscanf(string, "d", color2))
-				return SendSyntaxMessage(playerid, "/editcar [id] [color2] [color]");
-
-			if(color2 < 0 || color2 > 255)
-			    return SendClientMessage(playerid, COLOR_GRAD1, "   Color must not be lower than 0 or than 255");
-
-			vehicleVariables[id][vVehicleColour][1] = color2;
-
-			DestroyVehicle(vehicleVariables[id][vVehicleScriptID]);
-			Iter_Remove(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
-
-			vehicleVariables[id][vVehicleScriptID] = CreateVehicle(vehicleVariables[id][vVehicleModelID], vehicleVariables[id][vVehiclePosition][0], vehicleVariables[id][vVehiclePosition][1], vehicleVariables[id][vVehiclePosition][2], vehicleVariables[id][vVehicleRotation], vehicleVariables[id][vVehicleColour][0], vehicleVariables[id][vVehicleColour][1], 60000, vehicleVariables[id][vVehicleSiren]);
-
-		  	Iter_Add(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
-
-			Vehicle_Save(id);
-			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn: %s adjusted vehicle %d's 2st color to: %d", ReturnName(playerid), vehicleVariables[id][vVehicleScriptID], color2);
-		}
-		else if(!strcmp(type, "siren", true))
-		{
-		    new siren;
-
-		    if(sscanf(string, "d", siren))
-				return SendSyntaxMessage(playerid, "/editcar [id] [siren] [value]");
-
-			if(siren < 0 || siren > 1)
-			    return SendClientMessage(playerid, COLOR_GRAD1, "   Siren must be 0 or 1");
-
-			vehicleVariables[id][vVehicleSiren] = siren;
-
-			Vehicle_Save(id);
-			DestroyVehicle(vehicleVariables[id][vVehicleScriptID]);
-			Iter_Remove(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
-
-			vehicleVariables[id][vVehicleScriptID] = CreateVehicle(vehicleVariables[id][vVehicleModelID], vehicleVariables[id][vVehiclePosition][0], vehicleVariables[id][vVehiclePosition][1], vehicleVariables[id][vVehiclePosition][2], vehicleVariables[id][vVehicleRotation], vehicleVariables[id][vVehicleColour][0], vehicleVariables[id][vVehicleColour][1], 60000, vehicleVariables[id][vVehicleSiren]);
-
-		  	Iter_Add(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
-
-			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn: %s adjusted vehicle %d's siren to: %d", ReturnName(playerid), vehicleVariables[id][vVehicleScriptID], siren);
-		}
-		else if(!strcmp(type, "plate", true))
-		{
-		    new newPlate[24];
-
-		    if(sscanf(string, "s[24]", newPlate))
-				return SendSyntaxMessage(playerid, "/editcar [id] [plate] [text]");
-
-			if(strlen(newPlate) < 3 || strlen(newPlate) > 9)
-			    return SendClientMessage(playerid, COLOR_GRAD1, "   Text length must be higher than 3 and lower than 10");
-
-			format(vehicleVariables[id][vVehiclePlate], 24, "%s", newPlate);
-			SetVehicleNumberPlate(vehicleVariables[id][vVehicleScriptID], vehicleVariables[id][vVehiclePlate]);
-
-			SetVehicleToRespawn(vehicleVariables[id][vVehicleScriptID]);
-
-			Vehicle_Save(id);
-			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn: %s adjusted vehicle %d's plate to: %s", ReturnName(playerid), vehicleVariables[id][vVehicleScriptID], newPlate);
+			id = GetPlayerVehicleID(playerid);
 		}
 		else
 		{
-		 	SendSyntaxMessage(playerid, "/editveh [id] [name]");
-		    SendClientMessage(playerid, COLOR_GREY, "Available names: location, faction, color1, color2, siren, plate");
+			return SendSyntaxMessage(playerid, "/editveh [vehicle script id]");
 		}
 	}
-	else
-	{
-	    SendErrorMessage(playerid, "Invalid vehicle ID specified.");
-	}
-	return true;
+
+	new varid = Vehicle_GetID(id);
+	if(varid == -1)
+	    return SendErrorMessage(playerid, "This vehicle is not a static/server vehicle.");
+
+	ShowEditStaticVehMain(playerid, varid);
+	return 1;
 }
 
 CMD:aunlockcar(playerid, params[])
