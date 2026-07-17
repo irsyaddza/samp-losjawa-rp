@@ -2087,6 +2087,7 @@ new Iterator:sv_activevehicles<MAX_VEHICLES>;
 #include "modules/player/Account.pwn"
 #include "modules/Faction.pwn"
 #include "modules/vehicle/FactionStaticVeh.pwn"
+#include "modules/MapEditor.pwn"
 #include "modules/Graffiti.pwn"
 #include "modules/Phone.pwn"
 #include "modules/Store.pwn"
@@ -2138,6 +2139,7 @@ public OnGameModeInit()
 	mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `clothing_shop_skins` (`skin_id` INT PRIMARY KEY, `price` INT NOT NULL DEFAULT 5000)", "OnCreateShopSkinsTable");
 	HarvesterRental_Init();
 	FactionStaticVeh_Init();
+	MapEditor_Init();
 
     #include "modules/mapping/Misc.pwn"
     #include "modules/mapping/Main.pwn"
