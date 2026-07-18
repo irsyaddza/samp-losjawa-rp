@@ -7985,6 +7985,8 @@ CMD:duty(playerid, params[])
         if(PlayerData[playerid][pFavUniform] != 0)
 			SetPlayerSkin(playerid, PlayerData[playerid][pFavUniform]);
 
+		PlayerData[playerid][pOnDuty] = true;
+
 		switch(type)
 		{
 		    case FACTION_POLICE, FACTION_SHERIFF, FACTION_CORRECTIONAL:
@@ -8016,7 +8018,6 @@ CMD:duty(playerid, params[])
 		}
 
 		TagColor{playerid} = false;
-		PlayerData[playerid][pOnDuty] = true;
 		SetPlayerToTeamColor(playerid);
 	}
 	else
@@ -8027,7 +8028,6 @@ CMD:duty(playerid, params[])
 		TagColor{playerid} = false;
   		CallSign[playerid][0] = EOS;
 		PlayerData[playerid][pHandCuffs] = 0;
-		PlayerData[playerid][pOnDuty] = false;
 
 		if(TazerActive{playerid})
 		{
@@ -8060,6 +8060,8 @@ CMD:duty(playerid, params[])
 				SendMedicMessage(COLOR_POLICE, "** HQ: %s %s is now Off Duty! **", Faction_GetRank(playerid), ReturnName(playerid, 0));
 			}
 		}
+
+		PlayerData[playerid][pOnDuty] = false;
 	}
 	return true;
 }
@@ -12998,7 +13000,19 @@ stock GetChannelSlot(playerid, chan)
 	return 0;
 }
 
-YCMD:r(playerid, params[], help) = radio;
+CMD:r(playerid, params[])
+{
+	static cmdText[144];
+	if (isnull(params))
+	{
+		cmdText = "/radio";
+	}
+	else
+	{
+		format(cmdText, sizeof(cmdText), "/radio %s", params);
+	}
+	return Command_ReProcess(playerid, cmdText, 0);
+}
 
 CMD:radio(playerid, params[])
 {
