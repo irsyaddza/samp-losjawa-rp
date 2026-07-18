@@ -715,6 +715,8 @@ public Points_Load()
 			EntranceData[i][insideApartmentID] = -1;
 			EntranceData[i][pointPickup] = INVALID_STREAMER_ID;
 			EntranceData[i][pointPickupInside] = INVALID_STREAMER_ID;
+			EntranceData[i][pointLabel] = Text3D:INVALID_STREAMER_ID;
+			EntranceData[i][pointLabelInside] = Text3D:INVALID_STREAMER_ID;
 			
 			if(EntranceData[i][outsideApartmentSQL] != -1 || EntranceData[i][insideApartmentSQL] != -1)
 			{

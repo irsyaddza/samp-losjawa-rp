@@ -2087,6 +2087,7 @@ new Iterator:sv_activevehicles<MAX_VEHICLES>;
 #include "modules/player/Account.pwn"
 #include "modules/Faction.pwn"
 #include "modules/vehicle/FactionStaticVeh.pwn"
+#include "modules/system/Elevators.pwn"
 #include "modules/MapEditor.pwn"
 #include "modules/Graffiti.pwn"
 #include "modules/Phone.pwn"
@@ -2140,6 +2141,7 @@ public OnGameModeInit()
 	HarvesterRental_Init();
 	FactionStaticVeh_Init();
 	MapEditor_Init();
+	Elevators_Init();
 
     #include "modules/mapping/Misc.pwn"
     #include "modules/mapping/Main.pwn"
@@ -9113,12 +9115,19 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 	{
 		if(GetPlayerState(playerid) == PLAYER_STATE_ONFOOT)
 		{
-			new cmdText[8];
-			cmdText = "/enter";
-			Command_ReProcess(playerid, cmdText, 0);
+			if(IsPlayerNearElevator(playerid))
+			{
+				Command_ReProcess(playerid, "/elevator", 0);
+			}
+			else
+			{
+				new cmdText[8];
+				cmdText = "/enter";
+				Command_ReProcess(playerid, cmdText, 0);
 
-			cmdText = "/exit";
-			Command_ReProcess(playerid, cmdText, 0);
+				cmdText = "/exit";
+				Command_ReProcess(playerid, cmdText, 0);
+			}
 		}
 	}
 

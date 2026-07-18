@@ -959,10 +959,15 @@ CMD:createpoint(playerid, params[])
 	EntranceData[point][insideApartmentID] = -1;
 	EntranceData[point][outsideWorld] = GetPlayerVirtualWorld(playerid);
 	EntranceData[point][insideWorld] = 0;
+	EntranceData[point][pointPickup] = INVALID_STREAMER_ID;
+	EntranceData[point][pointPickupInside] = INVALID_STREAMER_ID;
+	EntranceData[point][pointLabel] = Text3D:INVALID_STREAMER_ID;
+	EntranceData[point][pointLabelInside] = Text3D:INVALID_STREAMER_ID;
 
 	AddPointToFile(point, name, playerPos[0], playerPos[1], playerPos[2], playerPos[3], EntranceData[point][outsideApartmentSQL], EntranceData[point][insideApartmentSQL], EntranceData[point][outsideWorld], EntranceData[point][insideWorld]);
 
 	Iter_Add(Entrance, point);
+	Point_Refresh(point);
 
 	SendClientMessageEx(playerid, COLOR_YELLOW, "-> Point successfully created with id #%d.", point);
 	return true;
@@ -981,13 +986,74 @@ CMD:points(playerid, params[])
 	if(PlayerData[playerid][pAdmin] < 1337)
 	    return SendErrorMessage(playerid, "You're not authorized to use this command.");
 
-	SendClientMessage(playerid, COLOR_GREY, "Listing all points...");
+	static str[2048];
+	str[0] = EOS;
+	new count = 0;
+	static listedPoints[MAX_ENTRANCES];
 
 	foreach (new i: Entrance)
 	{
-	    SendClientMessageEx(playerid, COLOR_GRAD2, "%d [%s]", i, EntranceData[i][pointName]);
+	    listedPoints[count] = i;
+	    new typeStr[32];
+	    new pType = EntranceData[i][pointType];
+	    if(pType >= 0 && pType < sizeof(PointTypes))
+	        format(typeStr, sizeof(typeStr), "%s", PointTypes[pType]);
+	    else
+	        format(typeStr, sizeof(typeStr), "Unknown (%d)", pType);
+
+	    format(str, sizeof(str), "%s%d - %s (%s)\n", str, i, EntranceData[i][pointName], typeStr);
+	    count++;
 	}
+
+	if(count == 0)
+	    return SendErrorMessage(playerid, "No points configured on the server.");
+
+	for(new idx = 0; idx < count; idx++)
+	{
+	    new pvarName[32];
+	    format(pvarName, sizeof(pvarName), "AdminPointMap_%d", idx);
+	    SetPVarInt(playerid, pvarName, listedPoints[idx]);
+	}
+	SetPVarInt(playerid, "AdminPointsCount", count);
+
+	Dialog_Show(playerid, AdminPointsList, DIALOG_STYLE_LIST, "Server Points List", str, "Edit", "Close");
 	return true;
+}
+
+Dialog:AdminPointsList(playerid, response, listitem, inputtext[])
+{
+    new count = GetPVarInt(playerid, "AdminPointsCount");
+    if(!response || count == 0)
+    {
+        for(new idx = 0; idx < count; idx++)
+        {
+            new pvarName[32];
+            format(pvarName, sizeof(pvarName), "AdminPointMap_%d", idx);
+            DeletePVar(playerid, pvarName);
+        }
+        DeletePVar(playerid, "AdminPointsCount");
+        return 1;
+    }
+
+    new pvarName[32];
+    format(pvarName, sizeof(pvarName), "AdminPointMap_%d", listitem);
+    new point = GetPVarInt(playerid, pvarName);
+
+    // Clean up
+    for(new idx = 0; idx < count; idx++)
+    {
+        new pvarNameTemp[32];
+        format(pvarNameTemp, sizeof(pvarNameTemp), "AdminPointMap_%d", idx);
+        DeletePVar(playerid, pvarNameTemp);
+    }
+    DeletePVar(playerid, "AdminPointsCount");
+
+    if(!Iter_Contains(Entrance, point))
+        return SendErrorMessage(playerid, "This point no longer exists.");
+
+    SetPVarInt(playerid, "EditingPoint", point);
+    ShowPointSettings(playerid, point);
+    return 1;
 }
 
 CMD:editpoint(playerid, params[])
@@ -9559,84 +9625,241 @@ enum E_AHELP_CMD
 {
 	ahName[20],
 	ahDesc[256],
-	ahSyntax[64],
+	ahSyntax[128],
 	ahLevel,
 	ahCategory // 1: Veh, 2: Prop/Biz, 3: Faction/Gate, 4: Player/Punish, 5: Teleport
 }
 
 new const AdminHelpCmds[][E_AHELP_CMD] = {
-	// Junior Admin / Level 1
-	{"/spec", "Spectate a player.", "/spec [playerid/name]", 1, 4},
-	{"/specoff", "Stop spectating a player.", "/specoff", 1, 4},
+	{"/aunlockcar", "Unlock nearest vehicle for admins.", "/aunlockcar", 1, 1},
+	{"/findcars", "List active server cars matching filters.", "/findcars [model] [occupied] [range-of-you]", 1, 1},
+	{"/flipcar", "Flip player's vehicle.", "/flipcar [vehicleid]", 1, 1},
+	{"/fuelveh", "Refuel player's vehicle.", "/fuelveh [vehicle id]", 1, 1},
+	{"/slapcar", "Slap player's vehicle.", "/slapcar [vehicleid]", 1, 1},
+	{"/testcar", "Spawn temporary test vehicle.", "/testcar [vehicleid]", 1, 1},
+	{"/watchcar", "Monitor a vehicle's status.", "/watchcar [vehicleid]", 1, 1},
+	{"/house", "View house properties.", "/house [house-id]", 1, 2},
+	{"/neargraffiti", "Find graffiti near current position.", "/neargraffiti", 1, 2},
+	{"/propinfo", "View property information.", "/propinfo [houseid]", 1, 2},
+	{"/aconfig", "Admin configuration settings.", "/aconfig", 1, 4},
+	{"/admin", "Admin chat channel.", "/admin", 1, 4},
+	{"/adminduty", "Toggle admin duty state.", "/adminduty", 1, 4},
+	{"/adminsys", "Show admin system status.", "/adminsys", 1, 4},
+	{"/ahelp", "Open admin help menu.", "/ahelp", 1, 4},
+	{"/ajailed", "Show list of jailed players.", "/ajailed", 1, 4},
+	{"/aooc", "Send administrator out-of-character message.", "/(a)ooc [message]", 1, 4},
+	{"/apark", "Admin park command.", "/apark [id/amount]", 1, 4},
+	{"/ar", "Accept report.", "/ar [playerid/name]", 1, 4},
+	{"/arecord", "Check player admin records and punishment history.", "/arecord [playerid/name]", 1, 4},
+	{"/as", "Admin whisper to player.", "/as [playerid/PartOfName]", 1, 4},
+	{"/at", "Admin ticket chat channel.", "/at", 1, 4},
+	{"/backup", "Call for admin assistance.", "/backup", 1, 4},
+	{"/blacklist", "Manage player blacklist.", "/blacklist", 1, 4},
+	{"/checkafk", "Check if a player is AFK.", "/checkafk [playerid/name]", 1, 4},
+	{"/checkall", "Check all online players status.", "/checkall", 1, 4},
+	{"/clearallchat", "Clear chatbox history.", "/clearallchat", 1, 4},
+	{"/clearguns", "Strip all weapons from player.", "/clearguns [playerid/PartOfName]", 1, 4},
+	{"/desynced", "Show desynced players list.", "/desynced [playerid/PartOfName]", 1, 4},
+	{"/down", "Launch downward teleport.", "/down", 1, 4},
+	{"/dr", "Deny report.", "/dr [playerid/name] [text]", 1, 4},
+	{"/find", "Find players matching criteria.", "/find [skin] [weaponid] [vehiclemodel] [ismasked] [range-of-you]", 1, 4},
 	{"/freeze", "Freeze a player in place.", "/freeze [playerid/name]", 1, 4},
-	{"/unfreeze", "Unfreeze a frozen player.", "/unfreeze [playerid/name]", 1, 4},
+	{"/gethealth", "Show player health level.", "/gethealth [amount]", 1, 4},
+	{"/getip", "Get player IP address.", "/getip [playerid/PartOfName]", 1, 4},
+	{"/getworld", "Show current virtual world.", "/getworld", 1, 4},
+	{"/glog", "Show graffiti logs.", "/glog dbid:graffiti", 1, 4},
+	{"/intpoints", "Open interior teleportation menu.", "/intpoints", 1, 4},
+	{"/ismasked", "Check if player is masked.", "/isafk [playerid/PartOfName]", 1, 4},
+	{"/left", "Teleport player slightly to the left.", "/left", 1, 4},
+	{"/masked", "Show list of masked players.", "/masked", 1, 4},
 	{"/mute", "Mute a player from chat channels.", "/mute [playerid/name] [time in mins] [reason]", 1, 4},
-	{"/unmute", "Unmute a muted player.", "/unmute [playerid/name]", 1, 4},
+	{"/p2fs", "Put player into faction.", "/p2fs [playerid] [factionid]", 1, 4},
+	{"/p2iw", "Put player into interior and virtual world.", "/p2iw [playerid] [interior] [world]", 1, 4},
+	{"/p2p", "Put player to another player.", "/p2p [playerid] [targetid]", 1, 4},
+	{"/p2v", "Put player into vehicle.", "/p2v [playerid] [vehicleid]", 1, 4},
+	{"/pmears", "Monitor player private messages.", "/pmears", 1, 4},
+	{"/reports", "Show list of pending reports.", "/reports", 1, 4},
+	{"/respawn", "Respawn player.", "/respawn [playerid OR name]", 1, 4},
+	{"/respawnrental", "Respawn rental vehicles.", "/respawnrental", 1, 4},
+	{"/right", "Teleport player slightly to the right.", "/right", 1, 4},
+	{"/setint", "Set player interior ID.", "/setint [playerid/PartOfName] [Interior ID]", 1, 4},
+	{"/setworld", "Set player virtual world ID.", "/setworld [playerid/PartOfName] [World ID]", 1, 4},
 	{"/slap", "Slap a player (launches them slightly into the air).", "/slap [playerid/name]", 1, 4},
 	{"/smack", "Smack a player (knocks them down temporarily).", "/smack [playerid/name]", 1, 4},
-	{"/checkafk", "Check if a player is AFK.", "/checkafk [playerid/name]", 1, 4},
-	{"/arecord", "Check player admin records and punishment history.", "/arecord [playerid/name]", 1, 4},
-	{"/gotospawn", "Teleport to the player spawn point.", "/gotospawn", 1, 5},
+	{"/thaw", "Unfreeze player.", "/thaw [playerid/PartOfName]", 1, 4},
+	{"/up", "Teleport player slightly upward.", "/up", 1, 4},
+	{"/watchoff", "Stop spectating vehicle/player.", "/watchoff", 1, 4},
+	{"/watchplayer", "Spectate player.", "/watchplayer [playerid]", 1, 4},
+	{"/gotofs", "Teleport to faction spawn.", "/gotofs [factionid] [spawn-id]", 1, 5},
 	{"/gotols", "Teleport to Los Santos.", "/gotols", 1, 5},
 	{"/gotolv", "Teleport to Las Venturas.", "/gotolv", 1, 5},
+	{"/gotomark", "Teleport to admin mark.", "/gotomark [1-4]", 1, 5},
+	{"/gotopizza", "Teleport to Pizza Stack.", "/gotopizza", 1, 5},
+	{"/gotoprison", "Teleport to prison location.", "/gotoprison", 1, 5},
 	{"/gotosf", "Teleport to San Fierro.", "/gotosf", 1, 5},
+	{"/gotospawn", "Teleport to the player spawn point.", "/gotospawn", 1, 5},
+	{"/mark", "Save admin mark coordinates.", "/mark [1-4]", 1, 5},
+	{"/whereami", "Show detailed current coordinates.", "/whereami", 1, 5},
 	{"/xyz", "Show current coordinates.", "/xyz", 1, 5},
-	{"/pmears", "Monitor player private messages.", "/pmears", 1, 4},
-
-	// General Admin / Level 2
-	{"/goto", "Teleport directly to a player's position.", "/goto [playerid/name]", 2, 5},
-	{"/gethere", "Teleport a player to your current position.", "/gethere [playerid/name]", 2, 5},
-	{"/revive", "Revive a player from death or down state.", "/revive [playerid/name]", 2, 4},
-	{"/healcar", "Fully repair and restore vehicle health.", "/healcar", 2, 1},
+	{"/entercarseat", "Force enter player into vehicle seat.", "/entercarseat [vehicleid] [seat 0-3]", 2, 1},
 	{"/fixveh", "Repair a vehicle body.", "/fixveh", 2, 1},
-	{"/gotocar", "Teleport to a vehicle by its ID.", "/gotocar [samp_vehicle_id]", 2, 1},
 	{"/getcar", "Bring a vehicle to your position by its ID.", "/getcar [samp_vehicle_id]", 2, 1},
-	{"/gotohouse", "Teleport to a house by its ID.", "/gotohouse [house_id]", 2, 5},
-	{"/gotobiz", "Teleport to a business by its ID.", "/gotobiz [business_id]", 2, 5},
-	{"/veh", "Spawn a temporary vehicle for admin duty.", "/veh [model_id] [color1] [color2]", 2, 1},
+	{"/gotocar", "Teleport to a vehicle by its ID.", "/gotocar [samp_vehicle_id]", 2, 1},
+	{"/healcar", "Fully repair and restore vehicle health.", "/healcar", 2, 1},
+	{"/lastincar", "Show last driver of vehicle.", "/lastincar [veh]", 2, 1},
 	{"/nos", "Add nitro to a vehicle.", "/nos", 2, 1},
-
-	// Senior Admin / Level 3
+	{"/veh", "Spawn a temporary vehicle for admin duty.", "/veh [model_id] [color1] [color2]", 2, 1},
+	{"/vehname", "Show vehicle model name.", "/vehname", 2, 1},
+	{"/changename", "Change player character name.", "/changename [playerid/PartOfName] [New_Name]", 2, 4},
+	{"/explosion", "Create test explosion.", "/explosion [playerid]", 2, 4},
+	{"/getpos", "Get current coordinates format.", "/getpos", 2, 4},
+	{"/log", "Show logs filtering option.", "/log dbid:player_dbid OR [PlayerID/partofName] <filter log (optional)>", 2, 4},
+	{"/refunddrug", "Refund player drugs.", "/refunddrug [playerid/PartOfName]", 2, 4},
+	{"/revive", "Revive a player from death or down state.", "/revive [playerid/name]", 2, 4},
+	{"/setwpackage", "Set weapons package slots.", "/setwpackage [playerid/PartOfName] [weaponid] [ammo] [slot (Optional)]", 2, 4},
+	{"/sotot", "Sotot teleport debugging command.", "/sotot [id/amount] [id/amount] [id/amount] [id/amount]", 2, 4},
+	{"/tod", "Set time of day.", "/tod [time] (0-23)", 2, 4},
+	{"/watchpm", "Monitor player PM chat.", "/watchpm [playerid/name]", 2, 4},
+	{"/watchradio", "Monitor faction radio frequency.", "/watchradio [frequency]", 2, 4},
+	{"/gethere", "Teleport a player to your current position.", "/gethere [playerid/name]", 2, 5},
+	{"/goto", "Teleport directly to a player's position.", "/goto [playerid/name]", 2, 5},
+	{"/gotocmdspot", "Teleport to command test spot.", "/gotocmdspot", 2, 5},
+	{"/sf", "Alternative teleport.", "/sf [playerid/PartOfName]", 2, 5},
+	{"/despawncar", "Despawn a vehicle by ID.", "/despawncar [vehicleid]", 3, 1},
+	{"/despawncars", "Despawn all inactive cars.", "/despawncars", 3, 1},
+	{"/fillallcars", "Refuel all server/faction vehicles.", "/fillallcars", 3, 1},
+	{"/vehiclerequests", "Show vehicle requests list.", "/vehiclerequests [id/amount]", 3, 1},
+	{"/ajail", "Send a player to Admin Jail.", "/ajail [playerid/name] [time in mins] [reason]", 3, 4},
 	{"/ban", "Permanently ban a player from the server.", "/ban [playerid/name] [reason]", 3, 4},
+	{"/forceunmask", "Force unmask a player.", "/forceunmask [playerid/name]", 3, 4},
+	{"/givegun", "Give weapon to player.", "/givegun [playerid/name] [weapon_id] [ammo]", 3, 4},
+	{"/kick", "Kick a player from the server.", "/kick [playerid/name] [reason]", 3, 4},
+	{"/kickfromjob", "Kick player from their job.", "/disabletp [playerid/PartOfName]", 3, 4},
+	{"/setarmour", "Set player armor level.", "/setarmour [playerid/name] [amount]", 3, 4},
+	{"/sethealth", "Set player health level.", "/sethealth [playerid/name] [amount]", 3, 4},
+	{"/setskin", "Set player character skin.", "/setskin [playerid/name] [skin_id]", 3, 4},
+	{"/sslap", "Slap player multiple times.", "/sslap [playerid/PartOfName]", 3, 4},
+	{"/tp", "Teleport to coordinates or player.", "/tp [playerid/name] or [x y z]", 3, 4},
 	{"/unban", "Unban a player name.", "/unban [exact_account_name]", 3, 4},
 	{"/unbanip", "Unban an IP address.", "/unbanip [ip_address]", 3, 4},
-	{"/ajail", "Send a player to Admin Jail.", "/ajail [playerid/name] [time in mins] [reason]", 3, 4},
 	{"/unjail", "Release a player from Admin Jail.", "/unjail [playerid/name]", 3, 4},
-	{"/kick", "Kick a player from the server.", "/kick [playerid/name] [reason]", 3, 4},
-	{"/setskin", "Set player character skin.", "/setskin [playerid/name] [skin_id]", 3, 4},
-	{"/sethealth", "Set player health level.", "/sethealth [playerid/name] [amount]", 3, 4},
-	{"/setarmour", "Set player armor level.", "/setarmour [playerid/name] [amount]", 3, 4},
-	{"/givegun", "Give weapon to player.", "/givegun [playerid/name] [weapon_id] [ammo]", 3, 4},
-
-	// Head Admin / Level 4
-	{"/mhouse", "Unified GUI Property Manager. Manage nearest or specific house ID.", "/mhouse [house_id (optional)]", 4, 2},
-	{"/createprop", "Wizard to create a new property/house at current position.", "/createprop", 4, 2},
-	{"/removeprop", "Delete a property from database.", "/removeprop [house_id]", 4, 2},
-	{"/asellhouse", "Admin sell a house back to state ownership.", "/asellhouse [house_id]", 4, 2},
-	{"/mbiz", "Unified GUI Business Manager. Manage nearest or specific business ID.", "/mbiz [business_id (optional)]", 4, 2},
-	{"/makebusiness", "Create a new business at current position.", "/makebusiness [type 1-5] [price]", 4, 2},
-	{"/removebusiness", "Delete a business from database.", "/removebusiness [business_id]", 4, 2},
-	{"/asellbusiness", "Admin sell a business back to state ownership.", "/asellbusiness [business_id]", 4, 2},
-	{"/mfac", "Unified GUI Faction Manager. Manage specific faction ID.", "/mfac [faction_id (optional)]", 4, 3},
-	{"/createfaction", "Wizard to create a new faction.", "/createfaction", 4, 3},
-	{"/destroyfaction", "Delete a faction entirely (with confirmation).", "/destroyfaction [faction_id]", 4, 3},
-	{"/setfaction", "Set faction parameters manually.", "/setfaction [faction_id] [stat] [value]", 4, 3},
-	{"/mveh", "Unified GUI Vehicle Manager. Manage current or specific vehicle ID.", "/mveh [vehicle_id (optional)]", 4, 1},
-	{"/saveveh", "Save current temporary vehicle permanently to database.", "/saveveh", 4, 1},
+	{"/weather", "Set server weather condition.", "/weather [weather_id]", 3, 4},
+	{"/weatherall", "Set weather for all players.", "/weatherall [weather_id]", 3, 4},
+	{"/gotoin", "Teleport to interior point.", "/gotoin", 3, 5},
+	{"/gotojet", "Teleport to airport location.", "/gotojet", 3, 5},
+	{"/gotostad", "Teleport to stadium.", "/gotostad", 3, 5},
+	{"/maketele", "Create a custom teleport point.", "/maketele [name]", 3, 5},
+	{"/removetele", "Remove a custom teleport point.", "/removetele [id]", 3, 5},
+	{"/telecmds", "Manage custom teleports.", "/telecmds", 3, 5},
+	{"/addstaticspawn", "Create static faction vehicle spawn point.", "/addstaticspawn", 4, 1},
+	{"/createcar", "Create a server vehicle.", "/createcar [model_id] [color1] [color2] [faction_id (-1 for none)]", 4, 1},
 	{"/deleteveh", "Delete vehicle from database.", "/deleteveh [vehicle_id]", 4, 1},
 	{"/editveh", "Edit vehicle properties manually.", "/editveh [vehicle_id] [stat] [value]", 4, 1},
-
-	// Developer / Level 1337
-	{"/mgate", "Unified GUI Gate Manager. Manage nearest or specific gate ID.", "/mgate [gate_id (optional)]", 1337, 3},
-	{"/makegate", "Wizard to create a new gate.", "/makegate", 1337, 3},
-	{"/removegate", "Delete a gate from database.", "/removegate [gate_id]", 1337, 3},
+	{"/managevehicle", "Open Vehicle Manager GUI.", "/managevehicle", 4, 1},
+	{"/saveveh", "Save current temporary vehicle permanently to database.", "/saveveh", 4, 1},
+	{"/setplate", "Change vehicle number plate.", "/setplate", 4, 1},
+	{"/vehcmds", "View level 4 vehicle commands info.", "/vehcmds", 4, 1},
+	{"/aelev", "Admin Elevator Manager (create/delete/addfloor/setfaction).", "/aelev [subcommand]", 4, 2},
+	{"/asellbusiness", "Admin sell a business back to state ownership.", "/asellbusiness [business_id]", 4, 2},
+	{"/asellhouse", "Admin sell a house back to state ownership.", "/asellhouse [house_id]", 4, 2},
+	{"/biztypes", "List available business types.", "/biztypes", 4, 2},
+	{"/bizz", "Manage business entrances.", "/businessenter [bizid]", 4, 2},
+	{"/cleangraffiti", "Clean nearest graffiti.", "/cleangraffiti", 4, 2},
+	{"/createatm", "Create an ATM at current position.", "/createatm", 4, 2},
+	{"/creategraffiti", "Create new graffiti.", "/creategraffiti", 4, 2},
+	{"/createprop", "Wizard to create a new property/house at current position.", "/createprop", 4, 2},
+	{"/deleteatm", "Delete an ATM.", "/deleteatm [atm_id]", 4, 2},
+	{"/destroygraffiti", "Destroy nearest graffiti.", "/destroygraffiti", 4, 2},
+	{"/editatm", "Edit ATM properties.", "/editatm [atm_id]", 4, 2},
+	{"/editgraffiti", "Edit graffiti details.", "/editgraffiti [id]", 4, 2},
+	{"/gotoatm", "Teleport to specific ATM ID.", "/gotoatm [ID]", 4, 2},
+	{"/gotograffiti", "Teleport to graffiti by ID.", "/gotograffiti [id]", 4, 2},
+	{"/houseenter", "Teleport inside specific house.", "/houseenter [houseid]", 4, 2},
+	{"/houseexit", "Teleport outside specific house.", "/houseexit [houseid]", 4, 2},
+	{"/makebusiness", "Create a new business at current position.", "/makebusiness [type 1-5] [price]", 4, 2},
+	{"/managehouse", "Open House Manager GUI.", "/managehouse", 4, 2},
+	{"/removebusiness", "Delete a business from database.", "/removebusiness [business_id]", 4, 2},
+	{"/removeprop", "Delete a property from database.", "/removeprop [house_id]", 4, 2},
+	{"/setapt", "Set apartment property stats.", "/setapt [houseid] [statcode] [input]", 4, 2},
+	{"/setprop", "Set property stats.", "/setprop [houseid] [statcode] [input]", 4, 2},
+	{"/asetrank", "Set faction member rank.", "/asetrank [playerid/name] [rank_id]", 4, 3},
+	{"/createfaction", "Wizard to create a new faction.", "/createfaction", 4, 3},
+	{"/factioncmds", "View faction commands info.", "/factioncmds", 4, 3},
+	{"/factionears", "Listen to all faction radio frequencies.", "/factionears", 4, 3},
+	{"/makeleader", "Set player as faction leader.", "/makeleader [playerid/name] [faction_id]", 4, 3},
+	{"/managefaction", "Open Faction Manager GUI.", "/managefaction", 4, 3},
+	{"/removefaction", "Remove player from faction.", "/removefaction [playerid/name]", 4, 3},
+	{"/setfaction", "Set faction parameters manually.", "/setfaction [faction_id] [stat] [value]", 4, 3},
+	{"/viewfactions", "Show list of all factions.", "/viewfactions", 4, 3},
+	{"/businessenter", "Teleport inside specific business.", "/businessenter [bizid]", 4, 4},
+	{"/businessex1", "Toggle business entrance 1.", "/businessex1 [bizid] [1-Disabled]", 4, 4},
+	{"/businessex2", "Toggle business entrance 2.", "/businessex2 [bizid] [1-Disabled]", 4, 4},
+	{"/businessex3", "Toggle business entrance 3.", "/businessex3 [bizid] [1-Disabled]", 4, 4},
+	{"/businessexit", "Teleport outside specific business.", "/businessexit [bizid]", 4, 4},
+	{"/businessint", "Set business interior.", "/businessint [id (0-48)]", 4, 4},
+	{"/editbusiness", "Edit business properties.", "/editbusiness [names] [input]", 4, 4},
+	{"/givepack", "Give equipment pack to player.", "/givepack [playerid/PartOfName]", 4, 4},
+	{"/gopos", "Teleport to coordinate.", "/gopos [x] [y] [z] [int]", 4, 4},
+	{"/leadadmin", "Show lead administrators.", "/leadadmin", 4, 4},
+	{"/makedonator", "Give player donator status.", "/makedonator [playerid/PartOfName] [level(1-3)] [days]", 4, 4},
+	{"/managebusiness", "Open Business Manager GUI.", "/managebusiness", 4, 4},
+	{"/netstats", "Show server network statistics.", "/netstats", 4, 4},
+	{"/playsound", "Play SA-MP sound for player.", "/playsound [playerid/PartOfName] [soundid]", 4, 4},
+	{"/serverstats", "Show server status & memory statistics.", "/serverstats", 4, 4},
+	{"/showbusinesses", "List all server businesses.", "/showbusinesses", 4, 4},
+	{"/tickrate", "Show server tickrate.", "/tickrate", 4, 4},
+	{"/whatbusiness", "Show info about nearest business.", "/whatbusiness", 4, 4},
+	{"/gocp", "Teleport to active checkpoint.", "/gocp", 4, 5},
+	{"/gorcp", "Teleport to active race checkpoint.", "/gorcp", 4, 5},
+	{"/gotoapp", "Teleport to specific apartment.", "/gotoapp [app id]", 4, 5},
+	{"/destroysignal", "Delete signal tower.", "/destroysignal [signal_id]", 5, 4},
+	{"/maketester", "Give player tester status.", "/maketester [playerid/PartOfName]", 1336, 4},
+	{"/descar", "Force destroy server car.", "/descar", 1337, 1},
+	{"/createapt", "Create a new apartment complex.", "/createapt [Pickup Enabled: (0 / 1)] [Faction SQLID: (-1 for none)] [Information]", 1337, 2},
+	{"/housecmds", "View Level 1337 house commands info.", "/housecmds", 1337, 2},
+	{"/properties", "Show list of properties/houses.", "/properties", 1337, 2},
+	{"/removeapt", "Delete an apartment complex.", "/removeapt [Apartment ID]", 1337, 2},
+	{"/whatmovedoor", "Identify nearest movedoor.", "/whatmovedoor", 1337, 2},
+	{"/cancelmovedoor", "Cancel movedoor edit operation.", "/cancelmovedoor", 1337, 3},
+	{"/dupgate", "Duplicate an existing gate.", "/dupgate [gateid] [Description]", 1337, 3},
+	{"/dupmovedoor", "Duplicate an existing movedoor.", "/dupmovedoor [doorid] [Description]", 1337, 3},
 	{"/editgate", "Edit gate properties manually.", "/editgate [gate_id] [type] [value]", 1337, 3},
-	{"/whatgate", "Identify nearest gate script ID and SQL ID.", "/whatgate", 1337, 3},
+	{"/editmovedoor", "Edit movedoor properties manually.", "/editmovedoor [doorid] [type (1-Object, 2-Move, 3-OpenSpeed, 4-Name, 5-Faction Type)]", 1337, 3},
+	{"/gatecmds", "View gate commands info.", "/gatecmds", 1337, 3},
+	{"/makegate", "Wizard to create a new gate.", "/makegate", 1337, 3},
+	{"/makemovedoor", "Create a new movedoor.", "/makemovedoor [modelid] [Faction Type] [Description]", 1337, 3},
+	{"/managegate", "Open Gate Manager GUI.", "/managegate", 1337, 3},
+	{"/movedoorcmds", "View movedoor commands info.", "/movedoorcmds", 1337, 3},
+	{"/removegate", "Delete a gate from database.", "/removegate [gate_id]", 1337, 3},
+	{"/removemovedoor", "Delete a movedoor.", "/removemovedoor [doorid]", 1337, 3},
 	{"/showgates", "Tablist of all server gates with teleport option.", "/showgates", 1337, 3},
-	{"/setstat", "Set character stats.", "/setstat [playerid/name] [stat_name] [value]", 1337, 4},
+	{"/showmovedoors", "Tablist of all movedoors with teleport option.", "/showmovedoors", 1337, 3},
+	{"/whatgate", "Identify nearest gate script ID and SQL ID.", "/whatgate", 1337, 3},
+	{"/businesscmds", "View level 1337 business commands info.", "/businesscmds", 1337, 4},
+	{"/checkaccount", "Check account registration information.", "/checkaccount [username]", 1337, 4},
+	{"/createaccount", "Create new player account.", "/createaccount [username] [password] [quiz]", 1337, 4},
+	{"/createcharacter", "Create new character on account.", "/createcharacter [accountName] [Firstname_Lastname] [Tutorial (0/1)", 1337, 4},
+	{"/createpoint", "Create a standard point/entrance.", "/createpoint", 1337, 4},
+	{"/createsignal", "Create signal tower.", "/createsignal [range]", 1337, 4},
+	{"/ecmd", "Emulate command for player.", "/(e)mulatecommand [playerid/PartOfName] [command]", 1337, 4},
+	{"/editpoint", "Open editpoint settings.", "/editpoint [point_id]", 1337, 4},
+	{"/editsignal", "Edit signal tower properties.", "/editsignal [signal_id]", 1337, 4},
+	{"/fly", "Toggle fly mode (noclip).", "/fly", 1337, 4},
 	{"/givemoney", "Give money to a player.", "/givemoney [playerid/name] [amount]", 1337, 4},
+	{"/hints", "Configure player hint settings.", "/hints", 1337, 4},
+	{"/icv", "In-car vehicle debug commands.", "/icv", 1337, 4},
+	{"/makeadmin", "Make a player an administrator.", "/makeadmin [playerid/name] [level 1-1337]", 1337, 4},
+	{"/particlegun", "Open particle gun tool.", "/particlegun [text]", 1337, 4},
+	{"/points", "Open points manager list.", "/points", 1337, 4},
+	{"/runquery", "Execute direct SQL query (Developer).", "/runquery", 1337, 4},
+	{"/setstat", "Set character stats.", "/setstat [playerid/name] [stat_name] [value]", 1337, 4},
+	{"/signalcmds", "View signal tower commands.", "/signalcmds", 1337, 4},
+	{"/streamer", "Show streamer cache & dynamic details.", "/streamer", 1337, 4},
 	{"/takemoney", "Take money from a player.", "/takemoney [playerid/name] [amount]", 1337, 4},
-	{"/makeadmin", "Make a player an administrator.", "/makeadmin [playerid/name] [level 1-1337]", 1337, 4}
+	{"/togdiscord", "Toggle Discord integration logs.", "/togdiscord", 1337, 4},
+	{"/updatemotd", "Update Message Of The Day.", "/updatemotd [new_motd]", 1337, 4},
+	{"/variables", "Show server internal debug variables.", "/variables", 1337, 4},
+	{"/mysqlstats", "Show MySQL statistics.", "/mysqlstats", 1337, 5}
 };
 
 stock ShowAdminHelpMain(playerid)

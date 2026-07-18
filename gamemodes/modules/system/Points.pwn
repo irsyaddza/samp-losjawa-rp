@@ -29,15 +29,16 @@ enum E_ENTRANCE_DATA
 	pointPickup,
 	pointPickupInside,
 	outsideWorld,
-	insideWorld
+	insideWorld,
+	Text3D:pointLabel,
+	Text3D:pointLabelInside
 };
 
-static const PointTypes[][] =
+new const PointTypes[][] =
 {
 	"On Foot Only",
 	"On Vehicle Only",
-	"On Foot / Vehicle",
-	"Elevator"
+	"On Foot / Vehicle"
 };
 
 new EntranceData[MAX_ENTRANCES][E_ENTRANCE_DATA];
@@ -65,10 +66,17 @@ ShowPointSettings(playerid, point)
 {
 	gstr[0] = EOS;
 
+	new typeStr[32];
+	new pType = EntranceData[point][pointType];
+	if(pType >= 0 && pType < sizeof(PointTypes))
+		format(typeStr, sizeof(typeStr), "%s", PointTypes[pType]);
+	else
+		format(typeStr, sizeof(typeStr), "Unknown (%d)", pType);
+
 	format(gstr, sizeof(gstr), "{7e98b6}1\t{a9c4e4}Name [{7e98b6}%s{a9c4e4}]\n", EntranceData[point][pointName]);
 	format(gstr, sizeof(gstr), "%s{7e98b6}2\t{a9c4e4}Outside Apartment ID [{7e98b6}%d{a9c4e4}]\n", gstr, EntranceData[point][outsideApartmentID]);
 	format(gstr, sizeof(gstr), "%s{7e98b6}3\t{a9c4e4}Inside Apartment ID [{7e98b6}%d{a9c4e4}]\n", gstr, EntranceData[point][insideApartmentID]);
-	format(gstr, sizeof(gstr), "%s{7e98b6}4\t{a9c4e4}Type [{7e98b6}%s{a9c4e4}]\n", gstr, PointTypes[ EntranceData[point][pointType] ]);
+	format(gstr, sizeof(gstr), "%s{7e98b6}4\t{a9c4e4}Type [{7e98b6}%s{a9c4e4}]\n", gstr, typeStr);
 	format(gstr, sizeof(gstr), "%s{7e98b6}5\t{a9c4e4}Range [{7e98b6}%.1f{a9c4e4}]\n", gstr, EntranceData[point][pointRange]);
 	format(gstr, sizeof(gstr), "%s{7e98b6}6\t{a9c4e4}Faction [{7e98b6}%s{a9c4e4}]\n", gstr, ReturnFactionNameByType(EntranceData[point][pointFaction]));
 	format(gstr, sizeof(gstr), "%s{7e98b6}Set enter coordinates (current position)\n{7e98b6}Set exit coordinates (current position)\n{7e98b6}Teleport\n{7e98b6}Delete Point", gstr);
@@ -163,7 +171,7 @@ Dialog:EditPoint(playerid, response, listitem, inputtext[])
 	{
 	    case 3:
 	    {
-			return Dialog_Show(playerid, EditPoint_Type, DIALOG_STYLE_LIST, "Point Type", "{7e98b6}On Foot Only\n{7e98b6}On Vehicle Only\n{7e98b6}On Foot / Vehicle\n{7e98b6}Elevator", "Select", "<< Go Back");
+			return Dialog_Show(playerid, EditPoint_Type, DIALOG_STYLE_LIST, "Point Type", "{7e98b6}On Foot Only\n{7e98b6}On Vehicle Only\n{7e98b6}On Foot / Vehicle", "Select", "<< Go Back");
 	    }
 	    case 4:
 	    {
@@ -279,6 +287,16 @@ Dialog:EditPoint(playerid, response, listitem, inputtext[])
 				DestroyDynamicPickup(EntranceData[point][pointPickupInside]);
 				EntranceData[point][pointPickupInside] = INVALID_STREAMER_ID;
 			}
+			if(IsValidDynamic3DTextLabel(EntranceData[point][pointLabel]))
+			{
+				DestroyDynamic3DTextLabel(EntranceData[point][pointLabel]);
+				EntranceData[point][pointLabel] = Text3D:INVALID_STREAMER_ID;
+			}
+			if(IsValidDynamic3DTextLabel(EntranceData[point][pointLabelInside]))
+			{
+				DestroyDynamic3DTextLabel(EntranceData[point][pointLabelInside]);
+				EntranceData[point][pointLabelInside] = Text3D:INVALID_STREAMER_ID;
+			}
 
 			mysql_format(dbCon, gquery, sizeof(gquery), "DELETE FROM `points` WHERE `ID` = '%d' LIMIT 1", EntranceData[point][pointID]);
 			mysql_pquery(dbCon, gquery);
@@ -308,18 +326,59 @@ stock Point_Refresh(i)
         DestroyDynamicPickup(EntranceData[i][pointPickupInside]);
         EntranceData[i][pointPickupInside] = INVALID_STREAMER_ID;
     }
+    if(IsValidDynamic3DTextLabel(EntranceData[i][pointLabel]))
+    {
+        DestroyDynamic3DTextLabel(EntranceData[i][pointLabel]);
+        EntranceData[i][pointLabel] = Text3D:INVALID_STREAMER_ID;
+    }
+    if(IsValidDynamic3DTextLabel(EntranceData[i][pointLabelInside]))
+    {
+        DestroyDynamic3DTextLabel(EntranceData[i][pointLabelInside]);
+        EntranceData[i][pointLabelInside] = Text3D:INVALID_STREAMER_ID;
+    }
     
     // Outside/Enter Pickup (always active)
-    new outWorld = (EntranceData[i][outsideApartmentID] == -1) ? EntranceData[i][outsideWorld] : ComplexData[EntranceData[i][outsideApartmentID]][aWorld];
-    new outInterior = (EntranceData[i][outsideApartmentID] == -1) ? -1 : ComplexData[EntranceData[i][outsideApartmentID]][aInterior];
+    new outWorld, outInterior;
+    if(EntranceData[i][outsideApartmentID] == -1)
+    {
+        outWorld = EntranceData[i][outsideWorld];
+        outInterior = -1;
+    }
+    else
+    {
+        new apt = EntranceData[i][outsideApartmentID];
+        outWorld = ComplexData[apt][aWorld];
+        outInterior = ComplexData[apt][aInterior];
+    }
+    
     EntranceData[i][pointPickup] = CreateDynamicPickup(19130, 23, EntranceData[i][outsidePos][0], EntranceData[i][outsidePos][1], EntranceData[i][outsidePos][2], outWorld, outInterior);
     
+    // Create 3D Text Label for Outside
+    new labelStr[256];
+    format(labelStr, sizeof(labelStr), "{00FFFF}[Point: %s]\n{FFFFFF}Point ID: {FFFF00}%d\n{FFFFFF}Use {FFFF00}/enter, F, or H", EntranceData[i][pointName], EntranceData[i][pointID]);
+    EntranceData[i][pointLabel] = CreateDynamic3DTextLabel(labelStr, 0xFFFFFFFF, EntranceData[i][outsidePos][0], EntranceData[i][outsidePos][1], EntranceData[i][outsidePos][2] + 0.6, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, outWorld, outInterior);
+
     // Inside/Exit Pickup (only if exit coords set)
     if(EntranceData[i][insidePos][0] != 0.0)
     {
-        new inWorld = (EntranceData[i][insideApartmentID] == -1) ? EntranceData[i][insideWorld] : ComplexData[EntranceData[i][insideApartmentID]][aWorld];
-        new inInterior = (EntranceData[i][insideApartmentID] == -1) ? -1 : ComplexData[EntranceData[i][insideApartmentID]][aInterior];
+        new inWorld, inInterior;
+        if(EntranceData[i][insideApartmentID] == -1)
+        {
+            inWorld = EntranceData[i][insideWorld];
+            inInterior = -1;
+        }
+        else
+        {
+            new apt = EntranceData[i][insideApartmentID];
+            inWorld = ComplexData[apt][aWorld];
+            inInterior = ComplexData[apt][aInterior];
+        }
+        
         EntranceData[i][pointPickupInside] = CreateDynamicPickup(19130, 23, EntranceData[i][insidePos][0], EntranceData[i][insidePos][1], EntranceData[i][insidePos][2], inWorld, inInterior);
+        
+        // Create 3D Text Label for Inside (Exit)
+        format(labelStr, sizeof(labelStr), "{00FFFF}[Point: %s (Exit)]\n{FFFFFF}Point ID: {FFFF00}%d\n{FFFFFF}Use {FFFF00}/enter, F, or H", EntranceData[i][pointName], EntranceData[i][pointID]);
+        EntranceData[i][pointLabelInside] = CreateDynamic3DTextLabel(labelStr, 0xFFFFFFFF, EntranceData[i][insidePos][0], EntranceData[i][insidePos][1], EntranceData[i][insidePos][2] + 0.6, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, inWorld, inInterior);
     }
     return 1;
 }

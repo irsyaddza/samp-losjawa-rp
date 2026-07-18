@@ -5120,6 +5120,9 @@ CMD:elevator(playerid, params[])
 	if(GetPlayerState(playerid) != PLAYER_STATE_ONFOOT)
 	    return SendErrorMessage(playerid, "You're not on foot.");
 
+	if(Elevator_OnPlayerUse(playerid))
+	    return 1;
+
 	foreach	(new i: Entrance)
 	{
 	    if(EntranceData[i][pointType] != POINT_TYPE_ELEVATOR) continue;
