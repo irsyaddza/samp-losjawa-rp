@@ -63,6 +63,13 @@ stock Complex_GetSlotByID(db_id)
 
 stock DetectMappingLocation(prop_type, prop_id, const code[], &world, &interior)
 {
+    if(prop_type == 4)
+    {
+        world = 0;
+        interior = 0;
+        return;
+    }
+
     // Find the first object in the code to get its coordinates
     new pos = 0;
     static line[256];
@@ -698,7 +705,7 @@ CMD:loadmapping(playerid, params[])
     if(PlayerData[playerid][pAdmin] != 1336 && PlayerData[playerid][pAdmin] != 1337)
         return SendUnauthMessage(playerid, "You're not authorized to use this command.");
 
-    mysql_tquery(dbCon, "SELECT `id`, `ucp_name`, `property_type`, `property_id` FROM `property_mappings` WHERE `status` = 0 ORDER BY `id` ASC LIMIT 128", "OnLoadPendingMappings", "d", playerid);
+    mysql_tquery(dbCon, "SELECT `id`, `ucp_name`, `property_type`, `property_id`, `custom_title` FROM `property_mappings` WHERE `status` = 0 ORDER BY `id` ASC LIMIT 128", "OnLoadPendingMappings", "d", playerid);
     return true;
 }
 
@@ -707,7 +714,7 @@ CMD:removemapping(playerid, params[])
     if(PlayerData[playerid][pAdmin] != 1336 && PlayerData[playerid][pAdmin] != 1337)
         return SendUnauthMessage(playerid, "You're not authorized to use this command.");
 
-    mysql_tquery(dbCon, "SELECT `id`, `ucp_name`, `property_type`, `property_id` FROM `property_mappings` WHERE `status` = 1 ORDER BY `id` ASC LIMIT 128", "OnLoadApprovedMappingsList", "d", playerid);
+    mysql_tquery(dbCon, "SELECT `id`, `ucp_name`, `property_type`, `property_id`, `custom_title` FROM `property_mappings` WHERE `status` = 1 ORDER BY `id` ASC LIMIT 128", "OnLoadApprovedMappingsList", "d", playerid);
     return true;
 }
 
@@ -737,7 +744,7 @@ CMD:savedmapping(playerid, params[])
     if(PlayerData[playerid][pAdmin] != 1336 && PlayerData[playerid][pAdmin] != 1337)
         return SendUnauthMessage(playerid, "You're not authorized to use this command.");
 
-    mysql_tquery(dbCon, "SELECT `id`, `ucp_name`, `property_type`, `property_id` FROM `property_mappings` WHERE `status` = 2 ORDER BY `id` ASC LIMIT 128", "OnLoadSavedMappingsList", "d", playerid);
+    mysql_tquery(dbCon, "SELECT `id`, `ucp_name`, `property_type`, `property_id`, `custom_title` FROM `property_mappings` WHERE `status` = 2 ORDER BY `id` ASC LIMIT 128", "OnLoadSavedMappingsList", "d", playerid);
     return true;
 }
 
@@ -746,7 +753,7 @@ CMD:deletemapping(playerid, params[])
     if(PlayerData[playerid][pAdmin] != 1336 && PlayerData[playerid][pAdmin] != 1337)
         return SendUnauthMessage(playerid, "You're not authorized to use this command.");
 
-    mysql_tquery(dbCon, "SELECT `id`, `ucp_name`, `property_type`, `property_id` FROM `property_mappings` WHERE `status` = 2 ORDER BY `id` ASC LIMIT 128", "OnLoadDeleteMappingsList", "d", playerid);
+    mysql_tquery(dbCon, "SELECT `id`, `ucp_name`, `property_type`, `property_id`, `custom_title` FROM `property_mappings` WHERE `status` = 2 ORDER BY `id` ASC LIMIT 128", "OnLoadDeleteMappingsList", "d", playerid);
     return true;
 }
 
@@ -761,8 +768,8 @@ public OnLoadPendingMappings(playerid)
         return SendErrorMessage(playerid, "There are no pending mapping requests.");
     }
 
-    new headers[256], item[128], db_id, prop_type, prop_id, ucp_name[32];
-    format(headers, sizeof(headers), "UCP Name\tProperty Type\tProperty ID\n");
+    new headers[512], item[128], db_id, prop_type, prop_id, ucp_name[32], custom_title[64];
+    format(headers, sizeof(headers), "UCP Name\tProperty Type\tProperty ID / Name\n");
     
     AdminPendingCount[playerid] = 0;
     
@@ -772,6 +779,7 @@ public OnLoadPendingMappings(playerid)
         cache_get_value_name_int(i, "property_type", prop_type);
         cache_get_value_name_int(i, "property_id", prop_id);
         cache_get_value_name(i, "ucp_name", ucp_name);
+        cache_get_value_name(i, "custom_title", custom_title, sizeof(custom_title));
 
         AdminPendingRequestID[playerid][i] = db_id;
         AdminPendingCount[playerid]++;
@@ -779,9 +787,18 @@ public OnLoadPendingMappings(playerid)
         new typeStr[16];
         if(prop_type == 1) typeStr = "House";
         else if(prop_type == 2) typeStr = "Business";
-        else typeStr = "Apartment";
+        else if(prop_type == 3) typeStr = "Apartment";
+        else typeStr = "Custom";
 
-        format(item, sizeof(item), "%s\t%s\t%d\n", ucp_name, typeStr, prop_id);
+        if(prop_type == 4)
+        {
+            if(custom_title[0] == '\0') format(custom_title, sizeof(custom_title), "Kustom");
+            format(item, sizeof(item), "%s\t%s\t%s\n", ucp_name, typeStr, custom_title);
+        }
+        else
+        {
+            format(item, sizeof(item), "%s\t%s\t%d\n", ucp_name, typeStr, prop_id);
+        }
         strcat(headers, item);
     }
 
@@ -798,8 +815,8 @@ public OnLoadApprovedMappingsList(playerid)
         return SendErrorMessage(playerid, "There are no approved custom mappings.");
     }
 
-    new headers[256], item[128], db_id, prop_type, prop_id, ucp_name[32];
-    format(headers, sizeof(headers), "UCP Name\tProperty Type\tProperty ID\n");
+    new headers[512], item[128], db_id, prop_type, prop_id, ucp_name[32], custom_title[64];
+    format(headers, sizeof(headers), "UCP Name\tProperty Type\tProperty ID / Name\n");
     
     AdminPendingCount[playerid] = 0;
     
@@ -809,6 +826,7 @@ public OnLoadApprovedMappingsList(playerid)
         cache_get_value_name_int(i, "property_type", prop_type);
         cache_get_value_name_int(i, "property_id", prop_id);
         cache_get_value_name(i, "ucp_name", ucp_name);
+        cache_get_value_name(i, "custom_title", custom_title, sizeof(custom_title));
 
         AdminPendingRequestID[playerid][i] = db_id;
         AdminPendingCount[playerid]++;
@@ -816,9 +834,18 @@ public OnLoadApprovedMappingsList(playerid)
         new typeStr[16];
         if(prop_type == 1) typeStr = "House";
         else if(prop_type == 2) typeStr = "Business";
-        else typeStr = "Apartment";
+        else if(prop_type == 3) typeStr = "Apartment";
+        else typeStr = "Custom";
 
-        format(item, sizeof(item), "%s\t%s\t%d\n", ucp_name, typeStr, prop_id);
+        if(prop_type == 4)
+        {
+            if(custom_title[0] == '\0') format(custom_title, sizeof(custom_title), "Kustom");
+            format(item, sizeof(item), "%s\t%s\t%s\n", ucp_name, typeStr, custom_title);
+        }
+        else
+        {
+            format(item, sizeof(item), "%s\t%s\t%d\n", ucp_name, typeStr, prop_id);
+        }
         strcat(headers, item);
     }
 
@@ -835,8 +862,8 @@ public OnLoadSavedMappingsList(playerid)
         return SendErrorMessage(playerid, "There are no saved/removed custom mappings.");
     }
 
-    new headers[256], item[128], db_id, prop_type, prop_id, ucp_name[32];
-    format(headers, sizeof(headers), "UCP Name\tProperty Type\tProperty ID\n");
+    new headers[512], item[128], db_id, prop_type, prop_id, ucp_name[32], custom_title[64];
+    format(headers, sizeof(headers), "UCP Name\tProperty Type\tProperty ID / Name\n");
     
     AdminPendingCount[playerid] = 0;
     
@@ -846,6 +873,7 @@ public OnLoadSavedMappingsList(playerid)
         cache_get_value_name_int(i, "property_type", prop_type);
         cache_get_value_name_int(i, "property_id", prop_id);
         cache_get_value_name(i, "ucp_name", ucp_name);
+        cache_get_value_name(i, "custom_title", custom_title, sizeof(custom_title));
 
         AdminPendingRequestID[playerid][i] = db_id;
         AdminPendingCount[playerid]++;
@@ -853,9 +881,18 @@ public OnLoadSavedMappingsList(playerid)
         new typeStr[16];
         if(prop_type == 1) typeStr = "House";
         else if(prop_type == 2) typeStr = "Business";
-        else typeStr = "Apartment";
+        else if(prop_type == 3) typeStr = "Apartment";
+        else typeStr = "Custom";
 
-        format(item, sizeof(item), "%s\t%s\t%d\n", ucp_name, typeStr, prop_id);
+        if(prop_type == 4)
+        {
+            if(custom_title[0] == '\0') format(custom_title, sizeof(custom_title), "Kustom");
+            format(item, sizeof(item), "%s\t%s\t%s\n", ucp_name, typeStr, custom_title);
+        }
+        else
+        {
+            format(item, sizeof(item), "%s\t%s\t%d\n", ucp_name, typeStr, prop_id);
+        }
         strcat(headers, item);
     }
 
@@ -870,7 +907,7 @@ public OnRestoreSelectedMapping(playerid, db_id)
     if(rows == 0) return SendErrorMessage(playerid, "Could not fetch mapping details for restoration.");
 
     new prop_type, prop_id;
-    static code[16384];
+    static code[65536];
     cache_get_value_name_int(0, "property_type", prop_type);
     cache_get_value_name_int(0, "property_id", prop_id);
     cache_get_value_name(0, "mapping_code", code, sizeof(code));
@@ -902,6 +939,11 @@ public OnRestoreSelectedMapping(playerid, db_id)
             world = ComplexData[slot][aWorld];
             interior = ComplexData[slot][aInterior];
         }
+    }
+    else if(prop_type == 4) // Custom / Write manually
+    {
+        world = 0;
+        interior = 0;
     }
 
     if(world != -1)
@@ -926,8 +968,8 @@ public OnLoadDeleteMappingsList(playerid)
         return SendErrorMessage(playerid, "There are no saved/removed custom mappings to delete.");
     }
 
-    new headers[256], item[128], db_id, prop_type, prop_id, ucp_name[32];
-    format(headers, sizeof(headers), "UCP Name\tProperty Type\tProperty ID\n");
+    new headers[512], item[128], db_id, prop_type, prop_id, ucp_name[32], custom_title[64];
+    format(headers, sizeof(headers), "UCP Name\tProperty Type\tProperty ID / Name\n");
     
     AdminPendingCount[playerid] = 0;
     
@@ -937,6 +979,7 @@ public OnLoadDeleteMappingsList(playerid)
         cache_get_value_name_int(i, "property_type", prop_type);
         cache_get_value_name_int(i, "property_id", prop_id);
         cache_get_value_name(i, "ucp_name", ucp_name);
+        cache_get_value_name(i, "custom_title", custom_title, sizeof(custom_title));
 
         AdminPendingRequestID[playerid][i] = db_id;
         AdminPendingCount[playerid]++;
@@ -944,9 +987,18 @@ public OnLoadDeleteMappingsList(playerid)
         new typeStr[16];
         if(prop_type == 1) typeStr = "House";
         else if(prop_type == 2) typeStr = "Business";
-        else typeStr = "Apartment";
+        else if(prop_type == 3) typeStr = "Apartment";
+        else typeStr = "Custom";
 
-        format(item, sizeof(item), "%s\t%s\t%d\n", ucp_name, typeStr, prop_id);
+        if(prop_type == 4)
+        {
+            if(custom_title[0] == '\0') format(custom_title, sizeof(custom_title), "Kustom");
+            format(item, sizeof(item), "%s\t%s\t%s\n", ucp_name, typeStr, custom_title);
+        }
+        else
+        {
+            format(item, sizeof(item), "%s\t%s\t%d\n", ucp_name, typeStr, prop_id);
+        }
         strcat(headers, item);
     }
 
@@ -961,7 +1013,7 @@ public OnPreviewSelectedMapping(playerid, db_id)
     if(rows == 0) return SendErrorMessage(playerid, "Could not fetch mapping details.");
 
     new prop_type, prop_id;
-    static code[16384];
+    static code[65536];
     cache_get_value_name_int(0, "property_type", prop_type);
     cache_get_value_name_int(0, "property_id", prop_id);
     cache_get_value_name(0, "mapping_code", code, sizeof(code));
@@ -993,6 +1045,11 @@ public OnPreviewSelectedMapping(playerid, db_id)
             world = ComplexData[slot][aWorld];
             interior = ComplexData[slot][aInterior];
         }
+    }
+    else if(prop_type == 4) // Custom / Write manually
+    {
+        world = 0;
+        interior = 0;
     }
 
     if(world == -1)
@@ -1159,7 +1216,7 @@ public OnLoadAllApprovedMappings()
     for(new i = 0; i < rows; ++i)
     {
         new db_id, prop_type, prop_id;
-        static code[16384];
+        static code[65536];
         cache_get_value_name_int(i, "id", db_id);
         cache_get_value_name_int(i, "property_type", prop_type);
         cache_get_value_name_int(i, "property_id", prop_id);
@@ -1192,6 +1249,11 @@ public OnLoadAllApprovedMappings()
                 world = ComplexData[slot][aWorld];
                 interior = ComplexData[slot][aInterior];
             }
+        }
+        else if(prop_type == 4) // Custom / Write manually
+        {
+            world = 0;
+            interior = 0;
         }
 
         if(world != -1)

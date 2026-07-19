@@ -3,7 +3,7 @@ import Link from 'next/link';
 import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { RowDataPacket } from 'mysql2';
-import { ArrowLeft, Home, Briefcase, Building, AlertCircle, History, UploadCloud, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { ArrowLeft, Home, Briefcase, Building, AlertCircle, History, UploadCloud, CheckCircle2, XCircle, Clock, FileCode } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import MappingForm from './MappingForm';
 
@@ -23,7 +23,7 @@ async function getUserDonatorStatus(userId: number) {
 async function getMappingRequests(username: string) {
   try {
     const [rows] = await pool.execute<RowDataPacket[]>(
-      'SELECT id, property_type, property_id, status, admin_note, created_at FROM property_mappings WHERE ucp_name = ? ORDER BY created_at DESC',
+      'SELECT id, property_type, property_id, status, admin_note, created_at, custom_title FROM property_mappings WHERE ucp_name = ? ORDER BY created_at DESC',
       [username]
     );
     return rows;
@@ -128,7 +128,10 @@ export default async function MappingPortalPage() {
                           {req.property_type === 1 && <Home className="h-3.5 w-3.5 text-amber-400" />}
                           {req.property_type === 2 && <Briefcase className="h-3.5 w-3.5 text-amber-400" />}
                           {req.property_type === 3 && <Building className="h-3.5 w-3.5 text-amber-400" />}
-                          {req.property_type === 1 ? 'Rumah' : req.property_type === 2 ? 'Bisnis' : 'Apartemen'} #{req.property_id}
+                          {req.property_type === 4 && <FileCode className="h-3.5 w-3.5 text-amber-400" />}
+                          {req.property_type === 4
+                            ? `Kustom: ${req.custom_title || 'Tanpa Judul'}`
+                            : `${req.property_type === 1 ? 'Rumah' : req.property_type === 2 ? 'Bisnis' : 'Apartemen'} #${req.property_id}`}
                         </span>
 
                         {req.status === 0 && (

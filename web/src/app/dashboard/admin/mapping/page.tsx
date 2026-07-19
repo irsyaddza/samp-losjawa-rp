@@ -10,7 +10,7 @@ import AdminMappingPanel from './AdminMappingPanel';
 async function getPendingMappings() {
   try {
     const [rows] = await pool.execute<RowDataPacket[]>(
-      `SELECT id, ucp_name, property_type, property_id, mapping_code, created_at 
+      `SELECT id, ucp_name, property_type, property_id, mapping_code, created_at, custom_title 
        FROM property_mappings 
        WHERE status = 0 
        ORDER BY created_at ASC`

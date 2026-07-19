@@ -11,6 +11,7 @@ interface MappingRequest {
   property_id: number;
   mapping_code: string;
   created_at: string;
+  custom_title?: string;
 }
 
 interface AdminMappingPanelProps {
@@ -120,7 +121,10 @@ export default function AdminMappingPanel({ initialRequests }: AdminMappingPanel
                       {req.property_type === 1 && <Home className="h-3.5 w-3.5" />}
                       {req.property_type === 2 && <Briefcase className="h-3.5 w-3.5" />}
                       {req.property_type === 3 && <Building className="h-3.5 w-3.5" />}
-                      {req.property_type === 1 ? 'Rumah' : req.property_type === 2 ? 'Bisnis' : 'Apartemen'} #{req.property_id}
+                      {req.property_type === 4 && <FileCode className="h-3.5 w-3.5" />}
+                      {req.property_type === 4 
+                        ? `Kustom: ${req.custom_title || 'Tanpa Judul'}`
+                        : `${req.property_type === 1 ? 'Rumah' : req.property_type === 2 ? 'Bisnis' : 'Apartemen'} #${req.property_id}`}
                     </span>
                   </div>
                   <div className="text-[10px] text-zinc-500 flex items-center gap-1.5">

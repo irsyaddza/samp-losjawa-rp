@@ -15,6 +15,9 @@ export default function MappingForm() {
   const router = useRouter();
   const [properties, setProperties] = useState<PropertyItem[]>([]);
   const [selectedPropIndex, setSelectedPropIndex] = useState<string>('');
+  const [customPropertyType, setCustomPropertyType] = useState<string>('1');
+  const [customPropertyId, setCustomPropertyId] = useState<string>('');
+  const [customTitle, setCustomTitle] = useState<string>('');
   const [mappingCode, setMappingCode] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [fetching, setFetching] = useState<boolean>(true);
@@ -50,22 +53,53 @@ export default function MappingForm() {
       setError('Silakan pilih salah satu properti terlebih dahulu.');
       return;
     }
+    if (selectedPropIndex === 'custom') {
+      if (customPropertyType === '4') {
+        if (!customTitle.trim()) {
+          setError('Silakan isi nama/judul kustom mapping Anda.');
+          return;
+        }
+      } else {
+        if (!customPropertyId.trim()) {
+          setError('Silakan isi ID properti Anda.');
+          return;
+        }
+      }
+    }
     if (!mappingCode.trim()) {
       setError('Silakan isi kode mapping properti Anda.');
       return;
     }
 
     setLoading(true);
-    const selectedProp = properties[parseInt(selectedPropIndex)];
+
+    let propType = 1;
+    let propId = 0;
+    let titleStr = '';
+
+    if (selectedPropIndex === 'custom') {
+      propType = parseInt(customPropertyType);
+      if (propType === 4) {
+        propId = 0;
+        titleStr = customTitle.trim();
+      } else {
+        propId = parseInt(customPropertyId);
+      }
+    } else {
+      const selectedProp = properties[parseInt(selectedPropIndex)];
+      propType = selectedProp.type;
+      propId = selectedProp.id;
+    }
 
     try {
       const res = await fetch('/api/mapping', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          propertyType: selectedProp.type,
-          propertyId: selectedProp.id,
+          propertyType: propType,
+          propertyId: propId,
           mappingCode,
+          customTitle: titleStr || undefined,
         }),
       });
 
@@ -73,6 +107,7 @@ export default function MappingForm() {
       if (res.ok) {
         setSuccess('Permintaan mapping berhasil dikirim! Catatan riwayat status akan diupdate.');
         setMappingCode('');
+        setCustomTitle('');
         router.refresh();
       } else {
         setError(data.error || 'Gagal mengirim pengajuan.');
@@ -89,18 +124,6 @@ export default function MappingForm() {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
-      </div>
-    );
-  }
-
-  if (properties.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <AlertCircle className="h-10 w-10 text-zinc-600 mx-auto mb-3" />
-        <p className="text-sm font-semibold text-zinc-400">Anda tidak memiliki properti saat ini</p>
-        <p className="text-xs text-zinc-500 mt-1 max-w-sm mx-auto leading-relaxed">
-          Karakter Anda harus membeli properti (rumah, bisnis, atau unit apartemen) di dalam game sebelum dapat mengajukan request mapping.
-        </p>
       </div>
     );
   }
@@ -136,8 +159,56 @@ export default function MappingForm() {
               [{prop.typeLabel}] {prop.label}
             </option>
           ))}
+          <option value="custom">[Tulis Sendiri / Custom ID]</option>
         </select>
       </div>
+
+      {selectedPropIndex === 'custom' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">
+              Tipe Properti Kustom
+            </label>
+            <select
+              value={customPropertyType}
+              onChange={(e) => setCustomPropertyType(e.target.value)}
+              className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm text-white focus:border-amber-500 focus:outline-none transition"
+            >
+              <option value="1">Rumah (House)</option>
+              <option value="2">Bisnis (Business)</option>
+              <option value="3">Apartemen (Apartment Unit)</option>
+              <option value="4">[Custom / Tulis Bebas]</option>
+            </select>
+          </div>
+          {customPropertyType === '4' ? (
+            <div>
+              <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">
+                Nama / Judul Kustom
+              </label>
+              <input
+                type="text"
+                value={customTitle}
+                onChange={(e) => setCustomTitle(e.target.value)}
+                placeholder="Contoh: Interior Palomino Church"
+                className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm text-white focus:border-amber-500 focus:outline-none transition"
+              />
+            </div>
+          ) : (
+            <div>
+              <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">
+                ID Properti Kustom
+              </label>
+              <input
+                type="number"
+                value={customPropertyId}
+                onChange={(e) => setCustomPropertyId(e.target.value)}
+                placeholder="Contoh: 12"
+                className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm text-white focus:border-amber-500 focus:outline-none transition"
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       <div>
         <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">

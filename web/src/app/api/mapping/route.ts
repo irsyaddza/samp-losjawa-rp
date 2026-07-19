@@ -18,7 +18,7 @@ export async function GET() {
 
   try {
     const [rows] = await pool.execute<RowDataPacket[]>(
-      'SELECT id, property_type, property_id, status, admin_note, created_at FROM property_mappings WHERE ucp_name = ? ORDER BY created_at DESC',
+      'SELECT id, property_type, property_id, status, admin_note, created_at, custom_title FROM property_mappings WHERE ucp_name = ? ORDER BY created_at DESC',
       [session.username]
     );
 
@@ -50,14 +50,14 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { propertyType, propertyId, mappingCode } = body;
+    const { propertyType, propertyId, mappingCode, customTitle } = body;
 
-    if (!propertyType || !propertyId || !mappingCode) {
+    if (!propertyType || !mappingCode) {
       return NextResponse.json({ error: 'Data form tidak lengkap.' }, { status: 400 });
     }
 
-    const typeNum = parseInt(propertyType); // 1 = House, 2 = Biz, 3 = Apartment
-    const idNum = parseInt(propertyId);
+    const typeNum = parseInt(propertyType); // 1 = House, 2 = Biz, 3 = Apartment, 4 = Custom
+    const idNum = typeNum === 4 ? 0 : parseInt(propertyId);
 
     // 2. Validate ownership based on property type
     let isOwner = false;
@@ -82,6 +82,8 @@ export async function POST(req: NextRequest) {
         [idNum, session.userId]
       );
       isOwner = apts.length > 0;
+    } else if (typeNum === 4) {
+      isOwner = true; // Custom mapping bypasses ownership check
     }
 
     if (!isOwner) {
@@ -89,14 +91,24 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Check for existing PENDING request
-    const [pending] = await pool.execute<RowDataPacket[]>(
-      'SELECT id FROM property_mappings WHERE property_type = ? AND property_id = ? AND status = 0 LIMIT 1',
-      [typeNum, idNum]
-    );
+    let pendingExists = false;
+    if (typeNum === 4) {
+      const [pending] = await pool.execute<RowDataPacket[]>(
+        'SELECT id FROM property_mappings WHERE property_type = 4 AND custom_title = ? AND status = 0 LIMIT 1',
+        [customTitle || '']
+      );
+      pendingExists = pending.length > 0;
+    } else {
+      const [pending] = await pool.execute<RowDataPacket[]>(
+        'SELECT id FROM property_mappings WHERE property_type = ? AND property_id = ? AND status = 0 LIMIT 1',
+        [typeNum, idNum]
+      );
+      pendingExists = pending.length > 0;
+    }
 
-    if (pending.length > 0) {
+    if (pendingExists) {
       return NextResponse.json(
-        { error: 'Properti ini sudah memiliki request mapping berstatus PENDING. Mohon tunggu tinjauan admin.' },
+        { error: 'Properti/Mapping ini sudah memiliki request mapping berstatus PENDING. Mohon tunggu tinjauan admin.' },
         { status: 400 }
       );
     }
@@ -141,8 +153,8 @@ export async function POST(req: NextRequest) {
 
     // 6. Save request to database
     await pool.execute<ResultSetHeader>(
-      'INSERT INTO property_mappings (ucp_name, property_type, property_id, mapping_code, status) VALUES (?, ?, ?, ?, 0)',
-      [session.username, typeNum, idNum, cleanMappingCode]
+      'INSERT INTO property_mappings (ucp_name, property_type, property_id, mapping_code, status, custom_title) VALUES (?, ?, ?, ?, 0, ?)',
+      [session.username, typeNum, idNum, cleanMappingCode, typeNum === 4 ? (customTitle || 'Kustom') : null]
     );
 
     return NextResponse.json({ success: true, message: 'Request mapping berhasil diajukan.' });
