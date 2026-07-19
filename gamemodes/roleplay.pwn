@@ -816,7 +816,13 @@ enum MOVEABLE_DOORS
 	Float:doorMoveZ,
 	Float:doorMoveRX,
 	Float:doorMoveRY,
-	Float:doorMoveRZ
+	Float:doorMoveRZ,
+	doorCheckpoint,
+	doorCheckpointMove,
+	Float:doorCPX,
+	Float:doorCPY,
+	Float:doorCPZ,
+	doorTimer
 }
 
 new Doors[MAX_MOVEDOORS][MOVEABLE_DOORS];
@@ -980,7 +986,7 @@ enum e_md
 	mTimer,
 };
 
-new sgstr[128], gstr[2000], gquery[256], vgstr[128]; // Global strings
+new sgstr[128], gstr[2000], gquery[512], vgstr[128]; // Global strings
 
 new
 	AdvertData[MAX_AD_QUEUE][eadvert],
@@ -9111,11 +9117,15 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 		}
     }
 
-	if(newkeys & KEY_SECONDARY_ATTACK) // Press F / Enter to Enter/Exit Interior
+	if((newkeys & KEY_SECONDARY_ATTACK) || (newkeys & KEY_CTRL_BACK)) // Press F / Enter or H to Interact
 	{
 		if(GetPlayerState(playerid) == PLAYER_STATE_ONFOOT)
 		{
-			if(IsPlayerNearElevator(playerid))
+			if(IsPlayerNearMoveDoor(playerid))
+			{
+				Command_ReProcess(playerid, "/door", 0);
+			}
+			else if(IsPlayerNearElevator(playerid))
 			{
 				Command_ReProcess(playerid, "/elevator", 0);
 			}
@@ -11716,19 +11726,19 @@ AddTeleToFile(teleid, const mapname[], interior, Float:LX, Float:LY, Float:LZ)
 
 AddGateToFile(id, modelid, faction, interior, virworld, Float:x, Float:y, Float:z, const name[])
 {
-    new clean_name[64];
-    mysql_escape_string(name,clean_name);
-	format(gquery, sizeof(gquery), "INSERT INTO `gates` (model, faction, posx, posy, posz, posrx, posry, posrz, interior, virworld, name) VALUES(%d, %d, %f, %f, %f, 0.0, 0.0, 0.0, %d, %d, '%s')",modelid,faction,x,y,z,interior,virworld,clean_name);
-	mysql_tquery(dbCon, gquery, "OnGateInsert", "d", id);
+    new clean_name[64], query[512];
+    mysql_escape_string(name, clean_name);
+	format(query, sizeof(query), "INSERT INTO `gates` (model, faction, posx, posy, posz, posrx, posry, posrz, interior, virworld, name) VALUES(%d, %d, %f, %f, %f, 0.0, 0.0, 0.0, %d, %d, '%s')", modelid, faction, x, y, z, interior, virworld, clean_name);
+	mysql_tquery(dbCon, query, "OnGateInsert", "d", id);
 	return true;
 }
 
 AddMoveDoorToFile(id, modelid, faction, interior, virworld, Float:x, Float:y, Float:z, const name[])
 {
-    new clean_name[64];
-    mysql_escape_string(name,clean_name);
-	format(gquery, sizeof(gquery), "INSERT INTO `movedoors` (model, faction, posx, posy, posz, posrx, posry, posrz, interior, virworld, name) VALUES(%d, %d, %f, %f, %f, 0.0, 0.0, 0.0, %d, %d, '%s')",modelid,faction,x,y,z,interior,virworld,clean_name);
-	mysql_tquery(dbCon, gquery, "OnMoveDoorInsert", "d", id);
+    new clean_name[64], query[512];
+    mysql_escape_string(name, clean_name);
+	format(query, sizeof(query), "INSERT INTO `movedoors` (model, faction, posx, posy, posz, posrx, posry, posrz, interior, virworld, name, openspeed, movex, movey, movez, moverx, movery, moverz, cpx, cpy, cpz) VALUES(%d, %d, %f, %f, %f, 0.0, 0.0, 0.0, %d, %d, '%s', 2.0, %f, %f, %f, 0.0, 0.0, 0.0, %f, %f, %f)", modelid, faction, x, y, z, interior, virworld, clean_name, x, y, z, x, y, z);
+	mysql_tquery(dbCon, query, "OnMoveDoorInsert", "d", id);
 	return true;
 }
 
@@ -11783,7 +11793,28 @@ public OnGateRemove(objectid)
 forward OnMoveDoorRemove(objectid);
 public OnMoveDoorRemove(objectid)
 {
+	new query[128];
+	format(query, sizeof(query), "DELETE FROM `movedoors` WHERE `id` = %d", Doors[objectid][doorID]);
+	mysql_tquery(dbCon, query);
+
 	DestroyDynamicObject(Doors[objectid][doorObject]);
+	if(IsValidDynamicCP(Doors[objectid][doorCheckpoint]))
+	{
+		DestroyDynamicCP(Doors[objectid][doorCheckpoint]);
+	}
+	Doors[objectid][doorCheckpoint] = INVALID_STREAMER_ID;
+	if(IsValidDynamicCP(Doors[objectid][doorCheckpointMove]))
+	{
+		DestroyDynamicCP(Doors[objectid][doorCheckpointMove]);
+	}
+	Doors[objectid][doorCheckpointMove] = INVALID_STREAMER_ID;
+
+	if(Doors[objectid][doorTimer])
+	{
+		KillTimer(Doors[objectid][doorTimer]);
+		Doors[objectid][doorTimer] = 0;
+	}
+
 	Doors[objectid][doorPosX] = 0.0;
 	Doors[objectid][doorPosY] = 0.0;
 	Doors[objectid][doorPosZ] = 0.0;
@@ -11796,6 +11827,95 @@ public OnMoveDoorRemove(objectid)
 	Doors[objectid][doorLocked] = 0;
 	Doors[objectid][doorVirtualWorld] = 0;
 	return true;
+}
+
+stock Door_Refresh(i)
+{
+	// Destroy existing checkpoints
+	if(IsValidDynamicCP(Doors[i][doorCheckpoint]))
+	{
+		DestroyDynamicCP(Doors[i][doorCheckpoint]);
+	}
+	Doors[i][doorCheckpoint] = INVALID_STREAMER_ID;
+	
+	if(IsValidDynamicCP(Doors[i][doorCheckpointMove]))
+	{
+		DestroyDynamicCP(Doors[i][doorCheckpointMove]);
+	}
+	Doors[i][doorCheckpointMove] = INVALID_STREAMER_ID;
+
+	// Create checkpoint (size 1.2, stream distance 15.0) at player standing coordinates
+	Doors[i][doorCheckpoint] = CreateDynamicCP(Doors[i][doorCPX], Doors[i][doorCPY], Doors[i][doorCPZ], 1.2, Doors[i][doorVirtualWorld], Doors[i][doorInterior], -1, 15.0);
+	return 1;
+}
+
+stock MoveMoveDoor(i, bool:open)
+{
+	if(!Iter_Contains(Movedoors, i)) return 0;
+	
+	new Float:targetX, Float:targetY, Float:targetZ;
+	new Float:targetRX, Float:targetRY, Float:targetRZ;
+	new Float:speed;
+
+	new Float:staticDist = VectorSize(Doors[i][doorMoveX] - Doors[i][doorPosX], Doors[i][doorMoveY] - Doors[i][doorPosY], Doors[i][doorMoveZ] - Doors[i][doorPosZ]);
+
+	if(open)
+	{
+		targetX = Doors[i][doorMoveX];
+		targetY = Doors[i][doorMoveY];
+		targetZ = Doors[i][doorMoveZ];
+		targetRX = Doors[i][doorMoveRX];
+		targetRY = Doors[i][doorMoveRY];
+		targetRZ = Doors[i][doorMoveRZ];
+
+		if(staticDist < 0.05)
+		{
+			targetZ += 0.005; // tiny offset to trigger translation-based rotation
+		}
+	}
+	else
+	{
+		targetX = Doors[i][doorPosX];
+		targetY = Doors[i][doorPosY];
+		targetZ = Doors[i][doorPosZ];
+		targetRX = Doors[i][doorPosRX];
+		targetRY = Doors[i][doorPosRY];
+		targetRZ = Doors[i][doorPosRZ];
+	}
+
+	if(staticDist < 0.05)
+	{
+		new Float:duration = 2.0;
+		if(Doors[i][doorOpenSpeed] > 0.01)
+		{
+			duration = 2.0 / Doors[i][doorOpenSpeed];
+		}
+		if(duration < 0.1) duration = 0.1;
+		speed = 0.005 / duration;
+	}
+	else
+	{
+		speed = Doors[i][doorOpenSpeed];
+	}
+
+	MoveDynamicObject(Doors[i][doorObject], targetX, targetY, targetZ, speed, targetRX, targetRY, targetRZ);
+	return 1;
+}
+
+forward AutoCloseMoveDoor(i);
+public AutoCloseMoveDoor(i)
+{
+	if(Iter_Contains(Movedoors, i))
+	{
+		if(Doors[i][doorOpened] == 1)
+		{
+			Doors[i][doorOpened] = 0;
+			Doors[i][doorTimer] = 0;
+			
+			MoveMoveDoor(i, false);
+		}
+	}
+	return 1;
 }
 
 forward OnGateInsert(id);
@@ -12262,6 +12382,7 @@ public OnPlayerEditDynamicObject(playerid, objectid, response, Float:x, Float:y,
 				SendClientMessageEx(playerid, COLOR_YELLOW, "-> Moving door %d's default position adjusted to: %f, %f, %f", x, y, z);
 				
 				SaveEditedMoveDoor(i, x, y, z, rx, ry, rz);
+				Door_Refresh(i);
 				
 				DeletePVar(playerid, "EditingMoveDoor");
 				DeletePVar(playerid, "ObjectEditing");
@@ -12282,18 +12403,18 @@ public OnPlayerEditDynamicObject(playerid, objectid, response, Float:x, Float:y,
 
 	if(GetPVarInt(playerid, "EditingMoveDoorMove") == 1)
 	{
-	    new i = GetPVarInt(playerid, "ObjectEditing");
+		new i = GetPVarInt(playerid, "ObjectEditing");
 	
-	    if(Iter_Contains(Movedoors, i))
-	    {
+		if(Iter_Contains(Movedoors, i))
+		{
 			if(response == EDIT_RESPONSE_FINAL)
 			{
-	      		Doors[i][doorMoveX] = x;
-	      		Doors[i][doorMoveY] = y;
-	      		Doors[i][doorMoveZ] = z;
-	      		Doors[i][doorMoveRX] = rx;
-	      		Doors[i][doorMoveRY] = ry;
-	      		Doors[i][doorMoveRZ] = rz;
+				Doors[i][doorMoveX] = x;
+				Doors[i][doorMoveY] = y;
+				Doors[i][doorMoveZ] = z;
+				Doors[i][doorMoveRX] = rx;
+				Doors[i][doorMoveRY] = ry;
+				Doors[i][doorMoveRZ] = rz;
 	      		
 				SetDynamicObjectPos(objectid, oldX, oldY, oldZ);
 				SetDynamicObjectRot(objectid, oldRotX, oldRotY, oldRotZ);
@@ -12301,6 +12422,7 @@ public OnPlayerEditDynamicObject(playerid, objectid, response, Float:x, Float:y,
 				SendClientMessageEx(playerid, COLOR_YELLOW, "-> Moving door %d's moving position adjusted to: %f, %f, %f", x, y, z);
 				
 				SaveEditedMoveDoorMove(i, x, y, z, rx, ry, rz);
+				Door_Refresh(i);
 
 				DeletePVar(playerid, "EditingMoveDoorMove");
 				DeletePVar(playerid, "ObjectEditing");

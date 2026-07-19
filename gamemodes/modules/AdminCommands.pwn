@@ -5362,6 +5362,18 @@ CMD:makemovedoor(playerid, params[])
 		Doors[objectid][doorOpened] = 0;
 		Doors[objectid][doorLocked] = 0;
 		Doors[objectid][doorVirtualWorld] = GetPlayerVirtualWorld(playerid);
+		Doors[objectid][doorOpenSpeed] = 2.0;
+		Doors[objectid][doorMoveX] = X;
+		Doors[objectid][doorMoveY] = Y;
+		Doors[objectid][doorMoveZ] = Z;
+		Doors[objectid][doorMoveRX] = 0.0;
+		Doors[objectid][doorMoveRY] = 0.0;
+		Doors[objectid][doorMoveRZ] = 0.0;
+		Doors[objectid][doorCheckpoint] = INVALID_STREAMER_ID;
+		Doors[objectid][doorCheckpointMove] = INVALID_STREAMER_ID;
+		Doors[objectid][doorCPX] = X;
+		Doors[objectid][doorCPY] = Y;
+		Doors[objectid][doorCPZ] = Z;
 
 		format(Doors[objectid][doorName], 64, "%s", name);
 		Doors[objectid][doorObject] = CreateDynamicObject(modelid, X, Y, Z, 0.0, 0.0, 0.0, Doors[objectid][doorVirtualWorld], Doors[objectid][doorInterior], -1, 200.0);
@@ -5371,6 +5383,7 @@ CMD:makemovedoor(playerid, params[])
 		SendClientMessageEx(playerid, COLOR_GREEN, "New moving door has been added [DoorID: %d, ModelID: %d, Description: %s]", objectid, modelid, Doors[objectid][doorName]);
 
 		Iter_Add(Movedoors, objectid);
+		Door_Refresh(objectid);
 	}
 	return true;
 }
@@ -5402,6 +5415,18 @@ CMD:dupmovedoor(playerid, params[])
 		Doors[objectid][doorOpened] = Doors[doorid][doorOpened];
 		Doors[objectid][doorLocked] = Doors[doorid][doorLocked];
 		Doors[objectid][doorVirtualWorld] = Doors[doorid][doorVirtualWorld];
+		Doors[objectid][doorOpenSpeed] = Doors[doorid][doorOpenSpeed];
+		Doors[objectid][doorMoveX] = Doors[doorid][doorMoveX];
+		Doors[objectid][doorMoveY] = Doors[doorid][doorMoveY];
+		Doors[objectid][doorMoveZ] = Doors[doorid][doorMoveZ];
+		Doors[objectid][doorMoveRX] = Doors[doorid][doorMoveRX];
+		Doors[objectid][doorMoveRY] = Doors[doorid][doorMoveRY];
+		Doors[objectid][doorMoveRZ] = Doors[doorid][doorMoveRZ];
+		Doors[objectid][doorCheckpoint] = INVALID_STREAMER_ID;
+		Doors[objectid][doorCheckpointMove] = INVALID_STREAMER_ID;
+		Doors[objectid][doorCPX] = Doors[doorid][doorCPX];
+		Doors[objectid][doorCPY] = Doors[doorid][doorCPY];
+		Doors[objectid][doorCPZ] = Doors[doorid][doorCPZ];
 
 		format(Doors[objectid][doorName], 64, "%s", name);
 
@@ -5412,6 +5437,7 @@ CMD:dupmovedoor(playerid, params[])
 		SendClientMessageEx(playerid, COLOR_GREEN, "New sliding door was copied [DoorID: %d, ModelID: %d, Description: %s]", objectid, Doors[objectid][doorModel], Doors[objectid][doorName]);
 
 		Iter_Add(Movedoors, objectid);
+		Door_Refresh(objectid);
 	}
 	return true;
 }
@@ -5459,7 +5485,7 @@ CMD:editmovedoor(playerid, params[])
 
 	if(sscanf(params, "ddS()[64]", objectid, type, input))
 	{
-		SendSyntaxMessage(playerid, "/editmovedoor [doorid] [type (1-Object, 2-Move, 3-OpenSpeed, 4-Name, 5-Faction Type)]");
+		SendSyntaxMessage(playerid, "/editmovedoor [doorid] [type (1-Default Pos, 2-Moving Pos, 3-OpenSpeed, 4-Name, 5-Faction Type, 6-Checkpoint Pos)]");
 		SendClientMessage(playerid, COLOR_GREY, "Faction types: 1: LSPD | 2: NEWS | 3: LSFD | 4: GOV | 5: MAFIA | 6: LSSD | 7: DOC");
 		return true;
 	}
@@ -5502,7 +5528,8 @@ CMD:editmovedoor(playerid, params[])
 			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `movedoors` SET `openspeed` = '%f' WHERE `id` = %d", speed, Doors[objectid][doorID]);
 			mysql_pquery(dbCon, gquery);
 
-	      	SendClientMessageEx(playerid, COLOR_GREEN, "-> Moving door %d's speed has been adjusted to: %.0f", speed);
+			Door_Refresh(objectid);
+	      	SendClientMessageEx(playerid, COLOR_GREEN, "-> Moving door %d's speed has been adjusted to: %.1f", objectid, speed);
       	}
       	else SendSyntaxMessage(playerid, "/editmovedoor %d 3 [speed]", objectid);
 	}
@@ -5515,7 +5542,8 @@ CMD:editmovedoor(playerid, params[])
 			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `movedoors` SET `name` = '%e' WHERE `id` = %d", input, Doors[objectid][doorID]);
 			mysql_pquery(dbCon, gquery);
 
-	      	SendClientMessageEx(playerid, COLOR_GREEN, "-> Moving door %d's name has been adjusted to: %s", input);
+			Door_Refresh(objectid);
+	      	SendClientMessageEx(playerid, COLOR_GREEN, "-> Moving door %d's name has been adjusted to: %s", objectid, input);
 		}
 		else SendSyntaxMessage(playerid, "/editmovedoor %d 4 [name]", objectid);
 	}
@@ -5532,10 +5560,26 @@ CMD:editmovedoor(playerid, params[])
 				mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `movedoors` SET `faction` = '%d' WHERE `id` = %d", faction, Doors[objectid][doorID]);
 				mysql_pquery(dbCon, gquery);
 
-				SendClientMessageEx(playerid, COLOR_GREEN, "-> Moving door %d's faction has been adjusted to: %d", Doors[objectid][doorFaction]);
+				Door_Refresh(objectid);
+				SendClientMessageEx(playerid, COLOR_GREEN, "-> Moving door %d's faction has been adjusted to: %d", objectid, Doors[objectid][doorFaction]);
 	      	}
 		}
 		else SendSyntaxMessage(playerid, "/editmovedoor %d 5 [faction type]", objectid);
+	}
+	else if(type == 6)
+	{
+		new Float:X, Float:Y, Float:Z;
+		GetPlayerPos(playerid, X, Y, Z);
+		
+		Doors[objectid][doorCPX] = X;
+		Doors[objectid][doorCPY] = Y;
+		Doors[objectid][doorCPZ] = Z;
+
+		mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `movedoors` SET `cpx` = '%f', `cpy` = '%f', `cpz` = '%f' WHERE `id` = %d", X, Y, Z, Doors[objectid][doorID]);
+		mysql_pquery(dbCon, gquery);
+
+		Door_Refresh(objectid);
+		SendClientMessageEx(playerid, COLOR_GREEN, "-> Moving door %d's checkpoint position has been set to your current position.", objectid);
 	}
 	return true;
 }

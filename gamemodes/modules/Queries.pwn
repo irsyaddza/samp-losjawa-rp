@@ -610,10 +610,16 @@ public Movedoor_Load()
         cache_get_value_index_float(i, 16, Doors[i][doorMoveRX]);
         cache_get_value_index_float(i, 17, Doors[i][doorMoveRY]);
         cache_get_value_index_float(i, 18, Doors[i][doorMoveRZ]);
+        cache_get_value_index_float(i, 19, Doors[i][doorCPX]);
+        cache_get_value_index_float(i, 20, Doors[i][doorCPY]);
+        cache_get_value_index_float(i, 21, Doors[i][doorCPZ]);
 
 		Doors[i][doorObject] = CreateDynamicObject(Doors[i][doorModel], Doors[i][doorPosX], Doors[i][doorPosY], Doors[i][doorPosZ], Doors[i][doorPosRX], Doors[i][doorPosRY], Doors[i][doorPosRZ], -1, -1, -1, 200.0);
+		Doors[i][doorCheckpoint] = INVALID_STREAMER_ID;
+		Doors[i][doorCheckpointMove] = INVALID_STREAMER_ID;
 
 		Iter_Add(Movedoors, i);
+		Door_Refresh(i);
 
 		total++;
 	}

@@ -5070,7 +5070,7 @@ CMD:door(playerid, params[])
 	{
 		TogglePrisonCell(house);
 	}	
-    else
+	else
 	{
 		new
 			Float:fDistance[2] = {99999.0, 0.0},
@@ -5079,40 +5079,62 @@ CMD:door(playerid, params[])
 
 		foreach (new x: Movedoors)
 		{
-			fDistance[1] = GetPlayerDistanceFromPoint(playerid, Doors[x][doorPosX], Doors[x][doorPosY], Doors[x][doorPosZ]);
-
+			fDistance[1] = GetPlayerDistanceFromPoint(playerid, Doors[x][doorCPX], Doors[x][doorCPY], Doors[x][doorCPZ]);
 			if(fDistance[1] < fDistance[0])
 			{
 				fDistance[0] = fDistance[1];
-
 				i = x;
 			}
 		}
 
-		if(i != -1 && fDistance[0] < 3)
+		if(i != -1 && fDistance[0] < 3.0)
 		{
-			if(Doors[i][doorFaction] == -1 || (Doors[i][doorFaction] != -1 && GetFactionType(playerid) == Doors[i][doorFaction]))
+			if(Doors[i][doorFaction] == -1 || (Doors[i][doorFaction] != -1 && GetFactionType(playerid) == Doors[i][doorFaction]) || PlayerData[playerid][pAdmin] >= 4)
 			{
 				if(Doors[i][doorOpened] == 1)
 				{
 					Doors[i][doorOpened] = 0;
 
-					MoveDynamicObject(Doors[i][doorObject], Doors[i][doorPosX], Doors[i][doorPosY], Doors[i][doorPosZ], Doors[i][doorOpenSpeed], Doors[i][doorPosRX], Doors[i][doorPosRY], Doors[i][doorPosRZ]);
+					if(Doors[i][doorTimer])
+					{
+						KillTimer(Doors[i][doorTimer]);
+						Doors[i][doorTimer] = 0;
+					}
+					MoveMoveDoor(i, false);
 				}
 				else
 				{
-					if(Doors[i][doorLocked])
+					if(Doors[i][doorLocked] && PlayerData[playerid][pAdmin] < 4)
 					    return SendClientMessage(playerid, COLOR_LIGHTRED, "Door is locked.");
 
 					Doors[i][doorOpened] = 1;
 
-					MoveDynamicObject(Doors[i][doorObject], Doors[i][doorMoveX], Doors[i][doorMoveY], Doors[i][doorMoveZ], Doors[i][doorOpenSpeed], Doors[i][doorMoveRX], Doors[i][doorMoveRY], Doors[i][doorMoveRZ]);
+					if(Doors[i][doorTimer])
+					{
+						KillTimer(Doors[i][doorTimer]);
+						Doors[i][doorTimer] = 0;
+					}
+					Doors[i][doorTimer] = SetTimerEx("AutoCloseMoveDoor", 3000, false, "d", i);
+
+					MoveMoveDoor(i, true);
 				}
 				return true;
 			}
 		}
 	}
 	return true;
+}
+
+stock IsPlayerNearMoveDoor(playerid)
+{
+	foreach(new x : Movedoors)
+	{
+		if(GetPlayerDistanceFromPoint(playerid, Doors[x][doorCPX], Doors[x][doorCPY], Doors[x][doorCPZ]) < 3.0)
+		{
+			return 1;
+		}
+	}
+	return 0;
 }
 
 CMD:elevator(playerid, params[])
@@ -10410,7 +10432,7 @@ CMD:lock(playerid, params[])
 
 		foreach (new x: Movedoors)
 		{
-			fDistance[1] = GetPlayerDistanceFromPoint(playerid, Doors[x][doorPosX], Doors[x][doorPosY], Doors[x][doorPosZ]);
+			fDistance[1] = GetPlayerDistanceFromPoint(playerid, Doors[x][doorCPX], Doors[x][doorCPY], Doors[x][doorCPZ]);
 
 			if(fDistance[1] < fDistance[0])
 			{
@@ -10421,7 +10443,7 @@ CMD:lock(playerid, params[])
 
 		if(i != -1 && fDistance[0] < 3)
 		{
-			if(Doors[i][doorFaction] == -1 || (Doors[i][doorFaction] != -1 && GetFactionType(playerid) == Doors[i][doorFaction]) || (Doors[i][doorFaction] == FACTION_CORRECTIONAL && IsPolice(playerid)))
+			if(Doors[i][doorFaction] == -1 || (Doors[i][doorFaction] != -1 && GetFactionType(playerid) == Doors[i][doorFaction]) || (Doors[i][doorFaction] == FACTION_CORRECTIONAL && IsPolice(playerid)) || PlayerData[playerid][pAdmin] >= 4)
 			{
 				if(Doors[i][doorLocked] == 1)
 				{
