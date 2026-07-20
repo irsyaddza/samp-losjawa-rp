@@ -4716,7 +4716,7 @@ CMD:invite(playerid, params[])
 
    	SendClientMessageEx(playerid, COLOR_YELLOW, "You invited %s to join %s, they'll have to accept first.", ReturnName(userid, 0), Faction_GetName(playerid));
 
-    SendClientMessageEx(userid, COLOR_YELLOW, "%s invited you to join %s, type /accept to accept the invitation.", ReturnName(playerid, 0), Faction_GetName(playerid));
+    SendClientMessageEx(userid, COLOR_YELLOW, "%s invited you to join %s, type /accept invite to accept the invitation.", ReturnName(playerid, 0), Faction_GetName(playerid));
     SendClientMessage(userid, COLOR_YELLOW, "You can use /decline if you don't want to join.");
 	return true;
 }
@@ -4838,61 +4838,58 @@ stock CanUseMDC(playerid, type)
 
 CMD:accept(playerid, params[])
 {
-	if(isnull(params))
-		return SendSyntaxMessage(playerid, "/accept male or /accept female, write it properly.");
+	if(!isnull(params) && strcmp(params, "invite", true) != 0 && strcmp(params, "male", true) != 0 && strcmp(params, "female", true) != 0)
+	{
+		return SendSyntaxMessage(playerid, "/accept invite");
+	}
 
 	if(PlayerData[playerid][pFactionOffer] == INVALID_PLAYER_ID)
 	    return SendErrorMessage(playerid, "You don't have any invitation to accept.");
 
-	if(strcmp(params, "male", false) == 0 || strcmp(params, "female", true) == 0)
+	new 
+		targetid = PlayerData[playerid][pFactionOffer], 
+		factionid = PlayerData[playerid][pFactionOffered]
+	;
+
+	if(!FactionData[factionid][factionExists] || PlayerData[targetid][pFactionRank] > 1)
 	{
-	    new 
-			targetid = PlayerData[playerid][pFactionOffer], 
-			factionid = PlayerData[playerid][pFactionOffered]
-		;
-
-		if(!FactionData[factionid][factionExists] || PlayerData[targetid][pFactionRank] > 1)
-		{
-		    PlayerData[playerid][pFactionOffer] = INVALID_PLAYER_ID;
-        	PlayerData[playerid][pFactionOffered] = -1;
-	   	 	return SendErrorMessage(playerid, "Faction doesn't exist or you're already in it.");
-		}
-
-		SetFaction(playerid, factionid);
-
-		new rank;
-
-		for(new i = 18; i >= 0; i--)
-		{
-		    if(strlen(FactionRanks[factionid][i]) >= 1)
-		    {
-		        rank = i + 1;
-		        break;
-		    }
-		}
-
-		PlayerData[playerid][pFactionRank] = rank;
-
-		SendClientMessageEx(playerid, COLOR_YELLOW, "You are now a member of %s!", Faction_GetName(targetid));
-		SendClientMessageEx(targetid, COLOR_YELLOW, "%s has joined your faction %s.", ReturnName(playerid, 0), Faction_GetName(targetid));
-
-		AssignFactionPermissions(playerid);
-
-        PlayerData[playerid][pFactionOffer] = INVALID_PLAYER_ID;
-        PlayerData[playerid][pFactionOffered] = -1;
-
-  		if(IsPolice(playerid) && PlayerData[playerid][pAdmin] < 1)
-		{
-			if(!MDC_Created{playerid})
-			{
-				InitMDC(playerid);
-			}
-		}
-
- 		mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `characters` SET `Faction` = '%d', `FactionRank` = '%d' WHERE `ID` = '%d' LIMIT 1", PlayerData[playerid][pFactionID], PlayerData[playerid][pFactionRank], PlayerData[playerid][pID]);
-		mysql_tquery(dbCon, gquery);
+		PlayerData[playerid][pFactionOffer] = INVALID_PLAYER_ID;
+		PlayerData[playerid][pFactionOffered] = -1;
+		return SendErrorMessage(playerid, "Faction doesn't exist or you're already in it.");
 	}
-	else SendSyntaxMessage(playerid, "/accept male or /accept female, write it properly.");
+
+	SetFaction(playerid, factionid);
+
+	new rank;
+	for(new i = 18; i >= 0; i--)
+	{
+		if(strlen(FactionRanks[factionid][i]) >= 1)
+		{
+			rank = i + 1;
+			break;
+		}
+	}
+
+	PlayerData[playerid][pFactionRank] = rank;
+
+	SendClientMessageEx(playerid, COLOR_YELLOW, "You are now a member of %s!", Faction_GetName(targetid));
+	SendClientMessageEx(targetid, COLOR_YELLOW, "%s has joined your faction %s.", ReturnName(playerid, 0), Faction_GetName(targetid));
+
+	AssignFactionPermissions(playerid);
+
+	PlayerData[playerid][pFactionOffer] = INVALID_PLAYER_ID;
+	PlayerData[playerid][pFactionOffered] = -1;
+
+	if(IsPolice(playerid) && PlayerData[playerid][pAdmin] < 1)
+	{
+		if(!MDC_Created{playerid})
+		{
+			InitMDC(playerid);
+		}
+	}
+
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `characters` SET `Faction` = '%d', `FactionRank` = '%d' WHERE `ID` = '%d' LIMIT 1", PlayerData[playerid][pFactionID], PlayerData[playerid][pFactionRank], PlayerData[playerid][pID]);
+	mysql_tquery(dbCon, gquery);
 
 	return true;
 }
@@ -17188,38 +17185,39 @@ CMD:fine(playerid, params[])
 
 CMD:fines(playerid, params[])
 {
-	if(!IsPolice(playerid))
+	if(isnull(params) || !IsPolice(playerid))
+	{
+		ListPlayerFines(playerid, playerid);
+		return true;
+	}
+
+	new userid;
+	if(sscanf(params, "u", userid))
+	{
+		ListPlayerFines(playerid, playerid);
+		return true;
+	}
+
+	if(userid == playerid)
 	{
 		ListPlayerFines(playerid, playerid);
 	}
 	else
 	{
-		new userid;
+		if(!PlayerData[playerid][pOnDuty])
+			return SendErrorMessage(playerid, "You're not on duty.");
 
-		if(sscanf(params, "u", userid))
-			return SendSyntaxMessage(playerid, "/fines [playerid/PartOfName]");
-
-        if(userid == playerid)
+		if(userid == INVALID_PLAYER_ID)
 		{
-			ListPlayerFines(playerid, playerid);
-        }
-        else
-		{
-            if(!PlayerData[playerid][pOnDuty])
-				return SendClientMessage(playerid, COLOR_GRAD1, "You're not on duty.");
-
-			if(userid == INVALID_PLAYER_ID)
+			new maskid[MAX_PLAYER_NAME];
+			sscanf(params, "s[24]", maskid);
+			if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
 			{
-				new maskid[MAX_PLAYER_NAME];
-				sscanf(params, "s[24]", maskid);
-				if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-				{
-					return SendErrorMessage(playerid, "The player you specified isn't connected.");
-				}
+				return SendErrorMessage(playerid, "The player you specified isn't connected.");
 			}
-
-			ListPlayerFines(playerid, userid);
 		}
+
+		ListPlayerFines(playerid, userid);
 	}
 	return true;
 }

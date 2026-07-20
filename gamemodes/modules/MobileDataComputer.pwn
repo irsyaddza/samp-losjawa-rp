@@ -3690,7 +3690,7 @@ FUNX::MDC_OnNameFound(playerid, dbid)
 		info_rows++; first_row++;
 	}*/
 
-    mysql_format(dbCon, query, sizeof(query), "SELECT `fineExpire` FROM `fines` WHERE `fineName` = '%e' ORDER BY `ID` DESC", e_Player_MDC_Cache[playerid][player_name]);
+    mysql_format(dbCon, query, sizeof(query), "SELECT `exp` FROM `fines` WHERE `addressee` = '%e' ORDER BY `id` DESC", e_Player_MDC_Cache[playerid][player_name]);
     new Cache:fines_cache = mysql_query(dbCon, query);
     
     new fines[3];
@@ -3699,7 +3699,7 @@ FUNX::MDC_OnNameFound(playerid, dbid)
     {
  		for(new i = 0, j = cache_num_rows(); i < j; ++i)
 		{
-			cache_get_value_name_int(i, "fineExpire", fines[2]);
+			cache_get_value_name_int(i, "exp", fines[2]);
 
 			if(gettime() > fines[2])
 			{
