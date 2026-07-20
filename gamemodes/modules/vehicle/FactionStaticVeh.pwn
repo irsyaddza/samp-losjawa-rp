@@ -14,6 +14,8 @@ enum E_STATIC_SPAWN {
     Float:ssX,
     Float:ssY,
     Float:ssZ,
+    ssWorld,
+    ssInterior,
     ssPickup,
     Text3D:ssLabel
 };
@@ -32,13 +34,16 @@ stock FactionStaticVeh_Init()
 
     // Create the faction static spawns table
     mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `faction_static_spawns` (`id` INT AUTO_INCREMENT PRIMARY KEY, `factionId` INT NOT NULL, `posX` FLOAT NOT NULL, `posY` FLOAT NOT NULL, `posZ` FLOAT NOT NULL)", "OnFactionStaticSpawnsTableCheck", "");
+    // Migrate: add world & interior columns if not exist (errors silently ignored)
+    mysql_tquery(dbCon, "ALTER TABLE `faction_static_spawns` ADD COLUMN `posWorld` INT NOT NULL DEFAULT '0'", "", "");
+    mysql_tquery(dbCon, "ALTER TABLE `faction_static_spawns` ADD COLUMN `posInterior` INT NOT NULL DEFAULT '-1'", "", "");
     return 1;
 }
 
 forward OnFactionStaticSpawnsTableCheck();
 public OnFactionStaticSpawnsTableCheck()
 {
-    mysql_tquery(dbCon, "SELECT * FROM `faction_static_spawns` LIMIT 20", "FactionStaticSpawns_Load", "");
+    mysql_tquery(dbCon, "SELECT `id`, `factionId`, `posX`, `posY`, `posZ`, `posWorld`, `posInterior` FROM `faction_static_spawns` LIMIT 20", "FactionStaticSpawns_Load", "");
     return 1;
 }
 
@@ -53,12 +58,14 @@ public FactionStaticSpawns_Load()
         cache_get_value_name_float(i, "posX", StaticSpawns[i][ssX]);
         cache_get_value_name_float(i, "posY", StaticSpawns[i][ssY]);
         cache_get_value_name_float(i, "posZ", StaticSpawns[i][ssZ]);
+        cache_get_value_name_int(i, "posWorld", StaticSpawns[i][ssWorld]);
+        cache_get_value_name_int(i, "posInterior", StaticSpawns[i][ssInterior]);
 
-        StaticSpawns[i][ssPickup] = CreateDynamicPickup(1239, 23, StaticSpawns[i][ssX], StaticSpawns[i][ssY], StaticSpawns[i][ssZ], 0, -1);
+        StaticSpawns[i][ssPickup] = CreateDynamicPickup(1239, 23, StaticSpawns[i][ssX], StaticSpawns[i][ssY], StaticSpawns[i][ssZ], StaticSpawns[i][ssWorld], StaticSpawns[i][ssInterior]);
         
         new labelStr[256];
         format(labelStr, sizeof(labelStr), "[%s's Vehicles]\n{FFFFFF}Use {FFFF00}/spawnstatic {FFFFFF}to spawn\nUse {FFFF00}/despawnstatic {FFFFFF}to despawn", FactionData[StaticSpawns[i][ssFaction]][factionName]);
-        StaticSpawns[i][ssLabel] = CreateDynamic3DTextLabel(labelStr, 0xFFFFFFFF, StaticSpawns[i][ssX], StaticSpawns[i][ssY], StaticSpawns[i][ssZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, -1);
+        StaticSpawns[i][ssLabel] = CreateDynamic3DTextLabel(labelStr, 0xFFFFFFFF, StaticSpawns[i][ssX], StaticSpawns[i][ssY], StaticSpawns[i][ssZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, StaticSpawns[i][ssWorld], StaticSpawns[i][ssInterior]);
     }
     printf("[Faction Static Spawns]: Loaded %d spawns from database.", rows);
     return 1;
@@ -125,15 +132,17 @@ Dialog:AddStaticSpawnFac(playerid, response, listitem, inputtext[])
 
     new Float:x, Float:y, Float:z;
     GetPlayerPos(playerid, x, y, z);
+    new world = GetPlayerVirtualWorld(playerid);
+    new interior = GetPlayerInterior(playerid);
 
     new query[256];
-    mysql_format(dbCon, query, sizeof(query), "INSERT INTO `faction_static_spawns` (`factionId`, `posX`, `posY`, `posZ`) VALUES (%d, %f, %f, %f)", facId, x, y, z);
-    mysql_tquery(dbCon, query, "OnFactionStaticSpawnCreated", "dddfff", playerid, slot, facId, x, y, z);
+    mysql_format(dbCon, query, sizeof(query), "INSERT INTO `faction_static_spawns` (`factionId`, `posX`, `posY`, `posZ`, `posWorld`, `posInterior`) VALUES (%d, %f, %f, %f, %d, %d)", facId, x, y, z, world, interior);
+    mysql_tquery(dbCon, query, "OnFactionStaticSpawnCreated", "dddfffdd", playerid, slot, facId, x, y, z, world, interior);
     return 1;
 }
 
-forward OnFactionStaticSpawnCreated(playerid, slot, facId, Float:x, Float:y, Float:z);
-public OnFactionStaticSpawnCreated(playerid, slot, facId, Float:x, Float:y, Float:z)
+forward OnFactionStaticSpawnCreated(playerid, slot, facId, Float:x, Float:y, Float:z, world, interior);
+public OnFactionStaticSpawnCreated(playerid, slot, facId, Float:x, Float:y, Float:z, world, interior)
 {
     new insertid = cache_insert_id();
     StaticSpawns[slot][ssID] = insertid;
@@ -141,12 +150,14 @@ public OnFactionStaticSpawnCreated(playerid, slot, facId, Float:x, Float:y, Floa
     StaticSpawns[slot][ssX] = x;
     StaticSpawns[slot][ssY] = y;
     StaticSpawns[slot][ssZ] = z;
+    StaticSpawns[slot][ssWorld] = world;
+    StaticSpawns[slot][ssInterior] = interior;
 
-    StaticSpawns[slot][ssPickup] = CreateDynamicPickup(1239, 23, x, y, z, 0, -1);
+    StaticSpawns[slot][ssPickup] = CreateDynamicPickup(1239, 23, x, y, z, world, interior);
     
     new labelStr[256];
     format(labelStr, sizeof(labelStr), "[%s's Vehicles]\n{FFFFFF}Use {FFFF00}/spawnstatic {FFFFFF}to spawn\nUse {FFFF00}/despawnstatic {FFFFFF}to despawn", FactionData[facId][factionName]);
-    StaticSpawns[slot][ssLabel] = CreateDynamic3DTextLabel(labelStr, 0xFFFFFFFF, x, y, z + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, -1);
+    StaticSpawns[slot][ssLabel] = CreateDynamic3DTextLabel(labelStr, 0xFFFFFFFF, x, y, z + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, world, interior);
 
     SendClientMessageEx(playerid, COLOR_GREEN, "Static spawn point for %s created successfully (ID: %d).", FactionData[facId][factionName], insertid);
     return 1;
@@ -768,3 +779,148 @@ Dialog:DespawnStaticVehSelect(playerid, response, listitem, inputtext[])
     SendClientMessageEx(playerid, COLOR_GREEN, "Vehicle (%s) despawned successfully.", vehicleVariables[foundIndex][vVehiclePlate]);
     return 1;
 }
+
+// ── Admin Command: /removestaticspawn ────────────────────────────────
+CMD:removestaticspawn(playerid, params[])
+{
+    if(PlayerData[playerid][pAdmin] < 4)
+        return SendErrorMessage(playerid, "You are not authorized to use this command.");
+
+    new str[1024], count = 0;
+    str[0] = EOS;
+
+    for(new i = 0; i < MAX_STATIC_SPAWNS; i++)
+    {
+        if(StaticSpawns[i][ssID] != 0)
+        {
+            format(str, sizeof(str), "%s[ID: %d] %s - (%.1f, %.1f, %.1f) VW:%d\n",
+                str,
+                StaticSpawns[i][ssID],
+                FactionData[StaticSpawns[i][ssFaction]][factionName],
+                StaticSpawns[i][ssX], StaticSpawns[i][ssY], StaticSpawns[i][ssZ],
+                StaticSpawns[i][ssWorld]);
+            count++;
+        }
+    }
+
+    if(!count)
+        return SendErrorMessage(playerid, "No static spawn points exist.");
+
+    Dialog_Show(playerid, RemoveStaticSpawnList, DIALOG_STYLE_LIST, "Remove Static Spawn Point", str, "Delete", "Cancel");
+    return 1;
+}
+
+Dialog:RemoveStaticSpawnList(playerid, response, listitem, inputtext[])
+{
+    if(!response) return 1;
+
+    // Map listitem to the actual slot
+    new slot = -1, idx = -1;
+    for(new i = 0; i < MAX_STATIC_SPAWNS; i++)
+    {
+        if(StaticSpawns[i][ssID] != 0)
+        {
+            idx++;
+            if(idx == listitem)
+            {
+                slot = i;
+                break;
+            }
+        }
+    }
+
+    if(slot == -1)
+        return SendErrorMessage(playerid, "Invalid selection.");
+
+    // Destroy pickup and label
+    if(IsValidDynamicPickup(StaticSpawns[slot][ssPickup]))
+        DestroyDynamicPickup(StaticSpawns[slot][ssPickup]);
+
+    if(IsValidDynamic3DTextLabel(StaticSpawns[slot][ssLabel]))
+        DestroyDynamic3DTextLabel(StaticSpawns[slot][ssLabel]);
+
+    // Delete from DB
+    new query[128];
+    mysql_format(dbCon, query, sizeof(query), "DELETE FROM `faction_static_spawns` WHERE `id` = %d LIMIT 1", StaticSpawns[slot][ssID]);
+    mysql_tquery(dbCon, query);
+
+    new removedId = StaticSpawns[slot][ssID];
+
+    // Clear slot
+    StaticSpawns[slot][ssID] = 0;
+    StaticSpawns[slot][ssFaction] = 0;
+    StaticSpawns[slot][ssX] = 0.0;
+    StaticSpawns[slot][ssY] = 0.0;
+    StaticSpawns[slot][ssZ] = 0.0;
+    StaticSpawns[slot][ssWorld] = 0;
+    StaticSpawns[slot][ssInterior] = -1;
+    StaticSpawns[slot][ssPickup] = INVALID_STREAMER_ID;
+    StaticSpawns[slot][ssLabel] = Text3D:INVALID_STREAMER_ID;
+
+    SendClientMessageEx(playerid, COLOR_GREEN, "Static spawn point ID %d has been permanently deleted.", removedId);
+    return 1;
+}
+
+// ── Admin Command: /liststaticspawn ──────────────────────────────────
+CMD:liststaticspawn(playerid, params[])
+{
+    if(PlayerData[playerid][pAdmin] < 4)
+        return SendErrorMessage(playerid, "You are not authorized to use this command.");
+
+    new str[1024], count = 0;
+    str[0] = EOS;
+
+    for(new i = 0; i < MAX_STATIC_SPAWNS; i++)
+    {
+        if(StaticSpawns[i][ssID] != 0)
+        {
+            format(str, sizeof(str), "%s[ID: %d] %s - (%.1f, %.1f, %.1f) VW:%d\n",
+                str,
+                StaticSpawns[i][ssID],
+                FactionData[StaticSpawns[i][ssFaction]][factionName],
+                StaticSpawns[i][ssX], StaticSpawns[i][ssY], StaticSpawns[i][ssZ],
+                StaticSpawns[i][ssWorld]);
+            count++;
+        }
+    }
+
+    if(!count)
+        return SendErrorMessage(playerid, "No static spawn points exist.");
+
+    Dialog_Show(playerid, ListStaticSpawnSelect, DIALOG_STYLE_LIST, "Static Spawn Points", str, "Teleport", "Close");
+    return 1;
+}
+
+Dialog:ListStaticSpawnSelect(playerid, response, listitem, inputtext[])
+{
+    if(!response) return 1;
+
+    // Map listitem to actual slot
+    new slot = -1, idx = -1;
+    for(new i = 0; i < MAX_STATIC_SPAWNS; i++)
+    {
+        if(StaticSpawns[i][ssID] != 0)
+        {
+            idx++;
+            if(idx == listitem)
+            {
+                slot = i;
+                break;
+            }
+        }
+    }
+
+    if(slot == -1)
+        return SendErrorMessage(playerid, "Invalid selection.");
+
+    SetPlayerVirtualWorldEx(playerid, StaticSpawns[slot][ssWorld]);
+    SetPlayerInterior(playerid, (StaticSpawns[slot][ssInterior] == -1) ? 0 : StaticSpawns[slot][ssInterior]);
+    SetPlayerPosEx(playerid, StaticSpawns[slot][ssX], StaticSpawns[slot][ssY], StaticSpawns[slot][ssZ]);
+
+    SendClientMessageEx(playerid, COLOR_YELLOW, "Teleported to static spawn ID %d (%s) in VW %d.",
+        StaticSpawns[slot][ssID],
+        FactionData[StaticSpawns[slot][ssFaction]][factionName],
+        StaticSpawns[slot][ssWorld]);
+    return 1;
+}
+

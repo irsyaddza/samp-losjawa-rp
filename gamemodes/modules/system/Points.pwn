@@ -355,7 +355,7 @@ stock Point_Refresh(i)
     
     // Create 3D Text Label for Outside
     new labelStr[256];
-    format(labelStr, sizeof(labelStr), "{00FFFF}[Point: %s]\n{FFFFFF}Point ID: {FFFF00}%d\n{FFFFFF}Use {FFFF00}/enter, F, or H", EntranceData[i][pointName], EntranceData[i][pointID]);
+    format(labelStr, sizeof(labelStr), "{00FFFF}[Point: %s]\n{FFFFFF}Point ID: {FFFF00}%d\n{FFFFFF}Use {FFFF00}/enter, F, or H", EntranceData[i][pointName], i);
     EntranceData[i][pointLabel] = CreateDynamic3DTextLabel(labelStr, 0xFFFFFFFF, EntranceData[i][outsidePos][0], EntranceData[i][outsidePos][1], EntranceData[i][outsidePos][2] + 0.6, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, outWorld, outInterior);
 
     // Inside/Exit Pickup (only if exit coords set)
@@ -377,7 +377,7 @@ stock Point_Refresh(i)
         EntranceData[i][pointPickupInside] = CreateDynamicPickup(19130, 23, EntranceData[i][insidePos][0], EntranceData[i][insidePos][1], EntranceData[i][insidePos][2], inWorld, inInterior);
         
         // Create 3D Text Label for Inside (Exit)
-        format(labelStr, sizeof(labelStr), "{00FFFF}[Point: %s (Exit)]\n{FFFFFF}Point ID: {FFFF00}%d\n{FFFFFF}Use {FFFF00}/enter, F, or H", EntranceData[i][pointName], EntranceData[i][pointID]);
+        format(labelStr, sizeof(labelStr), "{00FFFF}[Point: %s (Exit)]\n{FFFFFF}Point ID: {FFFF00}%d\n{FFFFFF}Use {FFFF00}/enter, F, or H", EntranceData[i][pointName], i);
         EntranceData[i][pointLabelInside] = CreateDynamic3DTextLabel(labelStr, 0xFFFFFFFF, EntranceData[i][insidePos][0], EntranceData[i][insidePos][1], EntranceData[i][insidePos][2] + 0.6, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, inWorld, inInterior);
     }
     return 1;
@@ -395,6 +395,7 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
             foreach (new i : Entrance)
             {
                 if(InApartment[playerid] != EntranceData[i][outsideApartmentID]) continue;
+                if(EntranceData[i][outsideApartmentID] == -1 && GetPlayerVirtualWorld(playerid) != EntranceData[i][outsideWorld]) continue;
 
                 if(IsPlayerInRangeOfPoint(playerid, EntranceData[i][pointRange], EntranceData[i][outsidePos][0], EntranceData[i][outsidePos][1], EntranceData[i][outsidePos][2]))
                 {
@@ -448,6 +449,7 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
                 foreach (new i : Entrance)
                 {
                     if(InApartment[playerid] != EntranceData[i][insideApartmentID]) continue;
+                    if(EntranceData[i][insideApartmentID] == -1 && GetPlayerVirtualWorld(playerid) != EntranceData[i][insideWorld]) continue;
 
                     if(IsPlayerInRangeOfPoint(playerid, EntranceData[i][pointRange], EntranceData[i][insidePos][0], EntranceData[i][insidePos][1], EntranceData[i][insidePos][2]))
                     {

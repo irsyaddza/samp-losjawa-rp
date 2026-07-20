@@ -5435,6 +5435,8 @@ CMD:enter(playerid, params[])
 	foreach	(new i: Entrance)
 	{
 	    if(InApartment[playerid] != EntranceData[i][outsideApartmentID]) continue;
+	    // VW check: if outside is in open world (no apartment), make sure VW matches
+	    if(EntranceData[i][outsideApartmentID] == -1 && GetPlayerVirtualWorld(playerid) != EntranceData[i][outsideWorld]) continue;
 
 	    if(IsPlayerInRangeOfPoint(playerid, EntranceData[i][pointRange], EntranceData[i][outsidePos][0], EntranceData[i][outsidePos][1], EntranceData[i][outsidePos][2]))
 	    {
@@ -5982,6 +5984,8 @@ CMD:exit(playerid, params[])
 	foreach	(new i: Entrance)
 	{
 	    if(InApartment[playerid] != EntranceData[i][insideApartmentID]) continue;
+	    // VW check: if inside is in open world (no apartment), make sure VW matches
+	    if(EntranceData[i][insideApartmentID] == -1 && GetPlayerVirtualWorld(playerid) != EntranceData[i][insideWorld]) continue;
 
 	    if(IsPlayerInRangeOfPoint(playerid, EntranceData[i][pointRange], EntranceData[i][insidePos][0], EntranceData[i][insidePos][1], EntranceData[i][insidePos][2]))
 	    {
