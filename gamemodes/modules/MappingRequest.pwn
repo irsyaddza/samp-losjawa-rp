@@ -20,7 +20,7 @@
 #define MAPPING_OFFSET_PREVIEW 300000
 
 // Preview objects per player (admin)
-#define MAX_PREVIEW_OBJECTS 500
+#define MAX_PREVIEW_OBJECTS 2000
 new PlayerPreviewObjects[MAX_PLAYERS][MAX_PREVIEW_OBJECTS];
 new PlayerPreviewCount[MAX_PLAYERS];
 
@@ -907,7 +907,7 @@ public OnRestoreSelectedMapping(playerid, db_id)
     if(rows == 0) return SendErrorMessage(playerid, "Could not fetch mapping details for restoration.");
 
     new prop_type, prop_id;
-    static code[65536];
+    static code[300000];
     cache_get_value_name_int(0, "property_type", prop_type);
     cache_get_value_name_int(0, "property_id", prop_id);
     cache_get_value_name(0, "mapping_code", code, sizeof(code));
@@ -1013,7 +1013,7 @@ public OnPreviewSelectedMapping(playerid, db_id)
     if(rows == 0) return SendErrorMessage(playerid, "Could not fetch mapping details.");
 
     new prop_type, prop_id;
-    static code[65536];
+    static code[300000];
     cache_get_value_name_int(0, "property_type", prop_type);
     cache_get_value_name_int(0, "property_id", prop_id);
     cache_get_value_name(0, "mapping_code", code, sizeof(code));
@@ -1216,7 +1216,7 @@ public OnLoadAllApprovedMappings()
     for(new i = 0; i < rows; ++i)
     {
         new db_id, prop_type, prop_id;
-        static code[65536];
+        static code[300000];
         cache_get_value_name_int(i, "id", db_id);
         cache_get_value_name_int(i, "property_type", prop_type);
         cache_get_value_name_int(i, "property_id", prop_id);
