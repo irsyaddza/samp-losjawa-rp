@@ -299,6 +299,10 @@ public OnQueryFinished(extraid, threadid)
 
 				cache_get_value_name_int(0, "Faction", PlayerData[extraid][pFactionID]);
 				cache_get_value_name_int(0, "FactionRank", PlayerData[extraid][pFactionRank]);
+				cache_get_value_name_int(0, "DBRank", PlayerData[extraid][pDBRank]);
+				cache_get_value_name_int(0, "SWATRank", PlayerData[extraid][pSWATRank]);
+				cache_get_value_name_int(0, "EMSRank", PlayerData[extraid][pEMSRank]);
+				cache_get_value_name_int(0, "FireRank", PlayerData[extraid][pFireRank]);
 				cache_get_value_name_int(0, "FactionSpawn", PlayerData[extraid][pFactionSpawn]);
 
 				cache_get_value_name_int(0, "Injured", PlayerData[extraid][pInjured]);

@@ -200,6 +200,64 @@ public Faction_Load()
 			    format(rank, sizeof(rank), "factionRank%d", j + 1);
 			    cache_get_value_name(i, rank, str);
 			    format(FactionRanks[i][j], 32, str);
+
+			    format(rank, sizeof(rank), "emsRank%d", j + 1);
+			    str[0] = EOS;
+			    cache_get_value_name(i, rank, str);
+			    if(strlen(str) > 0)
+			    {
+			    	format(EMSRanks[i][j], 32, str);
+			    }
+			    else
+			    {
+			    	switch(j)
+			    	{
+			    		case 0: format(EMSRanks[i][j], 32, "Medical Director");
+			    		case 1: format(EMSRanks[i][j], 32, "Chief Medical Officer");
+			    		case 2: format(EMSRanks[i][j], 32, "Chief of Surgery");
+			    		case 3: format(EMSRanks[i][j], 32, "Attending Physician");
+			    		case 4: format(EMSRanks[i][j], 32, "Senior Resident Doctor");
+			    		case 5: format(EMSRanks[i][j], 32, "Resident Doctor");
+			    		case 6: format(EMSRanks[i][j], 32, "Medical Intern");
+			    		case 7: format(EMSRanks[i][j], 32, "Chief Paramedic");
+			    		case 8: format(EMSRanks[i][j], 32, "Senior Paramedic");
+			    		case 9: format(EMSRanks[i][j], 32, "Paramedic II");
+			    		case 10: format(EMSRanks[i][j], 32, "Paramedic I");
+			    		case 11: format(EMSRanks[i][j], 32, "Advanced EMT");
+			    		case 12: format(EMSRanks[i][j], 32, "EMT-Basic");
+			    		case 13: format(EMSRanks[i][j], 32, "Student EMT");
+			    		default: format(EMSRanks[i][j], 32, "EMS Trainee");
+			    	}
+			    }
+
+			    format(rank, sizeof(rank), "fireRank%d", j + 1);
+			    str[0] = EOS;
+			    cache_get_value_name(i, rank, str);
+			    if(strlen(str) > 0)
+			    {
+			    	format(FireRanks[i][j], 32, str);
+			    }
+			    else
+			    {
+			    	switch(j)
+			    	{
+			    		case 0: format(FireRanks[i][j], 32, "Fire Chief");
+			    		case 1: format(FireRanks[i][j], 32, "Assistant Fire Chief");
+			    		case 2: format(FireRanks[i][j], 32, "Deputy Fire Chief");
+			    		case 3: format(FireRanks[i][j], 32, "Battalion Chief");
+			    		case 4: format(FireRanks[i][j], 32, "Fire Captain II");
+			    		case 5: format(FireRanks[i][j], 32, "Fire Captain I");
+			    		case 6: format(FireRanks[i][j], 32, "Fire Lieutenant II");
+			    		case 7: format(FireRanks[i][j], 32, "Fire Lieutenant I");
+			    		case 8: format(FireRanks[i][j], 32, "Senior Engineer");
+			    		case 9: format(FireRanks[i][j], 32, "Firefighter III");
+			    		case 10: format(FireRanks[i][j], 32, "Firefighter II");
+			    		case 11: format(FireRanks[i][j], 32, "Firefighter I");
+			    		case 12: format(FireRanks[i][j], 32, "Probationary Firefighter");
+			    		case 13: format(FireRanks[i][j], 32, "Fire Recruit");
+			    		default: format(FireRanks[i][j], 32, "Fire Trainee");
+			    	}
+			    }
 			}
 		}
 	}
@@ -254,6 +312,8 @@ FUNX::FactionSpawn_Load()
 		//cache_get_value_name_int(i, "Local", FactionSpawns[faction][ count[faction] ][spawnLocal]);
 
 		cache_get_value_name(i, "Name", FactionSpawns[faction][ count[faction] ][spawnName], 64);
+
+		UpdateFactionSpawnPickup(faction, count[faction]);
 
 		count[faction] ++;
 	}

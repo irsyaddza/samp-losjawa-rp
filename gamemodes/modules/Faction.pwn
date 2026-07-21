@@ -38,12 +38,48 @@ enum E_FACTION_SPAWN_DATA
 	spawnInt,
 	spawnWorld,
 	spawnApartment,
-	spawnName[64]
+	spawnName[64],
+	spawnPickup,
+	Text3D:spawnText
 };
 
 new FactionData[MAX_FACTIONS][E_FACTION_DATA];
 new FactionSpawns[MAX_FACTIONS][MAX_FACTION_SPAWNS][E_FACTION_SPAWN_DATA];
+
+stock UpdateFactionSpawnPickup(factionid, slot)
+{
+	if(FactionSpawns[factionid][slot][spawnPickup] != 0)
+	{
+		DestroyDynamicPickup(FactionSpawns[factionid][slot][spawnPickup]);
+		FactionSpawns[factionid][slot][spawnPickup] = 0;
+	}
+	if(IsValidDynamic3DTextLabel(FactionSpawns[factionid][slot][spawnText]))
+	{
+		DestroyDynamic3DTextLabel(FactionSpawns[factionid][slot][spawnText]);
+		FactionSpawns[factionid][slot][spawnText] = Text3D:INVALID_3DTEXT_ID;
+	}
+
+	if(FactionSpawns[factionid][slot][spawnID] != 0)
+	{
+		new Float:x = FactionSpawns[factionid][slot][factionSpawn][0];
+		new Float:y = FactionSpawns[factionid][slot][factionSpawn][1];
+		new Float:z = FactionSpawns[factionid][slot][factionSpawn][2];
+		new intid = FactionSpawns[factionid][slot][spawnInt];
+		new vwid = FactionSpawns[factionid][slot][spawnWorld];
+
+		// Create Pickup ID 1239
+		FactionSpawns[factionid][slot][spawnPickup] = CreateDynamicPickup(1239, 23, x, y, z, vwid, intid);
+
+		// Create 3D Text Label with Spawn Name
+		new labelStr[128];
+		format(labelStr, sizeof(labelStr), "[ %s ]\n{FFFFFF}Faction Spawn Point", FactionSpawns[factionid][slot][spawnName]);
+		FactionSpawns[factionid][slot][spawnText] = CreateDynamic3DTextLabel(labelStr, 0x7E98B6FF, x, y, z + 0.75, 12.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, vwid, intid);
+	}
+	return 1;
+}
 new FactionRanks[MAX_FACTIONS][19][32];
+new EMSRanks[MAX_FACTIONS][19][32];
+new FireRanks[MAX_FACTIONS][19][32];
 
 enum e_FACTION_SKIN_DATA
 {
@@ -380,6 +416,45 @@ Faction_GetRank(playerid)
  	if(factionid == -1)
 	    return rank;
 
+	if(GetFactionType(playerid) == FACTION_POLICE && PlayerData[playerid][pDBRank] > 0)
+	{
+		switch(PlayerData[playerid][pDBRank])
+		{
+			case 1: format(rank, 32, "Detective I");
+			case 2: format(rank, 32, "Detective II");
+			case 3: format(rank, 32, "Detective III");
+			default: format(rank, 32, FactionRanks[factionid][PlayerData[playerid][pFactionRank] - 1]);
+		}
+		return rank;
+	}
+	else if(GetFactionType(playerid) == FACTION_MEDIC)
+	{
+		if(PlayerData[playerid][pEMSRank] > 0)
+		{
+			switch(PlayerData[playerid][pEMSRank])
+			{
+				case 1: format(rank, 32, "EMT-Basic");
+				case 2: format(rank, 32, "Paramedic");
+				case 3: format(rank, 32, "Resident Doctor");
+				case 4: format(rank, 32, "Chief Medical Officer");
+				default: format(rank, 32, FactionRanks[factionid][PlayerData[playerid][pFactionRank] - 1]);
+			}
+			return rank;
+		}
+		else if(PlayerData[playerid][pFireRank] > 0)
+		{
+			switch(PlayerData[playerid][pFireRank])
+			{
+				case 1: format(rank, 32, "Probationary Firefighter");
+				case 2: format(rank, 32, "Firefighter");
+				case 3: format(rank, 32, "Fire Lieutenant");
+				case 4: format(rank, 32, "Battalion Chief");
+				default: format(rank, 32, FactionRanks[factionid][PlayerData[playerid][pFactionRank] - 1]);
+			}
+			return rank;
+		}
+	}
+
 	format(rank, 32, FactionRanks[factionid][PlayerData[playerid][pFactionRank] - 1]);
 	return rank;
 }
@@ -527,6 +602,7 @@ public OnFactionCreated(factionid)
 	mysql_pquery(dbCon, query);
 
 	FactionSpawns[factionid][0][spawnID] = cache_insert_id();
+	UpdateFactionSpawnPickup(factionid, 0);
 	return true;
 }
 
@@ -591,6 +667,7 @@ Faction_SaveSpawnID(factionid, spawnid)
 		);
 
 		mysql_tquery(dbCon, query);
+		UpdateFactionSpawnPickup(factionid, spawnid);
 	}
 
 	return true;
@@ -624,6 +701,26 @@ Faction_SaveRanks(factionid)
 	    FactionData[factionid][factionID]
 	);
 
+	return mysql_tquery(dbCon, query);
+}
+
+Faction_SaveEMSRanks(factionid)
+{
+	if(factionid == -1) return true;
+	new query[900];
+	mysql_format(dbCon, query, sizeof(query), "UPDATE `factions` SET `emsRank1` = '%e', `emsRank2` = '%e', `emsRank3` = '%e', `emsRank4` = '%e', `emsRank5` = '%e', `emsRank6` = '%e', `emsRank7` = '%e', `emsRank8` = '%e', `emsRank9` = '%e', `emsRank10` = '%e', `emsRank11` = '%e', `emsRank12` = '%e', `emsRank13` = '%e', `emsRank14` = '%e', `emsRank15` = '%e', `emsRank16` = '%e', `emsRank17` = '%e', `emsRank18` = '%e' WHERE `factionID` = '%d' LIMIT 1",
+	    EMSRanks[factionid][0], EMSRanks[factionid][1], EMSRanks[factionid][2], EMSRanks[factionid][3], EMSRanks[factionid][4], EMSRanks[factionid][5], EMSRanks[factionid][6], EMSRanks[factionid][7], EMSRanks[factionid][8], EMSRanks[factionid][9], EMSRanks[factionid][10], EMSRanks[factionid][11], EMSRanks[factionid][12], EMSRanks[factionid][13], EMSRanks[factionid][14], EMSRanks[factionid][15], EMSRanks[factionid][16], EMSRanks[factionid][17], FactionData[factionid][factionID]
+	);
+	return mysql_tquery(dbCon, query);
+}
+
+Faction_SaveFireRanks(factionid)
+{
+	if(factionid == -1) return true;
+	new query[900];
+	mysql_format(dbCon, query, sizeof(query), "UPDATE `factions` SET `fireRank1` = '%e', `fireRank2` = '%e', `fireRank3` = '%e', `fireRank4` = '%e', `fireRank5` = '%e', `fireRank6` = '%e', `fireRank7` = '%e', `fireRank8` = '%e', `fireRank9` = '%e', `fireRank10` = '%e', `fireRank11` = '%e', `fireRank12` = '%e', `fireRank13` = '%e', `fireRank14` = '%e', `fireRank15` = '%e', `fireRank16` = '%e', `fireRank17` = '%e', `fireRank18` = '%e' WHERE `factionID` = '%d' LIMIT 1",
+	    FireRanks[factionid][0], FireRanks[factionid][1], FireRanks[factionid][2], FireRanks[factionid][3], FireRanks[factionid][4], FireRanks[factionid][5], FireRanks[factionid][6], FireRanks[factionid][7], FireRanks[factionid][8], FireRanks[factionid][9], FireRanks[factionid][10], FireRanks[factionid][11], FireRanks[factionid][12], FireRanks[factionid][13], FireRanks[factionid][14], FireRanks[factionid][15], FireRanks[factionid][16], FireRanks[factionid][17], FactionData[factionid][factionID]
+	);
 	return mysql_tquery(dbCon, query);
 }
 
@@ -1418,6 +1515,10 @@ Dialog:FactionEdit(playerid, response, listitem, inputtext[])
 				format(string, sizeof(string), "{FFFFFF}Change the factions max vehicles count, currently %d\n\n(They currently have %d vehicles.)", FactionData[factionid][factionMaxVehicles], vehicles);
 				Dialog_Show(playerid, FactionEdit_MaxVehicles, DIALOG_STYLE_INPUT, "Max Vehicles", string, "Enter", "<< Back");
 			}
+			case 13: // Subrank Administration
+			{
+				ShowFactionSubranksMenu(playerid);
+			}
 			default:
 			{
 			    ShowPlayerEditFaction(playerid);
@@ -1430,6 +1531,282 @@ Dialog:FactionEdit(playerid, response, listitem, inputtext[])
 	}
 
 	return true;
+}
+
+ShowFactionSubranksMenu(playerid)
+{
+	new factionid = PlayerData[playerid][pFactionEdit];
+	if(factionid == -1) factionid = PlayerData[playerid][pFaction];
+	if(factionid == -1 || !FactionData[factionid][factionExists]) return true;
+
+	new ftype = FactionData[factionid][factionType];
+	gstr[0] = EOS;
+
+	if(ftype == FACTION_POLICE)
+	{
+		strcat(gstr, "1\tDetective Bureau (DB) Ranks\n");
+		strcat(gstr, "2\tSWAT Division Ranks\n");
+		Dialog_Show(playerid, FactionEdit_Subranks, DIALOG_STYLE_TABLIST, "LSPD Subranks Administration", gstr, "Select", "<< Back");
+	}
+	else if(ftype == FACTION_SHERIFF)
+	{
+		strcat(gstr, "1\tInvestigative Services (ISD/DB) Ranks\n");
+		strcat(gstr, "2\tSpecial Enforcement Bureau (SEB) Ranks\n");
+		Dialog_Show(playerid, FactionEdit_Subranks, DIALOG_STYLE_TABLIST, "LSSD Subranks Administration", gstr, "Select", "<< Back");
+	}
+	else if(ftype == FACTION_MEDIC)
+	{
+		strcat(gstr, "1\tHospital / EMS Division Ranks\n");
+		strcat(gstr, "2\tFirefighter / Rescue Division Ranks\n");
+		Dialog_Show(playerid, FactionEdit_Subranks, DIALOG_STYLE_TABLIST, "LSFD Subranks Administration", gstr, "Select", "<< Back");
+	}
+	else
+	{
+		SendErrorMessage(playerid, "Subranks management is currently only available for LSPD, LSSD, and LSFD.");
+		ShowPlayerEditFaction(playerid);
+	}
+	return true;
+}
+
+Dialog:FactionEdit_Subranks(playerid, response, listitem, inputtext[])
+{
+	if(response)
+	{
+		new ftype = GetFactionType(playerid);
+		if(ftype == FACTION_MEDIC)
+		{
+			return ShowLSFDSubrankList(playerid, listitem + 1); // 1 = EMS, 2 = Fire
+		}
+
+		SetPVarInt(playerid, "SubrankTypeSelected", listitem + 1); // 1 = DB/ISD, 2 = SWAT/SEB
+
+		new title[64];
+		if(listitem == 0) format(title, sizeof(title), "Assign Detective / ISD Rank");
+		else format(title, sizeof(title), (ftype == FACTION_SHERIFF) ? ("Assign SEB Rank") : ("Assign SWAT Rank"));
+
+		Dialog_Show(playerid, FactionEdit_SubTarget, DIALOG_STYLE_INPUT, title, "Enter player ID or character name to assign subrank:", "Next", "<< Back");
+		return true;
+	}
+	return ShowPlayerEditFaction(playerid);
+}
+
+ShowLSFDSubrankList(playerid, subType)
+{
+	new factionid = PlayerData[playerid][pFactionEdit];
+	if(factionid == -1) factionid = PlayerData[playerid][pFaction];
+	if(factionid == -1 || !FactionData[factionid][factionExists]) return true;
+
+	gstr[0] = EOS;
+	SetPVarInt(playerid, "LSFD_SubrankType", subType);
+
+	for(new i = 0; i < FactionData[factionid][factionRanks]; ++i)
+	{
+		if(strlen(FactionRanks[factionid][i]) > 0)
+		{
+			if(subType == 1)
+				format(gstr, sizeof(gstr), "%s\n{7e98b6}%d\t{a9c4e4}%s", gstr, i + 1, EMSRanks[factionid][i]);
+			else
+				format(gstr, sizeof(gstr), "%s\n{7e98b6}%d\t{a9c4e4}%s", gstr, i + 1, FireRanks[factionid][i]);
+		}
+	}
+
+	new title[64];
+	format(title, sizeof(title), (subType == 1) ? ("LSFD EMS Rank Names") : ("LSFD Firefighter Rank Names"));
+	Dialog_Show(playerid, LSFD_SubrankList, DIALOG_STYLE_LIST, title, gstr, "Edit Name", "<< Back");
+	return true;
+}
+
+Dialog:LSFD_SubrankList(playerid, response, listitem, inputtext[])
+{
+	if(!response) return ShowFactionSubranksMenu(playerid);
+
+	new rankSlot = strval(inputtext) - 1;
+	new subType = GetPVarInt(playerid, "LSFD_SubrankType");
+	SetPVarInt(playerid, "LSFD_EditSlot", rankSlot);
+
+	new factionid = PlayerData[playerid][pFactionEdit];
+	if(factionid == -1) factionid = PlayerData[playerid][pFaction];
+
+	new currentName[32];
+	if(subType == 1) format(currentName, sizeof(currentName), EMSRanks[factionid][rankSlot]);
+	else format(currentName, sizeof(currentName), FireRanks[factionid][rankSlot]);
+
+	new string[256];
+	format(string, sizeof(string), "{FFFFFF}Change %s rank name for Rank Slot %d.\n\nCurrent Name: {7e98b6}%s\n\n{FFFFFF}Enter new rank name:", (subType == 1) ? ("EMS") : ("Firefighter"), rankSlot + 1, currentName);
+	Dialog_Show(playerid, LSFD_EditSubrankName, DIALOG_STYLE_INPUT, "Edit Subrank Name", string, "Save", "<< Back");
+	return true;
+}
+
+Dialog:LSFD_EditSubrankName(playerid, response, listitem, inputtext[])
+{
+	new subType = GetPVarInt(playerid, "LSFD_SubrankType");
+	new rankSlot = GetPVarInt(playerid, "LSFD_EditSlot");
+
+	if(!response) return ShowLSFDSubrankList(playerid, subType);
+
+	new factionid = PlayerData[playerid][pFactionEdit];
+	if(factionid == -1) factionid = PlayerData[playerid][pFaction];
+	if(factionid == -1 || !FactionData[factionid][factionExists]) return true;
+
+	if(strlen(inputtext) < 2 || strlen(inputtext) > 31)
+		return SendErrorMessage(playerid, "Rank name must be between 2 and 31 characters.");
+
+	if(subType == 1)
+	{
+		format(EMSRanks[factionid][rankSlot], 32, inputtext);
+		Faction_SaveEMSRanks(factionid);
+		SendClientMessageEx(playerid, COLOR_YELLOW, "-> LSFD EMS Rank Slot %d updated to: %s", rankSlot + 1, inputtext);
+	}
+	else
+	{
+		format(FireRanks[factionid][rankSlot], 32, inputtext);
+		Faction_SaveFireRanks(factionid);
+		SendClientMessageEx(playerid, COLOR_YELLOW, "-> LSFD Firefighter Rank Slot %d updated to: %s", rankSlot + 1, inputtext);
+	}
+
+	return ShowLSFDSubrankList(playerid, subType);
+}
+
+Dialog:FactionEdit_SubTarget(playerid, response, listitem, inputtext[])
+{
+	if(!response) return ShowFactionSubranksMenu(playerid);
+
+	new targetid;
+	if(sscanf(inputtext, "u", targetid) || !IsPlayerConnected(targetid))
+	{
+		return Dialog_Show(playerid, FactionEdit_SubTarget, DIALOG_STYLE_INPUT, "Assign Subrank - Error", "{FF0000}Invalid Player ID/Name specified!\n\nEnter player ID or character name:", "Next", "<< Back");
+	}
+
+	if(PlayerData[targetid][pFaction] != PlayerData[playerid][pFaction])
+	{
+		return Dialog_Show(playerid, FactionEdit_SubTarget, DIALOG_STYLE_INPUT, "Assign Subrank - Error", "{FF0000}Player is not in your faction!\n\nEnter player ID or character name:", "Next", "<< Back");
+	}
+
+	SetPVarInt(playerid, "SubrankTargetPlayer", targetid);
+	new subType = GetPVarInt(playerid, "SubrankTypeSelected");
+	new ftype = GetFactionType(playerid);
+
+	gstr[0] = EOS;
+	if(subType == 1) // DB / ISD
+	{
+		strcat(gstr, "0\tRemove DB Subrank (Level 0)\n");
+		strcat(gstr, "1\tDetective I (Level 1)\n");
+		strcat(gstr, "2\tDetective II (Level 2)\n");
+		strcat(gstr, "3\tDetective III (Level 3)\n");
+		Dialog_Show(playerid, FactionEdit_SubLevel, DIALOG_STYLE_TABLIST, "Select Detective Rank Level", gstr, "Assign", "<< Back");
+	}
+	else // SWAT / SEB
+	{
+		new tag[8];
+		format(tag, sizeof(tag), (ftype == FACTION_SHERIFF) ? ("SEB") : ("SWAT"));
+
+		format(gstr, sizeof(gstr), "0\tRemove %s Subrank (Level 0)\n", tag);
+		format(gstr, sizeof(gstr), "%s1\t%s Operator (Level 1)\n", gstr, tag);
+		format(gstr, sizeof(gstr), "%s2\t%s Team Leader (Level 2)\n", gstr, tag);
+		format(gstr, sizeof(gstr), "%s3\t%s Commander (Level 3)\n", gstr, tag);
+
+		Dialog_Show(playerid, FactionEdit_SubLevel, DIALOG_STYLE_TABLIST, "Select Tactical Rank Level", gstr, "Assign", "<< Back");
+	}
+	return true;
+}
+
+Dialog:FactionEdit_SubLevel(playerid, response, listitem, inputtext[])
+{
+	if(!response) return ShowFactionSubranksMenu(playerid);
+
+	new targetid = GetPVarInt(playerid, "SubrankTargetPlayer");
+	new subType = GetPVarInt(playerid, "SubrankTypeSelected");
+	DeletePVar(playerid, "SubrankTargetPlayer");
+	DeletePVar(playerid, "SubrankTypeSelected");
+
+	if(!IsPlayerConnected(targetid)) return SendErrorMessage(playerid, "Target player disconnected.");
+
+	new ftype = GetFactionType(playerid);
+	new rankLevel = listitem; // 0, 1, 2, 3, 4
+
+	if(ftype == FACTION_MEDIC)
+	{
+		if(subType == 1) // EMS
+		{
+			PlayerData[targetid][pEMSRank] = rankLevel;
+			PlayerData[targetid][pFireRank] = 0;
+			new query[128];
+			mysql_format(dbCon, query, sizeof(query), "UPDATE `characters` SET `EMSRank` = '%d', `FireRank` = 0 WHERE `ID` = '%d' LIMIT 1", rankLevel, PlayerData[targetid][pID]);
+			mysql_tquery(dbCon, query);
+
+			new title[32];
+			switch(rankLevel)
+			{
+				case 1: title = "EMT-Basic";
+				case 2: title = "Paramedic";
+				case 3: title = "Resident Doctor";
+				case 4: title = "Chief Medical Officer";
+				default: title = "None (Removed)";
+			}
+			SendClientMessageEx(playerid, COLOR_YELLOW, "-> Set %s's EMS rank to %s (Level %d).", ReturnName(targetid, 0), title, rankLevel);
+			SendClientMessageEx(targetid, COLOR_YELLOW, "[LSFD] %s updated your Hospital / EMS Division rank to: %s.", ReturnName(playerid, 0), title);
+		}
+		else // Fire
+		{
+			PlayerData[targetid][pFireRank] = rankLevel;
+			PlayerData[targetid][pEMSRank] = 0;
+			new query[128];
+			mysql_format(dbCon, query, sizeof(query), "UPDATE `characters` SET `FireRank` = '%d', `EMSRank` = 0 WHERE `ID` = '%d' LIMIT 1", rankLevel, PlayerData[targetid][pID]);
+			mysql_tquery(dbCon, query);
+
+			new title[32];
+			switch(rankLevel)
+			{
+				case 1: title = "Probationary Firefighter";
+				case 2: title = "Firefighter";
+				case 3: title = "Fire Lieutenant";
+				case 4: title = "Battalion Chief";
+				default: title = "None (Removed)";
+			}
+			SendClientMessageEx(playerid, COLOR_YELLOW, "-> Set %s's Firefighter rank to %s (Level %d).", ReturnName(targetid, 0), title, rankLevel);
+			SendClientMessageEx(targetid, COLOR_YELLOW, "[LSFD] %s updated your Fire & Rescue Division rank to: %s.", ReturnName(playerid, 0), title);
+		}
+		return ShowFactionSubranksMenu(playerid);
+	}
+
+	if(subType == 1) // DB
+	{
+		PlayerData[targetid][pDBRank] = rankLevel;
+		new query[128];
+		mysql_format(dbCon, query, sizeof(query), "UPDATE `characters` SET `DBRank` = '%d' WHERE `ID` = '%d' LIMIT 1", rankLevel, PlayerData[targetid][pID]);
+		mysql_tquery(dbCon, query);
+
+		new title[32];
+		switch(rankLevel)
+		{
+			case 1: title = "Detective I";
+			case 2: title = "Detective II";
+			case 3: title = "Detective III";
+			default: title = "None (Removed)";
+		}
+		SendClientMessageEx(playerid, COLOR_YELLOW, "-> Set %s's DB rank to %s (Level %d).", ReturnName(targetid, 0), title, rankLevel);
+		SendClientMessageEx(targetid, COLOR_YELLOW, "[%s] %s updated your Detective Bureau rank to: %s.", Faction_GetAbbreviation(playerid), ReturnName(playerid, 0), title);
+	}
+	else // SWAT / SEB
+	{
+		PlayerData[targetid][pSWATRank] = rankLevel;
+		new query[128];
+		mysql_format(dbCon, query, sizeof(query), "UPDATE `characters` SET `SWATRank` = '%d' WHERE `ID` = '%d' LIMIT 1", rankLevel, PlayerData[targetid][pID]);
+		mysql_tquery(dbCon, query);
+
+		new divTag[8], title[32];
+		format(divTag, sizeof(divTag), (ftype == FACTION_SHERIFF) ? ("SEB") : ("SWAT"));
+		switch(rankLevel)
+		{
+			case 1: format(title, sizeof(title), "%s Operator", divTag);
+			case 2: format(title, sizeof(title), "%s Team Leader", divTag);
+			case 3: format(title, sizeof(title), "%s Commander", divTag);
+			default: format(title, sizeof(title), "None (Removed)");
+		}
+		SendClientMessageEx(playerid, COLOR_YELLOW, "-> Set %s's %s rank to %s (Level %d).", ReturnName(targetid, 0), divTag, title, rankLevel);
+		SendClientMessageEx(targetid, COLOR_YELLOW, "[%s] %s updated your %s rank to: %s.", Faction_GetAbbreviation(playerid), ReturnName(playerid, 0), divTag, title);
+	}
+	return ShowFactionSubranksMenu(playerid);
 }
 
 Dialog:FactionSpawns(playerid, response, listitem, inputtext[])
@@ -1491,6 +1868,7 @@ Dialog:FactionSpawns_Add(playerid, response, listitem, inputtext[])
 			mysql_pquery(dbCon, query);
 
 			FactionSpawns[factionid][idx][spawnID] = cache_insert_id();
+			UpdateFactionSpawnPickup(factionid, idx);
 
 			SendClientMessageEx(playerid, COLOR_YELLOW, "-> You have successfully created Spawn ID: %d", idx);
 		}
@@ -1529,6 +1907,7 @@ Dialog:FactionSpawns_Menu(playerid, response, listitem, inputtext[])
 				mysql_tquery(dbCon, string);
 
 				FactionSpawns[factionid][idx][spawnID] = 0;
+				UpdateFactionSpawnPickup(factionid, idx);
 
 			    SendClientMessageEx(playerid, COLOR_YELLOW, "-> You have successfully deleted Spawn ID: %d", FactionSpawns);
 

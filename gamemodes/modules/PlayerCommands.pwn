@@ -4595,6 +4595,8 @@ CMD:drugstore(playerid, params[])
 	return true;
 }
 
+YCMD:managespawn(playerid, params[], help) = managespawns;
+
 CMD:managespawns(playerid, params[])
 {
 	new factionid = PlayerData[playerid][pFaction];
@@ -4608,6 +4610,8 @@ CMD:managespawns(playerid, params[])
     ShowFactionSpawns(playerid, factionid);
 	return true;
 }
+
+YCMD:fmenu(playerid, params[], help) = factionmenu;
 
 CMD:factionmenu(playerid, params[])
 {
@@ -4711,6 +4715,13 @@ CMD:invite(playerid, params[])
 	if(playerid == userid)
 		return SendErrorMessage(playerid, "You can't invite yourself.");	
 
+	if(GetFactionType(playerid) == FACTION_MEDIC)
+	{
+		SetPVarInt(playerid, "LSFD_InviteTarget", userid);
+		Dialog_Show(playerid, LSFD_InviteSelect, DIALOG_STYLE_LIST, "LSFD Recruitment - Select Division", "1\tHospital / Medical Services Division (EMS)\n2\tFire & Rescue Operations Division (Firefighter)", "Select", "Cancel");
+		return true;
+	}
+
 	PlayerData[userid][pFactionOffer] = playerid;
     PlayerData[userid][pFactionOffered] = PlayerData[playerid][pFaction];
 
@@ -4718,6 +4729,32 @@ CMD:invite(playerid, params[])
 
     SendClientMessageEx(userid, COLOR_YELLOW, "%s invited you to join %s, type /accept invite to accept the invitation.", ReturnName(playerid, 0), Faction_GetName(playerid));
     SendClientMessage(userid, COLOR_YELLOW, "You can use /decline if you don't want to join.");
+	return true;
+}
+
+Dialog:LSFD_InviteSelect(playerid, response, listitem, inputtext[])
+{
+	new userid = GetPVarInt(playerid, "LSFD_InviteTarget");
+	DeletePVar(playerid, "LSFD_InviteTarget");
+
+	if(response)
+	{
+		if(!IsPlayerConnected(userid) || PlayerData[userid][pFaction] != -1)
+			return SendErrorMessage(playerid, "The player specified is no longer available for invitation.");
+
+		new divType = listitem + 1; // 1 = EMS, 2 = Fire
+		SetPVarInt(userid, "LSFD_InviteDiv", divType);
+
+		PlayerData[userid][pFactionOffer] = playerid;
+		PlayerData[userid][pFactionOffered] = PlayerData[playerid][pFaction];
+
+		new divName[40];
+		format(divName, sizeof(divName), (divType == 1) ? ("Hospital / EMS Division") : ("Fire & Rescue Division"));
+
+		SendClientMessageEx(playerid, COLOR_YELLOW, "You invited %s to join %s (%s).", ReturnName(userid, 0), Faction_GetName(playerid), divName);
+		SendClientMessageEx(userid, COLOR_YELLOW, "%s invited you to join %s (%s), type /accept invite to accept.", ReturnName(playerid, 0), Faction_GetName(playerid), divName);
+		SendClientMessage(userid, COLOR_YELLOW, "You can use /decline if you don't want to join.");
+	}
 	return true;
 }
 
@@ -4880,16 +4917,30 @@ CMD:accept(playerid, params[])
 	PlayerData[playerid][pFactionOffer] = INVALID_PLAYER_ID;
 	PlayerData[playerid][pFactionOffered] = -1;
 
-	if(IsPolice(playerid) && PlayerData[playerid][pAdmin] < 1)
+	if(GetFactionType(targetid) == FACTION_MEDIC)
 	{
-		if(!MDC_Created{playerid})
-		{
-			InitMDC(playerid);
-		}
-	}
+		new divType = GetPVarInt(playerid, "LSFD_InviteDiv");
+		DeletePVar(playerid, "LSFD_InviteDiv");
 
-	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `characters` SET `Faction` = '%d', `FactionRank` = '%d' WHERE `ID` = '%d' LIMIT 1", PlayerData[playerid][pFactionID], PlayerData[playerid][pFactionRank], PlayerData[playerid][pID]);
-	mysql_tquery(dbCon, gquery);
+		if(divType == 2)
+		{
+			PlayerData[playerid][pFireRank] = 1;
+			PlayerData[playerid][pEMSRank] = 0;
+		}
+		else
+		{
+			PlayerData[playerid][pEMSRank] = 1;
+			PlayerData[playerid][pFireRank] = 0;
+		}
+
+		mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `characters` SET `Faction` = '%d', `FactionRank` = '%d', `EMSRank` = '%d', `FireRank` = '%d' WHERE `ID` = '%d' LIMIT 1", PlayerData[playerid][pFactionID], PlayerData[playerid][pFactionRank], PlayerData[playerid][pEMSRank], PlayerData[playerid][pFireRank], PlayerData[playerid][pID]);
+		mysql_tquery(dbCon, gquery);
+	}
+	else
+	{
+		mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `characters` SET `Faction` = '%d', `FactionRank` = '%d' WHERE `ID` = '%d' LIMIT 1", PlayerData[playerid][pFactionID], PlayerData[playerid][pFactionRank], PlayerData[playerid][pID]);
+		mysql_tquery(dbCon, gquery);
+	}
 
 	return true;
 }
@@ -7830,10 +7881,56 @@ CMD:trailer(playerid, params[])
 	return true;
 }
 
+CMD:setdbrank(playerid, params[])
+{
+	if(GetFactionType(playerid) != FACTION_POLICE)
+		return SendErrorMessage(playerid, "You are not in the LSPD.");
+
+	if(PlayerData[playerid][pFactionRank] > 4)
+		return SendErrorMessage(playerid, "Only Commander (Rank 4) and above can set DB ranks.");
+
+	new userid, db_rank;
+	if(sscanf(params, "ud", userid, db_rank))
+		return SendSyntaxMessage(playerid, "/setdbrank [playerid/Name] [rank (0: None, 1: Det I, 2: Det II, 3: Det III)]");
+
+	if(!IsPlayerConnected(userid))
+		return SendErrorMessage(playerid, "Invalid player specified.");
+
+	if(PlayerData[userid][pFaction] != PlayerData[playerid][pFaction])
+		return SendErrorMessage(playerid, "That player is not in your faction.");
+
+	if(db_rank < 0 || db_rank > 3)
+		return SendErrorMessage(playerid, "DB Rank must be between 0 and 3.");
+
+	PlayerData[userid][pDBRank] = db_rank;
+
+	new query[128];
+	mysql_format(dbCon, query, sizeof(query), "UPDATE `characters` SET `DBRank` = '%d' WHERE `ID` = '%d' LIMIT 1", db_rank, PlayerData[userid][pID]);
+	mysql_tquery(dbCon, query);
+
+	new rankTitle[32];
+	switch(db_rank)
+	{
+		case 1: rankTitle = "Detective I";
+		case 2: rankTitle = "Detective II";
+		case 3: rankTitle = "Detective III";
+		default: rankTitle = "None (Removed)";
+	}
+
+	SendClientMessageEx(playerid, COLOR_YELLOW, "-> You set %s's DB rank to %s (DB Level %d).", ReturnName(userid, 0), rankTitle, db_rank);
+	SendClientMessageEx(userid, COLOR_YELLOW, "[LSPD] %s has updated your Detective Bureau rank to: %s.", ReturnName(playerid, 0), rankTitle);
+	return true;
+}
+
+YCMD:setsubrank(playerid, params[], help) = setdbrank;
+
 CMD:db(playerid, params[])
 {
 	if(!IsPolice(playerid))
 	    return SendErrorMessage(playerid, "You're not Police.");
+
+	if(PlayerData[playerid][pDBRank] < 1)
+		return SendErrorMessage(playerid, "You are not assigned to the Detective Bureau (DB Rank 1-3 required). Leader must use /setdbrank.");
 
     if(!IsNearFactionSpawn(playerid, PlayerData[playerid][pFaction]))
         return SendErrorMessage(playerid, "You can't /db here.");
@@ -7847,15 +7944,73 @@ CMD:db(playerid, params[])
 	SetPlayerArmourEx(playerid, 100.0);
 	SetPlayerHealthEx(playerid, 100.0 + PlayerData[playerid][pSHealth]);
 
-	SendClientMessage(playerid, -1, "Now you duty as Detective Bureau");
-	SendClientMessage(playerid, -1, "You got Deagle(350), Camera(200), Armour(100), Health(100)!");
+	new dbTitle[32];
+	switch(PlayerData[playerid][pDBRank])
+	{
+		case 1: dbTitle = "Detective I";
+		case 2: dbTitle = "Detective II";
+		case 3: dbTitle = "Detective III";
+		default: dbTitle = "Detective";
+	}
+
+	SendClientMessageEx(playerid, COLOR_YELLOW, "Now on duty as %s (Detective Bureau).", dbTitle);
+	SendClientMessage(playerid, COLOR_WHITE, "Equipped: Deagle (350), Camera (200), Armour (100), Health (100).");
 	return true;
 }
+
+CMD:setswatrank(playerid, params[])
+{
+	new ftype = GetFactionType(playerid);
+	if(ftype != FACTION_POLICE && ftype != FACTION_SHERIFF)
+		return SendErrorMessage(playerid, "You are not in LSPD or LSSD.");
+
+	if(PlayerData[playerid][pFactionRank] > 4)
+		return SendErrorMessage(playerid, "Only High Ranks (Rank 4+) can set SWAT/SEB ranks.");
+
+	new userid, swat_rank;
+	if(sscanf(params, "ud", userid, swat_rank))
+		return SendSyntaxMessage(playerid, "/setswatrank [playerid/Name] [rank (0: None, 1: Operator, 2: Leader, 3: Commander)]");
+
+	if(!IsPlayerConnected(userid))
+		return SendErrorMessage(playerid, "Invalid player specified.");
+
+	if(PlayerData[userid][pFaction] != PlayerData[playerid][pFaction])
+		return SendErrorMessage(playerid, "That player is not in your faction.");
+
+	if(swat_rank < 0 || swat_rank > 3)
+		return SendErrorMessage(playerid, "Rank must be between 0 and 3.");
+
+	PlayerData[userid][pSWATRank] = swat_rank;
+
+	new query[128];
+	mysql_format(dbCon, query, sizeof(query), "UPDATE `characters` SET `SWATRank` = '%d' WHERE `ID` = '%d' LIMIT 1", swat_rank, PlayerData[userid][pID]);
+	mysql_tquery(dbCon, query);
+
+	new divName[16], rankTitle[32];
+	format(divName, sizeof(divName), (ftype == FACTION_POLICE) ? ("SWAT") : ("SEB"));
+
+	switch(swat_rank)
+	{
+		case 1: format(rankTitle, sizeof(rankTitle), "%s Operator", divName);
+		case 2: format(rankTitle, sizeof(rankTitle), "%s Team Leader", divName);
+		case 3: format(rankTitle, sizeof(rankTitle), "%s Commander", divName);
+		default: format(rankTitle, sizeof(rankTitle), "None (Removed)");
+	}
+
+	SendClientMessageEx(playerid, COLOR_YELLOW, "-> You set %s's %s rank to %s (Level %d).", ReturnName(userid, 0), divName, rankTitle, swat_rank);
+	SendClientMessageEx(userid, COLOR_YELLOW, "[%s] %s updated your %s rank to: %s.", Faction_GetAbbreviation(playerid), ReturnName(playerid, 0), divName, rankTitle);
+	return true;
+}
+
+YCMD:setsebrank(playerid, params[], help) = setswatrank;
 
 CMD:swat(playerid, params[])
 {
 	if(GetFactionType(playerid) != FACTION_POLICE)
-		return SendErrorMessage(playerid, "You aren't in the LSPD.");
+		return SendErrorMessage(playerid, "You aren't in the LSPD. LSSD members use /seb.");
+
+	if(PlayerData[playerid][pSWATRank] < 1)
+		return SendErrorMessage(playerid, "You are not assigned to SWAT (SWAT Rank 1-3 required). Leader must use /setswatrank or /fmenu.");
 
 	if(!PlayerData[playerid][pOnDuty])
 	    return SendErrorMessage(playerid, "You're not on duty.");
@@ -7867,16 +8022,22 @@ CMD:swat(playerid, params[])
 	{
 		PlayerData[playerid][pSwat] = true;
 
-		SendPoliceMessage(COLOR_POLICE, "** HQ: SWAT Operative %s is now ready for orders! **", ReturnName(playerid, 0));
+		new title[32];
+		switch(PlayerData[playerid][pSWATRank])
+		{
+			case 1: title = "SWAT Operator";
+			case 2: title = "SWAT Team Leader";
+			case 3: title = "SWAT Commander";
+			default: title = "SWAT Member";
+		}
 
+		SendPoliceMessage(COLOR_POLICE, "** HQ: %s %s is now ready for tactical orders! **", title, ReturnName(playerid, 0));
 		SetPlayerArmourEx(playerid, 200.0);
 	}
 	else
 	{
 		PlayerData[playerid][pSwat] = false;
-
 		SendPoliceMessage(COLOR_POLICE, "** HQ: SWAT Operative %s is now Off Duty! **", ReturnName(playerid, 0));
-
 		SetPlayerArmourEx(playerid, 100.0);
 	}
 	return true;
@@ -7885,7 +8046,10 @@ CMD:swat(playerid, params[])
 CMD:seb(playerid, params[])
 {
 	if(GetFactionType(playerid) != FACTION_SHERIFF)
-		return SendErrorMessage(playerid, "You aren't in the LSSD.");
+		return SendErrorMessage(playerid, "You aren't in the LSSD. LSPD members use /swat.");
+
+	if(PlayerData[playerid][pSWATRank] < 1)
+		return SendErrorMessage(playerid, "You are not assigned to SEB (SEB Rank 1-3 required). Leader must use /setsebrank or /fmenu.");
 
 	if(!PlayerData[playerid][pOnDuty])
 	    return SendErrorMessage(playerid, "You're not on duty.");
@@ -7897,16 +8061,22 @@ CMD:seb(playerid, params[])
 	{
 		PlayerData[playerid][pSwat] = true;
 
-		SendPoliceMessage(COLOR_POLICE, "** HQ: Special Enforcement Bureau %s is now ready for orders! **", ReturnName(playerid, 0));
+		new title[32];
+		switch(PlayerData[playerid][pSWATRank])
+		{
+			case 1: title = "SEB Operator";
+			case 2: title = "SEB Team Leader";
+			case 3: title = "SEB Commander";
+			default: title = "SEB Member";
+		}
 
+		SendPoliceMessage(COLOR_POLICE, "** HQ: Special Enforcement Bureau (%s) %s is now ready for orders! **", title, ReturnName(playerid, 0));
 		SetPlayerArmourEx(playerid, 200.0);
 	}
 	else
 	{
 		PlayerData[playerid][pSwat] = false;
-
 		SendPoliceMessage(COLOR_POLICE, "** HQ: Special Enforcement Bureau %s is now Off Duty! **", ReturnName(playerid, 0));
-
 		SetPlayerArmourEx(playerid, 100.0);
 	}
 
