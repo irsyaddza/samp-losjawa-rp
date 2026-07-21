@@ -1739,8 +1739,387 @@ CMD:tackle(playerid, params[])
 
 CMD:help(playerid, params[])
 {
-    ShowMainMenuDialog(playerid);
+    ShowHelpCategories(playerid);
     return 1;
+}
+
+ShowHelpCategories(playerid)
+{
+	gstr[0] = EOS;
+	strcat(gstr, "1\tWhat is Roleplay? (Server & Rules Guide)\n");
+	strcat(gstr, "2\tBasic Commands\n");
+	strcat(gstr, "3\tChat & Communication Commands\n");
+	strcat(gstr, "4\tNeeds & Character Status\n");
+	strcat(gstr, "5\tInventory & Item Commands\n");
+	strcat(gstr, "6\tPhone & Communication Commands\n");
+	strcat(gstr, "7\tMoney, Banking & Economy\n");
+	strcat(gstr, "8\tJob & Sidejob Commands\n");
+	strcat(gstr, "9\tVehicle & Transportation Commands\n");
+	strcat(gstr, "10\tFaction / Family / Organization Help\n");
+	strcat(gstr, "11\tHouse & Property Commands\n");
+	strcat(gstr, "12\tApartment / Flat Commands\n");
+	strcat(gstr, "13\tBusiness & Enterprise Commands\n");
+	strcat(gstr, "14\tGarage Commands\n");
+	strcat(gstr, "15\tVIP & Donator Commands");
+
+	Dialog_Show(playerid, Help_Main, DIALOG_STYLE_TABLIST, "Help Categories", gstr, "Select", "Close");
+	return 1;
+}
+
+Dialog:Help_Main(playerid, response, listitem, inputtext[])
+{
+	if(!response) return 1;
+
+	switch(listitem)
+	{
+		case 0: // What is Roleplay?
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== WHAT IS ROLEPLAY & SERVER RULES ===\n\n");
+			strcat(gstr, "{7E98B6}Roleplay (RP):{FFFFFF} Acting as your character in a realistic fictional world.\n");
+			strcat(gstr, "{7E98B6}In-Character (IC):{FFFFFF} Everything related to your character's life in-game.\n");
+			strcat(gstr, "{7E98B6}Out-of-Character (OOC):{FFFFFF} Everything related to real life (/b, /pm, /o).\n\n");
+			strcat(gstr, "{FF6347}STRICTLY PROHIBITED RULES:{FFFFFF}\n");
+			strcat(gstr, "• {7E98B6}Deathmatching (DM):{FFFFFF} Killing or attacking players without a valid IC roleplay reason.\n");
+			strcat(gstr, "• {7E98B6}MetaGaming (MG):{FFFFFF} Using OOC information for IC advantage.\n");
+			strcat(gstr, "• {7E98B6}PowerGaming (PG):{FFFFFF} Doing impossible actions or forcing RP without giving others a chance.\n");
+			strcat(gstr, "• {7E98B6}Revenge Killing (RK):{FFFFFF} Returning to kill your killer right after dying.\n");
+			strcat(gstr, "• {7E98B6}Chicken Running / Bunny Hopping:{FFFFFF} Exploiting movement mechanics.\n");
+			strcat(gstr, "• {7E98B6}Ninja Jacking (NJ):{FFFFFF} Stealing vehicles without roleplay.\n\n");
+			strcat(gstr, "{FFFFFF}Useful Help Commands:\n");
+			strcat(gstr, "{A9C4E4}/rules{FFFFFF} - View server rules info\n");
+			strcat(gstr, "{A9C4E4}/stats{FFFFFF} - View your character statistics\n");
+			strcat(gstr, "{A9C4E4}/id / /getid{FFFFFF} - Search player ID & level\n");
+			strcat(gstr, "{A9C4E4}/admins / /testers{FFFFFF} - View online staff & helpers");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: What is Roleplay?", gstr, "<< Back", "Close");
+		}
+		case 1: // Basic Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== BASIC COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}/stats{FFFFFF} - View your character profile, level, money, and stats\n");
+			strcat(gstr, "{A9C4E4}/id / /getid [Name/ID]{FFFFFF} - Search for a player's ID and level\n");
+			strcat(gstr, "{A9C4E4}/admins{FFFFFF} - View list of online administrators\n");
+			strcat(gstr, "{A9C4E4}/testers{FFFFFF} - View list of online community helpers / testers\n");
+			strcat(gstr, "{A9C4E4}/time / /stime / /servertime{FFFFFF} - Check current server time and date\n");
+			strcat(gstr, "{A9C4E4}/rules{FFFFFF} - View server rules info\n");
+			strcat(gstr, "{A9C4E4}/motd / /changelog{FFFFFF} - View server message of the day & updates\n");
+			strcat(gstr, "{A9C4E4}/relog{FFFFFF} - Reconnect your character to server\n");
+			strcat(gstr, "{A9C4E4}/isafk [ID]{FFFFFF} - Check if a player is AFK\n");
+			strcat(gstr, "{A9C4E4}/changespawn / /setspawn - Change login spawn location\n");
+			strcat(gstr, "{A9C4E4}/stopanim{FFFFFF} - Stop roleplay animation (/dance /sit /lay /handsup /salute /wave /smoke /crack /cpr /flex)\n");
+			strcat(gstr, "{A9C4E4}/setstyle / /walk / /jog{FFFFFF} - Set character walking style\n");
+			strcat(gstr, "{A9C4E4}/tog / /togall / /toghud / /tognicks{FFFFFF} - Toggle HUD, chat & interface elements");
+			strcat(gstr, "{A9C4E4}/licenseexam / /licenses / /licensehelp{FFFFFF} - License exam & status\n");
+			strcat(gstr, "{A9C4E4}/onduty{FFFFFF} - Check list on duty\n");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Basic Commands", gstr, "<< Back", "Close");
+		}
+		case 2: // Chat & Communication Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== CHAT & ROLEPLAY COMMUNICATION ===\n\n");
+			strcat(gstr, "{A9C4E4}[Normal Chat]{FFFFFF} Type text normally to talk in local IC chat\n");
+			strcat(gstr, "{A9C4E4}/b / /cb / /lowb / /nooc / /ooc / /o{FFFFFF} - Out-of-Character (OOC) chat\n");
+			strcat(gstr, "{A9C4E4}/me / /lme / /ame / /my / /lmy / /amy{FFFFFF} - In-Character physical actions\n");
+			strcat(gstr, "{A9C4E4}/do / /ldo / /ddo{FFFFFF} - Environmental descriptions or outcomes\n");
+			strcat(gstr, "{A9C4E4}/low / /tlow / /autolow{FFFFFF} - Quiet whisper chat\n");
+			strcat(gstr, "{A9C4E4}/shout / /s / /dshout / /ds{FFFFFF} - Loud shouting chat\n");
+			strcat(gstr, "{A9C4E4}/whisper / /w / /cw{FFFFFF} - Private whisper to nearby player\n");
+			strcat(gstr, "{A9C4E4}/pm / /blockpm{FFFFFF} - Private OOC message to player\n");
+			strcat(gstr, "{A9C4E4}/greet / /acceptshake{FFFFFF} - Handshake / greeting\n");
+			strcat(gstr, "{A9C4E4}/convo / /endconvo{FFFFFF} - Conversation system\n");
+			strcat(gstr, "{A9C4E4}/knock / /ringbell{FFFFFF} - Knock on door / ring bell\n");
+			strcat(gstr, "{A9C4E4}/ad / /ads / /advert / /cad{FFFFFF} - Commercial & vehicle advertisements");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Chat Commands", gstr, "<< Back", "Close");
+		}
+		case 3: // Needs & Character Status
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== NEEDS & CHARACTER STATUS ===\n\n");
+			strcat(gstr, "{A9C4E4}/eat / /meal{FFFFFF} - Consume food to replenish hunger\n");
+			strcat(gstr, "{A9C4E4}/bdrink / /givedrink / /passdrink / /passbottle{FFFFFF} - Drink beverages\n");
+			strcat(gstr, "{A9C4E4}/cig / /cigs / /cigarette / /passcig / /passjoint{FFFFFF} - Smoke cigarettes\n");
+			strcat(gstr, "{A9C4E4}/helpup [ID]{FFFFFF} - Help up an injured player\n");
+			strcat(gstr, "{A9C4E4}/acceptdeath / /respawnme{FFFFFF} - Accept death / respawn at hospital\n");
+			strcat(gstr, "{A9C4E4}/lostitems{FFFFFF} - View lost items list\n");
+			strcat(gstr, "{A9C4E4}/attributes / /examine{FFFFFF} - Inspect player attributes / body\n");
+			strcat(gstr, "{A9C4E4}/damages{FFFFFF} - View damage log & inspect body");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Needs & Character", gstr, "<< Back", "Close");
+		}
+		case 4: // Inventory & Items
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== INVENTORY & ITEM COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}/pitems{FFFFFF} - Open prison items\n");
+			strcat(gstr, "{A9C4E4}/clothing / /clothinghelp{FFFFFF} - Change clothes / outfits\n");
+			strcat(gstr, "{A9C4E4}/note / /viewnotes{FFFFFF} - Create, view, or manage paper notes\n");
+			strcat(gstr, "{A9C4E4}/mask{FFFFFF} - Wear or remove face mask\n");
+			strcat(gstr, "{A9C4E4}/boombox / /setstation{FFFFFF} - Place and tune portable boombox\n");
+			strcat(gstr, "{A9C4E4}/gascan{FFFFFF} - Refuel vehicle using gas can item\n");
+			strcat(gstr, "{A9C4E4}/dice / /coin{FFFFFF} - Roll dice or flip coin\n");
+			strcat(gstr, "{A9C4E4}/mydrugs / /usedrug / /givedrug / /passdrug / /takedrugs / /placedrug / /checkdrugs / /vehdrugs / /drugstore{FFFFFF} - Drugs\n");
+			strcat(gstr, "{A9C4E4}/mypackage / /unpackage / /pw / /paw / /tw / /taw / /sp{FFFFFF} - Weapon packages");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Inventory & Items", gstr, "<< Back", "Close");
+		}
+		case 5: // Phone Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== PHONE & COMMUNICATION COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}/phone{FFFFFF} - Open smartphone GUI\n");
+			strcat(gstr, "{A9C4E4}/call [Number]{FFFFFF} - Call a phone number or service\n");
+			strcat(gstr, "{A9C4E4}/hangup / /h{FFFFFF} - End active call\n");
+			strcat(gstr, "{A9C4E4}/p{FFFFFF} - Answer incoming call\n");
+			strcat(gstr, "{A9C4E4}/sms [Number] [Text]{FFFFFF} - Send text message (SMS)\n");
+			strcat(gstr, "{A9C4E4}/dropcell / /loudspeaker / /convo{FFFFFF} - Phone options\n");
+			strcat(gstr, "{A9C4E4}/setchannel / /setslot / /part / /r / /radio / /rlow / /r1../r8{FFFFFF} - Portable radio");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Phone & Radio", gstr, "<< Back", "Close");
+		}
+		case 6: // Money & Banking
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== MONEY, BANKING & ECONOMY ===\n\n");
+			strcat(gstr, "{A9C4E4}/pay [ID] [Amount]{FFFFFF} - Hand cash money to player\n");
+			strcat(gstr, "{A9C4E4}/balance / /bank / /withdraw / /savings{FFFFFF} - Bank account management\n");
+			strcat(gstr, "{A9C4E4}/cheque{FFFFFF} - Write a bank cheque\n");
+			strcat(gstr, "{A9C4E4}/charity [Amount]{FFFFFF} - Donate cash to charity\n");
+			strcat(gstr, "{A9C4E4}/fines{FFFFFF} - Police fines & tickets");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Money & Banking", gstr, "<< Back", "Close");
+		}
+		case 7: // Job Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== JOB & SIDEJOB COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}/jobhelp / /businesshelp{FFFFFF} - View job guide & instructions\n");
+			strcat(gstr, "{A9C4E4}/jobswitch / /leavejob / /leavesidejob{FFFFFF} - Switch or leave jobs\n\n");
+			strcat(gstr, "{7E98B6}Specific Job Commands:{FFFFFF}\n");
+			strcat(gstr, "• {A9C4E4}Mechanic:{FFFFFF} /mechanicjob\n");
+			strcat(gstr, "• {A9C4E4}Farmer:{FFFFFF} /farmerjob /harvest /stopharvest\n");
+			strcat(gstr, "• {A9C4E4}Trucker:{FFFFFF} /truckerjob /cargo /trailer\n");
+			strcat(gstr, "• {A9C4E4}Fisherman:{FFFFFF} /gofishing /fish /stopfishing /unloadfish /myfish /fishhelp\n");
+			strcat(gstr, "• {A9C4E4}Taxi Driver:{FFFFFF} /taxi\n");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Job Commands", gstr, "<< Back", "Close");
+		}
+		case 8: // Vehicle Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== VEHICLE & TRANSPORTATION COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}/v / /vehicle{FFFFFF} - Open main vehicle management GUI\n");
+			strcat(gstr, "{A9C4E4}/engine{FFFFFF} - Toggle vehicle engine on/off\n");
+			strcat(gstr, "{A9C4E4}/lock / /flock{FFFFFF} - Lock or force lock vehicle doors\n");
+			strcat(gstr, "{A9C4E4}/v buypark{FFFFFF} - Buy parking location\n");
+			strcat(gstr, "{A9C4E4}/v park{FFFFFF} - Park your vehicle\n");
+			strcat(gstr, "{A9C4E4}/hood / /trunk / /vehpackage{FFFFFF} - Vehicle hood, trunk & package\n");
+			strcat(gstr, "{A9C4E4}/fill / /fuel{FFFFFF} - Refuel vehicle at gas station\n");
+			strcat(gstr, "{A9C4E4}/rw / /rollwindow{FFFFFF} - Roll vehicle windows up/down\n");
+			strcat(gstr, "{A9C4E4}/vehiclename / /colorlist / /paintcar{FFFFFF} - Vehicle name & colors\n");
+			strcat(gstr, "{A9C4E4}/service / /checkcomponents / /setbuycomp / /buycomp{FFFFFF} - Repairs & components\n");
+			strcat(gstr, "{A9C4E4}/attach / /detach / /towcar / /towcars{FFFFFF} - Towing & trailers\n");
+			strcat(gstr, "{A9C4E4}/carsign / /remove_carsign / /callsign{FFFFFF} - Vehicle sign & callsign\n");
+			strcat(gstr, "{A9C4E4}/rentvehicle / /unrentvehicle{FFFFFF} - Rent or return rental vehicle");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Vehicle Commands", gstr, "<< Back", "Close");
+		}
+		case 9: // Faction Help
+		{
+			ShowFactionHelpMenu(playerid);
+		}
+		case 10: // House Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== HOUSE & PROPERTY COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}/myhouse / /househelp{FFFFFF} - House info & guide\n");
+			strcat(gstr, "{A9C4E4}/buyhouse{FFFFFF} - Purchase an unowned house\n");
+			strcat(gstr, "{A9C4E4}/hlock{FFFFFF} - Lock or unlock house front door\n");
+			strcat(gstr, "{A9C4E4}/furniture{FFFFFF} - Place and customize house furniture\n");
+			strcat(gstr, "{A9C4E4}/offerrent / /setrentable / /setrent / /rentroom / /stoprent / /unrent{FFFFFF} - Rental\n");
+			strcat(gstr, "{A9C4E4}/tenants / /evict / /evictall{FFFFFF} - Tenant management\n");
+			strcat(gstr, "{A9C4E4}/houseupgrade / /grantbuild / /cmdspot{FFFFFF} - Upgrades & building\n");
+			strcat(gstr, "{A9C4E4}/propkeys / /givepropkey / /takepropkey{FFFFFF} - House keys");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: House Commands", gstr, "<< Back", "Close");
+		}
+		case 11: // Apartment / Flat Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== APARTMENT & FLAT COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}/enter / /exit{FFFFFF} - Enter or exit apartment building\n");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Apartment Commands", gstr, "<< Back", "Close");
+		}
+		case 12: // Business Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== BUSINESS & ENTERPRISE COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}/bizinfo{FFFFFF} - View business information\n");
+			strcat(gstr, "{A9C4E4}/buybiz / /sellbiz{FFFFFF} - Purchase or sell business\n");
+			strcat(gstr, "{A9C4E4}/bizbank / /bizwithdraw{FFFFFF} - Business bank vault & cash withdrawal\n");
+			strcat(gstr, "{A9C4E4}/buycomp / /setbuycomp / /compprice / /bizfee{FFFFFF} - Components & pricing");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Business Commands", gstr, "<< Back", "Close");
+		}
+		case 13: // Garage Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== GARAGE PROPERTY COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}Coming Soon\n");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Garage Commands", gstr, "<< Back", "Close");
+		}
+		case 14: // Donator Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== VIP & DONATOR COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}Coming Soon\n");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Donator Commands", gstr, "<< Back", "Close");
+		}
+	}
+	return 1;
+}
+
+ShowFactionHelpMenu(playerid)
+{
+	gstr[0] = EOS;
+	strcat(gstr, "1\tLos Santos Police Department (LSPD)\n");
+	strcat(gstr, "2\tLos Santos Fire Department (LSFD)\n");
+	strcat(gstr, "3\tLos Santos Sheriff Department (LSSD)\n");
+	strcat(gstr, "4\tSan Andreas News Agency (SANews / SANA)\n");
+	strcat(gstr, "5\tSan Andreas Government Service (SAGS)\n");
+	strcat(gstr, "6\tDepartment of Corrections (Correctional / DOC)\n");
+	strcat(gstr, "7\tOrganized Crime / Mafia / Families / Gangs");
+
+	Dialog_Show(playerid, Help_FactionList, DIALOG_STYLE_TABLIST, "Faction Help Categories", gstr, "Select", "<< Back");
+	return 1;
+}
+
+Dialog:Help_FactionList(playerid, response, listitem, inputtext[])
+{
+	if(!response) return ShowHelpCategories(playerid);
+
+	switch(listitem)
+	{
+		case 0: // LSPD
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== LOS SANTOS POLICE DEPARTMENT (LSPD) ===\n\n");
+			strcat(gstr, "{A9C4E4}/duty / /uniform / /favuniform / /badge{FFFFFF} - Duty, uniform & badge\n");
+			strcat(gstr, "{A9C4E4}/r / /m / /d / /departments / /dep / /setdep{FFFFFF} - Radios & megaphone\n");
+			strcat(gstr, "{A9C4E4}/db / /setdbrank{FFFFFF} - Detective Bureau duty & rank\n");
+			strcat(gstr, "{A9C4E4}/swat / /setswatrank{FFFFFF} - SWAT tactical duty & rank\n");
+			strcat(gstr, "{A9C4E4}/handcuff (/hc) / /unhandcuff (/uhc) / /passhandcuffs / /myhandcuffs{FFFFFF} - Handcuffs\n");
+			strcat(gstr, "{A9C4E4}/taser / /frisk / /friskapprove{FFFFFF} - Taser & frisking\n");
+			strcat(gstr, "{A9C4E4}/fine / /fines / /vehiclefines{FFFFFF} - Issue & view fines\n");
+			strcat(gstr, "{A9C4E4}/jail / /prison / /prisoners / /releaseme / /arrestrecord{FFFFFF} - Jail & prisoners\n");
+			strcat(gstr, "{A9C4E4}/detain / /eject{FFFFFF} - Detain or eject from vehicle\n");
+			strcat(gstr, "{A9C4E4}/roadblock (/rb) / /cone / /stinger{FFFFFF} - Barriers & spike strips\n");
+			strcat(gstr, "{A9C4E4}/siren / /alarm / /alarmoff{FFFFFF} - Siren & alarm control\n");
+			strcat(gstr, "{A9C4E4}/createscene (/cs) / /clearscene (/csall, /clearsceneall){FFFFFF} - Crime scenes\n");
+			strcat(gstr, "{A9C4E4}/togalpr / /alprlog / /apb / /mdc{FFFFFF} - ALPR, APB & MDC database\n");
+			strcat(gstr, "{A9C4E4}/fmenu / /factionmenu / /faction / /factionon / /invite / /uninvite / /rank / /accept / /decline{FFFFFF} - Faction");
+
+			Dialog_Show(playerid, Help_FactionDetail, DIALOG_STYLE_MSGBOX, "Faction Help: LSPD", gstr, "<< Back", "Close");
+		}
+		case 1: // LSFD
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== LOS SANTOS FIRE DEPARTMENT (LSFD) ===\n\n");
+			strcat(gstr, "{A9C4E4}/duty / /onduty / /fireduty / /uniform / /favuniform / /badge{FFFFFF} - Duty, uniform & badge\n");
+			strcat(gstr, "{A9C4E4}/r / /m / /d / /departments / /dep{FFFFFF} - Radio, megaphone & department chat\n");
+			strcat(gstr, "{A9C4E4}/heal / /equip{FFFFFF} - Heal patient & equip medical gear\n");
+			strcat(gstr, "{A9C4E4}/operation{FFFFFF} - Perform medical surgery at hospital\n");
+			strcat(gstr, "{A9C4E4}/putinambu{FFFFFF} - Load patient into ambulance\n");
+			strcat(gstr, "{A9C4E4}/fmenu / /factionmenu / /faction / /factionon / /invite / /uninvite / /rank / /accept / /decline{FFFFFF} - Faction & Division Ranks");
+
+			Dialog_Show(playerid, Help_FactionDetail, DIALOG_STYLE_MSGBOX, "Faction Help: LSFD", gstr, "<< Back", "Close");
+		}
+		case 2: // LSSD
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== LOS SANTOS SHERIFF DEPARTMENT (LSSD) ===\n\n");
+			strcat(gstr, "{A9C4E4}/duty / /onduty / /uniform / /favuniform / /badge{FFFFFF} - Duty, uniform & badge\n");
+			strcat(gstr, "{A9C4E4}/r / /m / /d / /departments / /dep{FFFFFF} - Radios & megaphone\n");
+			strcat(gstr, "{A9C4E4}/seb / /setsebrank{FFFFFF} - Special Enforcement Bureau (SEB) duty & rank\n");
+			strcat(gstr, "{A9C4E4}/db / /setdbrank{FFFFFF} - ISD / Detective duty & rank\n");
+			strcat(gstr, "{A9C4E4}/handcuff (/hc) / /unhandcuff (/uhc) / /passhandcuffs / /myhandcuffs{FFFFFF} - Handcuffs\n");
+			strcat(gstr, "{A9C4E4}/taser / /frisk / /friskapprove{FFFFFF} - Taser & frisking\n");
+			strcat(gstr, "{A9C4E4}/fine / /fines / /vehiclefines{FFFFFF} - Fines\n");
+			strcat(gstr, "{A9C4E4}/jail / /prison / /prisoners / /arrestrecord{FFFFFF} - County jail & prisoners\n");
+			strcat(gstr, "{A9C4E4}/detain / /eject / /siren / /alarm / /alarmoff{FFFFFF} - Detain & sirens\n");
+			strcat(gstr, "{A9C4E4}/roadblock (/rb) / /cone / /stinger{FFFFFF} - Barriers & stingers\n");
+			strcat(gstr, "{A9C4E4}/createscene (/cs) / /clearscene (/csall, /clearsceneall){FFFFFF} - Crime scenes\n");
+			strcat(gstr, "{A9C4E4}/togalpr / /alprlog / /apb / /mdc{FFFFFF} - ALPR, APB & MDC database\n");
+			strcat(gstr, "{A9C4E4}/fmenu / /factionmenu / /faction / /factionon / /invite / /uninvite / /rank / /accept / /decline{FFFFFF} - Faction");
+
+			Dialog_Show(playerid, Help_FactionDetail, DIALOG_STYLE_MSGBOX, "Faction Help: LSSD", gstr, "<< Back", "Close");
+		}
+		case 3: // SANews
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== SAN ANDREAS NEWS AGENCY (SANA) ===\n\n");
+			strcat(gstr, "{A9C4E4}/duty / /onduty / /uniform / /badge{FFFFFF} - Go on News reporter duty\n");
+			strcat(gstr, "{A9C4E4}/r{FFFFFF} - Internal news radio channel\n");
+			strcat(gstr, "{A9C4E4}/news / /bcast{FFFFFF} - Broadcast news update to server\n");
+			strcat(gstr, "{A9C4E4}/fmenu / /factionmenu / /faction / /factionon / /invite / /uninvite / /rank / /accept / /decline{FFFFFF} - Faction");
+
+			Dialog_Show(playerid, Help_FactionDetail, DIALOG_STYLE_MSGBOX, "Faction Help: SANews", gstr, "<< Back", "Close");
+		}
+		case 4: // SAGS
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== SAN ANDREAS GOVERNMENT SERVICE (SAGS) ===\n\n");
+			strcat(gstr, "{A9C4E4}/duty / /onduty / /uniform / /badge{FFFFFF} - Go on Government duty\n");
+			strcat(gstr, "{A9C4E4}/r / /m / /d / /departments / /dep{FFFFFF} - Radios & megaphone\n");
+			strcat(gstr, "{A9C4E4}/gov / /government{FFFFFF} - Official government announcement\n");
+			strcat(gstr, "{A9C4E4}/fmenu / /factionmenu / /faction / /factionon / /invite / /uninvite / /rank / /accept / /decline{FFFFFF} - Faction");
+
+			Dialog_Show(playerid, Help_FactionDetail, DIALOG_STYLE_MSGBOX, "Faction Help: SAGS", gstr, "<< Back", "Close");
+		}
+		case 5: // DOC
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== DEPARTMENT OF CORRECTIONS (DOC) ===\n\n");
+			strcat(gstr, "{A9C4E4}/duty / /onduty / /uniform / /badge{FFFFFF} - Go on DOC officer duty\n");
+			strcat(gstr, "{A9C4E4}/r / /m / /d / /departments / /dep{FFFFFF} - Radios & megaphone\n");
+			strcat(gstr, "{A9C4E4}/jail / /prison / /prisoners / /releaseme / /arrestrecord{FFFFFF} - Prison cellblocks & inmates\n");
+			strcat(gstr, "{A9C4E4}/handcuff (/hc) / /unhandcuff (/uhc) / /frisk / /friskapprove{FFFFFF} - Restraints & frisking\n");
+			strcat(gstr, "{A9C4E4}/fmenu / /factionmenu / /faction / /factionon / /invite / /uninvite / /rank / /accept / /decline{FFFFFF} - Faction");
+
+			Dialog_Show(playerid, Help_FactionDetail, DIALOG_STYLE_MSGBOX, "Faction Help: DOC", gstr, "<< Back", "Close");
+		}
+		case 6: // Organized Crime / Mafia / Families
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== ORGANIZED CRIME / MAFIA / FAMILIES ===\n\n");
+			strcat(gstr, "{A9C4E4}/f / /g / /fchat / /nofam / /disband{FFFFFF} - Organization IC & OOC chat\n");
+			strcat(gstr, "{A9C4E4}/fmenu / /factionmenu / /faction / /factionon / /invite / /uninvite / /rank / /accept / /decline{FFFFFF} - Organization\n");
+			strcat(gstr, "{A9C4E4}/graffiti{FFFFFF} - Spray gang tags\n");
+			strcat(gstr, "{A9C4E4}/tie / /untie / /blindfold{FFFFFF} - Tie or blindfold hostage\n");
+			strcat(gstr, "{A9C4E4}/mypackage / /unpackage / /pw / /paw / /tw / /taw / /sp{FFFFFF} - Materials & weapon packages");
+
+			Dialog_Show(playerid, Help_FactionDetail, DIALOG_STYLE_MSGBOX, "Faction Help: Crime & Gangs", gstr, "<< Back", "Close");
+		}
+	}
+	return 1;
+}
+
+Dialog:Help_Detail(playerid, response, listitem, inputtext[])
+{
+	ShowHelpCategories(playerid);
+	return 1;
+}
+
+Dialog:Help_FactionDetail(playerid, response, listitem, inputtext[])
+{
+	ShowFactionHelpMenu(playerid);
+	return 1;
 }
 
 CMD:rules(playerid, params[])
@@ -3098,6 +3477,13 @@ CMD:selfie(playerid, params[])
 
     if(DeathMode{playerid} || PlayerData[playerid][pInjured] || Dialog_Opened(playerid))
 		return SendClientMessage(playerid, COLOR_LIGHTRED, "You cannot use the phone at this time.");
+
+    // If already in selfie mode, exit it (toggle off) — workaround for ENTER key detection issue
+    if(ph_menuid[playerid] == 0 && ph_sub_menuid[playerid] == 2)
+    {
+        PhoneSelfie_Stop(playerid);
+        return true;
+    }
 
     OnPhoneClick_Selfie(playerid);
 	return true;
