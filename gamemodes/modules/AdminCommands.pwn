@@ -4256,6 +4256,35 @@ CMD:givemoney(playerid, params[])
 	return true;
 }
 
+CMD:givecell(playerid, params[])
+{
+	if(PlayerData[playerid][pAdmin] < 1)
+		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+
+	new userid;
+
+	if(sscanf(params, "u", userid))
+		return SendSyntaxMessage(playerid, "/givecell [playerid/PartOfName]");
+
+	if(!IsPlayerConnected(userid))
+		return SendErrorMessage(playerid, "The player you specified isn't connected.");
+
+	if(!SQL_IsLogged(userid))
+		return SendErrorMessage(playerid, "The player you specified isn't logged in.");
+
+	if(PlayerData[userid][pPnumber])
+		return SendErrorMessage(playerid, "That player already has a phone (number: %d).", PlayerData[userid][pPnumber]);
+
+	new newNumber = 100000 + random(99999);
+	PlayerData[userid][pPnumber] = newNumber;
+	PlayerData[userid][pPhoneModel] = 0;
+
+	SendClientMessageEx(userid,   COLOR_WHITE,  "SERVER: An admin gave you a new phone. Your number: %d", newNumber);
+	SendClientMessageEx(playerid, COLOR_YELLOW, "AdmCmd: You gave a phone to %s (number: %d).", ReturnName(userid), newNumber);
+	SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmCmd: %s gave a phone to %s [%d]. Number: %d", ReturnName(playerid), ReturnName(userid), userid, newNumber);
+	return true;
+}
+
 CMD:takemoney(playerid, params[])
 {
 	if(PlayerData[playerid][pAdmin] < 3)

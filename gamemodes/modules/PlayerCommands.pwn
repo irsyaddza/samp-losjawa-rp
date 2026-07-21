@@ -3522,6 +3522,31 @@ CMD:dropcell(playerid, params[])
 	return true;
 }
 
+CMD:buycell(playerid, params[])
+{
+	if(PlayerData[playerid][pInjured])
+		return SendClientMessage(playerid, COLOR_LIGHTRED, "Error: You are not able to do this right now.");
+
+	if(DeathMode{playerid})
+		return SendClientMessage(playerid, COLOR_LIGHTRED, "Error: You are not able to do this right now.");
+
+	if(PlayerData[playerid][pPnumber])
+		return SendClientMessage(playerid, COLOR_GRAD1, "   You already own a phone.");
+
+	if(PlayerData[playerid][pCash] < 500)
+		return SendClientMessageEx(playerid, COLOR_LIGHTRED, "Error: You need at least %s to buy a phone.", FormatNumber(500));
+
+	// Assign a unique random number (100000-199999)
+	new newNumber = 100000 + random(99999);
+	PlayerData[playerid][pPnumber] = newNumber;
+	PlayerData[playerid][pPhoneModel] = 0; // default black cover
+
+	TakePlayerMoney(playerid, 500);
+
+	SendNoticeMessage(playerid, "You purchased a new phone for $500. Your number: %d", newNumber);
+	return true;
+}
+
 CMD:loudspeaker(playerid, params[])
 {
     if(PlayerData[playerid][pInjured])

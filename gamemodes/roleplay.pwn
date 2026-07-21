@@ -6627,166 +6627,160 @@ ReturnPlayingHours(playerid)
 
 ShowStatistics(playerid, targetid)
 {
-    new factionText[32], rankText[32], factionid = PlayerData[targetid][pFaction];
+	new playerName[MAX_PLAYER_NAME];
+	GetPlayerName(targetid, playerName, MAX_PLAYER_NAME);
 
-    if(factionid != -1)
-    {
-        factionid = FactionData[factionid][factionID];
-        format(factionText, 32, "%s", Faction_GetName(targetid));
-        format(rankText, 32, "%s", Faction_GetRank(targetid));
-    }
-    else 
-    {
-        factionid = 0;
-        factionText = "Civilian";
-        rankText = "No Rank";
-    }
+	// Faction info
+	new factionText[64], factionid = PlayerData[targetid][pFaction];
+	if(factionid != -1)
+		format(factionText, sizeof(factionText), "%s (%s)", Faction_GetName(targetid), Faction_GetRank(targetid));
+	else
+		format(factionText, sizeof(factionText), "Civilian");
 
-    // Vehicle keys handling
-    new keys[64], kcount;
-    for(new i = 0; i < MAX_VEHICLE_KEYS; ++i)
-    {
-        if(PlayerData[targetid][pCarKeys][i] != 9999)
-        {
-            if(!kcount)
-                format(keys, sizeof(keys), "%d", CarData[ PlayerData[targetid][pCarKeys][i] ][carVehicle]);
-            else
-                format(keys, sizeof(keys), "%s|%d", keys, CarData[ PlayerData[targetid][pCarKeys][i] ][carVehicle]);
+	// Wealth rating based on net worth
+	new totalNetWorth = PlayerData[targetid][pCash] + PlayerData[targetid][pAccount];
+	new wealthRating[32];
+	if(totalNetWorth < 10000)        format(wealthRating, sizeof(wealthRating), "Poor");
+	else if(totalNetWorth < 50000)   format(wealthRating, sizeof(wealthRating), "Lower Class");
+	else if(totalNetWorth < 250000)  format(wealthRating, sizeof(wealthRating), "Middle Class");
+	else if(totalNetWorth < 1000000) format(wealthRating, sizeof(wealthRating), "Upper Class");
+	else                             format(wealthRating, sizeof(wealthRating), "Wealthy");
 
-            kcount++;
-        }
-    }
-    if(!kcount) format(keys, 64, "None");
+	// Bank account number (deterministic from player ID)
+	new bankAcc[32];
+	format(bankAcc, sizeof(bankAcc), "%03d-%03d-%03d",
+		(PlayerData[targetid][pID] * 137) % 900 + 100,
+		(PlayerData[targetid][pID] * 241) % 900 + 100,
+		(PlayerData[targetid][pID] * 359) % 900 + 100);
 
-    // Weapon handling
-    new primary_weapon[30], secondary_weapon[30], ammo[2];
-    if(PlayerData[targetid][pWeapon][1])
-    {
-        format(primary_weapon, 30, ReturnWeaponName(PlayerData[targetid][pWeapon][1]));
-        ammo[0] = PlayerData[targetid][pAmmunation][1];
+	// Playing time
+	new pSeconds = PlayerData[targetid][pPlayingSeconds];
+	new pHours   = pSeconds / 3600;
+	new pMinutes = (pSeconds % 3600) / 60;
+	new pSecs    = pSeconds % 60;
 
-        if(PlayerData[targetid][pWeapon][2])
-        {
-            format(secondary_weapon, 30, ReturnWeaponName(PlayerData[targetid][pWeapon][2]));
-            ammo[1] = PlayerData[targetid][pAmmunation][2];
-        }
-    }
-    else if(PlayerData[targetid][pWeapon][2])
-    {
-        format(primary_weapon, 30, ReturnWeaponName(PlayerData[targetid][pWeapon][2]));
-        ammo[0] = PlayerData[targetid][pAmmunation][2];
-    }
+	// Vehicles: use pCarKeys (spawned) for list, CountPlayerVehicles for owned count
+	new vehList[512], spawnedCount;
+	vehList[0] = EOS;
+	for(new i = 0; i < MAX_VEHICLE_KEYS; ++i)
+	{
+		new keyIdx = PlayerData[targetid][pCarKeys][i];
+		if(keyIdx != 9999)
+		{
+			if(spawnedCount > 0) strcat(vehList, ", ");
+			new tempVeh[64];
+			format(tempVeh, sizeof(tempVeh), "%s (VID:%d)", ReturnVehicleName(CarData[keyIdx][carVehicle]), CarData[keyIdx][carID]);
+			strcat(vehList, tempVeh);
+			spawnedCount++;
+		}
+	}
+	if(spawnedCount == 0) format(vehList, sizeof(vehList), "None");
 
-    new playerName[MAX_PLAYER_NAME], currentTime[64], string[2048];
-    GetPlayerName(targetid, playerName, MAX_PLAYER_NAME);
-    format(currentTime, 64, ReturnDateTime());
+	// Max owned vehicles based on donate rank / admin
+	new maxOwned = MaxOwnedVehicles(targetid);
+	new ownedCount = CountVehicleKeys(targetid); // number of keys held (spawned)
 
-    format(string, sizeof(string),
-        "Category\tDetail\tValue\n\
-        {33CCFF}Character Info\t{CCCCCC}Name\t{FFFFFF}%s\n\
-        \t{CCCCCC}Time\t{FFFFFF}%s\n\
-        \t{CCCCCC}Faction\t{FFFFFF}[%d] %s\n\
-        \t{CCCCCC}Rank\t{FFFFFF}%s\n\
-        \t{CCCCCC}Job\t{FFFFFF}%s\n\
-        \t{CCCCCC}Phone\t{FFFFFF}%d\n\
-        \t\t\n\
-        {33CCFF}Company Info\t{CCCCCC}Company\t{FFFFFF}[0] Null\n\
-        \t{CCCCCC}Rank\t{FFFFFF}Unknown\n\
-        \t\t\n\
-        {33CCFF}Inventory\t{CCCCCC}Car Parts\t{FFFFFF}0\n\
-        \t{CCCCCC}Radio\t{FFFFFF}%s\n\
-        \t{CCCCCC}Melee Weapon\t{FFFFFF}%s\n\
-        \t\t\n\
-        {33CCFF}Weapons\t{CCCCCC}Primary\t{FFFFFF}%s (Ammo: %d)\n\
-        \t{CCCCCC}Secondary\t{FFFFFF}%s (Ammo: %d)\n\
-        \t\t\n\
-        {33CCFF}Level Info\t{CCCCCC}Level\t{FFFFFF}%d\n\
-        \t{CCCCCC}Experience\t{FFFFFF}%d/%d\n\
-        \t{CCCCCC}Donator Level\t{FFFFFF}%s\n\
-        \t\t\n\
-        {33CCFF}Skills\t{CCCCCC}Health\t{FFFFFF}%.1f/150.0\n\
-        \t{CCCCCC}Time Played\t{FFFFFF}%d hours\n\
-        \t\t\n\
-        {33CCFF}Money Info\t{CCCCCC}Cash\t{FFFFFF}%s\n\
-        \t{CCCCCC}Bank\t{FFFFFF}%s\n\
-        \t{CCCCCC}Savings\t{FFFFFF}%s\n\
-        \t{CCCCCC}PayCheck\t{FFFFFF}%s\n\
-        \t\t\n\
-        {33CCFF}Other Info\t{CCCCCC}Vehicle Keys\t{FFFFFF}%s\n\
-        \t{CCCCCC}Side Job\t{FFFFFF}%s\n\
-        \t{CCCCCC}Renting Car\t{FFFFFF}%d\n\
-        \t\t\n\
-        {33CCFF}Business Info\t{CCCCCC}Owned Business\t{FFFFFF}%s\n\
-        \t{CCCCCC}Hired Business\t{FFFFFF}None",
-        playerName,
-        currentTime,
-        factionid,
-        factionText,
-        rankText,
-        ReturnJobName(targetid, PlayerData[targetid][pJob]),
-        PlayerData[targetid][pPnumber],
-        (PlayerData[targetid][pRadio]) ? ("{00FF00}Yes") : ("{FF0000}No"),
-        ReturnWeaponName(PlayerData[targetid][pWeapon][0]),
-        (strlen(primary_weapon)) ? primary_weapon : ("{FF0000}None"),
-        ammo[0],
-        (strlen(secondary_weapon)) ? secondary_weapon : ("{FF0000}None"),
-        ammo[1],
-        PlayerData[targetid][pLevel],
-        PlayerData[targetid][pExp],
-        ((PlayerData[targetid][pLevel]) * 4 + 4),
-        ReturnDonateRank(PlayerData[targetid][pDonateRank]),
-        PlayerData[targetid][pHealth],
-        floatround(PlayerData[targetid][pPlayingSeconds] / 3600, floatround_floor),
-        FormatNumber(PlayerData[targetid][pCash]),
-        FormatNumber(PlayerData[targetid][pAccount]),
-        FormatNumber(PlayerData[targetid][pSavingsCollect]),
-        FormatNumber(PlayerData[targetid][pPayCheck]),
-        keys,
-        ReturnJobName(targetid, PlayerData[targetid][pSideJob]),
-        RentCarKey[targetid],
-        PlayerData[targetid][pPbiskey] == -1 ? "{FF0000}None" : ClearGameTextColor(BusinessData[ PlayerData[targetid][pPbiskey] ][bInfo])
-    );
+	// Phone
+	new phoneNum[32];
+	if(PlayerData[targetid][pPnumber] > 0) format(phoneNum, sizeof(phoneNum), "%d", PlayerData[targetid][pPnumber]);
+	else format(phoneNum, sizeof(phoneNum), "None");
 
-    // If admin on duty, add admin information
-    if(AdminDuty{playerid})
-    {
-        new adminInfo[512], houses[64], hcount;
-        format(adminInfo, sizeof(adminInfo),
-            "\n\t\t\n{FF3333}Admin Info\t{CCCCCC}Business Key\t{FFFFFF}%d\n\
-            \t{CCCCCC}Interior\t{FFFFFF}%d\n\
-            \t{CCCCCC}World\t{FFFFFF}%d\n\
-            \t{CCCCCC}Local\t{FFFFFF}%d",
-            PlayerData[targetid][pPbiskey],
-            PlayerData[targetid][pInterior],
-            PlayerData[targetid][pWorld],
-            PlayerData[targetid][pLocal]
-        );
-        strcat(string, adminInfo);
+	// UCP info
+	new ucpName[MAX_PLAYER_NAME], ucpEmail[MAX_PLAYER_NAME];
+	if(AccountData[targetid][aUsername][0] != EOS) format(ucpName,  sizeof(ucpName),  "%s", AccountData[targetid][aUsername]);
+	else format(ucpName, sizeof(ucpName), "%s", playerName);
+	if(AccountData[targetid][aEmail][0] != EOS) format(ucpEmail, sizeof(ucpEmail), "%s", AccountData[targetid][aEmail]);
+	else format(ucpEmail, sizeof(ucpEmail), "N/A");
 
-        // Add houses information
-        foreach (new i : Property)
-        {
-            if(!PropertyData[i][hOwned]) continue;
+	// Weapons
+	new primary_weapon[32], secondary_weapon[32], ammo[2];
+	if(PlayerData[targetid][pWeapon][1])
+	{
+		format(primary_weapon, sizeof(primary_weapon), ReturnWeaponName(PlayerData[targetid][pWeapon][1]));
+		ammo[0] = PlayerData[targetid][pAmmunation][1];
+		if(PlayerData[targetid][pWeapon][2])
+		{
+			format(secondary_weapon, sizeof(secondary_weapon), ReturnWeaponName(PlayerData[targetid][pWeapon][2]));
+			ammo[1] = PlayerData[targetid][pAmmunation][2];
+		}
+	}
+	else if(PlayerData[targetid][pWeapon][2])
+	{
+		format(primary_weapon, sizeof(primary_weapon), ReturnWeaponName(PlayerData[targetid][pWeapon][2]));
+		ammo[0] = PlayerData[targetid][pAmmunation][2];
+	}
 
-            if(PropertyData[i][hOwnerSQLID] == PlayerData[targetid][pID])
-            {
-                if(!hcount)
-                    format(houses, sizeof(houses), "%d", i);
-                else
-                    format(houses, sizeof(houses), "%s, %d", houses, i);
+	// Staff Level / Admin Title
+	new staffTitle[32];
+	if(PlayerData[targetid][pAdmin] > 0)
+	{
+		switch(PlayerData[targetid][pAdmin])
+		{
+			case 1337: format(staffTitle, sizeof(staffTitle), "Management");
+			case 4:    format(staffTitle, sizeof(staffTitle), "Lead Admin");
+			case 3:    format(staffTitle, sizeof(staffTitle), "Senior Admin");
+			case 2:    format(staffTitle, sizeof(staffTitle), "Game Admin");
+			case 1:    format(staffTitle, sizeof(staffTitle), "Junior Admin");
+			default:   format(staffTitle, sizeof(staffTitle), "Junior Admin");
+		}
+	}
+	else if(TesterDuty{targetid})
+	{
+		format(staffTitle, sizeof(staffTitle), "Tester");
+	}
+	else
+	{
+		format(staffTitle, sizeof(staffTitle), "None");
+	}
 
-                hcount++;
-            }
-        }
-        format(adminInfo, sizeof(adminInfo), "\n\t{CCCCCC}Houses owned\t{FFFFFF}%s", houses);
-        strcat(string, adminInfo);
-    }
+	// Connection Info
+	new playerIP[32];
+	GetPlayerIp(targetid, playerIP, sizeof(playerIP));
 
-    new title[64];
-    format(title, sizeof(title), "{33AA33}Statistics: {FFFFFF}%s", playerName);
-    
-    ShowPlayerDialog(playerid, DIALOG_STATS, DIALOG_STYLE_TABLIST_HEADERS, title, string, "Close", "");
-    return 1;
+	// Build dialog string
+	new string[2048];
+	format(string, sizeof(string),
+		"{FFC700}IC Information:\n\
+		{FFFFFF}Gender: [{33AA33}%s{FFFFFF}] Money: [{33AA33}%s{FFFFFF}] Bank: [{33AA33}%s{FFFFFF}] Phone number: [{33AA33}%s{FFFFFF}]\n\
+		{FFFFFF}Jobs: [{33AA33}%s{FFFFFF}] Faction: [{33AA33}%s{FFFFFF}]\n\
+		{FFFFFF}Married with: [{33AA33}None{FFFFFF}] Wealth rating: [{33AA33}%s{FFFFFF}] Bank Account: [{33AA33}%s{FFFFFF}]\n\
+		{FFFFFF}Primary: [{33AA33}%s{FFFFFF}] (Ammo: [{33AA33}%d{FFFFFF}]) Secondary: [{33AA33}%s{FFFFFF}] (Ammo: [{33AA33}%d{FFFFFF}])\n\n\
+		{FFC700}OOC Information:\n\
+		{FFFFFF}User: [{00FFFF}%s{FFFFFF}] Email: [{00FFFF}%s{FFFFFF}] Time played: [{00FFFF}%d hours %d minutes %d seconds{FFFFFF}]\n\
+		{FFFFFF}Vehicles (%d/%d): [{00FFFF}%s{FFFFFF}]\n\
+		{FFFFFF}IP Address: [{00FFFF}%s{FFFFFF}] Staff Level: [{00FFFF}%s{FFFFFF}] Ping/PL: [{00FFFF}%d / %.2f%%%%{FFFFFF}]\n\
+		{FFFFFF}World: [{00FFFF}%d{FFFFFF}] Interior: [{00FFFF}%d{FFFFFF}] MaxHP: [{00FFFF}150.00{FFFFFF}] Health: [{FF0000}%.2f{FFFFFF}] Armour: [{00FFFF}%.2f{FFFFFF}]",
+		(IsSkinFemale(PlayerData[targetid][pModel]) == 1) ? ("Female") : ("Male"),
+		FormatNumber(PlayerData[targetid][pCash]),
+		FormatNumber(PlayerData[targetid][pAccount]),
+		phoneNum,
+		ReturnJobName(targetid, PlayerData[targetid][pJob]),
+		factionText,
+		wealthRating,
+		bankAcc,
+		(strlen(primary_weapon) > 0) ? primary_weapon : "None",
+		ammo[0],
+		(strlen(secondary_weapon) > 0) ? secondary_weapon : "None",
+		ammo[1],
+		ucpName,
+		ucpEmail,
+		pHours, pMinutes, pSecs,
+		ownedCount, maxOwned,
+		vehList,
+		playerIP,
+		staffTitle,
+		GetPlayerPing(targetid),
+		NetStats_PacketLossPercent(targetid),
+		GetPlayerVirtualWorld(targetid),
+		GetPlayerInterior(targetid),
+		PlayerData[targetid][pHealth],
+		PlayerData[targetid][pArmour]
+	);
+
+	new title[64];
+	format(title, sizeof(title), "%s (pid: %d)", playerName, PlayerData[targetid][pID]);
+	ShowPlayerDialog(playerid, DIALOG_STATS, DIALOG_STYLE_MSGBOX, title, string, "Close", "");
+	return 1;
 }
 
 SetPlayerToTeamColor(playerid)
