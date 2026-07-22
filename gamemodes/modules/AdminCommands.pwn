@@ -662,6 +662,18 @@ CMD:watchoff(playerid, params[])
 	SetPlayerVirtualWorld(playerid, PlayerData[playerid][pWorld]);
 
 	SetPlayerWeapons(playerid);
+
+	if(PlayerData[playerid][pOnDuty])
+	{
+		if(PlayerData[playerid][pOnDutySkin] > 0)
+			SetPlayerSkin(playerid, PlayerData[playerid][pOnDutySkin]);
+		else if(PlayerData[playerid][pFavUniform] > 0)
+			SetPlayerSkin(playerid, PlayerData[playerid][pFavUniform]);
+	}
+	else
+	{
+		SetPlayerSkin(playerid, PlayerData[playerid][pModel]);
+	}
 	return true;
 }
 

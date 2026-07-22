@@ -5565,7 +5565,9 @@ SQL_SaveCharacter(playerid, bool:quit = true)
 	    knockout,
 	    adminduty,
 	    testerduty,
-	    hudtoggled
+	    hudtoggled,
+	    bool:swap_weapons = false,
+	    temp_wep[3][2]
 	;
 
 	PlayerData[playerid][pInterior] = GetPlayerInterior(playerid);
@@ -5585,8 +5587,15 @@ SQL_SaveCharacter(playerid, bool:quit = true)
 		}
 		else
 		{
-			ResetPlayerWeapons(playerid);
-			RestorePlayerWeapons(playerid);
+			swap_weapons = true;
+			for(new i = 0; i < 3; i++)
+			{
+				temp_wep[i][0] = PlayerData[playerid][pWeapon][i];
+				temp_wep[i][1] = PlayerData[playerid][pAmmunation][i];
+
+				PlayerData[playerid][pWeapon][i] = TempWeapons[playerid][i][0];
+				PlayerData[playerid][pAmmunation][i] = TempWeapons[playerid][i][1];
+			}
 		}
 
 		if(!PlayerData[playerid][pTimeout]) PlayerData[playerid][pArmour] = 0;
@@ -5743,6 +5752,15 @@ SQL_SaveCharacter(playerid, bool:quit = true)
 	);
 
 	mysql_pquery(dbCon, query);
+
+	if(swap_weapons)
+	{
+		for(new i = 0; i < 3; i++)
+		{
+			PlayerData[playerid][pWeapon][i] = temp_wep[i][0];
+			PlayerData[playerid][pAmmunation][i] = temp_wep[i][1];
+		}
+	}
 
 	//printf("QUERY LENGTH WAS %d", strlen(query));
 
@@ -5980,16 +5998,24 @@ public OnPlayerSpawn(playerid)
 		SetPlayerSpawn(playerid);
 		SetPlayerTime(playerid, ghour, gminute);
 
-		new Float:px, Float:py, Float:pz;
-		px = PlayerData[playerid][pPos][0];
-		py = PlayerData[playerid][pPos][1];
-		pz = PlayerData[playerid][pPos][2];
-		SetPlayerCameraPos(playerid, px + 5.000, py + 5.000, pz + 180.000);
-		SetPlayerCameraLookAt(playerid, px, py, pz);
-		TogglePlayerControllable(playerid, false);
-		InterpolateCameraPos(playerid, px + 5.000, py + 5.000, pz + 180.000, px + 3.000, py + 3.000, pz + 3.000, 4000, CAMERA_MOVE);
-		InterpolateCameraLookAt(playerid, px, py, pz, px, py, pz + 1.000, 4000, CAMERA_MOVE);
-		SetTimerEx("OnPlayerGtaVSpawnFinish", 4000, false, "d", playerid);
+		if(!PlayerData[playerid][pInjured])
+		{
+			new Float:px, Float:py, Float:pz;
+			px = PlayerData[playerid][pPos][0];
+			py = PlayerData[playerid][pPos][1];
+			pz = PlayerData[playerid][pPos][2];
+			SetPlayerCameraPos(playerid, px + 5.000, py + 5.000, pz + 180.000);
+			SetPlayerCameraLookAt(playerid, px, py, pz);
+			TogglePlayerControllable(playerid, false);
+			InterpolateCameraPos(playerid, px + 5.000, py + 5.000, pz + 180.000, px + 3.000, py + 3.000, pz + 3.000, 4000, CAMERA_MOVE);
+			InterpolateCameraLookAt(playerid, px, py, pz, px, py, pz + 1.000, 4000, CAMERA_MOVE);
+			SetTimerEx("OnPlayerGtaVSpawnFinish", 4000, false, "d", playerid);
+		}
+		else
+		{
+			SetCameraBehindPlayer(playerid);
+			TogglePlayerControllable(playerid, false);
+		}
 
 		if(PlayerData[playerid][pTutorialStep] == 1)
 		{
@@ -6879,7 +6905,14 @@ public OnPlayerDeath(playerid, killerid, reason)
 				PlayerData[playerid][pInjured] = 1;
 				PlayerData[playerid][pInterior] = GetPlayerInterior(playerid);
 				PlayerData[playerid][pWorld] = GetPlayerVirtualWorld(playerid);
-				GetPlayerPos(playerid, PlayerData[playerid][pPos][0], PlayerData[playerid][pPos][1], PlayerData[playerid][pPos][2]);
+				new Float:x, Float:y, Float:z;
+				GetPlayerPos(playerid, x, y, z);
+				if(x != 0.0 && y != 0.0)
+				{
+					PlayerData[playerid][pPos][0] = x;
+					PlayerData[playerid][pPos][1] = y;
+					PlayerData[playerid][pPos][2] = z;
+				}
 				GetPlayerFacingAngle(playerid, PlayerData[playerid][pPos][3]);
 				DeathTimer[playerid] = 120;
 		    }

@@ -10,7 +10,7 @@ new vELMOriginalLights[MAX_VEHICLES];
 // Initializer: start the 120ms flasher timer
 stock ELM_Init()
 {
-	SetTimer("ELM_FlashTimer", 120, true);
+	SetTimer("ELM_FlashTimer", 100, true);
 	return 1;
 }
 
@@ -24,19 +24,29 @@ public ELM_FlashTimer()
 			new panels, doors_status, lights_status, tires;
 			GetVehicleDamageStatus(v, panels, doors_status, lights_status, tires);
 
+			// Force lights ON if they got turned OFF by sync or other scripts
+			new engine, lights, alarm, doors, bonnet, boot, objective;
+			GetVehicleParamsEx(v, engine, lights, alarm, doors, bonnet, boot, objective);
+			if(lights != 1)
+			{
+				SetVehicleParamsEx(v, engine, 1, alarm, doors, bonnet, boot, objective);
+			}
+
 			new new_lights = 0;
 			switch(vELMPattern[v])
 			{
-				case 0: new_lights = 9;  // Right side ON (Left broken: 1 | 8 = 9)
-				case 1: new_lights = 15; // All OFF
-				case 2: new_lights = 9;  // Right side ON
-				case 3: new_lights = 15; // All OFF
-				case 4: new_lights = 6;  // Left side ON (Right broken: 2 | 4 = 6)
-				case 5: new_lights = 15; // All OFF
-				case 6: new_lights = 6;  // Left side ON
-				case 7: new_lights = 15; // All OFF
+				case 0: new_lights = 4; // Right on (bit 2 broken)
+				case 1: new_lights = 0; // Right off (none broken)
+				case 2: new_lights = 4; // Right on
+				case 3: new_lights = 0; // Right off
+				case 4: new_lights = 2; // Left on (bit 1 broken)
+				case 5: new_lights = 0; // Left off (none broken)
+				case 6: new_lights = 2; // Left on
+				case 7: new_lights = 0; // Left off
+				case 8: new_lights = 6; // Both on (bit 1 & 2 broken)
+				case 9: new_lights = 0; // Both off (none broken)
 			}
-			vELMPattern[v] = (vELMPattern[v] + 1) % 8;
+			vELMPattern[v] = (vELMPattern[v] + 1) % 10;
 
 			UpdateVehicleDamageStatus(v, panels, doors_status, new_lights, tires);
 		}

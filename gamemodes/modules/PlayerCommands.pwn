@@ -8591,6 +8591,7 @@ CMD:duty(playerid, params[])
 			SetPlayerSkin(playerid, PlayerData[playerid][pFavUniform]);
 
 		PlayerData[playerid][pOnDuty] = true;
+		PlayerData[playerid][pOnDutySkin] = GetPlayerSkin(playerid);
 
 		switch(type)
 		{
@@ -8647,6 +8648,7 @@ CMD:duty(playerid, params[])
 		SetPlayerArmourEx(playerid, 0.0);
 		SetPlayerToTeamColor(playerid);
 		SetPlayerSkin(playerid, PlayerData[playerid][pModel]);
+		PlayerData[playerid][pOnDutySkin] = 0;
 
 	    switch(type)
 		{
