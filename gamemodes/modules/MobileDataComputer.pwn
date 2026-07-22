@@ -4511,7 +4511,7 @@ stock UpdatePlayerMDC(playerid, page, lastpage)
 		}
 		case 4: //cctv
 		{
-
+			ShowCCTVListDialog(playerid);
 		}
 		case 5: //vehicle bolo
 		{

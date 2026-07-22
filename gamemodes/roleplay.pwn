@@ -2099,6 +2099,7 @@ new Iterator:sv_activevehicles<MAX_VEHICLES>;
 #include "modules/Phone.pwn"
 #include "modules/Store.pwn"
 #include "modules/MobileDataComputer.pwn"
+#include "modules/police/CCTV.pwn"
 #include "modules/VehicleParts.pwn"
 #include "modules/timers/Server.pwn"
 forward RefreshTutorial(playerid);
@@ -2148,6 +2149,7 @@ public OnGameModeInit()
 	FactionStaticVeh_Init();
 	MapEditor_Init();
 	Elevators_Init();
+	CCTV_Init();
 
     #include "modules/mapping/Misc.pwn"
     #include "modules/mapping/Main.pwn"
@@ -12086,6 +12088,61 @@ StopBoomBox(playerid)
 
 public OnPlayerEditDynamicObject(playerid, objectid, response, Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz)
 {
+	// --- CCTV Object Edit ---
+	if(GetPVarInt(playerid, "EditingCCTV") > 0)
+	{
+		new cctv_id = GetPVarInt(playerid, "EditingCCTV") - 1;
+
+		if(cctv_id >= 0 && cctv_id < MAX_CCTV && CCTVData[cctv_id][cctvExist])
+		{
+			if(response == EDIT_RESPONSE_FINAL)
+			{
+				// Update in-memory position
+				CCTVData[cctv_id][cctvObjX]  = x;
+				CCTVData[cctv_id][cctvObjY]  = y;
+				CCTVData[cctv_id][cctvObjZ]  = z;
+				CCTVData[cctv_id][cctvObjRX] = rx;
+				CCTVData[cctv_id][cctvObjRY] = ry;
+				CCTVData[cctv_id][cctvObjRZ] = rz;
+
+				// Destroy and recreate dynamic object at new coordinates so Streamer internal pool registers new base location
+				if(IsValidDynamicObject(CCTVData[cctv_id][cctvObjID]))
+					DestroyDynamicObject(CCTVData[cctv_id][cctvObjID]);
+
+				CCTVData[cctv_id][cctvObjID] = CreateDynamicObject(1622, x, y, z, rx, ry, rz, CCTVData[cctv_id][cctvWorld], CCTVData[cctv_id][cctvInterior]);
+
+				// Update the 3D text label position
+				if(IsValidDynamic3DTextLabel(CCTVData[cctv_id][cctvLabel]))
+					DestroyDynamic3DTextLabel(CCTVData[cctv_id][cctvLabel]);
+
+				new labelText[128];
+				format(labelText, sizeof(labelText), "{FFC700}[CCTV ID: %d]\n{FFFFFF}%s", cctv_id, CCTVData[cctv_id][cctvName]);
+				CCTVData[cctv_id][cctvLabel] = CreateDynamic3DTextLabel(labelText, 0xFFFFFFFF,
+					x, y, z + 0.8, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0,
+					CCTVData[cctv_id][cctvWorld], CCTVData[cctv_id][cctvInterior], -1, 15.0);
+
+				// Persist to database
+				new query[256];
+				mysql_format(dbCon, query, sizeof(query), "UPDATE `cctv_cameras` SET `obj_x`='%f', `obj_y`='%f', `obj_z`='%f', `obj_rx`='%f', `obj_ry`='%f', `obj_rz`='%f' WHERE `id`='%d';",
+					x, y, z, rx, ry, rz, CCTVData[cctv_id][cctvID]);
+				mysql_tquery(dbCon, query);
+
+				SendNoticeMessage(playerid, "Posisi CCTV #%d (%s) berhasil diperbarui.", cctv_id, CCTVData[cctv_id][cctvName]);
+				DeletePVar(playerid, "EditingCCTV");
+			}
+			else if(response == EDIT_RESPONSE_CANCEL)
+			{
+				// Revert the object to its original position
+				SetDynamicObjectPos(CCTVData[cctv_id][cctvObjID], CCTV_OldObjPos[cctv_id][0], CCTV_OldObjPos[cctv_id][1], CCTV_OldObjPos[cctv_id][2]);
+				SetDynamicObjectRot(CCTVData[cctv_id][cctvObjID], CCTV_OldObjPos[cctv_id][3], CCTV_OldObjPos[cctv_id][4], CCTV_OldObjPos[cctv_id][5]);
+
+				SendClientMessage(playerid, COLOR_YELLOW, "-> Edit CCTV dibatalkan.");
+				DeletePVar(playerid, "EditingCCTV");
+			}
+		}
+		return true;
+	}
+
 	if(ParticleSettings[playerid][particleEditID] != -1)
 	{
 	    new particleid = ParticleSettings[playerid][particleEditID];
