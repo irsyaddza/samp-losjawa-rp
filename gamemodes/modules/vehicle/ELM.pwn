@@ -10,7 +10,7 @@ new vELMOriginalLights[MAX_VEHICLES];
 // Initializer: start the 120ms flasher timer
 stock ELM_Init()
 {
-	SetTimer("ELM_FlashTimer", 100, true);
+	SetTimer("ELM_FlashTimer", 120, true);
 	return 1;
 }
 
