@@ -2083,6 +2083,7 @@ new Iterator:sv_activevehicles<MAX_VEHICLES>;
 #include "modules/vehicle/Functions.pwn"
 #include "modules/vehicle/Modshop.pwn"
 #include "modules/vehicle/HarvesterRental.pwn"
+#include "modules/vehicle/ELM.pwn"
 #include "modules/Industry.pwn"
 #include "modules/Furniture.pwn"
 #include "modules/Drugs.pwn"
@@ -2150,6 +2151,7 @@ public OnGameModeInit()
 	MapEditor_Init();
 	Elevators_Init();
 	CCTV_Init();
+	ELM_Init();
 
     #include "modules/mapping/Misc.pwn"
     #include "modules/mapping/Main.pwn"

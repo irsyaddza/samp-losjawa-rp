@@ -427,6 +427,19 @@ Faction_GetRank(playerid)
 		}
 		return rank;
 	}
+	else if((GetFactionType(playerid) == FACTION_POLICE || GetFactionType(playerid) == FACTION_SHERIFF) && PlayerData[playerid][pSWATRank] > 0)
+	{
+		new divName[8];
+		format(divName, sizeof(divName), (GetFactionType(playerid) == FACTION_POLICE) ? ("SWAT") : ("SEB"));
+		switch(PlayerData[playerid][pSWATRank])
+		{
+			case 1: format(rank, 32, "%s Operator", divName);
+			case 2: format(rank, 32, "%s Team Leader", divName);
+			case 3: format(rank, 32, "%s Commander", divName);
+			default: format(rank, 32, FactionRanks[factionid][PlayerData[playerid][pFactionRank] - 1]);
+		}
+		return rank;
+	}
 	else if(GetFactionType(playerid) == FACTION_MEDIC)
 	{
 		if(PlayerData[playerid][pEMSRank] > 0)

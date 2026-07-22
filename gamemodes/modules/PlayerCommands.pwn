@@ -2011,6 +2011,7 @@ Dialog:Help_FactionList(playerid, response, listitem, inputtext[])
 			gstr[0] = EOS;
 			strcat(gstr, "{FFFFFF}=== LOS SANTOS POLICE DEPARTMENT (LSPD) ===\n\n");
 			strcat(gstr, "{A9C4E4}/duty / /uniform / /favuniform / /badge{FFFFFF} - Duty, uniform & badge\n");
+			strcat(gstr, "{A9C4E4}/takegun and /check{FFFFFF} - Take weapon from vehicle gun rack\n");
 			strcat(gstr, "{A9C4E4}/r / /m / /d / /departments / /dep / /setdep{FFFFFF} - Radios & megaphone\n");
 			strcat(gstr, "{A9C4E4}/db / /setdbrank{FFFFFF} - Detective Bureau duty & rank\n");
 			strcat(gstr, "{A9C4E4}/swat / /setswatrank{FFFFFF} - SWAT tactical duty & rank\n");
@@ -17281,12 +17282,18 @@ CMD:siren(playerid, params[])
 			}
 		}
 
+		// ponytail: toggle emergency lights (ELM) flashing
+		ToggleEmergencyLights(vehicleid, true);
+
         GameTextForPlayer(playerid, "~g~SIREN TURNED ON!", 5000, 4);
 	}
 	else
 	{
 	    DestroyDynamicObject(vehicleSiren[vehicleid]);
 	    vehicleSiren[vehicleid] = INVALID_OBJECT_ID;
+
+		// ponytail: toggle emergency lights (ELM) flashing off
+		ToggleEmergencyLights(vehicleid, false);
 
 	    GameTextForPlayer(playerid, "~r~SIREN TURNED OFF!", 5000, 4);
 	}
