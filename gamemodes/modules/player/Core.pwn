@@ -143,7 +143,8 @@ enum E_PLAYER_DATA
 	pSprayBanned,
 	pDepartment,
 	pHandCuffs,
-	pLastVehicle
+	pLastVehicle,
+	pBusJobDelay
 };
 
 new PlayerData[MAX_PLAYERS][E_PLAYER_DATA];

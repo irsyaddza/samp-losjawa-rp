@@ -2110,6 +2110,10 @@ forward RefreshTutorial(playerid);
 #include "modules/Interface.pwn"
 #include "modules/Prison.pwn"
 new LastEngineToggle[MAX_PLAYERS];
+new PlayerBusVehicle[MAX_PLAYERS] = {INVALID_VEHICLE_ID, ...};
+new PlayerBusVehicleIndex[MAX_PLAYERS] = {-1, ...};
+new PlayerBusCheckpointStep[MAX_PLAYERS] = {0, ...};
+new PlayerBusRouteIndex[MAX_PLAYERS] = {-1, ...};
 #include "modules/PlayerCommands.pwn"
 #include "modules/AdminCommands.pwn"
 #include "modules/TesterCommands.pwn"
@@ -2119,12 +2123,14 @@ new LastEngineToggle[MAX_PLAYERS];
 #include "modules/HudV2.pwn"
 #include "modules/MappingRequest.pwn"
 #include "modules/police/Fines.pwn"
+#include "modules/system/BusJob.pwn"
 
 public OnGameModeInit()
 {
 	mysql_log(ERROR);
 
 	SQL_Connect();
+	BusJob_SetupTable();
     SetupIndustry();
 
 	mysql_tquery(dbCon, "SELECT * FROM `factions` ORDER BY `factionID` ASC", "Faction_Load", "");
@@ -5723,7 +5729,7 @@ SQL_SaveCharacter(playerid, bool:quit = true)
 	    PlayerData[playerid][pWepLic]
 	);
 
-	format(query, sizeof(query), "%s, `PrimaryLicense` = '%d', `SecondaryLicense` = '%d', `CCWLicense` = '%d', `HudToggle` = '%d', `LoginToggle` = '%d', `LoginSound` = '%d', `LoginNotify` = '%d', `SprayBanned` = '%d', `Cigarettes` = '%d', `Drinks` = '%d', `GasCan` = '%d', `TotalDamages` = '%d', `LastBlow` = '%d', `Knockout` = '%d', `DrugStamp` = '%d', `AdminDuty` = '%d', `TesterDuty` = '%d', `Masked` = '%d', `MaskID` = '%d', `MaskIDEx` = '%d', `timeoutProp` = '%d', `timeoutApp` = '%d', `timeoutBizz` = '%d' WHERE `ID` = '%d'",
+	format(query, sizeof(query), "%s, `PrimaryLicense` = '%d', `SecondaryLicense` = '%d', `CCWLicense` = '%d', `HudToggle` = '%d', `LoginToggle` = '%d', `LoginSound` = '%d', `LoginNotify` = '%d', `SprayBanned` = '%d', `Cigarettes` = '%d', `Drinks` = '%d', `GasCan` = '%d', `TotalDamages` = '%d', `LastBlow` = '%d', `Knockout` = '%d', `DrugStamp` = '%d', `AdminDuty` = '%d', `TesterDuty` = '%d', `Masked` = '%d', `MaskID` = '%d', `MaskIDEx` = '%d', `timeoutProp` = '%d', `timeoutApp` = '%d', `timeoutBizz` = '%d', `busJobDelay` = '%d' WHERE `ID` = '%d'",
 	    query,
 	 	PlayerData[playerid][pPrimaryLicense],
 		PlayerData[playerid][pSecondaryLicense],
@@ -5748,6 +5754,7 @@ SQL_SaveCharacter(playerid, bool:quit = true)
 		InProperty[playerid] == -1 ? -1 : PropertyData[ InProperty[playerid] ][hID],
 		InApartment[playerid] == -1 ? -1 : ComplexData[ InApartment[playerid] ][aID],
 		InBusiness[playerid] == -1 ? -1 : BusinessData[ InBusiness[playerid] ][bID],
+		PlayerData[playerid][pBusJobDelay],
 		PlayerData[playerid][pID]
 	);
 

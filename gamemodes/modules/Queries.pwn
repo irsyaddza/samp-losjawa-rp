@@ -452,6 +452,8 @@ public Vehicle_Load()
 			cache_get_value_name_int(i, "vehicleModNitro", vehicleVariables[i][vVehicleModNitro]);
 			cache_get_value_name_float(i, "vehicleHealth", vehicleVariables[i][vVehicleHealth]);
 			cache_get_value_name_int(i, "vehicleStaticSpawn", vehicleVariables[i][vVehicleStaticSpawn]);
+			cache_get_value_name_int(i, "vehicleSideJob", vehicleVariables[i][vVehicleSideJob]);
+			cache_get_value_name_int(i, "vehicleSideJobSpawn", vehicleVariables[i][vVehicleSideJobSpawn]);
 
 			Iter_Add(sv_servercar, i);
 
@@ -465,7 +467,7 @@ public Vehicle_Load()
 				vehicleVariables[i][vVehicleColour][1] = random(126);
 			}
 
-			if(vehicleVariables[i][vVehicleFaction] != -1)
+			if(vehicleVariables[i][vVehicleFaction] != -1 || vehicleVariables[i][vVehicleSideJob] > 0)
 			{
 				vehicleVariables[i][vVehicleScriptID] = INVALID_VEHICLE_ID;
 			}

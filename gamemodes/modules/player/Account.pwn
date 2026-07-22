@@ -342,6 +342,7 @@ public OnQueryFinished(extraid, threadid)
 	            cache_get_value_name_int(0, "playerCareer", PlayerData[extraid][pCareer]);
 	            cache_get_value_name_int(0, "playerHouseKey", PlayerData[extraid][pHouseKey]);
 				cache_get_value_name_int(0, "playerComplexKey", PlayerData[extraid][pComplexKey]);
+				cache_get_value_name_int(0, "busJobDelay", PlayerData[extraid][pBusJobDelay]);
 	            cache_get_value_name(0, "Attribute", PlayerData[extraid][pAttribute]);
 
 	            cache_get_value_name(0, "PackageWeapons", str);
