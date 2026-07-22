@@ -42,6 +42,13 @@ new CCTV_OldPlayerVehicle[MAX_PLAYERS] = {INVALID_VEHICLE_ID, ...};
 new CCTV_OldPlayerSeat[MAX_PLAYERS] = {-1, ...};
 new Float:CCTV_OldObjPos[MAX_CCTV][6]; // stores original obj pos before editing
 
+// ponytail: CCTV camera manual direction editing states
+new bool:EditingCCTV_Active[MAX_PLAYERS];
+new EditingCCTV_CamID[MAX_PLAYERS] = {-1, ...};
+new Float:EditingCCTV_Yaw[MAX_PLAYERS];
+new Float:EditingCCTV_Pitch[MAX_PLAYERS];
+new CCTV_EditTimer[MAX_PLAYERS] = {-1, ...};
+
 
 // TextDraw handles - from cctv_ui-open.mp.txt
 // Sprite: global (static frame, same for all)
@@ -275,6 +282,123 @@ static CCTV_UpdatePlayerUI(playerid, index)
 	}
 }
 
+// ponytail: Update camera rotation and position based on key presses
+forward UpdateCCTVEditCamera(playerid);
+public UpdateCCTVEditCamera(playerid)
+{
+	if(!ViewingCCTV[playerid] || !EditingCCTV_Active[playerid])
+		return 0;
+
+	new keys, ud, lr;
+	GetPlayerKeys(playerid, keys, ud, lr);
+
+	new cctv_id = EditingCCTV_CamID[playerid];
+	if(cctv_id < 0 || cctv_id >= MAX_CCTV || !CCTVData[cctv_id][cctvExist])
+		return 0;
+
+	new bool:changed = false;
+	new bool:posChanged = false;
+
+	new Float:cx = CCTVData[cctv_id][cctvCamX];
+	new Float:cy = CCTVData[cctv_id][cctvCamY];
+	new Float:cz = CCTVData[cctv_id][cctvCamZ];
+
+	if(keys & KEY_WALK) // Holding ALT key to move/translate the camera
+	{
+		new Float:speed = 0.15;
+
+		if(ud < 0) // W
+		{
+			cx += speed * floatcos(EditingCCTV_Yaw[playerid], degrees);
+			cy += speed * floatsin(EditingCCTV_Yaw[playerid], degrees);
+			posChanged = true;
+		}
+		else if(ud > 0) // S
+		{
+			cx -= speed * floatcos(EditingCCTV_Yaw[playerid], degrees);
+			cy -= speed * floatsin(EditingCCTV_Yaw[playerid], degrees);
+			posChanged = true;
+		}
+
+		if(lr < 0) // A (Strafe Left)
+		{
+			cx += speed * floatcos(EditingCCTV_Yaw[playerid] + 90.0, degrees);
+			cy += speed * floatsin(EditingCCTV_Yaw[playerid] + 90.0, degrees);
+			posChanged = true;
+		}
+		else if(lr > 0) // D (Strafe Right)
+		{
+			cx += speed * floatcos(EditingCCTV_Yaw[playerid] - 90.0, degrees);
+			cy += speed * floatsin(EditingCCTV_Yaw[playerid] - 90.0, degrees);
+			posChanged = true;
+		}
+	}
+	else // Standard W/S/A/D or Arrows to rotate camera look-at angle
+	{
+		if(lr < 0) // Left
+		{
+			EditingCCTV_Yaw[playerid] += 2.0;
+			if(EditingCCTV_Yaw[playerid] >= 360.0) EditingCCTV_Yaw[playerid] -= 360.0;
+			changed = true;
+		}
+		else if(lr > 0) // Right
+		{
+			EditingCCTV_Yaw[playerid] -= 2.0;
+			if(EditingCCTV_Yaw[playerid] < 0.0) EditingCCTV_Yaw[playerid] += 360.0;
+			changed = true;
+		}
+
+		if(ud < 0) // Up
+		{
+			EditingCCTV_Pitch[playerid] += 1.5;
+			if(EditingCCTV_Pitch[playerid] > 85.0) EditingCCTV_Pitch[playerid] = 85.0;
+			changed = true;
+		}
+		else if(ud > 0) // Down
+		{
+			EditingCCTV_Pitch[playerid] -= 1.5;
+			if(EditingCCTV_Pitch[playerid] < -85.0) EditingCCTV_Pitch[playerid] = -85.0;
+			changed = true;
+		}
+	}
+
+	// Elevate camera up (Space key)
+	if(keys & KEY_SPRINT)
+	{
+		cz += 0.1;
+		posChanged = true;
+	}
+	// Lower camera down (C key)
+	else if(keys & KEY_CROUCH)
+	{
+		cz -= 0.1;
+		posChanged = true;
+	}
+
+	if(posChanged || changed)
+	{
+		new Float:lx = cx + 5.0 * floatcos(EditingCCTV_Yaw[playerid], degrees) * floatcos(EditingCCTV_Pitch[playerid], degrees);
+		new Float:ly = cy + 5.0 * floatsin(EditingCCTV_Yaw[playerid], degrees) * floatcos(EditingCCTV_Pitch[playerid], degrees);
+		new Float:lz = cz + 5.0 * floatsin(EditingCCTV_Pitch[playerid], degrees);
+
+		CCTVData[cctv_id][cctvCamX] = cx;
+		CCTVData[cctv_id][cctvCamY] = cy;
+		CCTVData[cctv_id][cctvCamZ] = cz;
+		CCTVData[cctv_id][cctvLookX] = lx;
+		CCTVData[cctv_id][cctvLookY] = ly;
+		CCTVData[cctv_id][cctvLookZ] = lz;
+
+		if(posChanged)
+		{
+			SetPlayerCameraPos(playerid, cx, cy, cz);
+			SetPlayerPos(playerid, cx, cy, cz - 50.0);
+			Streamer_UpdateEx(playerid, cx, cy, cz, CCTVData[cctv_id][cctvWorld], CCTVData[cctv_id][cctvInterior], STREAMER_TYPE_OBJECT);
+		}
+		SetPlayerCameraLookAt(playerid, lx, ly, lz);
+	}
+	return 1;
+}
+
 stock EnterCCTVView(playerid, index, bool:fromMDC = false)
 {
 	if(index < 0 || index >= MAX_CCTV || !CCTVData[index][cctvExist])
@@ -319,6 +443,9 @@ stock EnterCCTVView(playerid, index, bool:fromMDC = false)
 	SetPlayerInterior(playerid, CCTVData[index][cctvInterior]);
 	SetPlayerVirtualWorld(playerid, CCTVData[index][cctvWorld]);
 
+	// ponytail: update last teleport timestamp to bypass anticheat warning
+	LastTeleport[playerid] = gettime();
+
 	// Teleport player ped UNDERGROUND (-50.0 Z offset) in the target Virtual World/Interior!
 	// This keeps player in the target world so they see ALL live player/vehicle activity,
 	// while hiding their physical ped completely under the ground so no one sees them spawn!
@@ -346,9 +473,21 @@ stock ExitCCTVView(playerid)
 	// Hide CCTV UI
 	CCTV_HideUI(playerid);
 
+	// ponytail: stop editing timer if active
+	if(CCTV_EditTimer[playerid] != -1)
+	{
+		KillTimer(CCTV_EditTimer[playerid]);
+		CCTV_EditTimer[playerid] = -1;
+	}
+	EditingCCTV_Active[playerid] = false;
+	EditingCCTV_CamID[playerid] = -1;
+
 	// Restore player position / vehicle
 	SetPlayerInterior(playerid, PlayerData[playerid][pInterior]);
 	SetPlayerVirtualWorld(playerid, PlayerData[playerid][pWorld]);
+
+	// ponytail: update last teleport timestamp to bypass anticheat warning
+	LastTeleport[playerid] = gettime();
 
 	if(CCTV_OldPlayerVehicle[playerid] != INVALID_VEHICLE_ID) // check vehicle valid
 	{
@@ -424,6 +563,9 @@ stock SwitchCCTVNext(playerid)
 		SetPlayerInterior(playerid, CCTVData[nextIndex][cctvInterior]);
 		SetPlayerVirtualWorld(playerid, CCTVData[nextIndex][cctvWorld]);
 
+		// ponytail: update last teleport timestamp to bypass anticheat warning
+		LastTeleport[playerid] = gettime();
+
 		SetPlayerPos(playerid, CCTVData[nextIndex][cctvCamX], CCTVData[nextIndex][cctvCamY], CCTVData[nextIndex][cctvCamZ] - 50.0);
 		SetPlayerCameraPos(playerid, CCTVData[nextIndex][cctvCamX], CCTVData[nextIndex][cctvCamY], CCTVData[nextIndex][cctvCamZ]);
 		SetPlayerCameraLookAt(playerid, CCTVData[nextIndex][cctvLookX], CCTVData[nextIndex][cctvLookY], CCTVData[nextIndex][cctvLookZ]);
@@ -485,7 +627,7 @@ Dialog:DIALOG_CCTV_LIST(playerid, response, listitem, inputtext[])
 CMD:cctv(playerid, params[])
 {
 	if(PlayerData[playerid][pAdmin] < 4)
-		return SendErrorMessage(playerid, "Anda tidak memiliki izin untuk menggunakan perintah ini.");
+		return SendErrorMessage(playerid, "You have no permission to use this command!.");
 
 	new option[32], subparam[128];
 	if(sscanf(params, "s[32]S()[128]", option, subparam))
@@ -501,7 +643,7 @@ CMD:cctv(playerid, params[])
 
 		new slot = CCTV_GetFreeSlot();
 		if(slot == -1)
-			return SendErrorMessage(playerid, "Batas maksimal CCTV telah tercapai.");
+			return SendErrorMessage(playerid, "Max cctv has reached!");
 
 		new Float:x, Float:y, Float:z, Float:angle;
 		GetPlayerPos(playerid, x, y, z);
@@ -547,7 +689,7 @@ CMD:cctv(playerid, params[])
 		);
 		mysql_tquery(dbCon, query, "OnCCTVCreated", "d", slot);
 
-		SendNoticeMessage(playerid, "CCTV '#%d' (%s) berhasil dibuat. Object 1622 di-spawn.", slot, CCTVData[slot][cctvName]);
+		SendNoticeMessage(playerid, "CCTV '#%d' (%s) has been created. Object 1622 spawned.", slot, CCTVData[slot][cctvName]);
 		return 1;
 	}
 	else if(!strcmp(option, "edit", true))
@@ -557,7 +699,7 @@ CMD:cctv(playerid, params[])
 			return SendSyntaxMessage(playerid, "/cctv edit [id_cctv]");
 
 		if(cctv_id < 0 || cctv_id >= MAX_CCTV || !CCTVData[cctv_id][cctvExist])
-			return SendErrorMessage(playerid, "CCTV ID tidak valid.");
+			return SendErrorMessage(playerid, "CCTV ID is not valid.");
 
 		// Store original position in case edit is cancelled
 		CCTV_OldObjPos[cctv_id][0] = CCTVData[cctv_id][cctvObjX];
@@ -571,7 +713,7 @@ CMD:cctv(playerid, params[])
 		SetPVarInt(playerid, "EditingCCTV", cctv_id + 1);
 
 		EditDynamicObject(playerid, CCTVData[cctv_id][cctvObjID]);
-		SendNoticeMessage(playerid, "Mengedit posisi object CCTV #%d...", cctv_id);
+		SendNoticeMessage(playerid, "Editing CCTV Object #%d...", cctv_id);
 		return 1;
 	}
 	else if(!strcmp(option, "remove", true))
@@ -581,7 +723,7 @@ CMD:cctv(playerid, params[])
 			return SendSyntaxMessage(playerid, "/cctv remove [id_cctv]");
 
 		if(cctv_id < 0 || cctv_id >= MAX_CCTV || !CCTVData[cctv_id][cctvExist])
-			return SendErrorMessage(playerid, "CCTV ID tidak valid.");
+			return SendErrorMessage(playerid, "CCTV ID is not valid.");
 
 		if(IsValidDynamicObject(CCTVData[cctv_id][cctvObjID]))
 			DestroyDynamicObject(CCTVData[cctv_id][cctvObjID]);
@@ -594,55 +736,99 @@ CMD:cctv(playerid, params[])
 		mysql_tquery(dbCon, query);
 
 		CCTVData[cctv_id][cctvExist] = false;
-		SendNoticeMessage(playerid, "CCTV #%d berhasil dihapus.", cctv_id);
+		SendNoticeMessage(playerid, "CCTV #%d removed.", cctv_id);
 		return 1;
 	}
 	else if(!strcmp(option, "view", true))
 	{
 		new cctv_id, subsub[32];
 		if(sscanf(subparam, "dS()[32]", cctv_id, subsub))
-			return SendSyntaxMessage(playerid, "/cctv view [id_cctv] (opsional: save)");
+			return SendSyntaxMessage(playerid, "/cctv view [id_cctv] (optional: save)");
 
 		if(cctv_id < 0 || cctv_id >= MAX_CCTV || !CCTVData[cctv_id][cctvExist])
-			return SendErrorMessage(playerid, "CCTV ID tidak valid.");
+			return SendErrorMessage(playerid, "CCTV ID is not valid.");
 
 		if(!strcmp(subsub, "save", true))
 		{
-			// Harus berada dekat object CCTV (radius 15m)
-			if(!IsPlayerInRangeOfPoint(playerid, 15.0, CCTVData[cctv_id][cctvObjX], CCTVData[cctv_id][cctvObjY], CCTVData[cctv_id][cctvObjZ]))
-				return SendErrorMessage(playerid, "Anda harus berada dekat CCTV #%d (dalam radius 15m) untuk menyimpan posisi kamera.", cctv_id);
+			// ponytail: check if we are saving from the active rotating preview mode
+			if(EditingCCTV_Active[playerid] && EditingCCTV_CamID[playerid] == cctv_id)
+			{
+				new query[512];
+				format(query, sizeof(query), "UPDATE `cctv_cameras` SET `cam_x`='%f', `cam_y`='%f', `cam_z`='%f', `look_x`='%f', `look_y`='%f', `look_z`='%f' WHERE `id`='%d';",
+					CCTVData[cctv_id][cctvCamX], CCTVData[cctv_id][cctvCamY], CCTVData[cctv_id][cctvCamZ],
+					CCTVData[cctv_id][cctvLookX], CCTVData[cctv_id][cctvLookY], CCTVData[cctv_id][cctvLookZ],
+					CCTVData[cctv_id][cctvID]
+				);
+				mysql_tquery(dbCon, query);
 
-			new Float:cx, Float:cy, Float:cz, Float:fa;
-			GetPlayerPos(playerid, cx, cy, cz);
-			GetPlayerFacingAngle(playerid, fa);
+				ExitCCTVView(playerid);
+				SendNoticeMessage(playerid, "Point of view CCTV #%d (%s) saved.", cctv_id, CCTVData[cctv_id][cctvName]);
+				return 1;
+			}
+			else
+			{
+				// Backup: standard on-foot save method
+				if(!IsPlayerInRangeOfPoint(playerid, 15.0, CCTVData[cctv_id][cctvObjX], CCTVData[cctv_id][cctvObjY], CCTVData[cctv_id][cctvObjZ]))
+					return SendErrorMessage(playerid, "Around 15 meter of your character is not detected any CCTV #%d.", cctv_id);
 
-			CCTVData[cctv_id][cctvCamX]  = cx;
-			CCTVData[cctv_id][cctvCamY]  = cy;
-			CCTVData[cctv_id][cctvCamZ]  = cz + 0.8;
-			CCTVData[cctv_id][cctvLookX] = cx + (5.0 * floatcos(fa + 90.0, degrees));
-			CCTVData[cctv_id][cctvLookY] = cy + (5.0 * floatsin(fa + 90.0, degrees));
-			CCTVData[cctv_id][cctvLookZ] = cz + 0.5;
+				new Float:cx, Float:cy, Float:cz, Float:fa;
+				GetPlayerPos(playerid, cx, cy, cz);
+				GetPlayerFacingAngle(playerid, fa);
 
-			new query[512];
-			format(query, sizeof(query), "UPDATE `cctv_cameras` SET `cam_x`='%f', `cam_y`='%f', `cam_z`='%f', `look_x`='%f', `look_y`='%f', `look_z`='%f' WHERE `id`='%d';",
-				CCTVData[cctv_id][cctvCamX], CCTVData[cctv_id][cctvCamY], CCTVData[cctv_id][cctvCamZ],
-				CCTVData[cctv_id][cctvLookX], CCTVData[cctv_id][cctvLookY], CCTVData[cctv_id][cctvLookZ],
-				CCTVData[cctv_id][cctvID]
-			);
-			mysql_tquery(dbCon, query);
+				CCTVData[cctv_id][cctvCamX]  = cx;
+				CCTVData[cctv_id][cctvCamY]  = cy;
+				CCTVData[cctv_id][cctvCamZ]  = cz + 0.8;
+				CCTVData[cctv_id][cctvLookX] = cx + (5.0 * floatcos(fa + 90.0, degrees));
+				CCTVData[cctv_id][cctvLookY] = cy + (5.0 * floatsin(fa + 90.0, degrees));
+				CCTVData[cctv_id][cctvLookZ] = cz + 0.5;
 
-			ExitCCTVView(playerid);
-			SendNoticeMessage(playerid, "Posisi kamera CCTV #%d (%s) berhasil disimpan.", cctv_id, CCTVData[cctv_id][cctvName]);
-			return 1;
+				new query[512];
+				format(query, sizeof(query), "UPDATE `cctv_cameras` SET `cam_x`='%f', `cam_y`='%f', `cam_z`='%f', `look_x`='%f', `look_y`='%f', `look_z`='%f' WHERE `id`='%d';",
+					CCTVData[cctv_id][cctvCamX], CCTVData[cctv_id][cctvCamY], CCTVData[cctv_id][cctvCamZ],
+					CCTVData[cctv_id][cctvLookX], CCTVData[cctv_id][cctvLookY], CCTVData[cctv_id][cctvLookZ],
+					CCTVData[cctv_id][cctvID]
+				);
+				mysql_tquery(dbCon, query);
+
+				ExitCCTVView(playerid);
+				SendNoticeMessage(playerid, "CCTV Position #%d (%s) saved.", cctv_id, CCTVData[cctv_id][cctvName]);
+				return 1;
+			}
 		}
 		else
 		{
 			// Harus berada dekat object CCTV (radius 15m)
 			if(!IsPlayerInRangeOfPoint(playerid, 15.0, CCTVData[cctv_id][cctvObjX], CCTVData[cctv_id][cctvObjY], CCTVData[cctv_id][cctvObjZ]))
-				return SendErrorMessage(playerid, "Anda harus berada dekat CCTV #%d (dalam radius 15m) untuk mengatur posisi kamera.", cctv_id);
+				return SendErrorMessage(playerid, "Around 15 meter of your character is not detected any CCTV #%d.", cctv_id);
+
+			// ponytail: initialize editor yaw & pitch from existing look-at coordinates
+			new Float:cx = CCTVData[cctv_id][cctvCamX];
+			new Float:cy = CCTVData[cctv_id][cctvCamY];
+			new Float:cz = CCTVData[cctv_id][cctvCamZ];
+			new Float:lx = CCTVData[cctv_id][cctvLookX];
+			new Float:ly = CCTVData[cctv_id][cctvLookY];
+			new Float:lz = CCTVData[cctv_id][cctvLookZ];
+
+			new Float:dx = lx - cx;
+			new Float:dy = ly - cy;
+			new Float:dz = lz - cz;
+			new Float:dist2d = floatsqroot(dx * dx + dy * dy);
+
+			// Avoid division by zero/weird math if not initialized
+			if(dist2d < 0.1) dist2d = 1.0;
+
+			EditingCCTV_Yaw[playerid] = atan2(dy, dx);
+			EditingCCTV_Pitch[playerid] = atan2(dz, dist2d);
+			EditingCCTV_Active[playerid] = true;
+			EditingCCTV_CamID[playerid] = cctv_id;
 
 			EnterCCTVView(playerid, cctv_id, false);
-			SendNoticeMessage(playerid, "Preview kamera CCTV #%d. Berdiri di titik yang diinginkan & arahkan pandangan, lalu ketik '/cctv view %d save' untuk menyimpan.", cctv_id, cctv_id);
+
+			if(CCTV_EditTimer[playerid] != -1) KillTimer(CCTV_EditTimer[playerid]);
+			CCTV_EditTimer[playerid] = SetTimerEx("UpdateCCTVEditCamera", 50, true, "d", playerid);
+
+			SendNoticeMessage(playerid, "Preview CCTV of #%d. W/S/A/D: point of view | HOLD ALT + W/S/A/D: to move position | SPACE: UP | C: DOWN.", cctv_id);
+			SendNoticeMessage(playerid, "Type '/cctv view %d save' to save.", cctv_id);
 			return 1;
 		}
 	}
@@ -697,4 +883,62 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 #define OnPlayerKeyStateChange CCTV_OnPlayerKeyStateChange
 #if defined CCTV_OnPlayerKeyStateChange
 	forward CCTV_OnPlayerKeyStateChange(playerid, newkeys, oldkeys);
+#endif
+
+// ponytail: reset states and timers on player connect
+public OnPlayerConnect(playerid)
+{
+	CCTV_EditTimer[playerid] = -1;
+	EditingCCTV_Active[playerid] = false;
+	EditingCCTV_CamID[playerid] = -1;
+
+	ViewingCCTV[playerid] = false;
+	ViewingCCTV_ID[playerid] = -1;
+	CCTVOpenedFromMDC[playerid] = false;
+
+	#if defined CCTV_OnPlayerConnect
+		return CCTV_OnPlayerConnect(playerid);
+	#else
+		return 1;
+	#endif
+}
+#if defined _ALS_OnPlayerConnect
+	#undef OnPlayerConnect
+#else
+	#define _ALS_OnPlayerConnect
+#endif
+#define OnPlayerConnect CCTV_OnPlayerConnect
+#if defined CCTV_OnPlayerConnect
+	forward CCTV_OnPlayerConnect(playerid);
+#endif
+
+// ponytail: reset states and stop timers on player disconnect
+public OnPlayerDisconnect(playerid, reason)
+{
+	if(CCTV_EditTimer[playerid] != -1)
+	{
+		KillTimer(CCTV_EditTimer[playerid]);
+		CCTV_EditTimer[playerid] = -1;
+	}
+	EditingCCTV_Active[playerid] = false;
+	EditingCCTV_CamID[playerid] = -1;
+
+	ViewingCCTV[playerid] = false;
+	ViewingCCTV_ID[playerid] = -1;
+	CCTVOpenedFromMDC[playerid] = false;
+
+	#if defined CCTV_OnPlayerDisconnect
+		return CCTV_OnPlayerDisconnect(playerid, reason);
+	#else
+		return 1;
+	#endif
+}
+#if defined _ALS_OnPlayerDisconnect
+	#undef OnPlayerDisconnect
+#else
+	#define _ALS_OnPlayerDisconnect
+#endif
+#define OnPlayerDisconnect CCTV_OnPlayerDisconnect
+#if defined CCTV_OnPlayerDisconnect
+	forward CCTV_OnPlayerDisconnect(playerid, reason);
 #endif

@@ -12127,7 +12127,7 @@ public OnPlayerEditDynamicObject(playerid, objectid, response, Float:x, Float:y,
 					x, y, z, rx, ry, rz, CCTVData[cctv_id][cctvID]);
 				mysql_tquery(dbCon, query);
 
-				SendNoticeMessage(playerid, "Posisi CCTV #%d (%s) berhasil diperbarui.", cctv_id, CCTVData[cctv_id][cctvName]);
+				SendNoticeMessage(playerid, "CCTV Position #%d (%s) updated.", cctv_id, CCTVData[cctv_id][cctvName]);
 				DeletePVar(playerid, "EditingCCTV");
 			}
 			else if(response == EDIT_RESPONSE_CANCEL)
@@ -12136,7 +12136,7 @@ public OnPlayerEditDynamicObject(playerid, objectid, response, Float:x, Float:y,
 				SetDynamicObjectPos(CCTVData[cctv_id][cctvObjID], CCTV_OldObjPos[cctv_id][0], CCTV_OldObjPos[cctv_id][1], CCTV_OldObjPos[cctv_id][2]);
 				SetDynamicObjectRot(CCTVData[cctv_id][cctvObjID], CCTV_OldObjPos[cctv_id][3], CCTV_OldObjPos[cctv_id][4], CCTV_OldObjPos[cctv_id][5]);
 
-				SendClientMessage(playerid, COLOR_YELLOW, "-> Edit CCTV dibatalkan.");
+				SendClientMessage(playerid, COLOR_YELLOW, "-> CCTV editing canceled.");
 				DeletePVar(playerid, "EditingCCTV");
 			}
 		}
