@@ -9944,7 +9944,10 @@ new const AdminHelpCmds[][E_AHELP_CMD] = {
 	{"/togdiscord", "Toggle Discord integration logs.", "/togdiscord", 1337, 4},
 	{"/updatemotd", "Update Message Of The Day.", "/updatemotd [new_motd]", 1337, 4},
 	{"/variables", "Show server internal debug variables.", "/variables", 1337, 4},
-	{"/mysqlstats", "Show MySQL statistics.", "/mysqlstats", 1337, 5}
+	{"/mysqlstats", "Show MySQL statistics.", "/mysqlstats", 1337, 5},
+	{"/addsidejobspawn", "Create a bus sidejob spawn point at player position.", "/addsidejobspawn", 4, 6},
+	{"/editsidejobveh", "Configure the targeted server vehicle as a bus job vehicle.", "/editsidejobveh", 4, 6},
+	{"/busroute", "Create, edit, or delete bus checkpoints and salary.", "/busroute [create/cp/cpstop/finish/delete]", 4, 6}
 };
 
 stock ShowAdminHelpMain(playerid)
@@ -9961,7 +9964,8 @@ stock ShowAdminHelpMain(playerid)
 	strcat(string, "Category: Property & Business\n");
 	strcat(string, "Category: Faction & Gate Management\n");
 	strcat(string, "Category: Player Management & Punishment\n");
-	strcat(string, "Category: Teleport & Navigation");
+	strcat(string, "Category: Teleport & Navigation\n");
+	strcat(string, "Category: Creat Sidejob Bus");
 	
 	Dialog_Show(playerid, AdminHelpMain, DIALOG_STYLE_LIST, "Admin Help Center", string, "Select", "Close");
 	return 1;
