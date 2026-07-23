@@ -345,6 +345,10 @@ public OnQueryFinished(extraid, threadid)
 				cache_get_value_name_int(0, "busJobDelay", PlayerData[extraid][pBusJobDelay]);
 				cache_get_value_name_int(0, "sweeperJobDelay", PlayerData[extraid][pSweeperJobDelay]);
 	            cache_get_value_name(0, "Attribute", PlayerData[extraid][pAttribute]);
+	            if(cache_get_value_name(0, "MarriedTo", PlayerData[extraid][pMarriedTo]) == 0 || isnull(PlayerData[extraid][pMarriedTo]))
+	            {
+	                format(PlayerData[extraid][pMarriedTo], MAX_PLAYER_NAME, "None");
+	            }
 
 	            cache_get_value_name(0, "PackageWeapons", str);
 	            AssignPlayerWeapons(extraid, str);

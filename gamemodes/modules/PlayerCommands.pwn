@@ -1812,6 +1812,7 @@ Dialog:Help_Main(playerid, response, listitem, inputtext[])
 			strcat(gstr, "{A9C4E4}/setstyle / /walk / /jog{FFFFFF} - Set character walking style\n");
 			strcat(gstr, "{A9C4E4}/tog / /togall / /toghud / /tognicks{FFFFFF} - Toggle HUD, chat & interface elements");
 			strcat(gstr, "{A9C4E4}/licenseexam / /licenses / /licensehelp{FFFFFF} - License exam & status\n");
+			strcat(gstr, "{A9C4E4}/propose / /divorce / /spouse / /sw / /findspouse{FFFFFF} - Marriage & spouse commands\n");
 			strcat(gstr, "{A9C4E4}/onduty{FFFFFF} - Check list on duty\n");
 
 			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Basic Commands", gstr, "<< Back", "Close");
@@ -1827,6 +1828,7 @@ Dialog:Help_Main(playerid, response, listitem, inputtext[])
 			strcat(gstr, "{A9C4E4}/low / /tlow / /autolow{FFFFFF} - Quiet whisper chat\n");
 			strcat(gstr, "{A9C4E4}/shout / /s / /dshout / /ds{FFFFFF} - Loud shouting chat\n");
 			strcat(gstr, "{A9C4E4}/whisper / /w / /cw{FFFFFF} - Private whisper to nearby player\n");
+			strcat(gstr, "{A9C4E4}/spouse / /sw{FFFFFF} - Private chat with your married spouse\n");
 			strcat(gstr, "{A9C4E4}/pm / /blockpm{FFFFFF} - Private OOC message to player\n");
 			strcat(gstr, "{A9C4E4}/greet / /acceptshake{FFFFFF} - Handshake / greeting\n");
 			strcat(gstr, "{A9C4E4}/convo / /endconvo{FFFFFF} - Conversation system\n");
@@ -4946,10 +4948,10 @@ CMD:government(playerid, params[])
 	return true;
 }
 
-YCMD:f(playerid, params[], help) = fchat;
-YCMD:g(playerid, params[], help) = fchat;
+YCMD:fchat(playerid, params[], help) = f;
+YCMD:g(playerid, params[], help) = f;
 
-CMD:fchat(playerid, params[])
+CMD:f(playerid, params[])
 {
     new factionid = PlayerData[playerid][pFaction];
 
@@ -5007,9 +5009,9 @@ CMD:drugstore(playerid, params[])
 	return true;
 }
 
-YCMD:managespawn(playerid, params[], help) = managespawns;
+YCMD:managespawns(playerid, params[], help) = managespawn;
 
-CMD:managespawns(playerid, params[])
+CMD:managespawn(playerid, params[])
 {
 	new factionid = PlayerData[playerid][pFaction];
 
@@ -5023,9 +5025,9 @@ CMD:managespawns(playerid, params[])
 	return true;
 }
 
-YCMD:fmenu(playerid, params[], help) = factionmenu;
+YCMD:factionmenu(playerid, params[], help) = fmenu;
 
-CMD:factionmenu(playerid, params[])
+CMD:fmenu(playerid, params[])
 {
 	new factionid = PlayerData[playerid][pFaction];
 

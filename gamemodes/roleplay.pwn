@@ -2131,6 +2131,7 @@ new PlayerSweeperRouteIndex[MAX_PLAYERS] = {-1, ...};
 #include "modules/system/BusJob.pwn"
 #include "modules/system/SweeperJob.pwn"
 #include "modules/system/AdPoints.pwn"
+#include "modules/system/Marriage.pwn"
 
 public OnGameModeInit()
 {
@@ -2140,6 +2141,11 @@ public OnGameModeInit()
 	BusJob_SetupTable();
 	SweeperJob_SetupTable();
     SetupIndustry();
+
+	mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `MarriedTo` VARCHAR(24) NOT NULL DEFAULT 'None';");
+	mysql_tquery(dbCon, "ALTER TABLE `propose_points` ADD COLUMN `name` VARCHAR(64) NOT NULL DEFAULT 'Propose Point';");
+	mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `propose_points` (`id` INT AUTO_INCREMENT PRIMARY KEY, `name` VARCHAR(64) NOT NULL DEFAULT 'Propose Point', `posX` FLOAT, `posY` FLOAT, `posZ` FLOAT, `interior` INT, `world` INT);");
+	mysql_tquery(dbCon, "SELECT * FROM `propose_points`", "LoadProposePoints", "");
 
 	mysql_tquery(dbCon, "SELECT * FROM `factions` ORDER BY `factionID` ASC", "Faction_Load", "");
 	mysql_tquery(dbCon, "SELECT * FROM `factionspawns`", "FactionSpawn_Load", "");
@@ -2218,8 +2224,6 @@ public OnGameModeInit()
 	CreateRentalVehicles();
 	CreateLicenseVehicles();
 	CreatePenalCode();
-
-	CreateDynamicPickup(1314, 23, 1481.0662, -1771.3069, 18.7958, 0, 0); // City Hall
 
     systemVariables[OOCStatus] = 1;
 
@@ -6723,7 +6727,7 @@ ShowStatistics(playerid, targetid)
 		"{FFC700}IC Information:\n\
 		{FFFFFF}Gender: [{33AA33}%s{FFFFFF}] Money: [{33AA33}%s{FFFFFF}] Bank: [{33AA33}%s{FFFFFF}] Phone number: [{33AA33}%s{FFFFFF}]\n\
 		{FFFFFF}Jobs: [{33AA33}%s{FFFFFF}] Faction: [{33AA33}%s{FFFFFF}]\n\
-		{FFFFFF}Married with: [{33AA33}None{FFFFFF}] Wealth rating: [{33AA33}%s{FFFFFF}] Bank Account: [{33AA33}%s{FFFFFF}]\n\
+		{FFFFFF}Married with: [{33AA33}%s{FFFFFF}] Wealth rating: [{33AA33}%s{FFFFFF}] Bank Account: [{33AA33}%s{FFFFFF}]\n\
 		{FFFFFF}Primary: [{33AA33}%s{FFFFFF}] (Ammo: [{33AA33}%d{FFFFFF}]) Secondary: [{33AA33}%s{FFFFFF}] (Ammo: [{33AA33}%d{FFFFFF}])\n\n\
 		{FFC700}OOC Information:\n\
 		{FFFFFF}User: [{00FFFF}%s{FFFFFF}] Email: [{00FFFF}%s{FFFFFF}] Time played: [{00FFFF}%d hours %d minutes %d seconds{FFFFFF}]\n\
@@ -6736,6 +6740,7 @@ ShowStatistics(playerid, targetid)
 		phoneNum,
 		ReturnJobName(targetid, PlayerData[targetid][pJob]),
 		factionText,
+		PlayerData[targetid][pMarriedTo],
 		wealthRating,
 		bankAcc,
 		(strlen(primary_weapon) > 0) ? primary_weapon : "None",
@@ -14567,6 +14572,13 @@ initiateTutorial(playerid)
 
 GetIDByName(const playername[])
 {
+	new searchName[MAX_PLAYER_NAME];
+	format(searchName, sizeof(searchName), "%s", playername);
+	for(new i = 0, len = strlen(searchName); i < len; i++)
+	{
+		if(searchName[i] == ' ') searchName[i] = '_';
+	}
+
     foreach (new i : Player)
 	{
 		if(SQL_IsLogged(i))
@@ -14574,7 +14586,7 @@ GetIDByName(const playername[])
 			new pName[MAX_PLAYER_NAME];
 			GetPlayerName(i, pName, sizeof(pName));
 
-			if(strcmp(pName, playername, true, strlen(playername)) == 0)
+			if(!strcmp(pName, searchName, true) || !strcmp(ReturnName(i, 0), playername, true))
 			{
 				return i;
 			}

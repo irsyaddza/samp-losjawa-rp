@@ -48,6 +48,7 @@ enum E_PLAYER_DATA
 	pFactionID,
 	pFactionRank,
 	pDBRank,
+	pMarriedTo[MAX_PLAYER_NAME],
 	pSWATRank,
 	pEMSRank,
 	pFireRank,
