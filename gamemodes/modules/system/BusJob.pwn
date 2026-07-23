@@ -135,7 +135,7 @@ stock BusJob_SetupTable()
     mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `busJobDelay` INT DEFAULT 0;");
 
     // Load spawns and routes
-    mysql_tquery(dbCon, "SELECT * FROM `sidejob_spawns` ORDER BY `id` ASC", "BusJob_LoadSpawns");
+    mysql_tquery(dbCon, "SELECT * FROM `sidejob_spawns` WHERE `type` = '1' ORDER BY `id` ASC", "BusJob_LoadSpawns");
     mysql_tquery(dbCon, "SELECT * FROM `bus_routes` ORDER BY `id` ASC", "BusJob_LoadRoutes");
 
     return 1;
@@ -211,21 +211,28 @@ public BusJob_LoadCheckpoints(route_idx)
     return 1;
 }
 
+forward SweeperJob_OnSpawnCreated(playerid);
+
 // Dialog: add spawn point
 Dialog:CreateSidejobSpawn(playerid, response, listitem, inputtext[])
 {
     if(!response) return 1;
 
+    new Float:x, Float:y, Float:z;
+    GetPlayerPos(playerid, x, y, z);
+    new interior = GetPlayerInterior(playerid);
+    new world = GetPlayerVirtualWorld(playerid);
+    new q[256];
+
     if(listitem == 0) // Canny Bus Group
     {
-        new Float:x, Float:y, Float:z;
-        GetPlayerPos(playerid, x, y, z);
-        new interior = GetPlayerInterior(playerid);
-        new world = GetPlayerVirtualWorld(playerid);
-
-        new q[256];
         mysql_format(dbCon, q, sizeof(q), "INSERT INTO `sidejob_spawns` (`type`, `posX`, `posY`, `posZ`, `interior`, `world`) VALUES ('1', '%f', '%f', '%f', '%d', '%d')", x, y, z, interior, world);
         mysql_tquery(dbCon, q, "BusJob_OnSpawnCreated", "d", playerid);
+    }
+    else if(listitem == 1) // Sanitary Andreas (Sweeper)
+    {
+        mysql_format(dbCon, q, sizeof(q), "INSERT INTO `sidejob_spawns` (`type`, `posX`, `posY`, `posZ`, `interior`, `world`) VALUES ('2', '%f', '%f', '%f', '%d', '%d')", x, y, z, interior, world);
+        mysql_tquery(dbCon, q, "SweeperJob_OnSpawnCreated", "d", playerid);
     }
     return 1;
 }
@@ -235,7 +242,7 @@ public BusJob_OnSpawnCreated(playerid)
 {
     SendClientMessage(playerid, COLOR_GREEN, "[SIDEJOB]: Spawn point created successfully!");
     // Reload spawns
-    mysql_tquery(dbCon, "SELECT * FROM `sidejob_spawns` ORDER BY `id` ASC", "BusJob_LoadSpawns");
+    mysql_tquery(dbCon, "SELECT * FROM `sidejob_spawns` WHERE `type` = '1' ORDER BY `id` ASC", "BusJob_LoadSpawns");
     return 1;
 }
 
@@ -250,7 +257,7 @@ Dialog:EditSidejobVehMenu(playerid, response, listitem, inputtext[])
     {
         case 0: // Set Sidejob
         {
-            Dialog_Show(playerid, SidejobVehSetJob, DIALOG_STYLE_LIST, "Set Sidejob", "Canny Bus Group\nNone", "Select", "Back");
+            Dialog_Show(playerid, SidejobVehSetJob, DIALOG_STYLE_LIST, "Set Sidejob", "Canny Bus Group\nSanitary Andreas (Sweeper)\nNone", "Select", "Back");
         }
         case 1: // Color
         {
@@ -280,9 +287,10 @@ Dialog:EditSidejobVehMenu(playerid, response, listitem, inputtext[])
             new str[1000];
             format(str, sizeof(str), "ID\tType\tCoords\n");
             new count = 0;
-            foreach(new sj : sj_spawn)
+            
+            if(vehicleVariables[id][vVehicleSideJob] == 1) // Bus
             {
-                if(SidejobSpawns[sj][sjType] == 1) // Canny Bus Group
+                foreach(new sj : sj_spawn)
                 {
                     new temp[128];
                     format(temp, sizeof(temp), "%d\tCanny Bus Group\tX:%.1f Y:%.1f Z:%.1f\n", SidejobSpawns[sj][sjID], SidejobSpawns[sj][sjPos][0], SidejobSpawns[sj][sjPos][1], SidejobSpawns[sj][sjPos][2]);
@@ -290,7 +298,13 @@ Dialog:EditSidejobVehMenu(playerid, response, listitem, inputtext[])
                     count++;
                 }
             }
-            if(count == 0) return SendErrorMessage(playerid, "No sidejob spawn points available. Create one first using /addsidejobspawn.");
+            else if(vehicleVariables[id][vVehicleSideJob] == 2) // Sweeper (will be handled by calling external iterator/array)
+            {
+                // We'll declare forward function in SweeperJob.pwn
+                count = SweeperJob_GetSpawnList(str, sizeof(str));
+            }
+            
+            if(count == 0) return SendErrorMessage(playerid, "No sidejob spawn points available for this job type. Create one first using /addsidejobspawn.");
             Dialog_Show(playerid, SidejobVehSetSpawn, DIALOG_STYLE_TABLIST_HEADERS, "Select Spawn Point", str, "Select", "Back");
         }
         case 4: // Health
@@ -315,6 +329,11 @@ Dialog:SidejobVehSetJob(playerid, response, listitem, inputtext[])
     {
         vehicleVariables[id][vVehicleSideJob] = 1;
         SendClientMessage(playerid, COLOR_GREEN, "[SIDEJOB]: Vehicle assigned to Canny Bus Group.");
+    }
+    else if(listitem == 1) // Sanitary Andreas (Sweeper)
+    {
+        vehicleVariables[id][vVehicleSideJob] = 2;
+        SendClientMessage(playerid, COLOR_GREEN, "[SIDEJOB]: Vehicle assigned to Sanitary Andreas (Sweeper).");
     }
     else // None
     {
@@ -413,7 +432,7 @@ CMD:addsidejobspawn(playerid, params[])
     if(PlayerData[playerid][pAdmin] < 4)
         return SendUnauthMessage(playerid, "You're not authorized to use this command.");
 
-    Dialog_Show(playerid, CreateSidejobSpawn, DIALOG_STYLE_LIST, "Create Sidejob Spawn", "Canny Bus Group", "Create", "Cancel");
+    Dialog_Show(playerid, CreateSidejobSpawn, DIALOG_STYLE_LIST, "Create Sidejob Spawn", "Canny Bus Group\nSanitary Andreas (Sweeper)", "Create", "Cancel");
     return 1;
 }
 
@@ -536,6 +555,16 @@ CMD:busroute(playerid, params[])
         CreatingRouteCPTypes[playerid][count] = 2; // Finish CP
         CreatingRouteCheckpointsCount[playerid]++;
         count++;
+
+        // Despawn the vehicle the admin is in
+        new vehicleid = GetPlayerVehicleID(playerid);
+        new id = GetVehicleServerID(vehicleid);
+        if(id != -1)
+        {
+            DestroyVehicle(vehicleid);
+            vehicleVariables[id][vVehicleScriptID] = INVALID_VEHICLE_ID;
+            Iter_Remove(sv_vehicles, vehicleid);
+        }
 
         // Save route to database
         new q[256];
@@ -965,13 +994,15 @@ public BusJob_AbandonTimer(playerid)
     return 1;
 }
 
+forward SweeperJob_OnSpawnCommand(playerid);
+
 // Commands: Player
 CMD:spawn(playerid, params[])
 {
     new spawn_idx = GetNearestSidejobSpawn(playerid, 3.0);
     if(spawn_idx == -1)
     {
-        return SendErrorMessage(playerid, "You must stand near a sidejob spawn point to use this command.");
+        return SweeperJob_OnSpawnCommand(playerid);
     }
 
     if(SidejobSpawns[spawn_idx][sjType] == 1) // Canny Bus Group
@@ -1019,19 +1050,31 @@ CMD:spawn(playerid, params[])
 
 CMD:delays(playerid, params[])
 {
-    new str[256];
+    new str[512];
     format(str, sizeof(str), "Delay List:\n\n");
 
     new bus_delay = PlayerData[playerid][pBusJobDelay] - gettime();
     if(bus_delay > 0)
     {
         new temp[128];
-        format(temp, sizeof(temp), "Bus Driver Job: {FF0000}%d min %d sec left\n", bus_delay / 60, bus_delay % 60);
+        format(temp, sizeof(temp), "{FFFFFF}Bus Driver Job: {FF0000}%d min %d sec left\n", bus_delay / 60, bus_delay % 60);
         strcat(str, temp);
     }
     else
     {
-        strcat(str, "Bus Driver Job: {00FF00}Available\n");
+        strcat(str, "{FFFFFF}Bus Driver Job: {00FF00}Available\n");
+    }
+
+    new sweeper_delay = PlayerData[playerid][pSweeperJobDelay] - gettime();
+    if(sweeper_delay > 0)
+    {
+        new temp[128];
+        format(temp, sizeof(temp), "{FFFFFF}Sweeper Job: {FF0000}%d min %d sec left\n", sweeper_delay / 60, sweeper_delay % 60);
+        strcat(str, temp);
+    }
+    else
+    {
+        strcat(str, "{FFFFFF}Sweeper Job: {00FF00}Available\n");
     }
 
     Dialog_Show(playerid, None, DIALOG_STYLE_MSGBOX, "My Cooldowns & Delays", str, "Close", "");

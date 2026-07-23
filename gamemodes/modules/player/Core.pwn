@@ -144,7 +144,8 @@ enum E_PLAYER_DATA
 	pDepartment,
 	pHandCuffs,
 	pLastVehicle,
-	pBusJobDelay
+	pBusJobDelay,
+	pSweeperJobDelay
 };
 
 new PlayerData[MAX_PLAYERS][E_PLAYER_DATA];
