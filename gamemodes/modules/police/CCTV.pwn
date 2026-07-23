@@ -41,6 +41,7 @@ new Float:CCTV_OldPlayerPos[MAX_PLAYERS][3]; // stores player position before vi
 new CCTV_OldPlayerVehicle[MAX_PLAYERS] = {INVALID_VEHICLE_ID, ...};
 new CCTV_OldPlayerSeat[MAX_PLAYERS] = {-1, ...};
 new Float:CCTV_OldObjPos[MAX_CCTV][6]; // stores original obj pos before editing
+new LastCCTVSwitch[MAX_PLAYERS];
 
 // ponytail: CCTV camera manual direction editing states
 new bool:EditingCCTV_Active[MAX_PLAYERS];
@@ -532,6 +533,13 @@ stock SwitchCCTVNext(playerid)
 {
 	if(!ViewingCCTV[playerid]) return 0;
 
+	if((GetTickCount() - LastCCTVSwitch[playerid]) < 1000)
+	{
+		GameTextForPlayer(playerid, "~r~Please wait...", 1000, 3);
+		return 0;
+	}
+	LastCCTVSwitch[playerid] = GetTickCount();
+
 	new current = ViewingCCTV_ID[playerid];
 	new nextIndex = -1;
 
@@ -895,6 +903,7 @@ public OnPlayerConnect(playerid)
 	ViewingCCTV[playerid] = false;
 	ViewingCCTV_ID[playerid] = -1;
 	CCTVOpenedFromMDC[playerid] = false;
+	LastCCTVSwitch[playerid] = 0;
 
 	#if defined CCTV_OnPlayerConnect
 		return CCTV_OnPlayerConnect(playerid);
