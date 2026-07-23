@@ -2130,6 +2130,7 @@ new PlayerSweeperRouteIndex[MAX_PLAYERS] = {-1, ...};
 #include "modules/police/Fines.pwn"
 #include "modules/system/BusJob.pwn"
 #include "modules/system/SweeperJob.pwn"
+#include "modules/system/AdPoints.pwn"
 
 public OnGameModeInit()
 {
@@ -2159,6 +2160,7 @@ public OnGameModeInit()
 	mysql_tquery(dbCon, "UPDATE characters SET Online = 0 WHERE Online = 1");
     mysql_tquery(dbCon, "UPDATE accounts SET Online = 0 WHERE Online = 1");
 	mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `clothing_shop_skins` (`skin_id` INT PRIMARY KEY, `price` INT NOT NULL DEFAULT 5000)", "OnCreateShopSkinsTable");
+	mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `advertisement_points` (`id` INT AUTO_INCREMENT PRIMARY KEY, `pos_x` FLOAT, `pos_y` FLOAT, `pos_z` FLOAT, `vw` INT, `interior` INT)", "OnCreateAdPointsTable");
 	HarvesterRental_Init();
 	FactionStaticVeh_Init();
 	MapEditor_Init();
@@ -11322,13 +11324,6 @@ public OnPlayerPickUpDynamicPickup(playerid, pickupid)
 				}
 			}
 
-			if(BusinessData[i][bOwned] == 1)
-			{
-				format(str, sizeof(str), "%s~w~~n~Entrance Fee : ~g~$%d ~n~~p~To use /enter", BusinessData[i][bInfo], BusinessData[i][bEntranceCost]);
-			}
-			else format(str, sizeof(str), "%s~w~~n~This Business is for sale~n~Cost: ~g~$%d ~w~Level : %d ~n~~p~ To buy /buybiz", BusinessData[i][bInfo], BusinessData[i][bBuyPrice], BusinessData[i][bLevelNeeded]);
-
-			GameTextForPlayer(playerid, str, 5000, 3);
 			break;
 		}
 	}
@@ -14284,6 +14279,8 @@ RemovePlayerDriveby(playerid)
 
 CanAdvertise(playerid)
 {
+	if(IsPlayerNearAdPoint(playerid) != -1) return 99999;
+
 	new id = Business_Nearest(playerid, 5.0);
 
 	if(id == -1) return -1;

@@ -2678,7 +2678,7 @@ CMD:biztypes(playerid, params[])
     	return SendErrorMessage(playerid, "You're not authorized to use this command.");
 
 	SendClientMessage(playerid, COLOR_GRAD2, "1: Gas Station | 2: Ammunation | 3: 24/7 4: Vehicle Dealership | 5: Car Modding Shop | 6: Pay & Spray | 7: Clothing Shop");
-	SendClientMessage(playerid, COLOR_GRAD2, "8: Bars | 9: Restaurant | 10: Furniture Shop | 11: Advertisement Center | 12: Bank | 13: Weapon Factory");
+	SendClientMessage(playerid, COLOR_GRAD2, "8: Bars | 9: Restaurant | 10: Furniture Shop | 11: Disabled (/advertisement) | 12: Bank | 13: Weapon Factory");
 	return true;
 }
 
@@ -2730,7 +2730,7 @@ CMD:makebusiness(playerid, params[])
 	if(sscanf(params, "ddd", level, price, type))
 	{
 		Dialog_Show(playerid, MbizCreateType, DIALOG_STYLE_LIST, "Create Business (Wizard) - Step 1: Type", 
-			"1: Gas Station\n2: Ammunation\n3: 24-7\n4: Vehicle Dealership\n5: Car Modding Shop\n6: Pay & Spray\n7: Clothing Shop\n8: Bar\n9: Restaurant\n10: Furniture Shop\n11: Advertisement\n12: Bank\n13: Weapon Factory", 
+			"1: Gas Station\n2: Ammunation\n3: 24-7\n4: Vehicle Dealership\n5: Car Modding Shop\n6: Pay & Spray\n7: Clothing Shop\n8: Bar\n9: Restaurant\n10: Furniture Shop\n11: Disabled (Use /advertisement)\n12: Bank\n13: Weapon Factory", 
 			"Next", "Cancel");
 		return true;
 	}
@@ -2752,6 +2752,11 @@ CMD:removebusiness(playerid, params[])
     if((bizid = Business_Nearest(playerid)) != -1)
 	{
 		DestroyDynamicPickup(BusinessData[bizid][bPickup]);
+		if(BusinessData[bizid][bTextLabel])
+		{
+			DestroyDynamic3DTextLabel(BusinessData[bizid][bTextLabel]);
+			BusinessData[bizid][bTextLabel] = Text3D:INVALID_3DTEXT_ID;
+		}
 
 		new ply = INVALID_PLAYER_ID;
 
@@ -6337,6 +6342,53 @@ CMD:saveveh(playerid, params[])
 	return true;
 }
 
+CMD:deleteucp(playerid, params[])
+{
+	if(PlayerData[playerid][pAdmin] < 1337)
+		return SendUnauthMessage(playerid, "You are not authorized to use this command.");
+
+	new ucpName[MAX_PLAYER_NAME];
+	if(sscanf(params, "s[32]", ucpName))
+		return SendSyntaxMessage(playerid, "/deleteucp [ucp_name]");
+
+	new query[512];
+	mysql_format(dbCon, query, sizeof(query), "DELETE FROM `player_drugs` WHERE `PlayerSQLID` IN (SELECT `ID` FROM `characters` WHERE `master` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e'))", ucpName);
+	mysql_tquery(dbCon, query);
+
+	mysql_format(dbCon, query, sizeof(query), "DELETE FROM `damages` WHERE `playerID` IN (SELECT `ID` FROM `characters` WHERE `master` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e'))", ucpName);
+	mysql_tquery(dbCon, query);
+
+	mysql_format(dbCon, query, sizeof(query), "DELETE FROM `clothing` WHERE `owner` IN (SELECT `ID` FROM `characters` WHERE `master` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e'))", ucpName);
+	mysql_tquery(dbCon, query);
+
+	mysql_format(dbCon, query, sizeof(query), "DELETE FROM `weapon` WHERE `owner` IN (SELECT `ID` FROM `characters` WHERE `master` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e'))", ucpName);
+	mysql_tquery(dbCon, query);
+
+	mysql_format(dbCon, query, sizeof(query), "DELETE FROM `radio` WHERE `owner` IN (SELECT `ID` FROM `characters` WHERE `master` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e'))", ucpName);
+	mysql_tquery(dbCon, query);
+
+	mysql_format(dbCon, query, sizeof(query), "DELETE FROM `cars` WHERE `owner` IN (SELECT `ID` FROM `characters` WHERE `master` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e'))", ucpName);
+	mysql_tquery(dbCon, query);
+
+	mysql_format(dbCon, query, sizeof(query), "UPDATE `houses` SET `owner` = 'The State', `owned` = 0 WHERE `owner` IN (SELECT `Name` FROM `characters` WHERE `master` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e'))", ucpName);
+	mysql_tquery(dbCon, query);
+
+	mysql_format(dbCon, query, sizeof(query), "UPDATE `business` SET `biz_owner` = 'The State', `biz_owned` = 0 WHERE `biz_owner` IN (SELECT `Name` FROM `characters` WHERE `master` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e'))", ucpName);
+	mysql_tquery(dbCon, query);
+
+	mysql_format(dbCon, query, sizeof(query), "DELETE FROM `ucp_friends` WHERE `playerID` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e') OR `friendID` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e')", ucpName, ucpName);
+	mysql_tquery(dbCon, query);
+
+	mysql_format(dbCon, query, sizeof(query), "DELETE FROM `characters` WHERE `master` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e')", ucpName);
+	mysql_tquery(dbCon, query);
+
+	mysql_format(dbCon, query, sizeof(query), "DELETE FROM `accounts` WHERE `Username` = '%e'", ucpName);
+	mysql_tquery(dbCon, query);
+
+	SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmCmd: %s deleted UCP account '%s' and all associated data.", ReturnName(playerid, 0), ucpName);
+	return 1;
+}
+
 CMD:deleteveh(playerid, params[])
 {
     if(PlayerData[playerid][pAdmin] < 4)
@@ -7670,6 +7722,9 @@ new const BusinessInteriorNames[49][] = {
 
 stock CreateNewBusiness(playerid, level, price, type)
 {
+	if(type == 11)
+		return SendErrorMessage(playerid, "Advertisement is no longer a business type. Use /advertisement create instead.");
+
 	new bizid = Iter_Free(Business);
 	if(bizid == -1) return SendErrorMessage(playerid, "Business limit reached.");
 	
@@ -7935,7 +7990,7 @@ Dialog:MbizCreatePrice(playerid, response, listitem, inputtext[])
 	if(!response)
 	{
 		Dialog_Show(playerid, MbizCreateType, DIALOG_STYLE_LIST, "Create Business (Wizard) - Step 1: Type", 
-			"1: Gas Station\n2: Ammunation\n3: 24-7\n4: Vehicle Dealership\n5: Car Modding Shop\n6: Pay & Spray\n7: Clothing Shop\n8: Bar\n9: Restaurant\n10: Furniture Shop\n11: Advertisement\n12: Bank\n13: Weapon Factory", 
+			"1: Gas Station\n2: Ammunation\n3: 24-7\n4: Vehicle Dealership\n5: Car Modding Shop\n6: Pay & Spray\n7: Clothing Shop\n8: Bar\n9: Restaurant\n10: Furniture Shop\n11: Disabled (Use /advertisement)\n12: Bank\n13: Weapon Factory", 
 			"Next", "Cancel");
 		return 1;
 	}

@@ -10127,10 +10127,15 @@ CMD:place(playerid, params[])
     if(PlayerData[playerid][pLevel] < 2)
 	    return SendClientMessage(playerid, COLOR_GRAD1, "   You must have level 2 or above.");
 
-	new weaponid, ammo, id = -1, slot, string[256];
+	new weaponid = 0, ammo, id = -1, slot, string[256];
 
 	if(sscanf(params, "d", weaponid))
-		return SendClientMessage(playerid, COLOR_WHITE, "/place weapon_id (ID List in /weapons.)");
+	{
+		weaponid = GetPlayerWeapon(playerid);
+	}
+
+	if(weaponid <= 0 || weaponid == 46)
+		return SendErrorMessage(playerid, "You must be holding a weapon in your hand to place it.");
 
 	if(!PlayerHasWeapon(playerid, weaponid))
 	   return SendServerMessage(playerid, "Sorry, only the guns that are part of your /stats.");
@@ -13380,36 +13385,21 @@ CMD:m(playerid, params[])
 	if(GetFactionType(playerid) != FACTION_POLICE && GetFactionType(playerid) != FACTION_SHERIFF && GetFactionType(playerid) != FACTION_CORRECTIONAL)
 	    return SendUnauthMessage(playerid, "You can't access this.");
 
+	if(!PlayerData[playerid][pOnDuty])
+		return SendErrorMessage(playerid, "You must be on duty to use the megaphone.");
+
+	if(!IsPlayerInAnyVehicle(playerid))
+		return SendErrorMessage(playerid, "You must be inside a faction vehicle to use the megaphone.");
+
+	new vehicleid = GetPlayerVehicleID(playerid);
+	if(IsAFactionCar(vehicleid, PlayerData[playerid][pFaction]) == -1)
+		return SendErrorMessage(playerid, "You must be inside a faction vehicle to use the megaphone.");
+
 	if(isnull(params))
 		return SendSyntaxMessage(playerid, "/m [megaphone text]");
 
     if(PlayerData[playerid][pInjured])
-        return SendErrorMessage(playerid, "You cannot perform this action right now.");		
-
-	new bool:can_use;
-
-	if(IsPlayerInAnyVehicle(playerid))
-	{
-	    new vehicleid = GetPlayerVehicleID(playerid);
-
-	    if(IsAFactionCar(vehicleid, PlayerData[playerid][pFaction]))
-		{
-			can_use = true;
-		}
-	}
-	else
-	{
-		foreach (new i : sv_vehicles)
-		{
-			if(vehicleVariables[i][vVehicleFaction] == PlayerData[playerid][pFaction] && IsPlayerNearDriverDoor(playerid, vehicleVariables[i][vVehicleScriptID]))
-			{
-				can_use = true;
-			}
-		}
-	}
-
-	if(!can_use)
-	    return SendErrorMessage(playerid, "You aren't next to a megaphone.");
+        return SendErrorMessage(playerid, "You cannot perform this action right now.");
 
 	if(strlen(params) > 80)
     {
@@ -15961,10 +15951,12 @@ CMD:advert(playerid, params[])
 	}
 	else adTick[playerid] = 60;
 
-	BusinessData[id][bProducts] --;
-	BusinessData[id][bTill] += floatround(price * 0.7);
-
-	Business_Save(id);
+	if(id >= 0 && id < MAX_BUSINESS)
+	{
+		BusinessData[id][bProducts] --;
+		BusinessData[id][bTill] += floatround(price * 0.7);
+		Business_Save(id);
+	}
 	return true;
 }
 
@@ -16032,10 +16024,12 @@ CMD:cad(playerid, params[])
 	}
 	else adTick[playerid] = 60;
 
-	BusinessData[id][bProducts] --;
-	BusinessData[id][bTill] += floatround(price * 0.7);
-
-	Business_Save(id);
+	if(id >= 0 && id < MAX_BUSINESS)
+	{
+		BusinessData[id][bProducts] --;
+		BusinessData[id][bTill] += floatround(price * 0.7);
+		Business_Save(id);
+	}
 	return true;
 }
 
