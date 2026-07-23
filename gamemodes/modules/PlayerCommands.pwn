@@ -8628,6 +8628,8 @@ CMD:duty(playerid, params[])
 	}
 	else
 	{
+		PlayerData[playerid][pOnDuty] = false;
+
 		ResetWeapons(playerid);
 		RestorePlayerWeapons(playerid);
 
@@ -8667,8 +8669,6 @@ CMD:duty(playerid, params[])
 				SendMedicMessage(COLOR_POLICE, "** HQ: %s %s is now Off Duty! **", Faction_GetRank(playerid), ReturnName(playerid, 0));
 			}
 		}
-
-		PlayerData[playerid][pOnDuty] = false;
 	}
 	return true;
 }

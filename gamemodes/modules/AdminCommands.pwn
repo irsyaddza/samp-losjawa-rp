@@ -6367,13 +6367,13 @@ CMD:deleteucp(playerid, params[])
 	mysql_format(dbCon, query, sizeof(query), "DELETE FROM `radio` WHERE `owner` IN (SELECT `ID` FROM `characters` WHERE `master` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e'))", ucpName);
 	mysql_tquery(dbCon, query);
 
-	mysql_format(dbCon, query, sizeof(query), "DELETE FROM `cars` WHERE `owner` IN (SELECT `ID` FROM `characters` WHERE `master` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e'))", ucpName);
+	mysql_format(dbCon, query, sizeof(query), "DELETE FROM `cars` WHERE `carOwner` IN (SELECT `ID` FROM `characters` WHERE `master` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e'))", ucpName);
 	mysql_tquery(dbCon, query);
 
-	mysql_format(dbCon, query, sizeof(query), "UPDATE `houses` SET `owner` = 'The State', `owned` = 0 WHERE `owner` IN (SELECT `Name` FROM `characters` WHERE `master` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e'))", ucpName);
+	mysql_format(dbCon, query, sizeof(query), "UPDATE `houses` SET `owner` = 'The State', `owned` = 0 WHERE `owner` IN (SELECT `char_name` FROM `characters` WHERE `master` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e'))", ucpName);
 	mysql_tquery(dbCon, query);
 
-	mysql_format(dbCon, query, sizeof(query), "UPDATE `business` SET `biz_owner` = 'The State', `biz_owned` = 0 WHERE `biz_owner` IN (SELECT `Name` FROM `characters` WHERE `master` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e'))", ucpName);
+	mysql_format(dbCon, query, sizeof(query), "UPDATE `business` SET `biz_owner` = 'The State', `biz_owned` = 0 WHERE `biz_owner` IN (SELECT `char_name` FROM `characters` WHERE `master` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e'))", ucpName);
 	mysql_tquery(dbCon, query);
 
 	mysql_format(dbCon, query, sizeof(query), "DELETE FROM `ucp_friends` WHERE `playerID` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e') OR `friendID` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e')", ucpName, ucpName);

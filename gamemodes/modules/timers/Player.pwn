@@ -840,7 +840,7 @@ ptask Players[1000](i)
 		}
   	}
 
-	if((timestamp - LastSpawn[i]) >= 10 && (timestamp - LastTeleport[i]) >= 3 && !PlayerData[i][pFreeze] && AFKTimer[i] > 0 && !ViewingCCTV[i])
+	if((timestamp - LastSpawn[i]) >= 10 && (timestamp - LastTeleport[i]) >= 3 && !PlayerData[i][pFreeze] && AFKTimer[i] > 0 && !ViewingCCTV[i] && !PlayerData[i][pTutorialStep])
 	{
 		new specialAction = GetPlayerSpecialAction(i);
 

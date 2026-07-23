@@ -2766,7 +2766,7 @@ public OnPlayerGiveDamage(playerid, damagedid, Float: amount, weaponid, bodypart
 
 				case BODY_PART_LEFT_LEG, BODY_PART_RIGHT_LEG:
 				{
-				    amount = amount / 2;
+				    amount /= 2.0;
 
 				    if(random(2))
 				    {
@@ -2782,7 +2782,7 @@ public OnPlayerGiveDamage(playerid, damagedid, Float: amount, weaponid, bodypart
 				{
 					if(!PlayerData[damagedid][pSwat])
 					{
-					    amount += float(floatround(amount / 2, floatround_ceil));
+					    amount *= 1.5;
 					}
 				}
 			}
@@ -2790,7 +2790,7 @@ public OnPlayerGiveDamage(playerid, damagedid, Float: amount, weaponid, bodypart
 			if(PlayerData[damagedid][pSwat] && bodypart != BODY_PART_HEAD) armourhit = true;
 		}
 
-		if(amount < 1) amount = 1;
+		if(amount < 1.0) amount = 1.0;
 
 		if(PlayerData[damagedid][pInjured] && !KnockedOut{damagedid})
 		{
@@ -2802,7 +2802,7 @@ public OnPlayerGiveDamage(playerid, damagedid, Float: amount, weaponid, bodypart
 		}
 		else
 		{
-			if(armour > 0 && armourhit)
+			if(armour > 0.0 && armourhit)
 			{
 	            if(armour > amount)
 				{
@@ -2818,6 +2818,10 @@ public OnPlayerGiveDamage(playerid, damagedid, Float: amount, weaponid, bodypart
 			else
 			{
 				health -= amount;
+				if(armour > 0.0)
+				{
+					SetPlayerArmourEx(damagedid, armour);
+				}
 			}
 
 			CallbackDamages(damagedid, playerid, bodypart, weaponid, amount, armour);
@@ -7103,10 +7107,6 @@ public OnPlayerEnterVehicle(playerid, vehicleid, ispassenger)
 		}
 	}
 
-	if(!PlayerFlags[playerid][toggleHUD] && HUD_Created{playerid})
-	{
-		ShowHudV2Vehicle(playerid, vehicleid);
-	}
 	return true;
 }
 
@@ -7145,10 +7145,6 @@ public OnPlayerExitVehicle(playerid, vehicleid)
 		SetVehicleToRespawn(vehicleid);
 	}
 
-	if(!PlayerFlags[playerid][toggleHUD] && HUD_Created{playerid})
-	{
-		HideHudV2Vehicle(playerid);
-	}
 	return true;
 }
 
@@ -7163,6 +7159,11 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
 	    new vehicleid = GetPlayerVehicleID(playerid);
 
 		PlayerData[playerid][pLastVehicle] = vehicleid;
+
+		if(!PlayerFlags[playerid][toggleHUD] && HUD_Created{playerid})
+		{
+			ShowHudV2Vehicle(playerid, vehicleid);
+		}
 
 		if(PlayerData[playerid][pInjured])
 		{
@@ -7222,6 +7223,10 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
 
 	if(oldstate == PLAYER_STATE_DRIVER || oldstate == PLAYER_STATE_PASSENGER)
 	{
+		if(!PlayerFlags[playerid][toggleHUD] && HUD_Created{playerid})
+		{
+			HideHudV2Vehicle(playerid);
+		}
 		new id = -1, str[128];
 
 		if((id = Boombox_Nearest(playerid)) != INVALID_PLAYER_ID && BoomboxData[id][boomboxOn])
@@ -9215,6 +9220,7 @@ RefreshTutorial(playerid)
     if(PlayerData[playerid][pTutorialStep])
     {
 		TutorialDelay[playerid] = 5; // countdown: 5 seconds per step
+		LastTeleport[playerid] = gettime();
 
     	switch(PlayerData[playerid][pTutorialStep])
         {
@@ -9283,9 +9289,6 @@ RefreshTutorial(playerid)
 			    SendClientMessage(playerid, COLOR_GRAD2, "There are plenty of shops in the mall, such as clothes, tools, electronics, Musical instruments and even more.");
 			    SendClientMessage(playerid, COLOR_GRAD2, "You can buy saveable items that can improve your roleplay atmosphere and your character's look.");
 			    GameTextForPlayer(playerid, "~w~ Los Santos Mall", 3900, 3);
-
-            	/*InterpolateCameraPos(playerid, 2413.5383, -1885.4564, 23.2313, 1129.1364,-1359.0806,60.4063, 3000, CAMERA_MOVE);
-                InterpolateCameraLookAt(playerid, 2412.8733, -1886.1985, 23.0213, 1129.1011,-1488.4135,22.7614, 3000, CAMERA_MOVE);*/
             }
             case 7:
             {
@@ -9357,6 +9360,8 @@ RefreshTutorial(playerid)
 				SetSpawnInfo(playerid, NO_TEAM, PlayerData[playerid][pModel], PlayerData[playerid][pPos][0], PlayerData[playerid][pPos][1], PlayerData[playerid][pPos][2], PlayerData[playerid][pPos][3], 0, 0, 0, 0, 0, 0);
 
 				TogglePlayerSpectating(playerid, false);
+				SetPlayerPos(playerid, 1643.0010, -2331.7056, -2.6797);
+				SetPlayerFacingAngle(playerid, 359.8919);
 				SetCameraBehindPlayer(playerid);
 				SetPlayerVirtualWorld(playerid, 0);
 				TogglePlayerControllable(playerid, true);
@@ -14550,7 +14555,11 @@ initiateTutorial(playerid)
     ClearChatBox(playerid);
     
 	PlayerData[playerid][pTutorialStep] = 1;
-	SetPlayerVirtualWorld(playerid, playerid + 1000);
+	SetPlayerVirtualWorld(playerid, playerid + 20000);
+	SetPlayerInterior(playerid, 0);
+	LastTeleport[playerid] = gettime();
+
+	TogglePlayerSpectating(playerid, true);
 
 	RefreshTutorial(playerid);
 	return true;
