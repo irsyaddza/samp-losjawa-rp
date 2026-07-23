@@ -10387,7 +10387,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
 			switch(BusinessData[InBusiness[playerid]][bsubType])
 			{
-				case 1: // Pizza
+				case 2: // Well Stacked Pizza
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
@@ -10399,11 +10399,11 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 				    }
 
 				    SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s orders a meal.", ReturnName(playerid, 0));
-				    SendClientMessageEx(playerid, COLOR_WHITE, "Ordered {FF6347}Cluckin' Little Meal{FFFFFF} for {FF6347}%s{FFFFFF}..", FormatNumber(BusinessData[InBusiness[playerid]][bItems][0]));
+				    SendClientMessageEx(playerid, COLOR_WHITE, "Ordered {FF6347}Buster{FFFFFF} for {FF6347}%s{FFFFFF}..", FormatNumber(BusinessData[InBusiness[playerid]][bItems][0]));
 
 					MealHolding[playerid] = 2218;
 				}
-				case 2: // Donut
+				case 3: // Rusty Browns Donuts
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
@@ -10419,7 +10419,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
                     MealHolding[playerid] = 2221;
 				}
-				case 3: // Burger
+				case 1: // Burger Shot
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
@@ -10435,7 +10435,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
                     MealHolding[playerid] = 2213;
 				}
-				case 4: // Cluckin
+				case 0: // Cluckin Bell
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
@@ -10489,7 +10489,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
 			switch(BusinessData[InBusiness[playerid]][bsubType])
 			{
-				case 1: // Pizza
+				case 2: // Well Stacked Pizza
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
@@ -10505,7 +10505,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
                     MealHolding[playerid] = 2219;
 				}
-				case 2: // Donut
+				case 3: // Rusty Browns Donuts
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
@@ -10521,7 +10521,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
                     MealHolding[playerid] = 2223;
 				}
- 				case 3: // Burger
+  				case 1: // Burger Shot
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
@@ -10537,7 +10537,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
                     MealHolding[playerid] = 2214;
 				}
- 				case 4: // Cluckin
+  				case 0: // Cluckin Bell
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
@@ -10591,7 +10591,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
 			switch(BusinessData[InBusiness[playerid]][bsubType])
 			{
-				case 1: // Pizza
+				case 2: // Well Stacked Pizza
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
@@ -10603,7 +10603,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
                     MealHolding[playerid] = 2220;
 				}
-				case 2: // Donut
+				case 3: // Rusty Browns Donuts
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
@@ -10615,7 +10615,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
                     MealHolding[playerid] = 2222;
 				}
- 				case 3: // Burger
+  				case 1: // Burger Shot
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
@@ -10626,7 +10626,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 				    SendClientMessageEx(playerid, COLOR_WHITE, "Ordered {FF6347}Meat Stack{FFFFFF} for {FF6347}%s{FFFFFF}.", FormatNumber(BusinessData[InBusiness[playerid]][bItems][2]));
                     MealHolding[playerid]=2212;
 				}
- 				case 4: // Cluckin
+  				case 0: // Cluckin Bell
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
@@ -10676,7 +10676,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
 			switch(BusinessData[InBusiness[playerid]][bsubType])
 			{
-				case 1: // Pizza
+				case 2: // Well Stacked Pizza
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
@@ -10688,7 +10688,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
 					MealHolding[playerid] = 2355;
 				}
-				case 3: // Burger
+				case 1: // Burger Shot
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
@@ -10700,7 +10700,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
                     MealHolding[playerid] = 2354;
 				}
-				case 4: // Cluckin
+				case 0: // Cluckin Bell
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {

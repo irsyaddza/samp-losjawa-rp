@@ -6138,27 +6138,27 @@ CMD:meal(playerid, params[])
 
 						switch(BusinessData[InBusiness[playerid]][bsubType])
 						{
-						    case 1:
+						    case 2: // Well Stacked Pizza
 						    {
 	          					SendClientMessageEx(playerid, -1, "1. Buster - %s", FormatNumber(BusinessData[InBusiness[playerid]][bItems][0]));
 	          					SendClientMessageEx(playerid, -1, "2. Double D-Luxe - %s", FormatNumber(BusinessData[InBusiness[playerid]][bItems][1]));
 	          					SendClientMessageEx(playerid, -1, "3. Full Rack - %s", FormatNumber(BusinessData[InBusiness[playerid]][bItems][2]));
 	          					SendClientMessageEx(playerid, -1, "4. Salad Meal - %s", FormatNumber(BusinessData[InBusiness[playerid]][bItems][3]));
 						    }
-						    case 2:
+						    case 3: // Rusty Browns Donuts
 						    {
 	          					SendClientMessageEx(playerid, -1, "1. Rusty's D-Luxe - %s", FormatNumber(BusinessData[InBusiness[playerid]][bItems][0]));
 	          					SendClientMessageEx(playerid, -1, "2. Rusty's Double Barrel - %s", FormatNumber(BusinessData[InBusiness[playerid]][bItems][1]));
 	          					SendClientMessageEx(playerid, -1, "3. Rusty's Huge Double - %s", FormatNumber(BusinessData[InBusiness[playerid]][bItems][2]));
 						    }
-						    case 3:
+						    case 1: // Burger Shot
 						    {
 	          					SendClientMessageEx(playerid, -1, "1. Moo Kids Meal - %s", FormatNumber(BusinessData[InBusiness[playerid]][bItems][0]));
 	          					SendClientMessageEx(playerid, -1, "2. Beef Tower - %s", FormatNumber(BusinessData[InBusiness[playerid]][bItems][1]));
 	          					SendClientMessageEx(playerid, -1, "3. Meat Stack - %s", FormatNumber(BusinessData[InBusiness[playerid]][bItems][2]));
 	          					SendClientMessageEx(playerid, -1, "4. Salad Meal - %s", FormatNumber(BusinessData[InBusiness[playerid]][bItems][3]));
 						    }
-						    case 4:
+						    case 0: // Cluckin Bell
 						    {
 	          					SendClientMessageEx(playerid, -1, "1. Cluckin' Little Meal - %s", FormatNumber(BusinessData[InBusiness[playerid]][bItems][0]));
 	          					SendClientMessageEx(playerid, -1, "2. Cluckin' Big Meal - %s", FormatNumber(BusinessData[InBusiness[playerid]][bItems][1]));
@@ -6169,7 +6169,7 @@ CMD:meal(playerid, params[])
 				        return 1;
 				    }
 
-				    if(menuid >= 1 && (menuid <= 3 || (menuid <= 4 && BusinessData[InBusiness[playerid]][bsubType] != 2)))
+				    if(menuid >= 1 && (menuid <= 3 || (menuid <= 4 && BusinessData[InBusiness[playerid]][bsubType] != 3)))
 				    {
 						if(value < 1 || value > 9999)
 						    return SendClientMessage(playerid, COLOR_GRAD2, "Price must be at least 1 and less than 9999.");
@@ -6202,7 +6202,7 @@ stock ShowPlayerRestaurantMenu(playerid, id)
 
 	switch(BusinessData[id][bsubType])
 	{
-		case 1: // Pizza
+		case 2: // Well Stacked Pizza
 		{
 		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][0], 2218);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][0]);
@@ -6232,7 +6232,7 @@ stock ShowPlayerRestaurantMenu(playerid, id)
 			PlayerTextDrawSetString(playerid,PTD_Restaurant[playerid][7], string);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][7]);
 		}
- 		case 2: // Donut
+ 		case 3: // Rusty Browns Donuts
 		{
 		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][0], 2221);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][0]);
@@ -6255,7 +6255,7 @@ stock ShowPlayerRestaurantMenu(playerid, id)
 			PlayerTextDrawSetString(playerid,PTD_Restaurant[playerid][6], string);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][6]);
 		}
- 		case 3: // Burger
+ 		case 1: // Burger Shot
 		{
 		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][0], 2213);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][0]);
@@ -6285,7 +6285,7 @@ stock ShowPlayerRestaurantMenu(playerid, id)
 			PlayerTextDrawSetString(playerid,PTD_Restaurant[playerid][7], string);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][7]);
 		}
- 		case 4: // Cluckin
+ 		case 0: // Cluckin Bell
 		{
 		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][0], 2215);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][0]);

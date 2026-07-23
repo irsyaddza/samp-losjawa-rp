@@ -7849,7 +7849,7 @@ stock ShowMbizMainDialog(playerid, bizid)
 		strcat(string, line);
 		EditingBizOption[playerid][idx++] = 9;
 	}
-	else if(BusinessData[bizid][bType] == 8)
+	else if(BusinessData[bizid][bType] == 9)
 	{
 		new subName[32];
 		switch(BusinessData[bizid][bsubType])
