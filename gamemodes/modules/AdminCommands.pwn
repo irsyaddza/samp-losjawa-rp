@@ -1,3 +1,16 @@
+#if !defined CMD_ALIAS
+#define CMD_ALIAS(%0,%1) \
+    CMD:%0(playerid, params[]) \
+    { \
+        new _target[128]; \
+        _target = %1; \
+        if(params[0] == '\0') return Command_ReProcess(playerid, _target, 0); \
+        new _cmd[128]; \
+        format(_cmd, sizeof(_cmd), "%s %s", _target, params); \
+        return Command_ReProcess(playerid, _cmd, 0); \
+    }
+#endif
+
 new EditingHouseID[MAX_PLAYERS];
 new EditingHouseOption[MAX_PLAYERS][30];
 
@@ -118,7 +131,7 @@ CMD:createcar(playerid, params[])
 	return true;
 }
 
-YCMD:aduty(playerid, params[], help) = adminduty;
+CMD_ALIAS(aduty, "/adminduty")
 
 CMD:adminduty(playerid, params[])
 {
@@ -553,9 +566,9 @@ CMD:flipcar(playerid, params[])
     return true;
 }
 
-YCMD:spectate(playerid, params[], help) = watchplayer;
-YCMD:spec(playerid, params[], help) = watchplayer;
-YCMD:awp(playerid, params[], help) = watchplayer;
+CMD_ALIAS(spectate, "/watchplayer")
+CMD_ALIAS(spec, "/watchplayer")
+CMD_ALIAS(awp, "/watchplayer")
 
 CMD:watchplayer(playerid, params[])
 {
@@ -609,9 +622,9 @@ CMD:watchplayer(playerid, params[])
 	return true;
 }
 
-YCMD:spectatecar(playerid, params[], help) = watchcar;
-YCMD:speccar(playerid, params[], help) = watchcar;
-YCMD:awc(playerid, params[], help) = watchcar;
+CMD_ALIAS(spectatecar, "/watchcar")
+CMD_ALIAS(speccar, "/watchcar")
+CMD_ALIAS(awc, "/watchcar")
 
 CMD:watchcar(playerid, params[])
 {
@@ -642,7 +655,7 @@ CMD:watchcar(playerid, params[])
 	return true;
 }
 
-YCMD:specoff(playerid, params[], help) = watchoff;
+CMD_ALIAS(specoff, "/watchoff")
 
 CMD:watchoff(playerid, params[])
 {
@@ -7771,7 +7784,7 @@ stock CreateNewBusiness(playerid, level, price, type)
 	return 1;
 }
 
-YCMD:mbiz(playerid, params[], help) = managebusiness;
+CMD_ALIAS(mbiz, "/managebusiness")
 
 CMD:managebusiness(playerid, params[])
 {
@@ -8396,7 +8409,7 @@ stock CreateNewProperty(playerid, type, value)
 	return 1;
 }
 
-YCMD:mhouse(playerid, params[], help) = managehouse;
+CMD_ALIAS(mhouse, "/managehouse")
 
 CMD:managehouse(playerid, params[])
 {
@@ -8864,8 +8877,8 @@ Dialog:MhouseMenu(playerid, response, listitem, inputtext[])
 // PONYTAIL: Unified Faction Manager (/mfac)
 // ==========================================
 
-YCMD:destroyfaction(playerid, params[], help) = removefaction;
-YCMD:mfac(playerid, params[], help) = managefaction;
+CMD_ALIAS(destroyfaction, "/removefaction")
+CMD_ALIAS(mfac, "/managefaction")
 
 CMD:managefaction(playerid, params[])
 {
@@ -8971,7 +8984,7 @@ stock CreateNewGate(playerid, modelid, faction, name[])
 	return 1;
 }
 
-YCMD:mgate(playerid, params[], help) = managegate;
+CMD_ALIAS(mgate, "/managegate")
 
 CMD:managegate(playerid, params[])
 {
@@ -9344,7 +9357,7 @@ stock SaveVehicleAsPermanent(playerid, vehicleid)
 	return i;
 }
 
-YCMD:mveh(playerid, params[], help) = managevehicle;
+CMD_ALIAS(mveh, "/managevehicle")
 
 CMD:managevehicle(playerid, params[])
 {
