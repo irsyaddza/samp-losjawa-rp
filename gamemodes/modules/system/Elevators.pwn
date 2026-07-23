@@ -144,7 +144,7 @@ stock ElevatorFloor_Refresh(index)
     // Create 3D Text Label
     new labelStr[256];
     format(labelStr, sizeof(labelStr), 
-        "{00FFFF}[Elevator: %s]\n{FFFFFF}Floor: {FFFF00}%s\n{FFFFFF}Use {FFFF00}/elevator\n{999999}(Elevator ID: %d | Floor ID: %d)", 
+        "{00FFFF}[Elevator: %s]\n{FFFFFF}Floor: {FFFF00}%s\n{FFFFFF}Use {FFFF00}/elevator or 'F'\n{999999}(Elevator ID: %d | Floor ID: %d)", 
         elevName, ElevatorFloors[index][efName], elevId, ElevatorFloors[index][efID]);
         
     ElevatorFloors[index][efLabel] = CreateDynamic3DTextLabel(labelStr, 0xFFFFFFFF, 
