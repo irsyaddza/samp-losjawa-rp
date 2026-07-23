@@ -112,16 +112,20 @@ SendPoliceMessage(color, const fmat[], va_args<>)
 	return true;
 }
 
+#if !defined FACTION_MEDIC
+#define FACTION_MEDIC (3)
+#endif
+
 SendMedicMessage(color, const fmat[], va_args<>)
 {
 	new str[145];
-	va_format(str, sizeof (str), fmat, va_start<3>);
+	va_format(str, sizeof (str), fmat, va_start<2>);
 
 	foreach (new i : Player)
 	{
-		if(PlayerData[i][pFaction] == -1) continue;
+		if(PlayerData[i][pID] == -1 || PlayerData[i][pFaction] == -1) continue;
 
-		if(GetFactionType(i) == 3 && PlayerData[i][pOnDuty])
+		if(GetFactionType(i) == FACTION_MEDIC && PlayerData[i][pOnDuty])
 		{
 		    SendClientMessage(i, color, str);
 		}

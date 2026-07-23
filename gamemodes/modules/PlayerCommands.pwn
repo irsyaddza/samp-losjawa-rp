@@ -8630,8 +8630,6 @@ CMD:duty(playerid, params[])
 	}
 	else
 	{
-		PlayerData[playerid][pOnDuty] = false;
-
 		ResetWeapons(playerid);
 		RestorePlayerWeapons(playerid);
 
@@ -8668,9 +8666,13 @@ CMD:duty(playerid, params[])
 			{
                 PlayerData[playerid][pFireman] = false;
 
+				SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "* %s places medical gear and equipment inside a locker.", ReturnName(playerid, 0));
+
 				SendMedicMessage(COLOR_POLICE, "** HQ: %s %s is now Off Duty! **", Faction_GetRank(playerid), ReturnName(playerid, 0));
 			}
 		}
+
+		PlayerData[playerid][pOnDuty] = false;
 	}
 	return true;
 }
