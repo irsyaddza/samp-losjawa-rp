@@ -4035,49 +4035,6 @@ GetCooldownLevel(playerid, type)
 
 RemoveBuilding(playerid)
 {
-	//jefferson
-	RemoveBuildingForPlayer(playerid, 3582, 2232.399, -1464.800, 25.648, 0.250);
-	RemoveBuildingForPlayer(playerid, 3562, 2232.399, -1464.800, 25.648, 0.250);
-	RemoveBuildingForPlayer(playerid, 645, 2239.570, -1468.800, 22.687, 0.250);
-	RemoveBuildingForPlayer(playerid, 673, 2241.889, -1458.930, 22.960, 0.250);
-	RemoveBuildingForPlayer(playerid, 3582, 2247.530, -1464.800, 25.546, 0.250);
-	RemoveBuildingForPlayer(playerid, 3562, 2247.530, -1464.800, 25.546, 0.250);
-	RemoveBuildingForPlayer(playerid, 1221, 2251.290, -1461.829, 23.632, 0.250);
-	RemoveBuildingForPlayer(playerid, 1230, 2255.979, -1457.910, 22.859, 0.250);
-	RemoveBuildingForPlayer(playerid, 1220, 2256.659, -1456.900, 22.859, 0.250);
-	RemoveBuildingForPlayer(playerid, 3582, 2263.719, -1464.800, 25.437, 0.250);
-	RemoveBuildingForPlayer(playerid, 3562, 2263.719, -1464.800, 25.437, 0.250);
-	RemoveBuildingForPlayer(playerid, 620, 2267.469, -1470.199, 21.718, 0.250);
-	RemoveBuildingForPlayer(playerid, 710, 1018.909, -799.531, 114.335, 0.250);
-	RemoveBuildingForPlayer(playerid, 5438, 2222.669, -1462.910, 22.789, 0.250);
-	RemoveBuildingForPlayer(playerid, 5569, 2222.669, -1462.910, 22.789, 0.250);
-	RemoveBuildingForPlayer(playerid, 1221, 2225.850, -1466.650, 23.273, 0.250);
-	RemoveBuildingForPlayer(playerid, 1224, 2225.679, -1468.619, 23.429, 0.250);
-	RemoveBuildingForPlayer(playerid, 1230, 2225.800, -1470.729, 23.195, 0.250);
-	RemoveBuildingForPlayer(playerid, 1220, 2225.129, -1471.729, 23.195, 0.250);
-	RemoveBuildingForPlayer(playerid, 1230, 2223.629, -1468.750, 23.195, 0.250);
-	RemoveBuildingForPlayer(playerid, 1220, 2222.959, -1469.739, 23.195, 0.250);
-	RemoveBuildingForPlayer(playerid, 1221, 2225.090, -1471.130, 23.273, 0.250);
-	RemoveBuildingForPlayer(playerid, 5682, 2241.429, -1433.670, 31.281, 0.250);
-	RemoveBuildingForPlayer(playerid, 3593, 2261.770, -1441.099, 23.500, 0.250);
-	RemoveBuildingForPlayer(playerid, 3593, 2265.080, -1424.479, 23.500, 0.250);
-	RemoveBuildingForPlayer(playerid, 3582, 2230.610, -1401.780, 25.640, 0.250);
-	RemoveBuildingForPlayer(playerid, 3562, 2230.610, -1401.780, 25.640, 0.250);
-	RemoveBuildingForPlayer(playerid, 1224, 2225.979, -1396.680, 23.531, 0.250);
-	RemoveBuildingForPlayer(playerid, 1230, 2223.879, -1396.800, 23.304, 0.250);
-	RemoveBuildingForPlayer(playerid, 1221, 2223.469, -1396.089, 23.375, 0.250);
-	RemoveBuildingForPlayer(playerid, 1220, 2222.879, -1396.130, 23.304, 0.250);
-	RemoveBuildingForPlayer(playerid, 1220, 2224.860, -1393.959, 23.304, 0.250);
-	RemoveBuildingForPlayer(playerid, 1230, 2225.850, -1394.630, 23.304, 0.250);
-	RemoveBuildingForPlayer(playerid, 1221, 2227.949, -1396.849, 23.375, 0.250);
-	RemoveBuildingForPlayer(playerid, 1264, 2224.129, -1408.839, 23.398, 0.250);
-	RemoveBuildingForPlayer(playerid, 1264, 2224.979, -1408.910, 23.398, 0.250);
-	RemoveBuildingForPlayer(playerid, 1221, 2253.219, -1409.890, 23.632, 0.250);
-	RemoveBuildingForPlayer(playerid, 3582, 2256.659, -1401.780, 25.640, 0.250);
-	RemoveBuildingForPlayer(playerid, 3562, 2256.659, -1401.780, 25.640, 0.250);
-	RemoveBuildingForPlayer(playerid, 3582, 2243.709, -1401.780, 25.640, 0.250);
-	RemoveBuildingForPlayer(playerid, 3562, 2243.709, -1401.780, 25.640, 0.250);
-
 	//Pershing Square
 	RemoveBuildingForPlayer(playerid, 4057, 1479.5547, -1693.1406, 19.5781, 0.25);
 	RemoveBuildingForPlayer(playerid, 4210, 1479.5625, -1631.4531, 12.0781, 0.25);
@@ -4194,15 +4151,6 @@ RemoveBuilding(playerid)
 	RemoveBuildingForPlayer(playerid, 1413, 1658.8359, -2109.6875, 13.6797, 0.25);
 	RemoveBuildingForPlayer(playerid, 1413, 1658.8359, -2104.4063, 13.6797, 0.25);
 
-	// car mod shop
-	RemoveBuildingForPlayer(playerid, 6359, 421.4297, -1307.9922, 24.2656, 0.25);
-	RemoveBuildingForPlayer(playerid, 620, 394.1172, -1317.8750, 13.2344, 0.25);
-	RemoveBuildingForPlayer(playerid, 620, 395.8594, -1323.7578, 13.0000, 0.25);
-	RemoveBuildingForPlayer(playerid, 620, 404.8359, -1303.7266, 13.6719, 0.25);
-	RemoveBuildingForPlayer(playerid, 673, 404.9766, -1329.1016, 13.7031, 0.25);
-	RemoveBuildingForPlayer(playerid, 6355, 421.4297, -1307.9922, 24.2656, 0.25);
-	RemoveBuildingForPlayer(playerid, 6363, 428.1016, -1348.8125, 29.2578, 0.25);
-
 	// Idlewood 03dl
 	RemoveBuildingForPlayer(playerid, 5534, 1927.703, -1754.312, 12.460, 0.250);
 	RemoveBuildingForPlayer(playerid, 5542, 1884.663, -1613.421, 12.460, 0.250);
@@ -4287,25 +4235,6 @@ RemoveBuilding(playerid)
 	RemoveBuildingForPlayer(playerid, 620, 2336.984, -1350.578, 22.726, 0.250);
 	RemoveBuildingForPlayer(playerid, 17542, 2347.921, -1364.289, 27.156, 0.250);
 	RemoveBuildingForPlayer(playerid, 955, 2352.179, -1357.156, 23.773, 0.250);
-
-	// Crenshaw Complex
-	RemoveBuildingForPlayer(playerid, 3562, 2232.3984, -1464.7969, 25.6484, 0.25);
-	RemoveBuildingForPlayer(playerid, 3562, 2247.5313, -1464.7969, 25.5469, 0.25);
-	RemoveBuildingForPlayer(playerid, 3562, 2263.7188, -1464.7969, 25.4375, 0.25);
-	RemoveBuildingForPlayer(playerid, 3562, 2243.7109, -1401.7813, 25.6406, 0.25);
-	RemoveBuildingForPlayer(playerid, 3562, 2230.6094, -1401.7813, 25.6406, 0.25);
-	RemoveBuildingForPlayer(playerid, 3562, 2256.6641, -1401.7813, 25.6406, 0.25);
-	RemoveBuildingForPlayer(playerid, 3582, 2230.6094, -1401.7813, 25.6406, 0.25);
-	RemoveBuildingForPlayer(playerid, 3582, 2243.7109, -1401.7813, 25.6406, 0.25);
-	RemoveBuildingForPlayer(playerid, 3582, 2256.6641, -1401.7813, 25.6406, 0.25);
-	RemoveBuildingForPlayer(playerid, 645, 2239.5703, -1468.8047, 22.6875, 0.25);
-	RemoveBuildingForPlayer(playerid, 3582, 2232.3984, -1464.7969, 25.6484, 0.25);
-	RemoveBuildingForPlayer(playerid, 673, 2241.8906, -1458.9297, 22.9609, 0.25);
-	RemoveBuildingForPlayer(playerid, 3582, 2247.5313, -1464.7969, 25.5469, 0.25);
-	RemoveBuildingForPlayer(playerid, 3582, 2263.7188, -1464.7969, 25.4375, 0.25);
-	RemoveBuildingForPlayer(playerid, 3593, 2261.7734, -1441.1016, 23.5000, 0.25);
-	RemoveBuildingForPlayer(playerid, 3593, 2265.0781, -1424.4766, 23.5000, 0.25);
-	RemoveBuildingForPlayer(playerid, 5682, 2241.4297, -1433.6719, 31.2813, 0.25);
 
 	// Fire House
 	RemoveBuildingForPlayer(playerid, 5967, 1259.437, -1246.812, 17.109, 0.250);
