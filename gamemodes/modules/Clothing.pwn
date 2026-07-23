@@ -653,7 +653,7 @@ stock AddPlayerClothing(playerid,modelid,Float:fOffsetX,Float:fOffsetY,Float:fOf
 }
 
 // Skin Shop System Integration
-#define MAX_SHOP_SKINS (500)
+#define MAX_SHOP_SKINS (600)
 
 enum E_SHOP_SKIN_DATA
 {
@@ -696,6 +696,18 @@ stock IsSkinFemale(skinid)
     return 0;
 }
 
+stock IsCustomShopSkin(skinid)
+{
+    switch(skinid)
+    {
+        // Cowok (Male):
+        case 20001, 20002, 20005..20008, 20027, 20029..20044, 20061..20068, 20076, 20084..20100, 20110..20113, 20119, 20120, 20124..20129, 20136..20139, 20146..20148, 20168..20173, 20175, 20179, 20180, 20208..20215, 20249..20251, 20253, 20254, 20257..20259: return 1;
+        // Cewek (Female):
+        case 20003, 20004, 20025, 20026, 20028, 20069..20075, 20078..20083, 20103, 20121..20123, 20143..20145, 20153..20161, 20174, 20176..20178, 20184, 20216, 20217, 20226, 20252, 20255, 20256: return 1;
+    }
+    return 0;
+}
+
 stock IsDefaultCivilianSkin(skinid)
 {
     if (skinid < 1 || skinid > 311) return 0;
@@ -715,29 +727,66 @@ stock IsDefaultCivilianSkin(skinid)
 forward OnCreateShopSkinsTable();
 public OnCreateShopSkinsTable()
 {
-    mysql_tquery(dbCon, "SELECT COUNT(*) FROM `clothing_shop_skins`", "OnCheckShopSkinsCount");
+    mysql_tquery(dbCon, "SELECT COUNT(*) AS total, SUM(CASE WHEN skin_id = 1 THEN 1 ELSE 0 END) AS has_basic, SUM(CASE WHEN skin_id = 20001 THEN 1 ELSE 0 END) AS has_custom FROM `clothing_shop_skins`", "OnCheckShopSkinsCount");
     return 1;
 }
 
 forward OnCheckShopSkinsCount();
 public OnCheckShopSkinsCount()
 {
-    new count = 0;
-    cache_get_value_name_int(0, "COUNT(*)", count);
-    if (count == 0)
+    new count = 0, has_basic = 0, has_custom = 0;
+    cache_get_value_name_int(0, "total", count);
+    cache_get_value_name_int(0, "has_basic", has_basic);
+    cache_get_value_name_int(0, "has_custom", has_custom);
+    
+    if (count == 0 || has_basic == 0 || has_custom == 0)
     {
-        new query[512];
+        // Delete all old skins
+        mysql_tquery(dbCon, "DELETE FROM `clothing_shop_skins`");
+        
+        // Populate new custom and basic civilian skins in database AND memory instantly
+        new query[256];
+        TotalShopSkins = 0;
+        
+        // 1. Populate basic civilian skins
         for (new i = 1; i <= 311; i++)
         {
             if (IsDefaultCivilianSkin(i))
             {
                 mysql_format(dbCon, query, sizeof(query), "INSERT INTO `clothing_shop_skins` (`skin_id`, `price`) VALUES (%d, 5000)", i);
                 mysql_tquery(dbCon, query);
+                
+                if (TotalShopSkins < MAX_SHOP_SKINS)
+                {
+                    ShopSkins[TotalShopSkins][ss_id] = i;
+                    ShopSkins[TotalShopSkins][ss_price] = 5000;
+                    TotalShopSkins++;
+                }
             }
         }
-        printf("[SERVER]: Populated default civilian skins in clothing_shop_skins table.");
+        
+        // 2. Populate custom skins
+        for (new i = 20001; i <= 20261; i++)
+        {
+            if (IsCustomShopSkin(i))
+            {
+                mysql_format(dbCon, query, sizeof(query), "INSERT INTO `clothing_shop_skins` (`skin_id`, `price`) VALUES (%d, 5000)", i);
+                mysql_tquery(dbCon, query);
+                
+                if (TotalShopSkins < MAX_SHOP_SKINS)
+                {
+                    ShopSkins[TotalShopSkins][ss_id] = i;
+                    ShopSkins[TotalShopSkins][ss_price] = 5000;
+                    TotalShopSkins++;
+                }
+            }
+        }
+        printf("[SERVER]: Re-populated default + custom skins in clothing_shop_skins table & memory (%d skins).", TotalShopSkins);
     }
-    LoadShopSkins();
+    else
+    {
+        LoadShopSkins();
+    }
     return 1;
 }
 

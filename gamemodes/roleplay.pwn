@@ -2101,6 +2101,7 @@ new Iterator:sv_activevehicles<MAX_VEHICLES>;
 #include "modules/Store.pwn"
 #include "modules/MobileDataComputer.pwn"
 #include "modules/police/CCTV.pwn"
+#include "modules/system/SkinTest.pwn"
 #include "modules/VehicleParts.pwn"
 #include "modules/timers/Server.pwn"
 forward RefreshTutorial(playerid);
