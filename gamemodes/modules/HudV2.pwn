@@ -338,9 +338,10 @@ ShowHudV2Base(playerid)
     TextDrawShowForPlayer(playerid, HV2_Line);
     TextDrawShowForPlayer(playerid, HV2_Date);
     TextDrawShowForPlayer(playerid, HV2_Time);
-    PlayerTextDrawShow(playerid, HV2_WindShort[playerid]);
-    PlayerTextDrawShow(playerid, HV2_WindLong[playerid]);
-    PlayerTextDrawShow(playerid, HV2_Location[playerid]);
+    if(HV2_WindShort[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_WindShort[playerid]);
+    if(HV2_WindLong[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_WindLong[playerid]);
+    if(HV2_Location[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_Location[playerid]);
+    ShowHudV2Radio(playerid);
 }
 
 HideHudV2Base(playerid)
@@ -349,32 +350,33 @@ HideHudV2Base(playerid)
     TextDrawHideForPlayer(playerid, HV2_Line);
     TextDrawHideForPlayer(playerid, HV2_Date);
     TextDrawHideForPlayer(playerid, HV2_Time);
-    PlayerTextDrawHide(playerid, HV2_WindShort[playerid]);
-    PlayerTextDrawHide(playerid, HV2_WindLong[playerid]);
-    PlayerTextDrawHide(playerid, HV2_Location[playerid]);
+    if(HV2_WindShort[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_WindShort[playerid]);
+    if(HV2_WindLong[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_WindLong[playerid]);
+    if(HV2_Location[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_Location[playerid]);
+    HideHudV2Radio(playerid);
 }
 
 ShowHudV2Radio(playerid)
 {
-    PlayerTextDrawShow(playerid, HV2_BaseRadio[playerid]);
-    PlayerTextDrawShow(playerid, HV2_RadioSlot[playerid]);
-    PlayerTextDrawShow(playerid, HV2_RadioChan[playerid]);
+    if(HV2_BaseRadio[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_BaseRadio[playerid]);
+    if(HV2_RadioSlot[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_RadioSlot[playerid]);
+    if(HV2_RadioChan[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_RadioChan[playerid]);
 }
 
 HideHudV2Radio(playerid)
 {
-    PlayerTextDrawHide(playerid, HV2_BaseRadio[playerid]);
-    PlayerTextDrawHide(playerid, HV2_RadioSlot[playerid]);
-    PlayerTextDrawHide(playerid, HV2_RadioChan[playerid]);
+    if(HV2_BaseRadio[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_BaseRadio[playerid]);
+    if(HV2_RadioSlot[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_RadioSlot[playerid]);
+    if(HV2_RadioChan[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_RadioChan[playerid]);
 }
 
 ShowHudV2Vehicle(playerid, vehicleid)
 {
-    PlayerTextDrawShow(playerid, HV2_BaseSpeed[playerid]);
-    PlayerTextDrawShow(playerid, HV2_Speed[playerid]);
-    PlayerTextDrawShow(playerid, HV2_Mph[playerid]);
-    PlayerTextDrawShow(playerid, HV2_Miles[playerid]);
-    PlayerTextDrawShow(playerid, HV2_FuelPercent[playerid]);
+    if(HV2_BaseSpeed[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_BaseSpeed[playerid]);
+    if(HV2_Speed[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_Speed[playerid]);
+    if(HV2_Mph[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_Mph[playerid]);
+    if(HV2_Miles[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_Miles[playerid]);
+    if(HV2_FuelPercent[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_FuelPercent[playerid]);
 
     // Fuel State
     new Float:maxFuel = GetVehicleDataFuel(GetVehicleModel(vehicleid));
@@ -384,13 +386,13 @@ ShowHudV2Vehicle(playerid, vehicleid)
 
     if(fuelPercent <= 20)
     {
-        PlayerTextDrawShow(playerid, HV2_FuelRed[playerid]);
-        PlayerTextDrawHide(playerid, HV2_FuelNorm[playerid]);
+        if(HV2_FuelRed[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_FuelRed[playerid]);
+        if(HV2_FuelNorm[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_FuelNorm[playerid]);
     }
     else
     {
-        PlayerTextDrawHide(playerid, HV2_FuelRed[playerid]);
-        PlayerTextDrawShow(playerid, HV2_FuelNorm[playerid]);
+        if(HV2_FuelNorm[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_FuelRed[playerid]);
+        if(HV2_FuelNorm[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_FuelNorm[playerid]);
     }
 
     // Lights state
@@ -398,41 +400,41 @@ ShowHudV2Vehicle(playerid, vehicleid)
     GetVehicleParamsEx(vehicleid, eng, lights, alarm, doors, bonnet, boot, objective);
     if(lights == 1)
     {
-        PlayerTextDrawShow(playerid, HV2_LightsOn[playerid]);
-        PlayerTextDrawHide(playerid, HV2_LightsOff[playerid]);
+        if(HV2_LightsOn[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_LightsOn[playerid]);
+        if(HV2_LightsOff[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_LightsOff[playerid]);
     }
     else
     {
-        PlayerTextDrawHide(playerid, HV2_LightsOn[playerid]);
-        PlayerTextDrawShow(playerid, HV2_LightsOff[playerid]);
+        if(HV2_LightsOff[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_LightsOn[playerid]);
+        if(HV2_LightsOff[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_LightsOff[playerid]);
     }
 
     // Lock state
     if(doors == 1)
     {
-        PlayerTextDrawShow(playerid, HV2_Lock[playerid]);
-        PlayerTextDrawHide(playerid, HV2_Unlock[playerid]);
+        if(HV2_Lock[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_Lock[playerid]);
+        if(HV2_Unlock[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_Unlock[playerid]);
     }
     else
     {
-        PlayerTextDrawHide(playerid, HV2_Lock[playerid]);
-        PlayerTextDrawShow(playerid, HV2_Unlock[playerid]);
+        if(HV2_Unlock[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_Lock[playerid]);
+        if(HV2_Unlock[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_Unlock[playerid]);
     }
 }
 
 HideHudV2Vehicle(playerid)
 {
-    PlayerTextDrawHide(playerid, HV2_BaseSpeed[playerid]);
-    PlayerTextDrawHide(playerid, HV2_Speed[playerid]);
-    PlayerTextDrawHide(playerid, HV2_Mph[playerid]);
-    PlayerTextDrawHide(playerid, HV2_Miles[playerid]);
-    PlayerTextDrawHide(playerid, HV2_FuelNorm[playerid]);
-    PlayerTextDrawHide(playerid, HV2_FuelRed[playerid]);
-    PlayerTextDrawHide(playerid, HV2_FuelPercent[playerid]);
-    PlayerTextDrawHide(playerid, HV2_LightsOff[playerid]);
-    PlayerTextDrawHide(playerid, HV2_LightsOn[playerid]);
-    PlayerTextDrawHide(playerid, HV2_Lock[playerid]);
-    PlayerTextDrawHide(playerid, HV2_Unlock[playerid]);
+    if(HV2_BaseSpeed[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_BaseSpeed[playerid]);
+    if(HV2_Speed[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_Speed[playerid]);
+    if(HV2_Mph[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_Mph[playerid]);
+    if(HV2_Miles[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_Miles[playerid]);
+    if(HV2_FuelNorm[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_FuelNorm[playerid]);
+    if(HV2_FuelRed[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_FuelRed[playerid]);
+    if(HV2_FuelPercent[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_FuelPercent[playerid]);
+    if(HV2_LightsOff[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_LightsOff[playerid]);
+    if(HV2_LightsOn[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_LightsOn[playerid]);
+    if(HV2_Lock[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_Lock[playerid]);
+    if(HV2_Unlock[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_Unlock[playerid]);
 }
 
 ShowHudV2Full(playerid)
@@ -539,71 +541,106 @@ UpdateHudV2Player(playerid, vehicleid)
     // ── Vehicle ────────────────────────────────────────────────
     if(vehicleid)
     {
-        PlayerTextDrawShow(playerid, HV2_BaseSpeed[playerid]);
-        PlayerTextDrawShow(playerid, HV2_Mph[playerid]);
-
-        new Float:mph = CoreVehicles[vehicleid][vSpeed] * 121.30;
-        new speedStr[16];
-        format(speedStr, sizeof(speedStr), "%d", floatround(mph));
-        PlayerTextDrawSetString(playerid, HV2_Speed[playerid], speedStr);
-        PlayerTextDrawShow(playerid, HV2_Speed[playerid]);
-
-        // Mileage
-        new carid = CoreVehicles[vehicleid][vehicleCarID];
-        new milesStr[32];
-        if(carid != -1)
-            format(milesStr, sizeof(milesStr), "%.1f miles", CarData[carid][carMileage]);
-        else
-            format(milesStr, sizeof(milesStr), "0.0 miles");
-        PlayerTextDrawSetString(playerid, HV2_Miles[playerid], milesStr);
-        PlayerTextDrawShow(playerid, HV2_Miles[playerid]);
-
-        // Fuel
-        new Float:maxFuel = GetVehicleDataFuel(GetVehicleModel(vehicleid));
-        new fuelPercent = (maxFuel > 0.0) ? floatround((CoreVehicles[vehicleid][vehFuel] / maxFuel) * 100.0) : 0;
-        if(fuelPercent < 0) fuelPercent = 0;
-        else if(fuelPercent > 100) fuelPercent = 100;
-
-        new fuelStr[16];
-        format(fuelStr, sizeof(fuelStr), "%d", fuelPercent);
-        PlayerTextDrawSetString(playerid, HV2_FuelPercent[playerid], fuelStr);
-        PlayerTextDrawShow(playerid, HV2_FuelPercent[playerid]);
-
-        if(fuelPercent <= 20)
+        new vehModel = GetVehicleModel(vehicleid);
+        if((vehModel == 538 || vehModel == 570) && GetPlayerState(playerid) == PLAYER_STATE_PASSENGER)
         {
-            PlayerTextDrawShow(playerid, HV2_FuelRed[playerid]);
-            PlayerTextDrawHide(playerid, HV2_FuelNorm[playerid]);
+            HideHudV2Vehicle(playerid);
+            return;
         }
         else
         {
-            PlayerTextDrawHide(playerid, HV2_FuelRed[playerid]);
-            PlayerTextDrawShow(playerid, HV2_FuelNorm[playerid]);
-        }
+            PlayerTextDrawShow(playerid, HV2_BaseSpeed[playerid]);
+            PlayerTextDrawShow(playerid, HV2_Mph[playerid]);
 
-        // Lights
-        new eng, lights, alarm, doors, bonnet, boot, objective;
-        GetVehicleParamsEx(vehicleid, eng, lights, alarm, doors, bonnet, boot, objective);
-        if(lights == 1)
-        {
-            PlayerTextDrawShow(playerid, HV2_LightsOn[playerid]);
-            PlayerTextDrawHide(playerid, HV2_LightsOff[playerid]);
-        }
-        else
-        {
-            PlayerTextDrawHide(playerid, HV2_LightsOn[playerid]);
-            PlayerTextDrawShow(playerid, HV2_LightsOff[playerid]);
-        }
+            new Float:mph = CoreVehicles[vehicleid][vSpeed] * 121.30;
+            new speedVal = floatround(mph);
+            new speedStr[32];
 
-        // Lock
-        if(doors == 1)
-        {
-            PlayerTextDrawShow(playerid, HV2_Lock[playerid]);
-            PlayerTextDrawHide(playerid, HV2_Unlock[playerid]);
-        }
-        else
-        {
-            PlayerTextDrawHide(playerid, HV2_Lock[playerid]);
-            PlayerTextDrawShow(playerid, HV2_Unlock[playerid]);
+            if((vehModel == 538 || vehModel == 537) && PlayerOnTrainJob[playerid])
+            {
+                new Float:limit = PlayerTrainSpeedLimit[playerid];
+                if(float(speedVal) > limit)
+                {
+                    format(speedStr, sizeof(speedStr), "~r~%d", speedVal);
+
+                    PlayerOverspeedWarns[playerid]++;
+                    if(PlayerOverspeedWarns[playerid] % 3 == 0)
+                    {
+                        PlayerTotalFines[playerid] += 50;
+                        AddSalaryHistory(playerid, -50, "Train Overspeed Fine");
+                        SendClientMessageEx(playerid, COLOR_LIGHTRED, "[RAILROAD PENALTY]: Overspeeding (%d / %.0f MPH)! Recorded Fine: -$50 (will be deducted on paycheck).", speedVal, limit);
+                    }
+                }
+                else
+                {
+                    format(speedStr, sizeof(speedStr), "%d", speedVal);
+                }
+            }
+            else
+            {
+                format(speedStr, sizeof(speedStr), "%d", speedVal);
+            }
+
+            PlayerTextDrawSetString(playerid, HV2_Speed[playerid], speedStr);
+            PlayerTextDrawShow(playerid, HV2_Speed[playerid]);
+
+            // Mileage
+            new carid = CoreVehicles[vehicleid][vehicleCarID];
+            new milesStr[32];
+            if(carid != -1)
+                format(milesStr, sizeof(milesStr), "%.1f miles", CarData[carid][carMileage]);
+            else
+                format(milesStr, sizeof(milesStr), "0.0 miles");
+            PlayerTextDrawSetString(playerid, HV2_Miles[playerid], milesStr);
+            PlayerTextDrawShow(playerid, HV2_Miles[playerid]);
+
+            // Fuel
+            new Float:maxFuel = GetVehicleDataFuel(vehModel);
+            new fuelPercent = (maxFuel > 0.0) ? floatround((CoreVehicles[vehicleid][vehFuel] / maxFuel) * 100.0) : 0;
+            if(fuelPercent < 0) fuelPercent = 0;
+            else if(fuelPercent > 100) fuelPercent = 100;
+
+            new fuelStr[16];
+            format(fuelStr, sizeof(fuelStr), "%d", fuelPercent);
+            PlayerTextDrawSetString(playerid, HV2_FuelPercent[playerid], fuelStr);
+            PlayerTextDrawShow(playerid, HV2_FuelPercent[playerid]);
+
+            if(fuelPercent <= 20)
+            {
+                PlayerTextDrawShow(playerid, HV2_FuelRed[playerid]);
+                PlayerTextDrawHide(playerid, HV2_FuelNorm[playerid]);
+            }
+            else
+            {
+                PlayerTextDrawHide(playerid, HV2_FuelRed[playerid]);
+                PlayerTextDrawShow(playerid, HV2_FuelNorm[playerid]);
+            }
+
+            // Lights
+            new eng, lights, alarm, doors, bonnet, boot, objective;
+            GetVehicleParamsEx(vehicleid, eng, lights, alarm, doors, bonnet, boot, objective);
+            if(lights == 1)
+            {
+                PlayerTextDrawShow(playerid, HV2_LightsOn[playerid]);
+                PlayerTextDrawHide(playerid, HV2_LightsOff[playerid]);
+            }
+            else
+            {
+                PlayerTextDrawHide(playerid, HV2_LightsOn[playerid]);
+                PlayerTextDrawShow(playerid, HV2_LightsOff[playerid]);
+            }
+
+            // Lock
+            if(doors == 1)
+            {
+                PlayerTextDrawShow(playerid, HV2_Lock[playerid]);
+                PlayerTextDrawHide(playerid, HV2_Unlock[playerid]);
+            }
+            else
+            {
+                PlayerTextDrawHide(playerid, HV2_Lock[playerid]);
+                PlayerTextDrawShow(playerid, HV2_Unlock[playerid]);
+            }
         }
     }
     else

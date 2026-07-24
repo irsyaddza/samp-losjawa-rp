@@ -2849,8 +2849,11 @@ stock SendSMS(playerid, const params[])
 	if(PlayerData[playerid][pJailed])
 	    return SendClientMessage(playerid, COLOR_LIGHTRED, "Error: Your phone was confiscated by the cops.");
 
-    if(PlayerData[playerid][pInjured] || IsCuffed{playerid} || IsTied{playerid})
-		return SendErrorMessage(playerid, "You can't do this right now.");
+	if(PlayerData[playerid][pInjured])
+		return SendErrorMessage(playerid, "You can't use your phone while injured.");
+
+	if(IsCuffed{playerid} || IsTied{playerid})
+		return SendErrorMessage(playerid, "You can't use your phone while cuffed or tied.");
 
 	if(ph_menuid[playerid] == 6)
 	    return SendErrorMessage(playerid, "You can't do this now (phone off).");
@@ -2858,8 +2861,11 @@ stock SendSMS(playerid, const params[])
 	if(ph_airmode[playerid])
 		return SendErrorMessage(playerid, "You can't do this now (airplane mode on).");
 
-  	if(calltimer[playerid] || smstimer[playerid] || GetPlayerSpecialAction(playerid) > 0 || PlayerData[playerid][pCash] < 1)
-	  	return SendErrorMessage(playerid, "You can't do this right now.");
+	if(PlayerData[playerid][pCash] < 1)
+		return SendErrorMessage(playerid, "You don't have enough cash ($1) to send an SMS.");
+
+	calltimer[playerid] = 0;
+	smstimer[playerid] = 0;
 
 	new phonenumb[24], sms_text[128];
 
@@ -2912,8 +2918,11 @@ stock CallNumber(playerid, const params[])
 	if(PlayerData[playerid][pJailed])
 	    return SendClientMessage(playerid, COLOR_LIGHTRED, "Error: Your phone was confiscated by the cops.");
 
-    if(PlayerData[playerid][pInjured] || IsCuffed{playerid} || IsTied{playerid})
-		return SendErrorMessage(playerid, "You can't do this right now.");
+	if(PlayerData[playerid][pInjured])
+		return SendErrorMessage(playerid, "You can't use your phone while injured.");
+
+	if(IsCuffed{playerid} || IsTied{playerid})
+		return SendErrorMessage(playerid, "You can't use your phone while cuffed or tied.");
 
 	if(!CheckPhoneStatus(playerid))
 	    return SendErrorMessage(playerid, "You can't do this now (phone off).");
@@ -2921,8 +2930,11 @@ stock CallNumber(playerid, const params[])
 	if(ph_airmode[playerid])
 		return SendErrorMessage(playerid, "You can't do this now (airplane mode on).");
 
-  	if(calltimer[playerid] || smstimer[playerid] || GetPlayerSpecialAction(playerid) > 0 || PlayerData[playerid][pCash] < 10)
-	  	return SendErrorMessage(playerid, "You can't do this right now.");
+	if(PlayerData[playerid][pCash] < 10)
+		return SendErrorMessage(playerid, "You don't have enough cash ($10) to make a call.");
+
+	calltimer[playerid] = 0;
+	smstimer[playerid] = 0;
 
 	new phonenumb[24];
 

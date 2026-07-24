@@ -2132,6 +2132,7 @@ new PlayerSweeperRouteIndex[MAX_PLAYERS] = {-1, ...};
 #include "modules/system/SweeperJob.pwn"
 #include "modules/system/AdPoints.pwn"
 #include "modules/system/Marriage.pwn"
+#include "modules/system/TrainSystem.pwn"
 
 public OnGameModeInit()
 {
@@ -2146,6 +2147,16 @@ public OnGameModeInit()
 	mysql_tquery(dbCon, "ALTER TABLE `propose_points` ADD COLUMN `name` VARCHAR(64) NOT NULL DEFAULT 'Propose Point';");
 	mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `propose_points` (`id` INT AUTO_INCREMENT PRIMARY KEY, `name` VARCHAR(64) NOT NULL DEFAULT 'Propose Point', `posX` FLOAT, `posY` FLOAT, `posZ` FLOAT, `interior` INT, `world` INT);");
 	mysql_tquery(dbCon, "SELECT * FROM `propose_points`", "LoadProposePoints", "");
+
+	mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `train_stations` (`ID` int(11) NOT NULL AUTO_INCREMENT, `Name` varchar(64) NOT NULL, `X` float NOT NULL, `Y` float NOT NULL, `Z` float NOT NULL, `World` int(11) NOT NULL DEFAULT 0, `Interior` int(11) NOT NULL DEFAULT 0, `Price` int(11) NOT NULL DEFAULT 15, PRIMARY KEY (`ID`));");
+	mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `train_centers` (`ID` int(11) NOT NULL AUTO_INCREMENT, `Name` varchar(64) NOT NULL, `X` float NOT NULL, `Y` float NOT NULL, `Z` float NOT NULL, `World` int(11) NOT NULL DEFAULT 0, `Interior` int(11) NOT NULL DEFAULT 0, PRIMARY KEY (`ID`));");
+	mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `rail_crossings` (`ID` int(11) NOT NULL AUTO_INCREMENT, `X` float NOT NULL, `Y` float NOT NULL, `Z` float NOT NULL, `RX` float NOT NULL, `RY` float NOT NULL, `RZ` float NOT NULL, `MoveRX` float NOT NULL, `MoveRY` float NOT NULL, `MoveRZ` float NOT NULL, PRIMARY KEY (`ID`));");
+	mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `train_route_checkpoints` (`ID` int(11) NOT NULL AUTO_INCREMENT, `Name` varchar(64) NOT NULL, `X` float NOT NULL, `Y` float NOT NULL, `Z` float NOT NULL, `Angle` float NOT NULL, `SpeedLimit` float NOT NULL DEFAULT 60.0, PRIMARY KEY (`ID`));");
+
+	mysql_tquery(dbCon, "SELECT * FROM `train_stations`", "LoadTrainStations", "");
+	mysql_tquery(dbCon, "SELECT * FROM `train_centers`", "LoadTrainCenters", "");
+	mysql_tquery(dbCon, "SELECT * FROM `rail_crossings`", "LoadRailCrossings", "");
+	mysql_tquery(dbCon, "SELECT * FROM `train_route_checkpoints` ORDER BY `ID` ASC", "LoadTrainRouteCheckpoints", "");
 
 	mysql_tquery(dbCon, "SELECT * FROM `factions` ORDER BY `factionID` ASC", "Faction_Load", "");
 	mysql_tquery(dbCon, "SELECT * FROM `factionspawns`", "FactionSpawn_Load", "");
@@ -14413,6 +14424,7 @@ ReturnJobName(playerid, jobid)
 	    case JOB_TAXI: format(name, 32, "Taxi Driver");
 	    case JOB_WPDEALER: format(name, 32, "Weapon Dealer");
 	    case JOB_SUPPLIER: format(name, 32, "Weapon Supplier");
+	    case JOB_TRAIN_DRIVER: format(name, 32, "Train Driver");
 
 	    default: format(name, 32, "Unemployed");
 	}

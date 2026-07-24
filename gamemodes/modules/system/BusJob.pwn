@@ -1077,6 +1077,18 @@ CMD:delays(playerid, params[])
         strcat(str, "{FFFFFF}Sweeper Job: {00FF00}Available\n");
     }
 
+    new train_delay = PlayerTrainJobDelay[playerid] - gettime();
+    if(train_delay > 0)
+    {
+        new temp[128];
+        format(temp, sizeof(temp), "{FFFFFF}Train Driver Job: {FF0000}%d min %d sec left\n", train_delay / 60, train_delay % 60);
+        strcat(str, temp);
+    }
+    else
+    {
+        strcat(str, "{FFFFFF}Train Driver Job: {00FF00}Available\n");
+    }
+
     Dialog_Show(playerid, None, DIALOG_STYLE_MSGBOX, "My Cooldowns & Delays", str, "Close", "");
     return 1;
 }

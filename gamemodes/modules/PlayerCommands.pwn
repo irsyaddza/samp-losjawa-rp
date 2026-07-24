@@ -1906,6 +1906,7 @@ Dialog:Help_Main(playerid, response, listitem, inputtext[])
 			strcat(gstr, "• {A9C4E4}Trucker:{FFFFFF} /truckerjob /cargo /trailer\n");
 			strcat(gstr, "• {A9C4E4}Fisherman:{FFFFFF} /gofishing /fish /stopfishing /unloadfish /myfish /fishhelp\n");
 			strcat(gstr, "• {A9C4E4}Taxi Driver:{FFFFFF} /taxi\n");
+			strcat(gstr, "• {A9C4E4}Train Driver:{FFFFFF} /trainjob\n");
 
 			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Job Commands", gstr, "<< Back", "Close");
 		}
@@ -2290,6 +2291,13 @@ CMD:jobhelp(playerid, params[])
 		//if(PlayerData[playerid][pCareer]) SendClientMessageEx(playerid, COLOR_WHITE, "You have %d career hours.", PlayerData[playerid][pCareer]);
 
 		SendClientMessage(playerid, COLOR_GREEN, "_______________________________________");
+	}
+
+	if(PlayerData[playerid][pJob] == JOB_TRAIN_DRIVER || PlayerData[playerid][pSideJob] == JOB_TRAIN_DRIVER)
+	{
+		SendClientMessage(playerid, COLOR_LIGHTRED, "Train Driver Commands:");
+		SendClientMessage(playerid, COLOR_WHITE, "/trainjob [join / queue / leavequeue / leave / status / start]");
+		SendClientMessage(playerid, COLOR_WHITE, "/buyticket - /mysalary - /delays");
 	}
 
 	SendNoticeMessage(playerid, "You have logged 0 hours on this job.");
@@ -15395,20 +15403,17 @@ CMD:cheque(playerid, params[])
 	}
 	else if(strcmp(tmp,"paycheck",true) == 0)
 	{
-	    if(PlayerData[playerid][pLocal] != 502 && PlayerData[playerid][pLocal] != 503 && PlayerData[playerid][pLocal] != 504)
-			return SendClientMessage(playerid, COLOR_GREY, "   You are not at the bank!");
+	    if(PlayerData[playerid][pLocal] != 502 && PlayerData[playerid][pLocal] != 503 && PlayerData[playerid][pLocal] != 504 && ATM_Nearest(playerid) == -1)
+			return SendErrorMessage(playerid, "You are not at the Bank or near an ATM!");
 
-	    new
-			string[16]
-		;
+		if(PlayerData[playerid][pPayCheck] <= 0)
+			return SendErrorMessage(playerid, "You do not have any pending paycheck to collect.");
 
-		if(sscanf(tmp2, "s[16]", string))
-			return SendClientMessage(playerid,COLOR_LIGHTRED,"/cheque paycheck yes to confirm");
-
-        if(strcmp(string, "yes", true) == 0)
-		{
-            printf("paycheck yes");
-		}
+		new amount = PlayerData[playerid][pPayCheck];
+		PlayerData[playerid][pPayCheck] = 0;
+		GivePlayerMoney(playerid, amount);
+		SendServerMessage(playerid, "You have successfully collected your paycheck of %s in cash!", FormatNumber(amount));
+		PlayerPlaySound(playerid, 1150, 0.0, 0.0, 0.0);
 		return true;
 	}
 	else if(strcmp(tmp,"cash",true) == 0)
@@ -15491,6 +15496,62 @@ CMD:cheque(playerid, params[])
 	}
 	return true;
 }
+
+CMD:mysalary(playerid, params[])
+{
+    new string[2048], line[128];
+    format(string, sizeof(string), "Time\tAmount\tSource\n");
+
+    if(SalaryHistoryCount[playerid] == 0)
+    {
+        strcat(string, "No history recorded yet.\t$0\t--\n");
+    }
+    else
+    {
+        for(new i = SalaryHistoryCount[playerid] - 1; i >= 0; i--)
+        {
+            if(SalaryHistory[playerid][i][shAmount] >= 0)
+            {
+                format(line, sizeof(line), "{A9C4E4}%s\t{00FF00}+%s\t{FFFFFF}%s\n",
+                    SalaryHistory[playerid][i][shTime],
+                    FormatNumber(SalaryHistory[playerid][i][shAmount]),
+                    SalaryHistory[playerid][i][shSource]);
+            }
+            else
+            {
+                format(line, sizeof(line), "{A9C4E4}%s\t{FF0000}-%s\t{FFFFFF}%s\n",
+                    SalaryHistory[playerid][i][shTime],
+                    FormatNumber(-SalaryHistory[playerid][i][shAmount]),
+                    SalaryHistory[playerid][i][shSource]);
+            }
+            strcat(string, line);
+        }
+    }
+
+    format(line, sizeof(line), "{FFFFFF}Total Pending Paycheck:\t{00FF00}%s\t{7E98B6}[Collect at Bank via /cheque paycheck]\n", FormatNumber(PlayerData[playerid][pPayCheck]));
+    strcat(string, line);
+
+    ShowPlayerDialog(playerid, 16999, DIALOG_STYLE_TABLIST_HEADERS, "My Salary & Paycheck Statement", string, "Close", "");
+    return 1;
+}
+
+CMD:collectpay(playerid, params[])
+{
+	if(PlayerData[playerid][pPayCheck] <= 0)
+		return SendErrorMessage(playerid, "You do not have any pending paycheck to collect.");
+
+	// Verify player is inside Bank or near an ATM
+	if(PlayerData[playerid][pLocal] != 502 && PlayerData[playerid][pLocal] != 503 && PlayerData[playerid][pLocal] != 504 && ATM_Nearest(playerid) == -1)
+		return SendErrorMessage(playerid, "You must be inside the Bank or near an ATM to collect your paycheck.");
+
+	new amount = PlayerData[playerid][pPayCheck];
+	PlayerData[playerid][pPayCheck] = 0;
+	GivePlayerMoney(playerid, amount);
+	SendServerMessage(playerid, "You have successfully collected your paycheck of $%s in cash!", FormatNumber(amount));
+	PlayerPlaySound(playerid, 1150, 0.0, 0.0, 0.0);
+	return true;
+}
+YCMD:paycheck(playerid, params[], help) = collectpay;
 
 CMD:boombox(playerid, params[])
 {

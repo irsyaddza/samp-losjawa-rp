@@ -9784,6 +9784,10 @@ enum E_AHELP_CMD
 }
 
 new const AdminHelpCmds[][E_AHELP_CMD] = {
+	{"/trainstation", "Create, edit, or delete train stations.", "/trainstation [create/edit/delete]", 4, 6},
+	{"/traincenter", "Create, edit, or delete train driver centers.", "/traincenter [create/edit/delete]", 4, 6},
+	{"/traincheckpoint", "Create, edit, or delete train route checkpoints.", "/traincheckpoint [create/edit/delete]", 4, 6},
+	{"/railcrossing", "Create, edit, or delete railroad crossing gates.", "/railcrossing [create/edit/delete]", 4, 6},
 	{"/aunlockcar", "Unlock nearest vehicle for admins.", "/aunlockcar", 1, 1},
 	{"/findcars", "List active server cars matching filters.", "/findcars [model] [occupied] [range-of-you]", 1, 1},
 	{"/flipcar", "Flip player's vehicle.", "/flipcar [vehicleid]", 1, 1},
@@ -9963,6 +9967,9 @@ new const AdminHelpCmds[][E_AHELP_CMD] = {
 	{"/tickrate", "Show server tickrate.", "/tickrate", 4, 4},
 	{"/whatbusiness", "Show info about nearest business.", "/whatbusiness", 4, 4},
 	{"/proposepoint", "Create, remove or list propose points.", "/proposepoint [create/remove/list/goto]", 4, 4},
+	{"/trainstation", "Create, remove, list or goto train stations.", "/trainstation [create/remove/list/goto]", 4, 4},
+	{"/traincenter", "Create, remove, list or goto Train Driver Centers.", "/traincenter [create/remove/list/goto]", 4, 4},
+	{"/railcrossing", "Create, remove or list dynamic rail crossings.", "/railcrossing [create/remove/list]", 4, 4},
 	{"/gocp", "Teleport to active checkpoint.", "/gocp", 4, 5},
 	{"/gorcp", "Teleport to active race checkpoint.", "/gorcp", 4, 5},
 	{"/gotoapp", "Teleport to specific apartment.", "/gotoapp [app id]", 4, 5},
