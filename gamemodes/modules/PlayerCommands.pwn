@@ -25,13 +25,16 @@ CMD:togmusic(playerid, params[])
 		SendClientMessage(playerid, COLOR_YELLOW, "Lobby/character selection music has been enabled.");
 		if(PlayerData[playerid][pID] == -1)
 		{
-			PlayAudioStreamForPlayer(playerid, "http://files.catbox.moe/4gddc4.mp3");
+			PlayerPlaySound(playerid, gLobbySound1, 0.0, 0.0, 0.0);
+			if(strlen(gLobbyStream2) > 0)
+				PlayAudioStreamForPlayer(playerid, gLobbyStream2);
 		}
 	}
 	else
 	{
 		SetPVarInt(playerid, "LobbyMusicOff", 1);
 		SendClientMessage(playerid, COLOR_YELLOW, "Lobby/character selection music has been disabled.");
+		PlayerPlaySound(playerid, 0, 0.0, 0.0, 0.0);
 		StopAudioStreamForPlayer(playerid);
 	}
 	return true;
@@ -2297,7 +2300,6 @@ CMD:jobhelp(playerid, params[])
 	{
 		SendClientMessage(playerid, COLOR_LIGHTRED, "Train Driver Commands:");
 		SendClientMessage(playerid, COLOR_WHITE, "/trainjob [join / queue / leavequeue / leave / status / start]");
-		SendClientMessage(playerid, COLOR_WHITE, "/buyticket - /mysalary - /delays");
 	}
 
 	SendNoticeMessage(playerid, "You have logged 0 hours on this job.");
@@ -5429,11 +5431,25 @@ CMD:gates(playerid, params[])
 				Gates[i][gateOpened] = 1;
 
 				MoveDynamicObject(Gates[i][gateObject], Gates[i][gateMoveX], Gates[i][gateMoveY], Gates[i][gateMoveZ], Gates[i][gateOpenSpeed], Gates[i][gateMoveRX], Gates[i][gateMoveRY], Gates[i][gateMoveRZ]);
+
+				// Auto-close gate after 4 seconds
+				SetTimerEx("AutoCloseGate", 4000, false, "d", i);
 			}
 			return true;
 		}
 	}
 	return true;
+}
+
+forward AutoCloseGate(gateid);
+public AutoCloseGate(gateid)
+{
+	if(gateid < 0 || gateid >= MAX_GATES) return;
+	if(!Iter_Contains(Gates, gateid)) return;
+	if(Gates[gateid][gateOpened] != 1) return;
+
+	Gates[gateid][gateOpened] = 0;
+	MoveDynamicObject(Gates[gateid][gateObject], Gates[gateid][gatePosX], Gates[gateid][gatePosY], Gates[gateid][gatePosZ], Gates[gateid][gateOpenSpeed], Gates[gateid][gatePosRX], Gates[gateid][gatePosRY], Gates[gateid][gatePosRZ]);
 }
 
 GateFactionPermissible(playerid, gatefaction, faction)
@@ -7668,9 +7684,9 @@ CMD:packetloss(playerid, params[])
 	return true;
 }
 
-YCMD:cc(playerid, params[], help) = clearchat;
+YCMD:clearchat(playerid, params[], help) = cc;
 
-CMD:clearchat(playerid, params[])
+CMD:cc(playerid, params[])
 {
 	for(new i = 0; i < 21; ++i)
 	{
@@ -16905,7 +16921,39 @@ CMD:stinger(playerid, params[])
 	if(!PlayerData[playerid][pOnDuty])
 		return SendErrorMessage(playerid, "You're not on duty!");
 
-    DeployRoadblock(playerid, 10, "");
+	// Deploy stinger instantly at ground level in front of player (no edit dialog)
+	new idx = -1;
+	for(new i = 0; i < 10; ++i)
+	{
+		if(RoadBlocks[playerid][i][roadblockObject] == INVALID_OBJECT_ID)
+		{
+			idx = i;
+			break;
+		}
+	}
+
+	if(idx == -1) return SendErrorMessage(playerid, "Roadblock limit exceeded (max 10).");
+
+	new Float:px, Float:py, Float:pz, Float:angle, date[6];
+	getdate(date[2], date[1], date[0]);
+	gettime(date[3], date[4], date[5]);
+
+	GetPlayerPos(playerid, px, py, pz);
+	GetPlayerFacingAngle(playerid, angle);
+
+	// Position stinger 2 units in front of player, flush with the ground
+	new Float:sx = px + (2.0 * floatsin(-angle, degrees));
+	new Float:sy = py + (2.0 * floatcos(-angle, degrees));
+	new Float:sz = pz - 1.0; // flush to feet level
+
+	RoadBlocks[playerid][idx][roadblockID] = 10; // 10 = stinger
+	format(RoadBlocks[playerid][idx][roadblockNote], 24, "");
+	Get2DZone(px, py, RoadBlocks[playerid][idx][roadblockLocation], MAX_ZONE_NAME);
+	format(RoadBlocks[playerid][idx][roadblockDate], 60, "%d-%d-%d %02d:%02d", date[0], date[1], date[2], date[3], date[4]);
+	RoadBlocks[playerid][idx][roadblockObject] = CreateDynamicObject(Road_Blocks[10][rbObjectID], sx, sy, sz, 0.0, 0.0, angle);
+
+	SendNoticeMessage(playerid, "Stinger deployed in front of you. Use /disband to retrieve it.");
+	PlayerPlaySound(playerid, 1150, 0.0, 0.0, 0.0);
 	return true;
 }
 

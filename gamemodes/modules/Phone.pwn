@@ -2965,7 +2965,7 @@ stock CallNumber(playerid, const params[])
 
   		if(pnumber == 911)
 		{
-			PlayerPlaySoundEx(playerid, 3600);
+			PlayerPlaySound(playerid, 3600, 0.0, 0.0, 0.0);
 
 			Annotation(playerid, "dials a number on their phone.");
 
@@ -2988,7 +2988,7 @@ stock CallNumber(playerid, const params[])
 		}
   		else if(pnumber == 991)
 		{
-			PlayerPlaySoundEx(playerid, 3600);
+			PlayerPlaySound(playerid, 3600, 0.0, 0.0, 0.0);
 
 			Annotation(playerid, "dials a number on their phone.");
 
@@ -3012,7 +3012,7 @@ stock CallNumber(playerid, const params[])
 		}
   		else if(pnumber == 555)
 		{
-			PlayerPlaySoundEx(playerid, 3600);
+			PlayerPlaySound(playerid, 3600, 0.0, 0.0, 0.0);
 
 			Annotation(playerid, "dials a number on their phone.");
 
@@ -3034,7 +3034,7 @@ stock CallNumber(playerid, const params[])
 		}
   		else if(pnumber == 544)
 		{
-			PlayerPlaySoundEx(playerid, 3600);
+			PlayerPlaySound(playerid, 3600, 0.0, 0.0, 0.0);
 
 			Annotation(playerid, "dials a number on their phone.");
 
@@ -3076,7 +3076,7 @@ stock CallNumber(playerid, const params[])
 				return true;
 			}
 
-			PlayerPlaySoundEx(playerid, 3600);
+			PlayerPlaySound(playerid, 3600, 0.0, 0.0, 0.0);
 
 			Annotation(playerid, "dials a number on their phone.");
 

@@ -1211,7 +1211,7 @@ CMD:makeadmin(playerid, params[])
     SetPVarInt(playerid, "makeadmin_target", userid);
 
     new dialog_str[512];
-    strcat(dialog_str, "Pemain Biasa (Level 0)\n");
+    strcat(dialog_str, "Basic Player (Level 0)\n");
     strcat(dialog_str, "Intern (Level 1)\n");
     strcat(dialog_str, "Junior Admin (Level 2)\n");
     strcat(dialog_str, "Senior Admin (Level 3)\n");
@@ -1219,7 +1219,7 @@ CMD:makeadmin(playerid, params[])
     strcat(dialog_str, "Deputy Head Admin (Level 1336)\n");
     strcat(dialog_str, "Head Admin (Level 1337)");
 
-    Dialog_Show(playerid, MakeAdminDialog, DIALOG_STYLE_LIST, "Make Admin - Pilih Pangkat", dialog_str, "Pilih", "Batal");
+    Dialog_Show(playerid, MakeAdminDialog, DIALOG_STYLE_LIST, "Make Admin - Choose Rank", dialog_str, "Select", "Cancel");
 	return true;
 }
 
@@ -1232,14 +1232,14 @@ Dialog:MakeAdminDialog(playerid, response, listitem, inputtext[])
         return 1;
 
     if(!IsPlayerConnected(userid) || !SQL_IsLogged(userid))
-        return SendErrorMessage(playerid, "Pemain target sudah tidak terhubung.");
+        return SendErrorMessage(playerid, "Player is not connected.");
 
     new adminlevel = 0;
     new rank_name[32];
 
     switch(listitem)
     {
-        case 0: { adminlevel = 0; rank_name = "Pemain Biasa"; }
+        case 0: { adminlevel = 0; rank_name = "Basic Player"; }
         case 1: { adminlevel = 1; rank_name = "Intern"; }
         case 2: { adminlevel = 2; rank_name = "Junior Admin"; }
         case 3: { adminlevel = 3; rank_name = "Senior Admin"; }
@@ -1249,14 +1249,14 @@ Dialog:MakeAdminDialog(playerid, response, listitem, inputtext[])
     }
 
     if(PlayerData[userid][pAdmin] == adminlevel)
-        return SendErrorMessage(playerid, "Player sudah memiliki pangkat tersebut.");
+        return SendErrorMessage(playerid, "The player already holds that rank..");
 
     PlayerData[userid][pAdmin] = adminlevel;
 
-    SendServerMessage(userid, "Admin %s telah mengatur pangkat admin Anda menjadi: %s (Level %d).", ReturnName(playerid, 0), rank_name, adminlevel);
-    SendServerMessage(playerid, "Anda telah mengatur pangkat admin %s menjadi: %s (Level %d).", ReturnName(userid, 0), rank_name, adminlevel);
+    SendServerMessage(userid, "Admin %s has set your admin rank to: %s (Level %d).", ReturnName(playerid, 0), rank_name, adminlevel);
+    SendServerMessage(playerid, "You have set the admin rank %s to: %s (Level %d).", ReturnName(userid, 0), rank_name, adminlevel);
 
-    SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmCmd: %s mengatur pangkat %s menjadi %s (Level %d).", ReturnName(playerid), ReturnName(userid), rank_name, adminlevel);
+    SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmCmd: %s has set %s's admin rank to %s (Level %d).", ReturnName(playerid), ReturnName(userid), rank_name, adminlevel);
 
     new query[256];
     mysql_format(dbCon, query, sizeof(query), "UPDATE `accounts` SET `Admin` = '%d' WHERE `ID` = %d LIMIT 1", adminlevel, AccountData[userid][aUserid]);
@@ -6636,9 +6636,9 @@ CMD:findcars(playerid, params[])
         if(Distance <= range_of_you)
         {
         	if(occupied)
-				SendClientMessageEx(playerid, COLOR_GREY, "Found a %s (ID: %d) within %.0f meters of range (Occupied by %s).", ReturnName(occupied_by), ReturnVehicleModelName(vehicle_model), i, Distance);
+				SendClientMessageEx(playerid, COLOR_GREY, "Found a %s (VID: %d) within %.0f meters of range (Occupied by %s).", ReturnVehicleModelName(vehicle_model), i, Distance, ReturnName(occupied_by));
         	else
-				SendClientMessageEx(playerid, COLOR_GREY, "Found a %s (ID: %d) within %.0f meters of range (Unoccupied).", ReturnVehicleModelName(vehicle_model), i, Distance);
+				SendClientMessageEx(playerid, COLOR_GREY, "Found a %s (VID: %d) within %.0f meters of range (Unoccupied).", ReturnVehicleModelName(vehicle_model), i, Distance);
 
         	count++;
 		}
@@ -7380,6 +7380,92 @@ CMD:as(playerid, params[])
 	}
 
 	SendClientMessage(playerid, COLOR_GREEN, "______________________________________________");
+	return true;
+}
+
+// sound test system
+CMD:sound(playerid, params[])
+{
+	if(PlayerData[playerid][pAdmin] < 4)
+		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+
+	// --- Pure manual parsing (no sscanf) to avoid s[n] reading full string ---
+	// Skip leading spaces
+	new p = 0;
+	while(params[p] == ' ') p++;
+
+	if(!params[p]) // empty
+	{
+		SendSyntaxMessage(playerid, "/sound [test/stop/lobby1/lobby2] [value]");
+		SendClientMessage(playerid, COLOR_GREY, "  test [id]   - Play a SA-MP sound ID to yourself");
+		SendClientMessage(playerid, COLOR_GREY, "  stop        - Stop the current sound");
+		SendClientMessage(playerid, COLOR_GREY, "  lobby1 [id] - Set lobby background sound ID");
+		SendClientMessage(playerid, COLOR_GREY, "  lobby2 [url]- Set lobby audio stream URL");
+		return true;
+	}
+
+	// Extract action word
+	new action[10], aidx = 0;
+	while(params[p] && params[p] != ' ' && aidx < 9)
+		action[aidx++] = params[p++];
+	action[aidx] = '\0';
+
+	// Skip spaces to reach value
+	while(params[p] == ' ') p++;
+	// params[p] now = start of value string, or '\0' if no value
+
+	// Copy value into separate buffer for strval / format safety
+	new valueStr[256];
+	if(params[p]) strmid(valueStr, params, p, strlen(params), 255);
+
+	if(!strcmp(action, "test", true))
+	{
+		if(!valueStr[0]) return SendSyntaxMessage(playerid, "/sound test [sound_id]");
+		new soundid = strval(valueStr);
+		if(soundid < 0 || soundid > 50000)
+			return SendErrorMessage(playerid, "Sound ID must be between 0 and 50000.");
+
+		PlayerPlaySound(playerid, soundid, 0.0, 0.0, 0.0);
+		SendServerMessage(playerid, "[SOUND TEST]: Playing sound ID %d. Use /sound stop to stop.", soundid);
+	}
+	else if(!strcmp(action, "stop", true))
+	{
+		PlayerPlaySound(playerid, 0, 0.0, 0.0, 0.0);
+		StopAudioStreamForPlayer(playerid);
+		SendServerMessage(playerid, "[SOUND TEST]: Sound stopped.");
+	}
+	else if(!strcmp(action, "lobby1", true))
+	{
+		if(!valueStr[0]) return SendSyntaxMessage(playerid, "/sound lobby1 [sound_id]");
+		new soundid = strval(valueStr);
+		if(soundid < 0 || soundid > 50000)
+			return SendErrorMessage(playerid, "Sound ID must be between 0 and 50000.");
+
+		gLobbySound1 = soundid;
+		for(new i = 0; i < MAX_PLAYERS; i++)
+		{
+			if(IsPlayerConnected(i) && PlayerData[i][pID] == -1 && GetPVarInt(i, "LobbyMusicOff") == 0)
+				PlayerPlaySound(i, gLobbySound1, 0.0, 0.0, 0.0);
+		}
+		SendServerMessage(playerid, "[LOBBY SOUND]: Lobby background sound changed to ID %d.", soundid);
+	}
+	else if(!strcmp(action, "lobby2", true))
+	{
+		if(!valueStr[0]) return SendSyntaxMessage(playerid, "/sound lobby2 [stream_url]");
+
+		format(gLobbyStream2, 256, valueStr);
+
+		for(new i = 0; i < MAX_PLAYERS; i++)
+		{
+			if(IsPlayerConnected(i) && PlayerData[i][pID] == -1 && GetPVarInt(i, "LobbyMusicOff") == 0)
+				PlayAudioStreamForPlayer(i, gLobbyStream2);
+		}
+		SendServerMessage(playerid, "[LOBBY STREAM]: Lobby stream URL updated.");
+	}
+	else
+	{
+		SendSyntaxMessage(playerid, "/sound [test/stop/lobby1/lobby2] [value]");
+	}
 	return true;
 }
 

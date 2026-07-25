@@ -568,7 +568,7 @@ stock SendTrainAnnouncement(Float:x, Float:y, Float:z, const message[], vehid = 
             if(IsPlayerInRangeOfPoint(i, 100.0, x, y, z) || (vehid != INVALID_VEHICLE_ID && IsPlayerInVehicle(i, vehid)))
             {
                 SendClientMessage(i, COLOR_YELLOW, message);
-                PlayerPlaySound(i, 6401, x, y, z);
+                PlayerPlaySound(i, 5201, x, y, z);
             }
         }
     }

@@ -272,37 +272,61 @@ Property_Refresh(houseid)
 	new world = (PropertyData[houseid][hComplexID] == -1) ? 0 : ComplexData[PropertyData[houseid][hComplexID]][aWorld];
 	PropertyData[houseid][hPickup] = CreateDynamicPickup(model, 23, PropertyData[houseid][hEntranceX], PropertyData[houseid][hEntranceY], PropertyData[houseid][hEntranceZ], world, -1);
 
-	if(!PropertyData[houseid][hOwned])
+	// Destroy existing label first before rebuilding
+	if(IsValidDynamic3DTextLabel(Text3D:PropertyData[houseid][hLabel]))
 	{
-	    if(!IsValidDynamic3DTextLabel(Text3D:PropertyData[houseid][hLabel]))
-		{
-	        if(PropertyData[houseid][hComplexID] == -1)
-	        {
-	            format(sgstr, sizeof(sgstr), ""EMBED_YELLOW"House[%d] For Sale:\nPrice: $%d\nLevel: %d\nLock Level: 1\nAlarm Level: 1", houseid, PropertyData[houseid][hPrice], PropertyData[houseid][hLevelbuy]);
-	        	PropertyData[houseid][hLabel] = CreateDynamic3DTextLabel(sgstr, -1, PropertyData[houseid][hEntranceX], PropertyData[houseid][hEntranceY], PropertyData[houseid][hEntranceZ], 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, 0, -1, -1, 100.0);
-			}
-			else
-			{
-			    format(sgstr, sizeof(sgstr), ""EMBED_YELLOW"Apartment[%d] For Sale:\nPrice: $%d\nLevel: %d\nLock Level: 1\nAlarm Level: 1", houseid, PropertyData[houseid][hPrice], PropertyData[houseid][hLevelbuy]);
-			    PropertyData[houseid][hLabel] = CreateDynamic3DTextLabel(sgstr, -1, PropertyData[houseid][hEntranceX], PropertyData[houseid][hEntranceY], PropertyData[houseid][hEntranceZ], 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, ComplexData[ PropertyData[houseid][hComplexID] ][aWorld], -1, -1, 100.0);
-			}
-			return true;
-		}
+		DestroyDynamic3DTextLabel(Text3D:PropertyData[houseid][hLabel]);
+		PropertyData[houseid][hLabel] = Text3D:INVALID_3DTEXT_ID;
+	}
 
-	    if(PropertyData[houseid][hComplexID] == -1)
-	    {
-			format(sgstr, sizeof(sgstr), ""EMBED_YELLOW"House[%d] For Sale:\nPrice: $%d\nLevel: %d\nLock Level: 1\nAlarm Level: 1", houseid, PropertyData[houseid][hPrice], PropertyData[houseid][hLevelbuy]);
-			UpdateDynamic3DTextLabelText(PropertyData[houseid][hLabel], -1, sgstr);
+	new labelText[256];
+	new isApartment = (PropertyData[houseid][hComplexID] != -1);
+	new labelWorld = isApartment ? ComplexData[PropertyData[houseid][hComplexID]][aWorld] : 0;
+
+	if(PropertyData[houseid][hOwned])
+	{
+		// Owned house label — same color scheme as business
+		if(PropertyData[houseid][hRentable])
+		{
+			format(labelText, sizeof(labelText),
+				"{33CCFF}[%s ID: %d]\n{FFFFFF}%s\n{A8C4E4}Owner: %s\n{2ECC71}For Rent: %d/month\n{FFFF00}Use 'F' or /enter",
+				isApartment ? "APARTMENT" : "HOUSE",
+				houseid,
+				PropertyData[houseid][hInfo],
+				PropertyData[houseid][hOwner],
+				PropertyData[houseid][hRentprice]
+			);
 		}
 		else
 		{
-			format(sgstr, sizeof(sgstr), ""EMBED_YELLOW"Apartment[%d] For Sale:\nPrice: $%d\nLevel: %d\nLock Level: 1\nAlarm Level: 1", houseid, PropertyData[houseid][hPrice], PropertyData[houseid][hLevelbuy]);
-			UpdateDynamic3DTextLabelText(PropertyData[houseid][hLabel], -1, sgstr);			
+			format(labelText, sizeof(labelText),
+				"{33CCFF}[%s ID: %d]\n{FFFFFF}%s\n{A8C4E4}Owner: %s\n{FFFF00}Use 'F' or /enter",
+				isApartment ? "APARTMENT" : "HOUSE",
+				houseid,
+				PropertyData[houseid][hInfo],
+				PropertyData[houseid][hOwner]
+			);
 		}
 	}
 	else
 	{
-		if(IsValidDynamic3DTextLabel(Text3D:PropertyData[houseid][hLabel])) DestroyDynamic3DTextLabel(Text3D:PropertyData[houseid][hLabel]);
+		// Unowned / for-sale house label
+		format(labelText, sizeof(labelText),
+			"{33CCFF}[%s ID: %d]\n{FFFFFF}%s\n{2ECC71}For Sale: %s\n{FFFF00}Use /buyhouse to purchase",
+			isApartment ? "APARTMENT" : "HOUSE",
+			houseid,
+			PropertyData[houseid][hInfo],
+			FormatNumber(PropertyData[houseid][hPrice])
+		);
+	}
+
+	if(isApartment)
+	{
+		PropertyData[houseid][hLabel] = CreateDynamic3DTextLabel(labelText, 0xFFFFFFFF, PropertyData[houseid][hEntranceX], PropertyData[houseid][hEntranceY], PropertyData[houseid][hEntranceZ], 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, labelWorld, -1, -1, 100.0);
+	}
+	else
+	{
+		PropertyData[houseid][hLabel] = CreateDynamic3DTextLabel(labelText, 0xFFFFFFFF, PropertyData[houseid][hEntranceX], PropertyData[houseid][hEntranceY], PropertyData[houseid][hEntranceZ], 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, 0, -1, -1, 100.0);
 	}
 
 	return true;

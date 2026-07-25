@@ -987,6 +987,8 @@ enum e_md
 };
 
 new sgstr[128], gstr[2000], gquery[512], vgstr[128]; // Global strings
+new gLobbySound1 = 144;                          // Lobby sound ID (played on connect/char select)
+new gLobbyStream2[256] = "";                     // Lobby audio stream URL (optional, set via /sound lobby2)
 
 new
 	AdvertData[MAX_AD_QUEUE][eadvert],
@@ -2367,7 +2369,9 @@ public OnPlayerConnect(playerid)
 
 	if(GetPVarInt(playerid, "LobbyMusicOff") == 0)
 	{
-		PlayAudioStreamForPlayer(playerid, "http://files.catbox.moe/4gddc4.mp3");
+		PlayerPlaySound(playerid, gLobbySound1, 0.0, 0.0, 0.0);
+		if(strlen(gLobbyStream2) > 0)
+			PlayAudioStreamForPlayer(playerid, gLobbyStream2);
 	}
 	return true;
 }
@@ -5514,7 +5518,9 @@ Relog_Player(playerid)
 
 	if(GetPVarInt(playerid, "LobbyMusicOff") == 0)
 	{
-		PlayAudioStreamForPlayer(playerid, "http://files.catbox.moe/4gddc4.mp3");
+		PlayerPlaySound(playerid, gLobbySound1, 0.0, 0.0, 0.0);
+		if(strlen(gLobbyStream2) > 0)
+			PlayAudioStreamForPlayer(playerid, gLobbyStream2);
 	}
 	return 1;
 }
@@ -5803,6 +5809,11 @@ public OnPlayerRequestClass(playerid, classid)
 
 	SetSpawnInfo(playerid, NO_TEAM, PlayerData[playerid][pModel], PlayerData[playerid][pPos][0], PlayerData[playerid][pPos][1], PlayerData[playerid][pPos][2], PlayerData[playerid][pPos][3], 0, 0, 0, 0, 0, 0);
 	Spawned{playerid} = false;
+
+	// Stop lobby music as soon as character is selected and entering the world
+	PlayerPlaySound(playerid, 0, 0.0, 0.0, 0.0);
+	StopAudioStreamForPlayer(playerid);
+
 	SpawnPlayer(playerid);					
 	return true;
 }
@@ -5943,6 +5954,7 @@ public OnPlayerSpawn(playerid)
 	{
         Spawned{playerid} = true;
         StopAudioStreamForPlayer(playerid);
+        PlayerPlaySound(playerid, 0, 0.0, 0.0, 0.0); // Stop lobby sound (ID 144)
 
 
 
@@ -6654,7 +6666,7 @@ ShowStatistics(playerid, targetid)
 	new pMinutes = (pSeconds % 3600) / 60;
 	new pSecs    = pSeconds % 60;
 
-	// Vehicles: use pCarKeys (spawned) for list, CountPlayerVehicles for owned count
+	// Vehicles: list spawned vehicles, count all owned from DB
 	new vehList[512], spawnedCount;
 	vehList[0] = EOS;
 	for(new i = 0; i < MAX_VEHICLE_KEYS; ++i)
@@ -6664,16 +6676,16 @@ ShowStatistics(playerid, targetid)
 		{
 			if(spawnedCount > 0) strcat(vehList, ", ");
 			new tempVeh[64];
-			format(tempVeh, sizeof(tempVeh), "%s (VID:%d)", ReturnVehicleName(CarData[keyIdx][carVehicle]), CarData[keyIdx][carID]);
+			format(tempVeh, sizeof(tempVeh), "%s (VID:%d)", ReturnVehicleModelName(CarData[keyIdx][carModel]), CarData[keyIdx][carVehicle]);
 			strcat(vehList, tempVeh);
 			spawnedCount++;
 		}
 	}
-	if(spawnedCount == 0) format(vehList, sizeof(vehList), "None");
+	if(spawnedCount == 0) format(vehList, sizeof(vehList), "None spawned");
 
-	// Max owned vehicles based on donate rank / admin
+	// Total owned (including despawned) from DB
 	new maxOwned = MaxOwnedVehicles(targetid);
-	new ownedCount = CountVehicleKeys(targetid); // number of keys held (spawned)
+	new ownedCount = CountPlayerVehicles(targetid); // total owned (DB query)
 
 	// Phone
 	new phoneNum[32];
@@ -6711,12 +6723,13 @@ ShowStatistics(playerid, targetid)
 	{
 		switch(PlayerData[targetid][pAdmin])
 		{
-			case 1337: format(staffTitle, sizeof(staffTitle), "Management");
+			case 1337: format(staffTitle, sizeof(staffTitle), "Head Admin");
+			case 1336: format(staffTitle, sizeof(staffTitle), "Deputy Head Admin");
 			case 4:    format(staffTitle, sizeof(staffTitle), "Lead Admin");
 			case 3:    format(staffTitle, sizeof(staffTitle), "Senior Admin");
 			case 2:    format(staffTitle, sizeof(staffTitle), "Game Admin");
 			case 1:    format(staffTitle, sizeof(staffTitle), "Junior Admin");
-			default:   format(staffTitle, sizeof(staffTitle), "Junior Admin");
+			default:   format(staffTitle, sizeof(staffTitle), "Staff (Lv%d)", PlayerData[targetid][pAdmin]);
 		}
 	}
 	else if(TesterDuty{targetid})
@@ -6742,7 +6755,7 @@ ShowStatistics(playerid, targetid)
 		{FFFFFF}Primary: [{33AA33}%s{FFFFFF}] (Ammo: [{33AA33}%d{FFFFFF}]) Secondary: [{33AA33}%s{FFFFFF}] (Ammo: [{33AA33}%d{FFFFFF}])\n\n\
 		{FFC700}OOC Information:\n\
 		{FFFFFF}User: [{00FFFF}%s{FFFFFF}] Email: [{00FFFF}%s{FFFFFF}] Time played: [{00FFFF}%d hours %d minutes %d seconds{FFFFFF}]\n\
-		{FFFFFF}Vehicles (%d/%d): [{00FFFF}%s{FFFFFF}]\n\
+		{FFFFFF}Experience: [{00FFFF}%d XP{FFFFFF}] Vehicles (%d/%d): [{00FFFF}%s{FFFFFF}]\n\
 		{FFFFFF}IP Address: [{00FFFF}%s{FFFFFF}] Staff Level: [{00FFFF}%s{FFFFFF}] Ping/PL: [{00FFFF}%d / %.2f%%%%{FFFFFF}]\n\
 		{FFFFFF}World: [{00FFFF}%d{FFFFFF}] Interior: [{00FFFF}%d{FFFFFF}] MaxHP: [{00FFFF}150.00{FFFFFF}] Health: [{FF0000}%.2f{FFFFFF}] Armour: [{00FFFF}%.2f{FFFFFF}]",
 		(IsSkinFemale(PlayerData[targetid][pModel]) == 1) ? ("Female") : ("Male"),
@@ -6761,6 +6774,7 @@ ShowStatistics(playerid, targetid)
 		ucpName,
 		ucpEmail,
 		pHours, pMinutes, pSecs,
+		PlayerData[targetid][pExp],
 		ownedCount, maxOwned,
 		vehList,
 		playerIP,
