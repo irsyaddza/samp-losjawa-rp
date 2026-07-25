@@ -1866,8 +1866,8 @@ Dialog:Help_Main(playerid, response, listitem, inputtext[])
 			strcat(gstr, "{A9C4E4}/boombox / /setstation{FFFFFF} - Place and tune portable boombox\n");
 			strcat(gstr, "{A9C4E4}/gascan{FFFFFF} - Refuel vehicle using gas can item\n");
 			strcat(gstr, "{A9C4E4}/dice / /coin{FFFFFF} - Roll dice or flip coin\n");
-			strcat(gstr, "{A9C4E4}/mydrugs / /usedrug / /givedrug / /passdrug / /takedrugs / /placedrug / /checkdrugs / /vehdrugs / /drugstore{FFFFFF} - Drugs\n");
-			strcat(gstr, "{A9C4E4}/mypackage / /unpackage / /pw / /paw / /tw / /taw / /sp{FFFFFF} - Weapon packages");
+			strcat(gstr, "{A9C4E4}/mydrugs / /usedrug / /givedrug / /passdrug / /takedrugs / /placedrug / /checkdrugs / /drugstore{FFFFFF} - Drugs\n");
+			strcat(gstr, "{A9C4E4}/mypackage / /unpackage / /putweapon / /putallweapons / /takeweapon / /takeallweapons / /sellpackage{FFFFFF} - Weapon packages");
 
 			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Inventory & Items", gstr, "<< Back", "Close");
 		}

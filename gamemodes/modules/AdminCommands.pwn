@@ -8587,7 +8587,7 @@ stock ShowMhouseMainDialog(playerid, houseid)
 	strcat(string, line);
 	EditingHouseOption[playerid][idx++] = 1;
 	
-	format(line, sizeof(line), "Price: $%s\n", FormatNumber(PropertyData[houseid][hPrice]));
+	format(line, sizeof(line), "Price: %s\n", FormatNumber(PropertyData[houseid][hPrice]));
 	strcat(string, line);
 	EditingHouseOption[playerid][idx++] = 2;
 	
@@ -8603,11 +8603,11 @@ stock ShowMhouseMainDialog(playerid, houseid)
 	strcat(string, line);
 	EditingHouseOption[playerid][idx++] = 5;
 	
-	format(line, sizeof(line), "Rent Price: $%s\n", FormatNumber(PropertyData[houseid][hRentprice]));
+	format(line, sizeof(line), "Rent Price: %s\n", FormatNumber(PropertyData[houseid][hRentprice]));
 	strcat(string, line);
 	EditingHouseOption[playerid][idx++] = 6;
 	
-	format(line, sizeof(line), "Cash Box (Till): $%s\n", FormatNumber(PropertyData[houseid][hCash]));
+	format(line, sizeof(line), "Cash Box (Till): %s\n", FormatNumber(PropertyData[houseid][hCash]));
 	strcat(string, line);
 	EditingHouseOption[playerid][idx++] = 7;
 	
