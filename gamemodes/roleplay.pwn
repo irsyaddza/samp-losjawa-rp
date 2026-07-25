@@ -2089,6 +2089,7 @@ new Iterator:sv_activevehicles<MAX_VEHICLES>;
 #include "modules/Industry.pwn"
 #include "modules/Furniture.pwn"
 #include "modules/Drugs.pwn"
+#include "modules/system/DrugStore.pwn"
 #include "modules/Weapons.pwn"
 #include "modules/Death.pwn"
 #include "modules/Clothing.pwn"
@@ -2144,6 +2145,7 @@ public OnGameModeInit()
 	BusJob_SetupTable();
 	SweeperJob_SetupTable();
     SetupIndustry();
+	DrugStore_Init();
 
 	mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `MarriedTo` VARCHAR(24) NOT NULL DEFAULT 'None';");
 	mysql_tquery(dbCon, "ALTER TABLE `propose_points` ADD COLUMN `name` VARCHAR(64) NOT NULL DEFAULT 'Propose Point';");

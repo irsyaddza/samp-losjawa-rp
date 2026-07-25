@@ -5007,15 +5007,35 @@ CMD:f(playerid, params[])
 
 CMD:drugstore(playerid, params[])
 {
-	new factionid = PlayerData[playerid][pFaction];
-
-	if(factionid == -1)
+	if(PlayerData[playerid][pFaction] == -1)
 	    return SendErrorMessage(playerid, "You're not in a faction.");
 
-	if(!HasFactionRank(playerid, 1))
-	    return SendErrorMessage(playerid, "You're not the leader.");
+	if(GetFactionType(playerid) != FACTION_GANG)
+	    return SendErrorMessage(playerid, "Only Mafia/Gang faction members can access the Drug Store.");
 
-	SendClientMessage(playerid, COLOR_GREY, "Coming Soon");
+	new nearStore = -1;
+	for(new i = 0; i < MAX_DRUG_STORES; i++)
+	{
+		if(DrugStores[i][dsID] != 0 && IsPlayerInRangeOfPoint(playerid, 3.0, DrugStores[i][dsX], DrugStores[i][dsY], DrugStores[i][dsZ]))
+		{
+			nearStore = i;
+			break;
+		}
+	}
+
+	if(nearStore == -1)
+		return SendErrorMessage(playerid, "You must be near a Drug Store pickup point.");
+
+	new body[256];
+	body[0] = EOS;
+
+	for(new d = 0; d < sizeof(d_DATA); ++d)
+	{
+		strcat(body, d_DATA[d][dName]);
+		strcat(body, "\n");
+	}
+
+	Dialog_Show(playerid, DrugStore_Type, DIALOG_STYLE_LIST, "Drug Store - Select Drug:", body, "Next", "Cancel");
 	return true;
 }
 

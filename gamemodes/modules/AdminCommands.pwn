@@ -6719,6 +6719,15 @@ CMD:refunddrug(playerid, params[])
 	return true;
 }
 
+CMD:createdrugstore(playerid, params[])
+{
+	if(PlayerData[playerid][pAdmin] < 4)
+		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+
+	CreateDrugStoreSpot(playerid);
+	return true;
+}
+
 //weapon packages
 
 CMD:setwpackage(playerid, params[])
