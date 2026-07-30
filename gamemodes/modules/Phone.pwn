@@ -2229,7 +2229,8 @@ FUNX::SendPlayerSMS(playerid, numberid, number)
 	return true;
 }
 
-FUNX::OnPhoneInsertSMS(targetid, exist)
+forward OnPhoneInsertSMS(targetid, exist);
+public OnPhoneInsertSMS(targetid, exist)
 {
 	if(IsPlayerConnected(targetid))
 	{

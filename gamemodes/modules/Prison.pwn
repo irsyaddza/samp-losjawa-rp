@@ -52,7 +52,7 @@ enum E_PRISON_CELL_DATA
     bool:cellLocked,
 };
 
-static const PrisonCells[MAX_PRISON_CELLS][E_PRISON_CELL_DATA];
+new PrisonCells[MAX_PRISON_CELLS][E_PRISON_CELL_DATA];
 
 // Functions
 
