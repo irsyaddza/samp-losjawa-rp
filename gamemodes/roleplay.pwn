@@ -18,6 +18,7 @@
 #define MAX_ACTORS (50)
 
 #include <a_mysql>
+#include <requests>
 #include <sscanf2>
 #include <streamer>
 #include <easyDialog>
@@ -2137,6 +2138,7 @@ new PlayerSweeperRouteIndex[MAX_PLAYERS] = {-1, ...};
 #include "modules/system/Marriage.pwn"
 #include "modules/system/TrainSystem.pwn"
 #include "modules/system/MedicinePoint.pwn"
+#include "modules/system/AiNpc.pwn"
 
 public OnGameModeInit()
 {

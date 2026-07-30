@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 LABEL maintainer="Los Jawa Roleplay"
 LABEL description="open.mp Linux Server with MySQL 5.7 support"
@@ -10,7 +10,7 @@ RUN dpkg --add-architecture i386 && \
     apt-get update && apt-get install -y \
         wget \
         curl \
-        netcat \
+        netcat-openbsd \
         tar \
         libc6:i386 \
         libstdc++6:i386 \
@@ -52,6 +52,7 @@ COPY plugins/pawnregex.so           ./plugins/pawnregex.so
 COPY plugins/discord-connector.so   ./plugins/discord-connector.so
 COPY plugins/samp_bcrypt.so         ./plugins/samp_bcrypt.so
 COPY plugins/crashdetect.so          ./plugins/crashdetect.so
+COPY plugins/requests.so             ./plugins/requests.so
 COPY plugins/pawnregex.cfg          ./plugins/pawnregex.cfg
 
 COPY log-core.so                    ./log-core.so

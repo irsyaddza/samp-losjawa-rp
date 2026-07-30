@@ -25,3 +25,6 @@ Thumbs.db
 # Docker — environment & generated data
 .env
 mysql/data/
+
+# Secrets
+scriptfiles/ai_config.json

@@ -37,9 +37,34 @@ SQL_Connect()
 		// Ensure Hunger & Thirst columns exist in characters table
 		mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `Hunger` INT(11) NOT NULL DEFAULT '100';");
 		mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `Thirst` INT(11) NOT NULL DEFAULT '100';");
+
+		// Ensure AI NPC table exists
+		mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `npc_ai` (" \
+			"`id` INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY," \
+			"`name` VARCHAR(32) NOT NULL," \
+			"`age` INT(11) NOT NULL DEFAULT '25'," \
+			"`gender` VARCHAR(12) NOT NULL DEFAULT 'Male'," \
+			"`skin` INT(11) NOT NULL DEFAULT '299'," \
+			"`ethnicity` VARCHAR(24) NOT NULL DEFAULT 'Indonesian'," \
+			"`traits` VARCHAR(256) NOT NULL," \
+			"`context` VARCHAR(512) NOT NULL," \
+			"`pos_x` FLOAT NOT NULL," \
+			"`pos_y` FLOAT NOT NULL," \
+			"`pos_z` FLOAT NOT NULL," \
+			"`pos_a` FLOAT NOT NULL," \
+			"`virtual_world` INT(11) NOT NULL DEFAULT '0'," \
+			"`interior` INT(11) NOT NULL DEFAULT '0'" \
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;", "OnAiNpcTableInit", "");
 	}
 
 	return true;
+}
+
+forward OnAiNpcTableInit();
+public OnAiNpcTableInit()
+{
+	mysql_tquery(dbCon, "SELECT * FROM `npc_ai`", "OnLoadAiNpcs");
+	return 1;
 }
 
 SQL_CheckAccount(playerid)

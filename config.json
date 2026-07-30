@@ -109,7 +109,8 @@
             "mysql.so",
             "Whirlpool.so",
             "pawnregex.so",
-            "samp_bcrypt.so"
+            "samp_bcrypt.so",
+            "requests.so"
         ],
         "main_scripts": [
             "roleplay 1"
