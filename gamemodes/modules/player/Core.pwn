@@ -92,7 +92,14 @@ enum E_PLAYER_DATA
 	pDrugStamp,
 	pDrugEffects,
 	pDrugBoost,
+	Float:pDrugAmountUsed, // Amount used in dosage (0.1 - 0.3g)
 	pDrugTick,
+	pDrugDuration,        // Sisa detik efek drug aktif
+	pDrugTolerance[10],   // Toleransi per jenis drug (0 - 100), makin tinggi = buff makin lemah
+	pNarcan,              // Narcan medicine doses in inventory
+	pMedkits,             // First aid medkits in inventory
+	pOverdosing,          // 1 if currently collapsed from Fentanyl overdose
+	pOverdoseTimer,       // Countdown timer seconds for natural overdose recovery
 	pFightStyle,
 	pFaction,
 	pFactionEdit,

@@ -2107,11 +2107,80 @@ Dialog:Help_FactionList(playerid, response, listitem, inputtext[])
 			strcat(gstr, "{FFFFFF}=== ORGANIZED CRIME / MAFIA / FAMILIES ===\n\n");
 			strcat(gstr, "{A9C4E4}/f / /g / /fchat / /nofam / /disband{FFFFFF} - Organization IC & OOC chat\n");
 			strcat(gstr, "{A9C4E4}/fmenu / /factionmenu / /faction / /factionon / /invite / /uninvite / /rank / /accept / /decline{FFFFFF} - Organization\n");
-			strcat(gstr, "{A9C4E4}/graffiti{FFFFFF} - Spray gang tags\n");
-			strcat(gstr, "{A9C4E4}/tie / /untie / /blindfold{FFFFFF} - Tie or blindfold hostage\n");
-			strcat(gstr, "{A9C4E4}/mypackage / /unpackage / /pw / /paw / /tw / /taw / /sp{FFFFFF} - Materials & weapon packages");
+		}
+		case 8: // Vehicle Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== VEHICLE & TRANSPORTATION COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}/v / /vehicle{FFFFFF} - Open main vehicle management GUI\n");
+			strcat(gstr, "{A9C4E4}/engine{FFFFFF} - Toggle vehicle engine on/off\n");
+			strcat(gstr, "{A9C4E4}/lock / /flock{FFFFFF} - Lock or force lock vehicle doors\n");
+			strcat(gstr, "{A9C4E4}/v buypark{FFFFFF} - Buy parking location\n");
+			strcat(gstr, "{A9C4E4}/v park{FFFFFF} - Park your vehicle\n");
+			strcat(gstr, "{A9C4E4}/hood / /trunk / /vehpackage{FFFFFF} - Vehicle hood, trunk & package\n");
+			strcat(gstr, "{A9C4E4}/fill / /fuel{FFFFFF} - Refuel vehicle at gas station\n");
+			strcat(gstr, "{A9C4E4}/rw / /rollwindow{FFFFFF} - Roll vehicle windows up/down\n");
+			strcat(gstr, "{A9C4E4}/vehiclename / /colorlist / /paintcar{FFFFFF} - Vehicle name & colors\n");
+			strcat(gstr, "{A9C4E4}/service / /checkcomponents / /setbuycomp / /buycomp{FFFFFF} - Repairs & components\n");
+			strcat(gstr, "{A9C4E4}/attach / /detach / /towcar / /towcars{FFFFFF} - Towing & trailers\n");
+			strcat(gstr, "{A9C4E4}/carsign / /remove_carsign / /callsign{FFFFFF} - Vehicle sign & callsign\n");
+			strcat(gstr, "{A9C4E4}/rentvehicle / /unrentvehicle{FFFFFF} - Rent or return rental vehicle");
 
-			Dialog_Show(playerid, Help_FactionDetail, DIALOG_STYLE_MSGBOX, "Faction Help: Crime & Gangs", gstr, "<< Back", "Close");
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Vehicle Commands", gstr, "<< Back", "Close");
+		}
+		case 9: // Faction Help
+		{
+			ShowFactionHelpMenu(playerid);
+		}
+		case 10: // House Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== HOUSE & PROPERTY COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}/myhouse / /househelp{FFFFFF} - House info & guide\n");
+			strcat(gstr, "{A9C4E4}/buyhouse{FFFFFF} - Purchase an unowned house\n");
+			strcat(gstr, "{A9C4E4}/hlock{FFFFFF} - Lock or unlock house front door\n");
+			strcat(gstr, "{A9C4E4}/furniture{FFFFFF} - Place and customize house furniture\n");
+			strcat(gstr, "{A9C4E4}/offerrent / /setrentable / /setrent / /rentroom / /stoprent / /unrent{FFFFFF} - Rental\n");
+			strcat(gstr, "{A9C4E4}/tenants / /evict / /evictall{FFFFFF} - Tenant management\n");
+			strcat(gstr, "{A9C4E4}/houseupgrade / /grantbuild / /cmdspot{FFFFFF} - Upgrades & building\n");
+			strcat(gstr, "{A9C4E4}/propkeys / /givepropkey / /takepropkey{FFFFFF} - House keys");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: House Commands", gstr, "<< Back", "Close");
+		}
+		case 11: // Apartment / Flat Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== APARTMENT & FLAT COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}/enter / /exit{FFFFFF} - Enter or exit apartment building\n");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Apartment Commands", gstr, "<< Back", "Close");
+		}
+		case 12: // Business Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== BUSINESS & ENTERPRISE COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}/bizinfo{FFFFFF} - View business information\n");
+			strcat(gstr, "{A9C4E4}/buybiz / /sellbiz{FFFFFF} - Purchase or sell business\n");
+			strcat(gstr, "{A9C4E4}/bizbank / /bizwithdraw{FFFFFF} - Business bank vault & cash withdrawal\n");
+			strcat(gstr, "{A9C4E4}/buycomp / /setbuycomp / /compprice / /bizfee{FFFFFF} - Components & pricing");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Business Commands", gstr, "<< Back", "Close");
+		}
+		case 13: // Garage Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== GARAGE PROPERTY COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}Coming Soon\n");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Garage Commands", gstr, "<< Back", "Close");
+		}
+		case 14: // Donator Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== VIP & DONATOR COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}Coming Soon\n");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Donator Commands", gstr, "<< Back", "Close");
 		}
 	}
 	return 1;
@@ -2148,12 +2217,198 @@ CMD:drughelp(playerid, params[])
 	SendClientMessage(playerid, COLOR_WHITE, "/mydrugs - /givedrug - /dropdrug - /usedrug");
 	SendClientMessage(playerid, COLOR_WHITE, "/placedrug (/pd) - /placealldrugs (pad) - /takedrug (/td) - /takealldrugs (/tad)");
 	SendClientMessage(playerid, COLOR_WHITE, "/checkdrugs - /transferdrug - /buildpackage - /adjustpackage - /givealldrugs - /vehdrugs");
+	SendClientMessage(playerid, COLOR_WHITE, "/druginfo - View detailed drug effects guide.");
 	return true;
+}
+
+YCMD:di(playerid, params[], help) = druginfo;
+
+stock ShowDrugInfoOverview(playerid)
+{
+	new body[2048];
+	format(body, sizeof(body), "Drug Name\tCategory\tPrimary Buff\tDuration\n");
+
+	new line[192];
+
+	format(line, sizeof(line), "{FF6666}Cocaine\t{FFAA00}Combat\t{00FF88}+25 HP Burst, Stamina\t{CCCCCC}60s\n");
+	strcat(body, line);
+
+	format(line, sizeof(line), "{88DD44}Marijuana\t{7799CC}Utility\t{00FF88}+15 HP over time\t{CCCCCC}90s\n");
+	strcat(body, line);
+
+	format(line, sizeof(line), "{AABBFF}Xanax\t{7799CC}Utility\t{00FF88}Clears visual debuffs (Keeps Buffs)\t{CCCCCC}120s\n");
+	strcat(body, line);
+
+	format(line, sizeof(line), "{FFCC44}Heroin\t{FFAA00}Combat\t{00FF88}Restores Armor (Max 100%)\t{CCCCCC}120s\n");
+	strcat(body, line);
+
+	format(line, sizeof(line), "{CC88FF}Ketamine\t{FFAA00}Combat\t{00FF88}Dissociative + Stumble Chance\t{CCCCCC}90s\n");
+	strcat(body, line);
+
+	format(line, sizeof(line), "{FF4444}Fentanyl\t{FF4444}God-Tier\t{00FF88}Over-Armour (150%) + OD Risk\t{CCCCCC}90s\n");
+	strcat(body, line);
+
+	format(line, sizeof(line), "{FFFF44}Meth\t{FFAA00}Combat\t{00FF88}Restores Armor (Max 50%) + Crash\t{CCCCCC}50s\n");
+	strcat(body, line);
+
+	format(line, sizeof(line), "{44CCFF}Steroids\t{FFAA00}Combat\t{00FF88}Extra Melee Damage (+20%-50%)\t{CCCCCC}120s\n");
+	strcat(body, line);
+
+	format(line, sizeof(line), "{FFBB55}Oxycodone\t{FFAA00}Combat\t{00FF88}Healing + Ignore pincang\t{CCCCCC}90s\n");
+	strcat(body, line);
+
+	Dialog_Show(playerid, DrugInfo_Overview, DIALOG_STYLE_TABLIST_HEADERS,
+		"Drug Encyclopedia",
+		body, "Details", "Close");
+	return 1;
+}
+
+CMD:druginfo(playerid, params[])
+{
+	ShowDrugInfoOverview(playerid);
+	return true;
+}
+
+Dialog:DrugInfo_Detail(playerid, response, listitem, inputtext[])
+{
+	if(!response) return 1;
+
+	ShowDrugInfoOverview(playerid);
+	return 1;
+}
+
+Dialog:DrugInfo_Overview(playerid, response, listitem, inputtext[])
+{
+	if(!response) return 1;
+
+	for(new drug; drug < sizeof(d_DATA); drug++)
+	{
+		if(strfind(inputtext, d_DATA[drug][dName], true) != -1)
+		{
+			listitem = drug;
+			break;
+		}
+	}
+	if(listitem < 0 || listitem >= sizeof(d_DATA)) return 1;
+
+	new detail[1024];
+	new title[64];
+	new tol = PlayerData[playerid][pDrugTolerance][listitem];
+	detail[0] = EOS;
+
+	switch(listitem)
+	{
+		case 0: // Cocaine
+		{
+			format(title, sizeof(title), "Cocaine - Adrenaline & Sprint");
+			strcat(detail, "{FF6666}[ COCAINE ]{FFFFFF}  |  Category: {FFAA00}Combat & Gunfight{FFFFFF}\n\n");
+			strcat(detail, "{00FF88}BUFFS:{FFFFFF}\n  + Instant HP Burst: {00FF88}+10 HP (0.1g) | +18 HP (0.2g) | +25 HP (0.3g){FFFFFF}\n  + Infinite sprint stamina during effect\n\n");
+			strcat(detail, "{FF4444}DEBUFFS:{FFFFFF}\n  - Short duration (20s - 60s based on dose)\n  - Slight movement slowdown after effect expires\n\n");
+			strcat(detail, "{FFFF00}VISUAL:{FFFFFF} Clear vision (No screen sway)\n{FFFF00}DOSAGE SCALING:{FFFFFF} 0.1g (+10 HP, 20s) | 0.2g (+18 HP, 40s) | 0.3g (+25 HP, 60s)\n\n");
+			format(detail, sizeof(detail), "%s{AAAAAA}Your current tolerance: {FF6666}%d / 100", detail, tol);
+		}
+		case 1: // Marijuana
+		{
+			format(title, sizeof(title), "Marijuana - Passive Relief");
+			strcat(detail, "{88DD44}[ MARIJUANA ]{FFFFFF}  |  Category: {7799CC}Utility & RP{FFFFFF}\n\n");
+			strcat(detail, "{00FF88}BUFFS:{FFFFFF}\n  + Slow passive health regen over time (+5 to +15 HP total)\n  + Safest drug with minimal overdose risk\n\n");
+			strcat(detail, "{FF4444}DEBUFFS:{FFFFFF}\n  - Emits visible joint smoke aura (Law Enforcement risk)\n  - Gentle camera sway\n\n");
+			strcat(detail, "{FFFF00}VISUAL:{FFFFFF} Light camera sway (DrunkLevel 5500)\n{FFFF00}DOSAGE SCALING:{FFFFFF} 0.1g (+5 HP, 20s) | 0.2g (+10 HP, 40s) | 0.3g (+15 HP, 60s)\n\n");
+			format(detail, sizeof(detail), "%s{AAAAAA}Your current tolerance: {88DD44}%d / 100", detail, tol);
+		}
+		case 2: // Xanax
+		{
+			format(title, sizeof(title), "Xanax - Visual Stabilizer & Cleanser");
+			strcat(detail, "{AABBFF}[ XANAX ]{FFFFFF}  |  Category: {7799CC}Utility / Cleanser{FFFFFF}\n\n");
+			strcat(detail, "{00FF88}BUFFS:{FFFFFF}\n  + {00FF88}Instantly clears visual camera sway & disorientation{FFFFFF}\n  + {00FF88}KEEPS ACTIVE BUFFS INTACT{FFFFFF} (Painkiller Oxycodone & Armor regen remain active)\n\n");
+			strcat(detail, "{FF4444}DEBUFFS:{FFFFFF}\n  - Does not provide direct HP or Armor regeneration\n\n");
+			strcat(detail, "{FFFF00}VISUAL:{FFFFFF} Cleanser (Resets camera to clear baseline)\n{FFFF00}DOSAGE SCALING:{FFFFFF} 0.1g (40s) | 0.2g (80s) | 0.3g (120s)\n\n");
+			format(detail, sizeof(detail), "%s{AAAAAA}Your current tolerance: {AABBFF}%d / 100", detail, tol);
+		}
+		case 3: // MDMA
+		{
+			format(title, sizeof(title), "MDMA - Euphoria & Stamina");
+			strcat(detail, "{FF88CC}[ MDMA ]{FFFFFF}  |  Category: {AA55FF}Roleplay & Utility{FFFFFF}\n\n");
+			strcat(detail, "{00FF88}BUFFS:{FFFFFF}\n  + Continuous stamina regeneration\n  + Social euphoria RP boost\n\n");
+			strcat(detail, "{FF4444}DEBUFFS:{FFFFFF}\n  - Occasional stumble animations while walking\n  - Slower weapon aiming focus\n\n");
+			strcat(detail, "{FFFF00}VISUAL:{FFFFFF} Vibrant visual disorientation\n{FFFF00}DOSAGE SCALING:{FFFFFF} 0.1g (30s) | 0.2g (60s) | 0.3g (90s)\n\n");
+			format(detail, sizeof(detail), "%s{AAAAAA}Your current tolerance: {FF88CC}%d / 100", detail, tol);
+		}
+		case 4: // Heroin
+		{
+			format(title, sizeof(title), "Heroin - Heavy Armor Tank");
+			strcat(detail, "{FFCC44}[ HEROIN ]{FFFFFF}  |  Category: {FFAA00}Combat & Heavy Tank{FFFFFF}\n\n");
+			strcat(detail, "{00FF88}BUFFS:{FFFFFF}\n  + {00FF88}Restores Armor up to 100%% (Full Armor){FFFFFF}\n  + Strong pain numbness\n\n");
+			strcat(detail, "{FF4444}DEBUFFS:{FFFFFF}\n  - Severe camera disorientation (DrunkLevel 25000)\n  - Requires multiple doses to reach 100%% Armor\n\n");
+			strcat(detail, "{FFFF00}VISUAL:{FFFFFF} Heavy camera sway\n{FFFF00}DOSAGE SCALING:{FFFFFF} 0.1g (+15%% Armor, 18s) | 0.2g (+30%% Armor, 32s) | 0.3g (+50%% Armor, 50s)\n\n");
+			format(detail, sizeof(detail), "%s{AAAAAA}Your current tolerance: {FFCC44}%d / 100", detail, tol);
+		}
+		case 5: // Ketamine
+		{
+			format(title, sizeof(title), "Ketamine - Dissociative Damage Buffer");
+			strcat(detail, "{CC88FF}[ KETAMINE ]{FFFFFF}  |  Category: {FFAA00}Combat & Defensive{FFFFFF}\n\n");
+			strcat(detail, "{00FF88}BUFFS:{FFFFFF}\n  + {00FF88}25%% Damage Reduction{FFFFFF} against incoming bullet & melee damage\n  + Continuous HP regeneration\n\n");
+			strcat(detail, "{FF4444}DEBUFFS:{FFFFFF}\n  - Heavy screen sway (DrunkLevel 25000)\n  - {FF4444}Random Stumble Animation{FFFFFF} (loses balance periodically)\n\n");
+			strcat(detail, "{FFFF00}VISUAL:{FFFFFF} Heavy camera sway\n{FFFF00}DOSAGE SCALING:{FFFFFF} 0.1g (30s) | 0.2g (60s) | 0.3g (90s)\n\n");
+			format(detail, sizeof(detail), "%s{AAAAAA}Your current tolerance: {CC88FF}%d / 100", detail, tol);
+		}
+		case 6: // Fentanyl
+		{
+			format(title, sizeof(title), "Fentanyl - High Risk God-Tier");
+			strcat(detail, "{FF4444}[ FENTANYL ]{FFFFFF}  |  Category: {FF4444}God-Tier / High Risk{FFFFFF}\n\n");
+			strcat(detail, "{00FF88}BUFFS:{FFFFFF}\n  + Instant HP & Armor Over-boost\n  + Maximum combat numbness\n\n");
+			strcat(detail, "{FF4444}DEBUFFS:{FFFFFF}\n  - {FF4444}Extremely High Overdose Risk{FFFFFF} (knocks out player)\n  - Requires Narcan administration from LSFD Paramedics\n\n");
+			strcat(detail, "{FFFF00}VISUAL:{FFFFFF} Minimal screen effect\n{FFFF00}DOSAGE SCALING:{FFFFFF} 0.1g (30s) | 0.2g (60s) | 0.3g (90s)\n\n");
+			format(detail, sizeof(detail), "%s{AAAAAA}Your current tolerance: {FF4444}%d / 100", detail, tol);
+		}
+		case 7: // Methamphetamine
+		{
+			format(title, sizeof(title), "Methamphetamine - Speed & Medium Armor");
+			strcat(detail, "{FFFF44}[ METHAMPHETAMINE ]{FFFFFF}  |  Category: {FFAA00}Combat & Speed{FFFFFF}\n\n");
+			strcat(detail, "{00FF88}BUFFS:{FFFFFF}\n  + {00FF88}Restores Armor up to 50%% max{FFFFFF}\n  + Infinite sprint stamina during effect\n\n");
+			strcat(detail, "{FF4444}DEBUFFS:{FFFFFF}\n  - Fast camera shake effect (DrunkLevel 12000)\n\n");
+			strcat(detail, "{FFFF00}VISUAL:{FFFFFF} Camera shake\n{FFFF00}DOSAGE SCALING:{FFFFFF} 0.1g (+10%% Armor, 18s) | 0.2g (+20%% Armor, 32s) | 0.3g (+30%% Armor, 50s)\n\n");
+			format(detail, sizeof(detail), "%s{AAAAAA}Your current tolerance: {FFFF44}%d / 100", detail, tol);
+		}
+		case 8: // Steroids
+		{
+			format(title, sizeof(title), "Steroids - Heavy Brawler");
+			strcat(detail, "{44CCFF}[ STEROIDS ]{FFFFFF}  |  Category: {FFAA00}Brawler & Melee{FFFFFF}\n\n");
+			strcat(detail, "{00FF88}BUFFS:{FFFFFF}\n  + {00FF88}3x Melee Damage Multiplier{FFFFFF} (Fists & blunt melee weapons)\n  + HP regen over time\n\n");
+			strcat(detail, "{FF4444}DEBUFFS:{FFFFFF}\n  - Reduced firearm accuracy focus\n\n");
+			strcat(detail, "{FFFF00}VISUAL:{FFFFFF} No screen effect\n{FFFF00}DOSAGE SCALING:{FFFFFF} 0.1g (40s) | 0.2g (80s) | 0.3g (120s)\n\n");
+			format(detail, sizeof(detail), "%s{AAAAAA}Your current tolerance: {44CCFF}%d / 100", detail, tol);
+		}
+		case 9: // Oxycodone
+		{
+			format(title, sizeof(title), "Oxycodone - Painkiller");
+			strcat(detail, "{FFBB55}[ OXYCODONE ]{FFFFFF}  |  Category: {FFAA00}Combat & Injury Relief{FFFFFF}\n\n");
+			strcat(detail, "{00FF88}BUFFS:{FFFFFF}\n  + {00FF88}Suppresses leg injury animation (pincang){FFFFFF} when shot in legs\n  + Prevents sprint/jump collapse from gunshot wounds\n\n");
+			strcat(detail, "{FF4444}DEBUFFS:{FFFFFF}\n  - Mild vision blur (Can be neutralized with Xanax WITHOUT losing painkiller buff)\n\n");
+			strcat(detail, "{FFFF00}VISUAL:{FFFFFF} Tunnel vision blur (DrunkLevel 7000)\n{FFFF00}DOSAGE SCALING:{FFFFFF} 0.1g (28s) | 0.2g (52s) | 0.3g (80s)\n\n");
+			format(detail, sizeof(detail), "%s{AAAAAA}Your current tolerance: {FFBB55}%d / 100", detail, tol);
+		}
+	}
+
+	// Show tolerance bar as ASCII
+	new tolBar[32];
+	new filled = tol / 10;
+	tolBar[0] = EOS;
+	for(new b = 0; b < 10; b++)
+	{
+		if(b < filled) strcat(tolBar, "|");
+		else strcat(tolBar, ".");
+	}
+
+	new finalDetail[1200];
+	format(finalDetail, sizeof(finalDetail), "%s\n\n{FFFF00}Tolerance Bar: {FF6666}[%s]{FFFFFF} %d%%\n{AAAAAA}Higher tolerance reduces duration & boost by up to 40%%.", detail, tolBar, tol);
+
+	Dialog_Show(playerid, DrugInfo_Detail, DIALOG_STYLE_MSGBOX, title, finalDetail, "Back", "Close");
+	return 1;
 }
 
 CMD:radiohelp(playerid, params[])
 {
-	SendClientMessage(playerid, COLOR_GREEN, "|_____________________Radio_help______________________|");
 	SendClientMessage(playerid, COLOR_YELLOW, "HINT: You can buy radio in 24-7's!");
 	SendClientMessage(playerid, COLOR_WHITE, "/setchannel - Sets which channel you want on which slot.");
 	SendClientMessage(playerid, COLOR_WHITE, "/setslot - Sets which slot on your radio you're currently responding too.");
@@ -2731,6 +2986,9 @@ stock ResetDrugBoost(playerid)
 	PlayerData[playerid][pDrugBoost] = 0;
 	PlayerData[playerid][pDrugEffects] = -1;
 	PlayerData[playerid][pDrugTick] = 0;
+	PlayerData[playerid][pDrugDuration] = 0;
+	// Reset visual effect to normal FPS counter baseline
+	SetPlayerDrunkLevel(playerid, 2000);
 }
 
 //(1-20, 21-50, 51-75, 79-90, 91-99, 100)
@@ -2761,46 +3019,180 @@ CMD:usedrug(playerid, params[])
 	    return SendErrorMessage(playerid, "You don't have that much %s.", d_DATA[ Player_Drugs[playerid][package - 1][dType] ][dName]);
 
 	new string[128];
+	new drugType = Player_Drugs[playerid][package - 1][dType];
 
-	if(isSmokable(Player_Drugs[playerid][package - 1][dType]))
+	if(isSmokable(drugType))
 	{
 		SetPlayerSpecialAction(playerid, SPECIAL_ACTION_SMOKE_CIGGY);
-
 		SendNoticeMessage(playerid, "You can pass the joint to another player with /passjoint!");
-
-		SendClientMessageEx(playerid, COLOR_YELLOW, "You've smoked some %s.", d_DATA[ Player_Drugs[playerid][package - 1][dType] ][dName]);
-		
-		format(string, sizeof(string), "* %s uses %s.", ReturnName(playerid, 0), d_DATA[ Player_Drugs[playerid][package - 1][dType] ][dName]);
+		SendClientMessageEx(playerid, COLOR_YELLOW, "You've smoked some %s.", d_DATA[drugType][dName]);
+		format(string, sizeof(string), "* %s smokes %s.", ReturnName(playerid, 0), d_DATA[drugType][dName]);
 	}
 	else
 	{
-	    new boost;
-
-	    switch(floatround(Player_Drugs[playerid][package - 1][dStrength]))
-	    {
-	        case 100:
-				boost = randomEx(30, 40);
-			case 91..99:
-			    boost = randomEx(30, 35);
-			case 79..90:
-			    boost = randomEx(25, 30);
-			case 51..78:
-			    boost = randomEx(20, 25);
-			case 21..50:
-			    boost = randomEx(15, 20);
-			case 1..20:
-			    boost = randomEx(5, 10);
-		}
-
-		PlayerData[playerid][pDrugBoost] = boost;
-		PlayerData[playerid][pDrugEffects] = Player_Drugs[playerid][package - 1][dType];
-		PlayerData[playerid][pDrugTick] = 0;
-		PlayerData[playerid][pDrugStamp] = gettime();
-
-		SendClientMessageEx(playerid, COLOR_YELLOW, "You've taken %.1f%s of %s.", amount, (d_DATA[ Player_Drugs[playerid][package - 1][dType] ][IsPill] == true) ? (" Pills") : ("g"), d_DATA[ Player_Drugs[playerid][package - 1][dType] ][dName]);
-
-        format(string, sizeof(string), "* %s takes %s.", ReturnName(playerid, 0), d_DATA[ Player_Drugs[playerid][package - 1][dType] ][dName]);
+		format(string, sizeof(string), "* %s takes %s.", ReturnName(playerid, 0), d_DATA[drugType][dName]);
 	}
+
+	new strength = floatround(Player_Drugs[playerid][package - 1][dStrength]);
+
+	// Tolerance reduces boost (cap tolerance at 80)
+	new tol = PlayerData[playerid][pDrugTolerance][drugType];
+	if(tol > 80) tol = 80;
+
+	new boost;
+	switch(strength)
+	{
+		case 100:		 boost = randomEx(30, 40);
+		case 91..99:	 boost = randomEx(30, 35);
+		case 79..90:	 boost = randomEx(25, 30);
+		case 51..78:	 boost = randomEx(20, 25);
+		case 21..50:	 boost = randomEx(15, 20);
+		case 1..20:		 boost = randomEx(5, 10);
+	}
+
+	// Apply tolerance penalty to boost
+	boost = boost - (boost * tol / 100);
+	if(boost < 1) boost = 1;
+
+	// === Duration per drug type (scaled by amount 0.1, 0.2, 0.3) ===
+	new baseDuration;
+	switch(drugType)
+	{
+		case 0: baseDuration = 60;   // Cocaine
+		case 1: baseDuration = 60;   // Marijuana
+		case 2: baseDuration = 120;  // Xanax
+		case 3: baseDuration = 90;   // MDMA
+		case 4: baseDuration = 50;   // Heroin
+		case 5: baseDuration = 90;   // Ketamine
+		case 6: baseDuration = 90;   // Fentanyl
+		case 7: baseDuration = 50;   // Methamphetamine
+		case 8: baseDuration = 120;  // Steroids
+		case 9: baseDuration = 80;   // Oxycodone
+	}
+
+	new duration;
+	if(amount <= 0.15) duration = floatround(baseDuration * 0.35);      // 0.1g dose -> 35% duration
+	else if(amount <= 0.25) duration = floatround(baseDuration * 0.65); // 0.2g dose -> 65% duration
+	else duration = baseDuration;                                        // 0.3g dose -> 100% duration
+
+	duration = duration - (duration * tol / 200); // tolerance reduces duration by up to 40%
+	if(duration < 15) duration = 15;
+
+	PlayerData[playerid][pDrugBoost] = boost;
+	PlayerData[playerid][pDrugAmountUsed] = amount;
+	PlayerData[playerid][pDrugTick] = 0;
+	PlayerData[playerid][pDrugStamp] = gettime();
+	PlayerData[playerid][pDrugDuration] = duration;
+
+	// Increase tolerance: 0.1g (+3%), 0.2g (+5%), 0.3g (+10%)
+	new tolGain = (amount <= 0.15) ? (3) : ((amount <= 0.25) ? (5) : (10));
+	if(PlayerData[playerid][pDrugTolerance][drugType] < 100)
+		PlayerData[playerid][pDrugTolerance][drugType] += tolGain;
+
+	// === Drug-specific side-effects on use ===
+	switch(drugType)
+	{
+		case 0: // Cocaine – HP burst scaled by dose (+10 HP for 0.1g, +18 HP for 0.2g, +25 HP for 0.3g)
+		{
+			new Float:curHp = PlayerData[playerid][pHealth];
+			new Float:burst = (amount <= 0.15) ? (10.0) : ((amount <= 0.25) ? (18.0) : (25.0));
+			new Float:newHp = curHp + burst;
+			if(newHp > MAX_DRUG_HEALTH) newHp = MAX_DRUG_HEALTH;
+			SetPlayerHealthEx(playerid, newHp);
+			GameTextForPlayer(playerid, "~r~COCAINE~n~~w~Adrenaline Rush!", 3000, 3);
+			PlayerData[playerid][pDrugEffects] = drugType;
+		}
+		case 1: // Marijuana – light visual effect
+		{
+			SetPlayerDrunkLevel(playerid, 5500);
+			GameTextForPlayer(playerid, "~g~MARIJUANA~n~~w~You feel relaxed...", 3000, 3);
+			PlayerData[playerid][pDrugEffects] = drugType;
+		}
+		case 2: // Xanax – Cleanser: clears visual drunk level WITHOUT cancelling active drug buffs (e.g. Oxycodone)
+		{
+			SetPlayerDrunkLevel(playerid, 2000);
+			GameTextForPlayer(playerid, "~p~XANAX~n~~w~Nerves calmed (Visual Cleared)!", 3000, 3);
+
+			// If player is NOT under another active drug effect, set effect to Xanax
+			if(PlayerData[playerid][pDrugEffects] == -1)
+			{
+				PlayerData[playerid][pDrugEffects] = drugType;
+			}
+			// If already under Oxycodone or another drug, keep the previous pDrugEffects so painkiller/buff stays active!
+		}
+		case 4: // Heroin – heavy visual + 100% max armor regen
+		{
+			SetPlayerDrunkLevel(playerid, 25000);
+			GameTextForPlayer(playerid, "~y~HEROIN~n~~w~Heavy Numbness (Restoring Armor)...", 3000, 3);
+			PlayerData[playerid][pDrugEffects] = drugType;
+		}
+		case 5: // Ketamine – strong visual disorientation
+		{
+			SetPlayerDrunkLevel(playerid, 25000);
+			GameTextForPlayer(playerid, "~p~KETAMINE~n~~w~Dissociating...", 3000, 3);
+			PlayerData[playerid][pDrugEffects] = drugType;
+		}
+		case 6: // Fentanyl – God-Tier: Over-Armour up to 150% (requires 100% Armor first) + Overdose risk
+		{
+			new Float:curArm = PlayerData[playerid][pArmour];
+			if(curArm >= 100.0)
+			{
+				new Float:addArm = (amount <= 0.15) ? (15.0) : ((amount <= 0.25) ? (30.0) : (50.0));
+				new Float:newArm = curArm + addArm;
+				if(newArm > 150.0) newArm = 150.0;
+				SetPlayerArmourEx(playerid, newArm);
+				SendClientMessageEx(playerid, COLOR_YELLOW, "[FENTANYL] Over-Armour boosted to %.1f%%!", newArm);
+			}
+			else
+			{
+				SendClientMessage(playerid, COLOR_LIGHTRED, "[FENTANYL NOTICE] You need 100% Armor first to unleash Fentanyl's 150% Over-Armour!");
+			}
+
+			// Overdose chance: 0.1g (5%), 0.2g (25%), 0.3g (60%)
+			new odChance = (amount <= 0.15) ? (5) : ((amount <= 0.25) ? (25) : (60));
+			if(random(100) < odChance)
+			{
+				PlayerData[playerid][pOverdosing] = 1;
+				PlayerData[playerid][pOverdoseTimer] = 180;
+				ApplyAnimation(playerid, "CRACK", "crckidle2", 4.1, 0, 0, 0, 1, 0, 1);
+				TogglePlayerControllable(playerid, 0);
+				GameTextForPlayer(playerid, "~r~OVERDOSE!~n~~w~Collapsed! Need Narcan!", 5000, 3);
+				SendClientMessage(playerid, COLOR_LIGHTRED, "[OVERDOSE] You collapsed from a Fentanyl overdose! Ask for Narcan or wait 3 minutes to recover.");
+			}
+			else
+			{
+				GameTextForPlayer(playerid, "~r~FENTANYL~n~~w~God-Tier Power!", 3000, 3);
+			}
+			PlayerData[playerid][pDrugEffects] = drugType;
+		}
+		case 7: // Methamphetamine – camera shake + 50% max armor regen
+		{
+			SetPlayerDrunkLevel(playerid, 12000);
+			GameTextForPlayer(playerid, "~y~METH~n~~w~Heart racing & Restoring Armor (Max 50%)!", 3000, 3);
+			PlayerData[playerid][pDrugEffects] = drugType;
+		}
+		case 8: // Steroids – Extra Melee Damage (+20% for 0.1g, +35% for 0.2g, +50% for 0.3g)
+		{
+			GameTextForPlayer(playerid, "~r~STEROIDS~n~~w~Raw Muscle Power (+Melee Damage)!", 3000, 3);
+			PlayerData[playerid][pDrugEffects] = drugType;
+		}
+		case 9: // Oxycodone – ignore broken leg + vision blur
+		{
+			SetPlayerDrunkLevel(playerid, 7000);
+			GameTextForPlayer(playerid, "~y~OXYCODONE~n~~w~Painkillers kicking in...", 3000, 3);
+			PlayerData[playerid][pDrugEffects] = drugType;
+		}
+		default:
+		{
+			new gstr_drug[64];
+			format(gstr_drug, sizeof(gstr_drug), "~p~%s~n~~w~Effect active.", d_DATA[drugType][dName]);
+			GameTextForPlayer(playerid, gstr_drug, 3000, 3);
+			PlayerData[playerid][pDrugEffects] = drugType;
+		}
+	}
+
+	SendClientMessageEx(playerid, COLOR_YELLOW, "You've used %.1f%s of %s. Effect lasts ~%d seconds.",
+		amount, (d_DATA[drugType][IsPill] == true) ? (" Pills") : ("g"), d_DATA[drugType][dName], duration);
 
 	SetPlayerChatBubble(playerid, string, COLOR_PURPLE, 30.0, 6000);
 
@@ -18974,5 +19366,96 @@ Dialog:PlayerVehScrapConfirm(playerid, response, listitem, inputtext[])
 	new query[128];
 	mysql_format(dbCon, query, sizeof(query), "DELETE FROM `cars` WHERE `carID` = '%d' LIMIT 1", CarData[carid][carID]);
 	mysql_tquery(dbCon, query, "OnPlayerVehicleScrap", "ddd", playerid, carid, scrap_price);
+	return 1;
+}
+
+// ----------------------------------------------------------------------------
+// COMMAND: /health [playerid] (Medical & Body Status Inspector)
+// ----------------------------------------------------------------------------
+
+CMD:health(playerid, params[])
+{
+	new targetid = playerid;
+	if(!isnull(params))
+	{
+		if(sscanf(params, "u", targetid))
+			return SendSyntaxMessage(playerid, "/health [playerid/PartOfName]");
+
+		if(targetid == INVALID_PLAYER_ID)
+			return SendErrorMessage(playerid, "Invalid player specified.");
+
+		if(targetid != playerid)
+		{
+			new Float:x, Float:y, Float:z;
+			GetPlayerPos(targetid, x, y, z);
+			if(GetPlayerDistanceFromPoint(playerid, x, y, z) > 5.0)
+				return SendErrorMessage(playerid, "You are too far away from that player.");
+		}
+	}
+
+	new bool:isPrivileged = (playerid == targetid || PlayerData[playerid][pAdmin] > 0 || PlayerData[playerid][pFaction] != -1);
+
+	new Float:hp = PlayerData[targetid][pHealth];
+	new Float:arm = PlayerData[targetid][pArmour];
+
+	new body[1024];
+	format(body, sizeof(body), "{FFFFFF}=== PHYSICAL & MEDICAL STATUS (%s) ===\n\n", ReturnName(targetid, 0));
+
+	format(body, sizeof(body), "%s{00FF88}Health (HP):{FFFFFF} %.1f / 150.0 HP\n", body, hp);
+	format(body, sizeof(body), "%s{00FF88}Armor (Vest):{FFFFFF} %.1f / 150.0%%\n", body, arm);
+
+	if(BrokenLeg{targetid})
+		format(body, sizeof(body), "%s{FF4444}Leg Condition:{FFFFFF} Fractured / Injured (Pincang)\n", body);
+	else
+		format(body, sizeof(body), "%s{00FF88}Leg Condition:{FFFFFF} Healthy / Normal\n", body);
+
+	// Detailed Medical Info (Privileged: Self, Admin, or LSFD/Faction)
+	if(isPrivileged)
+	{
+		format(body, sizeof(body), "%s\n{FFFF00}=== CONFIDENTIAL MEDICAL & TOXICOLOGY LOGS ==={FFFFFF}\n", body);
+
+		// Active Drug Effect
+		new drugID = PlayerData[targetid][pDrugEffects];
+		if(drugID >= 0 && drugID < sizeof(d_DATA))
+		{
+			format(body, sizeof(body), "%s{FFAA00}Active Substance:{FFFFFF} %s (Remaining Duration: ~%d sec)\n", 
+				body, d_DATA[drugID][dName], PlayerData[targetid][pDrugDuration]);
+		}
+		else
+		{
+			format(body, sizeof(body), "%s{AAAAAA}Active Substance:{FFFFFF} None\n", body);
+		}
+
+		// Overdose Status
+		if(PlayerData[targetid][pOverdosing])
+			format(body, sizeof(body), "%s{FF0000}Overdose Status:{FFFFFF} CRITICAL - Fentanyl Overdose (Unconscious / Need Narcan)\n", body);
+		else
+			format(body, sizeof(body), "%s{00FF88}Overdose Status:{FFFFFF} Normal / Clear\n", body);
+
+		// Tolerance Levels Summary
+		new maxTol = 0;
+		for(new d = 0; d < 10; d++)
+		{
+			if(PlayerData[targetid][pDrugTolerance][d] > maxTol)
+				maxTol = PlayerData[targetid][pDrugTolerance][d];
+		}
+		format(body, sizeof(body), "%s{AABBFF}Overall Drug Tolerance:{FFFFFF} %d%%\n", body, maxTol);
+
+		if(maxTol >= 80)
+			format(body, sizeof(body), "%s{FF4444}Withdrawal Alert:{FFFFFF} High Addiction Risk (Severe Tolerance)\n", body);
+	}
+	else
+	{
+		format(body, sizeof(body), "%s\n{AAAAAA}[Note] Detailed toxicology, active drug effects, and overdose logs can only be inspected by Admin or Medical Paramedics.", body);
+	}
+
+	new title[64];
+	format(title, sizeof(title), "Health Inspection: %s", ReturnName(targetid, 0));
+	Dialog_Show(playerid, Health_Inspection, DIALOG_STYLE_MSGBOX, title, body, "Close", "");
+	return 1;
+}
+
+Dialog:Health_Inspection(playerid, response, listitem, inputtext[])
+{
 	return 1;
 }

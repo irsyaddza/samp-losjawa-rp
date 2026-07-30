@@ -2136,6 +2136,7 @@ new PlayerSweeperRouteIndex[MAX_PLAYERS] = {-1, ...};
 #include "modules/system/AdPoints.pwn"
 #include "modules/system/Marriage.pwn"
 #include "modules/system/TrainSystem.pwn"
+#include "modules/system/MedicinePoint.pwn"
 
 public OnGameModeInit()
 {
@@ -2764,6 +2765,18 @@ public OnPlayerGiveDamage(playerid, damagedid, Float: amount, weaponid, bodypart
 		    default:
 			{
 				amount = WeaponDamage[weaponid][WepDamage]; //script damage
+			}
+		}
+
+		// Steroids Melee Damage Boost (Melee weapons: weaponid 0..15)
+		if(IsMelee(weaponid) || weaponid == 0)
+		{
+			if(PlayerData[playerid][pDrugEffects] == 8) // Steroids active
+			{
+				new Float:useDose = PlayerData[playerid][pDrugAmountUsed];
+				new Float:bonusPercent = (useDose <= 0.15) ? (0.20) : ((useDose <= 0.25) ? (0.35) : (0.50));
+				if(amount <= 0.0) amount = 3.0; // fallback fist damage if 0
+				amount = amount + (amount * bonusPercent);
 			}
 		}
 

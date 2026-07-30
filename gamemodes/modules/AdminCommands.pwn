@@ -462,10 +462,10 @@ CMD:ajail(playerid, params[])
 	SendClientMessageEx(playerid, COLOR_GRAD2, " %s was successfully admin jailed for %d minutes", ReturnName(userid), time);
 
 	DesyncPlayerInterior(userid);
-	SetPlayerPosEx(userid, 2689.2698, 2689.3066, 22.9472);
+	SetPlayerPosEx(userid, -9.771969, 2337.558593, 24.303375);
 	SetPlayerInteriorEx(userid, 0);
 	SetPlayerVirtualWorldEx(userid, userid + 200);
-	SetSpawnInfo(userid, NO_TEAM, PlayerData[userid][pModel], 2689.2698, 2689.3066, 22.9472, 1.0, -1, -1, -1, -1, -1, -1);
+	SetSpawnInfo(userid, NO_TEAM, PlayerData[userid][pModel], -9.771969, 2337.558593, 24.303375, 1.0, -1, -1, -1, -1, -1, -1);
 
 	new largeQuery[512];
 
@@ -4095,12 +4095,17 @@ CMD:revive(playerid, params[])
 	if(!IsPlayerConnected(userid))
 		return SendClientMessage(playerid, COLOR_LIGHTRED, "The player you specified isn't connected.");
 
-	if(!PlayerData[userid][pInjured] && !DeathMode{userid})
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "That player isn't dead or brutally wounded.");
+	if(!PlayerData[userid][pInjured] && !DeathMode{userid} && !PlayerData[userid][pOverdosing])
+		return SendClientMessage(playerid, COLOR_LIGHTRED, "That player isn't dead, wounded, or overdosing.");
 
     RevivePlayer(userid);
 	SetPlayerHealthEx(userid, 150.0);
 	TogglePlayerControllable(userid, true);
+
+	// Clear Fentanyl Overdose state if overdosing
+	PlayerData[userid][pOverdosing] = 0;
+	PlayerData[userid][pOverdoseTimer] = 0;
+	ClearAnimations(userid);
 
 	if(PlayerData[userid][pJailed] == 3) AttachPrisonLabel(userid);
 
