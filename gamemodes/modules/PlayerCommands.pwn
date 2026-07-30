@@ -1860,6 +1860,7 @@ Dialog:Help_Main(playerid, response, listitem, inputtext[])
 			gstr[0] = EOS;
 			strcat(gstr, "{FFFFFF}=== INVENTORY & ITEM COMMANDS ===\n\n");
 			strcat(gstr, "{A9C4E4}/pitems{FFFFFF} - Open prison items\n");
+			strcat(gstr, "{A9C4E4}/items{FFFFFF} - Open your items\n");
 			strcat(gstr, "{A9C4E4}/clothing / /clothinghelp{FFFFFF} - Change clothes / outfits\n");
 			strcat(gstr, "{A9C4E4}/note / /viewnotes{FFFFFF} - Create, view, or manage paper notes\n");
 			strcat(gstr, "{A9C4E4}/mask{FFFFFF} - Wear or remove face mask\n");
@@ -4932,36 +4933,212 @@ CMD:friskapprove(playerid, params[])
 	return true;
 }
 
-stock FriskPlayer(playerid, userid)
+// ponytail: Clean function to build & show owned/rented properties in tablist dialog
+CMD:myproperty(playerid, params[])
 {
-	SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s performs a frisk on %s.", ReturnName(playerid, 0), ReturnName(userid, 0));
+	new body[2048], line[160], count = 0;
 
-	SendClientMessage(playerid, COLOR_LIGHTRED, "");
-	SendClientMessage(playerid, COLOR_LIGHTRED, "");
-	SendClientMessageEx(playerid, COLOR_LIGHTRED, "%s's General items:", ReturnName(userid, 0));
+	format(body, sizeof(body), "Type\tProperty Name / Address\tStatus\n");
 
-	if(PlayerData[userid][pCash] > 0 && PlayerData[userid][pCash] <= 500) SendClientMessageEx(playerid, COLOR_LIGHTRED, "[ {FFFFFF}$%d+{FF6347} ]", floatround(float(PlayerData[userid][pCash]), floatround_floor));
-	else if(PlayerData[userid][pCash] > 500) SendClientMessage(playerid, COLOR_LIGHTRED, "[ {FFFFFF}$500+{FF6347} ]");
-
-	SendClientMessageEx(playerid, COLOR_LIGHTRED, "[ {FFFFFF}Cellphone{FF6347} ]");
-
-	for(new i = 0; i < 3; ++i)
+	// 1. Owned House
+	for(new i = 0; i < MAX_PROPERTIES; i++)
 	{
-		if(PlayerData[userid][pWeapon][i] != 0 && PlayerData[userid][pAmmunation][i] != 0)
+		if(PropertyData[i][hOwned] && PropertyData[i][hOwnerSQLID] == PlayerData[playerid][pID])
 		{
-		    SendClientMessageEx(playerid, COLOR_LIGHTRED, "[ {FFFFFF}%s{FF6347} ]", ReturnWeaponName(PlayerData[userid][pWeapon][i]));
+			format(line, sizeof(line), "{FFCC44}[HOUSE]\t{FFFFFF}%s (ID: %d)\t{00FF88}Owner\n", ReturnPropertyAddress(i), i);
+			strcat(body, line);
+			count++;
 		}
 	}
 
-	SendClientMessage(playerid, COLOR_LIGHTRED, "");
-    ShowPlayerDrugs(userid, playerid); // drugs
+	// 2. Rented House / Room
+	new rentHouse = PlayerData[playerid][pHouseKey];
+	if(rentHouse != -1 && rentHouse < MAX_PROPERTIES)
+	{
+		if(!Property_IsOwner(playerid, rentHouse) && PropertyData[rentHouse][hOwned])
+		{
+			format(line, sizeof(line), "{44CCFF}[RENTED HOUSE]\t{FFFFFF}%s (ID: %d)\t{FFFF00}Renter ($%d/hr)\n", 
+				ReturnPropertyAddress(rentHouse), rentHouse, PropertyData[rentHouse][hRentprice]);
+			strcat(body, line);
+			count++;
+		}
+	}
 
-	SendClientMessage(playerid, COLOR_LIGHTRED, "");
-	ShowPlayerWeapons(userid, playerid); // weapon packages
+	// 3. Owned Business
+	new pName[MAX_PLAYER_NAME];
+	format(pName, sizeof(pName), "%s", ReturnName(playerid, 0));
 
-	SendClientMessage(playerid, COLOR_LIGHTRED, "");
-	SendClientMessageEx(playerid, COLOR_LIGHTRED, "%s's Prison items:", ReturnName(userid, 0));
-	SendClientMessage(playerid, COLOR_WHITE, "This player has no prison items.");
+	for(new i = 0; i < MAX_BUSINESS; i++)
+	{
+		if(BusinessData[i][bID] != 0 && BusinessData[i][bOwned])
+		{
+			if(strcmp(BusinessData[i][bOwner], pName, true) == 0 || PlayerData[playerid][pPbiskey] == i)
+			{
+				format(line, sizeof(line), "{FF8844}[BUSINESS]\t{FFFFFF}%s (ID: %d)\t{00FF88}Owner\n", BusinessData[i][bInfo], i);
+				strcat(body, line);
+				count++;
+			}
+		}
+	}
+
+	if(count == 0)
+	{
+		strcat(body, "{AAAAAA}(No Properties)\t{AAAAAA}You don't own or rent any property\t{AAAAAA}None\n");
+	}
+
+	new title[64];
+	format(title, sizeof(title), "My Properties (%d Owned/Rented)", count);
+	Dialog_Show(playerid, Player_Property_Dialog, DIALOG_STYLE_TABLIST_HEADERS, title, body, "Close", "");
+	return 1;
+}
+
+Dialog:Player_Property_Dialog(playerid, response, listitem, inputtext[])
+{
+	return 1;
+}
+
+// ponytail: Single clean function to build & show inventory dialog for /items and /frisk
+stock ShowPlayerInventoryDialog(playerid, targetid)
+{
+	new body[2048], line[128], count = 0;
+
+	format(body, sizeof(body), "Item\tAmount\n");
+
+	// Money
+	if(PlayerData[targetid][pCash] > 0)
+	{
+		format(line, sizeof(line), "{00FF88}Money\t{FFFFFF}%s\n", FormatNumber(PlayerData[targetid][pCash]));
+		strcat(body, line);
+		count++;
+	}
+
+	// Cellphone
+	if(PlayerData[targetid][pPnumber] > 0)
+	{
+		format(line, sizeof(line), "{AABBFF}Cellphone\t{FFFFFF}1 (On) (#%d)\n", PlayerData[targetid][pPnumber]);
+		strcat(body, line);
+		count++;
+	}
+
+	// Radio
+	if(PlayerData[targetid][pRadio] > 0)
+	{
+		format(line, sizeof(line), "{AABBFF}Radio\t{FFFFFF}1 (Slot #%d)\n", PlayerData[targetid][pRSlot]);
+		strcat(body, line);
+		count++;
+	}
+
+	// Equipped Weapons
+	for(new i = 0; i < 3; i++)
+	{
+		if(PlayerData[targetid][pWeapon][i] != 0 && PlayerData[targetid][pAmmunation][i] > 0)
+		{
+			format(line, sizeof(line), "{FF4444}[EQUIPPED] %s\t{FFFFFF}%d Ammo\n", ReturnWeaponName(PlayerData[targetid][pWeapon][i]), PlayerData[targetid][pAmmunation][i]);
+			strcat(body, line);
+			count++;
+		}
+	}
+
+	// Weapon Packages
+	for(new i = 0; i < MAX_PLAYER_WEAPON_PACKAGE; i++)
+	{
+		if(PlayerData[targetid][pPackageWP][i] > 0)
+		{
+			format(line, sizeof(line), "{FF6347}[PACKAGE] %s\t{FFFFFF}1 Pkg (%d Ammo)\n", GetWeaponPackageName(PlayerData[targetid][pPackageWP][i]), PlayerData[targetid][pPackageAmmo][i]);
+			strcat(body, line);
+			count++;
+		}
+	}
+
+	// Drugs
+	for(new i = 0; i < MAX_PLAYER_DRUGS; i++)
+	{
+		if(Player_Drugs[targetid][i][dID] != -1 && Player_Drugs[targetid][i][dAmount] > 0.0)
+		{
+			new drugType = Player_Drugs[targetid][i][dType];
+			format(line, sizeof(line), "{FFAA00}[DRUGS] %s\t{FFFFFF}%.1f%s (%.0f%% Str)\n", 
+				d_DATA[drugType][dName], 
+				Player_Drugs[targetid][i][dAmount], 
+				(d_DATA[drugType][IsPill] ? (" Pills") : ("g")), 
+				Player_Drugs[targetid][i][dStrength]);
+			strcat(body, line);
+			count++;
+		}
+	}
+
+	// Medical
+	if(PlayerData[targetid][pNarcan] > 0)
+	{
+		format(line, sizeof(line), "{FF8888}[MEDICINE] Narcan Dose\t{FFFFFF}%d Dose(s)\n", PlayerData[targetid][pNarcan]);
+		strcat(body, line);
+		count++;
+	}
+	if(PlayerData[targetid][pMedkits] > 0)
+	{
+		format(line, sizeof(line), "{FF8888}[MEDICINE] First Aid Kit\t{FFFFFF}%d Kit(s)\n", PlayerData[targetid][pMedkits]);
+		strcat(body, line);
+		count++;
+	}
+
+	// Utility Items
+	if(PlayerData[targetid][pCigarettes] > 0)
+	{
+		format(line, sizeof(line), "{FFFF88}Cigarettes\t{FFFFFF}%d Pcs\n", PlayerData[targetid][pCigarettes]);
+		strcat(body, line);
+		count++;
+	}
+	if(PlayerData[targetid][pGasCan] > 0)
+	{
+		format(line, sizeof(line), "{FFFF88}Gas Can (Jerigen)\t{FFFFFF}%d Pcs\n", PlayerData[targetid][pGasCan]);
+		strcat(body, line);
+		count++;
+	}
+	if(PlayerData[targetid][pBoombox] > 0)
+	{
+		format(line, sizeof(line), "{FFFF88}Portable Boombox\t{FFFFFF}1 Pcs\n");
+		strcat(body, line);
+		count++;
+	}
+	if(PlayerData[targetid][pHandCuffs] > 0)
+	{
+		format(line, sizeof(line), "{FFFF88}Handcuffs (Borgol)\t{FFFFFF}%d Pcs\n", PlayerData[targetid][pHandCuffs]);
+		strcat(body, line);
+		count++;
+	}
+
+	// Fishes
+	if(PlayerData[targetid][pFishes] > 0)
+	{
+		format(line, sizeof(line), "{44CCFF}[FISHER] Caught Fish\t{FFFFFF}%d Lbs\n", PlayerData[targetid][pFishes]);
+		strcat(body, line);
+		count++;
+	}
+
+	if(count == 0)
+	{
+		strcat(body, "{AAAAAA}(No items in inventory)\t{AAAAAA}Empty\n");
+	}
+
+	new title[64];
+	format(title, sizeof(title), "Inventory of %s (%d Items)", ReturnName(targetid, 0), count);
+	Dialog_Show(playerid, Player_Inventory_Dialog, DIALOG_STYLE_TABLIST_HEADERS, title, body, "Close", "");
+	return 1;
+}
+
+Dialog:Player_Inventory_Dialog(playerid, response, listitem, inputtext[])
+{
+	return 1;
+}
+
+CMD:items(playerid, params[])
+{
+	return ShowPlayerInventoryDialog(playerid, playerid);
+}
+
+stock FriskPlayer(playerid, userid)
+{
+	SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s performs a frisk on %s.", ReturnName(playerid, 0), ReturnName(userid, 0));
+	ShowPlayerInventoryDialog(playerid, userid);
 	return true;
 }
 
@@ -6651,7 +6828,7 @@ stock ShowPlayerRestaurantMenu(playerid, id)
 		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][2], 2220);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][2]);
 
-		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][3], 2355);
+		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][3], 2647); // Soda / Drink Cup
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][3]);
 
 			format(string, sizeof(string), "Buster~n~~r~Health: +30~n~Removes hunger~n~~b~Price: %s", FormatNumber(BusinessData[id][bItems][0]));
@@ -6666,7 +6843,7 @@ stock ShowPlayerRestaurantMenu(playerid, id)
 			PlayerTextDrawSetString(playerid,PTD_Restaurant[playerid][6], string);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][6]);
 
-		    format(string, sizeof(string), "Salad Meal~n~~r~Health: +100~n~Removes hunger~n~~b~Price: %s", FormatNumber(BusinessData[id][bItems][3]));
+		    format(string, sizeof(string), "Sprunk Drink~n~~b~Thirst: +100%%~n~~r~Health: +15~n~~b~Price: %s", FormatNumber(BusinessData[id][bItems][3]));
 			PlayerTextDrawSetString(playerid,PTD_Restaurant[playerid][7], string);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][7]);
 		}
@@ -6681,6 +6858,9 @@ stock ShowPlayerRestaurantMenu(playerid, id)
 		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][2], 2222);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][2]);
 
+		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][3], 2647); // Coffee / Hot Drink
+		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][3]);
+
             format(string, sizeof(string), "Rusty's D-Luxe~n~~r~Health: +30~n~Removes hunger~n~~b~Price: %s", FormatNumber(BusinessData[id][bItems][0]));
 			PlayerTextDrawSetString(playerid,PTD_Restaurant[playerid][4], string);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][4]);
@@ -6692,6 +6872,10 @@ stock ShowPlayerRestaurantMenu(playerid, id)
 		    format(string, sizeof(string), "Rusty's Huge Double~n~~r~Health: +100~n~Removes hunger~n~~b~Price: %s", FormatNumber(BusinessData[id][bItems][2]));
 			PlayerTextDrawSetString(playerid,PTD_Restaurant[playerid][6], string);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][6]);
+
+		    format(string, sizeof(string), "Rusty's Iced Coffee~n~~b~Thirst: +100%%~n~~r~Health: +15~n~~b~Price: %s", FormatNumber(BusinessData[id][bItems][3]));
+			PlayerTextDrawSetString(playerid,PTD_Restaurant[playerid][7], string);
+		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][7]);
 		}
  		case 1: // Burger Shot
 		{
@@ -6704,7 +6888,7 @@ stock ShowPlayerRestaurantMenu(playerid, id)
 		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][2], 2212);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][2]);
 
-		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][3], 2354);
+		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][3], 2647);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][3]);
 
             format(string, sizeof(string), "Moo Kids Meal~n~~r~Health: +30~n~Removes hunger~n~~b~Price: %s", FormatNumber(BusinessData[id][bItems][0]));
@@ -6719,7 +6903,7 @@ stock ShowPlayerRestaurantMenu(playerid, id)
 			PlayerTextDrawSetString(playerid,PTD_Restaurant[playerid][6], string);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][6]);
 
-            format(string, sizeof(string), "Salad Meal~n~~r~Health: +100~n~Removes hunger~n~~b~Price: %s", FormatNumber(BusinessData[id][bItems][3]));
+            format(string, sizeof(string), "Large Soda Drink~n~~b~Thirst: +100%%~n~~r~Health: +15~n~~b~Price: %s", FormatNumber(BusinessData[id][bItems][3]));
 			PlayerTextDrawSetString(playerid,PTD_Restaurant[playerid][7], string);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][7]);
 		}
@@ -6734,7 +6918,7 @@ stock ShowPlayerRestaurantMenu(playerid, id)
 		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][2], 2217);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][2]);
 
-		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][3], 2353);
+		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][3], 2647);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][3]);
 
             format(string, sizeof(string), "Cluckin' Little Meal~n~~r~Health: +30~n~Removes hunger~n~~b~Price: %s", FormatNumber(BusinessData[id][bItems][0]));
@@ -6749,7 +6933,7 @@ stock ShowPlayerRestaurantMenu(playerid, id)
 			PlayerTextDrawSetString(playerid,PTD_Restaurant[playerid][6], string);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][6]);
 
-            format(string, sizeof(string), "Salad Meal~n~~r~Health: +100~n~Removes hunger~n~~b~Price: %s", FormatNumber(BusinessData[id][bItems][3]));
+            format(string, sizeof(string), "Cluckin' Soft Drink~n~~b~Thirst: +100%%~n~~r~Health: +15~n~~b~Price: %s", FormatNumber(BusinessData[id][bItems][3]));
 			PlayerTextDrawSetString(playerid,PTD_Restaurant[playerid][7], string);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][7]);
 		}

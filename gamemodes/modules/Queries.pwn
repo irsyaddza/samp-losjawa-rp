@@ -31,7 +31,13 @@ SQL_Connect()
 	if(mysql_errno(dbCon))
 		printf("[SQL] Connection to \"%s\" failed! Please check the connection settings...\a", SQL_HOSTNAME);
 	else
+	{
 		printf("[SQL] Connection to \"%s\" passed!", SQL_HOSTNAME);
+
+		// Ensure Hunger & Thirst columns exist in characters table
+		mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `Hunger` INT(11) NOT NULL DEFAULT '100';");
+		mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `Thirst` INT(11) NOT NULL DEFAULT '100';");
+	}
 
 	return true;
 }

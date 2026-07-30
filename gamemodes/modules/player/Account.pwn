@@ -395,6 +395,9 @@ public OnQueryFinished(extraid, threadid)
 				cache_get_value_name_float(0, "Health", PlayerData[extraid][pHealth]);
 				cache_get_value_name_float(0, "Armour", PlayerData[extraid][pArmour]);
 
+				if(cache_get_value_name_int(0, "Hunger", PlayerData[extraid][pHunger]) != 0) PlayerData[extraid][pHunger] = 100;
+				if(cache_get_value_name_int(0, "Thirst", PlayerData[extraid][pThirst]) != 0) PlayerData[extraid][pThirst] = 100;
+
 				cache_get_value_name_int(0, "Fishes", PlayerData[extraid][pFishes]);
 
 				cache_get_value_name_int(0, "Checkpoint_Type", PlayerData[extraid][pCP_Type]);

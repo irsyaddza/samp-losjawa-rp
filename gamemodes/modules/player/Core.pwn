@@ -153,7 +153,9 @@ enum E_PLAYER_DATA
 	pHandCuffs,
 	pLastVehicle,
 	pBusJobDelay,
-	pSweeperJobDelay
+	pSweeperJobDelay,
+	pHunger,
+	pThirst
 };
 
 new PlayerData[MAX_PLAYERS][E_PLAYER_DATA];

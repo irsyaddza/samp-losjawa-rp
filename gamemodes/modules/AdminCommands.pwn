@@ -4874,6 +4874,22 @@ CMD:setstat(playerid, params[])
 
             SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(3) %s has set %s's CCW License to %d.", ReturnName(playerid), ReturnName(pid), amount);
 		}
+		case 26:
+		{
+			if(amount < 0) amount = 0;
+			if(amount > 100) amount = 100;
+			PlayerData[pid][pHunger] = amount;
+			SendClientMessageEx(pid, COLOR_YELLOW, "%s set %s's hunger to %d%%", ReturnName(playerid), ReturnName(pid), amount);
+			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(3) %s has set %s's Hunger to %d%%.", ReturnName(playerid), ReturnName(pid), amount);
+		}
+		case 27:
+		{
+			if(amount < 0) amount = 0;
+			if(amount > 100) amount = 100;
+			PlayerData[pid][pThirst] = amount;
+			SendClientMessageEx(pid, COLOR_YELLOW, "%s set %s's thirst to %d%%", ReturnName(playerid), ReturnName(pid), amount);
+			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(3) %s has set %s's Thirst to %d%%.", ReturnName(playerid), ReturnName(pid), amount);
+		}
 		default:
 		{
 			return SendClientMessage(playerid, COLOR_GRAD2, "Invalid stat code.");

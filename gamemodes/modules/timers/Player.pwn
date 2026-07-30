@@ -392,6 +392,45 @@ ptask Players[1000](i)
 			SendClientMessage(i, COLOR_LIGHTRED, "[WITHDRAWAL] Your body is experiencing mild tremors due to high drug tolerance...");
 		}
 
+	// Hunger & Thirst Decay (Every 180s = -2% Hunger, Every 120s = -3% Thirst)
+	if(PlayerData[i][pPlayingSeconds] % 180 == 0)
+	{
+		if(PlayerData[i][pHunger] > 0)
+		{
+			PlayerData[i][pHunger] -= 2;
+			if(PlayerData[i][pHunger] < 0) PlayerData[i][pHunger] = 0;
+		}
+	}
+	if(PlayerData[i][pPlayingSeconds] % 120 == 0)
+	{
+		if(PlayerData[i][pThirst] > 0)
+		{
+			PlayerData[i][pThirst] -= 3;
+			if(PlayerData[i][pThirst] < 0) PlayerData[i][pThirst] = 0;
+		}
+	}
+
+	// Hunger & Thirst Warnings & Starvation Penalty
+	if(PlayerData[i][pHunger] <= 5 || PlayerData[i][pThirst] <= 5)
+	{
+		if(PlayerData[i][pPlayingSeconds] % 10 == 0)
+		{
+			new Float:pHP = PlayerData[i][pHealth];
+			if(pHP > 10.0)
+			{
+				SetPlayerHealthEx(i, pHP - 2.0);
+				SendClientMessage(i, COLOR_LIGHTRED, "[NEEDS] You are starving / severely dehydrated! (-2 HP)");
+			}
+		}
+	}
+	else if(PlayerData[i][pHunger] <= 20 || PlayerData[i][pThirst] <= 20)
+	{
+		if(PlayerData[i][pPlayingSeconds] % 120 == 0)
+		{
+			SendClientMessage(i, COLOR_YELLOW, "[NEEDS] You are feeling very hungry / thirsty! Find food or drink soon.");
+		}
+	}
+
 	    if(PlayerData[i][pDrugStamp] != 0) //drug withdrawal effects
 	    {
 	        if((timestamp - PlayerData[i][pDrugStamp]) > 5400)

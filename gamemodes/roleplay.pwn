@@ -5636,7 +5636,7 @@ SQL_SaveCharacter(playerid, bool:quit = true)
 		PlayerData[playerid][pAmmunation][2]
 	);
 
-	format(query, sizeof(query), "%s, `Tutorial` = '%d', `Model` = '%d', `PhoneNumbr` = '%d', `PhoneModel` = '%d', `SpawnPoint` = '%d', `FactionSpawn` = '%d', `Level` = '%d', `Exp` = '%d', `ExpCounter` = '%d', `PayDay` = '%d', `PayDayHad` = '%d', `PayCheck` = '%d', `ChequeCash` = '%d', `Injured` = '%d', `playerTimeout` = '%d', `MedicBill` = '%d', `Armour` = '%f', `Health` = '%f' WHERE `ID` = '%d'",
+	format(query, sizeof(query), "%s, `Tutorial` = '%d', `Model` = '%d', `PhoneNumbr` = '%d', `PhoneModel` = '%d', `SpawnPoint` = '%d', `FactionSpawn` = '%d', `Level` = '%d', `Exp` = '%d', `ExpCounter` = '%d', `PayDay` = '%d', `PayDayHad` = '%d', `PayCheck` = '%d', `ChequeCash` = '%d', `Injured` = '%d', `playerTimeout` = '%d', `MedicBill` = '%d', `Armour` = '%f', `Health` = '%f', `Hunger` = '%d', `Thirst` = '%d' WHERE `ID` = '%d'",
 		query,
 		PlayerData[playerid][pTutorial],
 		PlayerData[playerid][pModel],
@@ -5656,6 +5656,8 @@ SQL_SaveCharacter(playerid, bool:quit = true)
 		MedicBill[playerid],
  		PlayerData[playerid][pArmour],
 		PlayerData[playerid][pHealth],
+		PlayerData[playerid][pHunger],
+		PlayerData[playerid][pThirst],
 		PlayerData[playerid][pID]
 	);
 
@@ -10508,6 +10510,9 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
 			TakePlayerMoney(playerid, BusinessData[InBusiness[playerid]][bItems][0]);
 
+			PlayerData[playerid][pHunger] += 30;
+			if(PlayerData[playerid][pHunger] > 100) PlayerData[playerid][pHunger] = 100;
+
             BusinessData[InBusiness[playerid]][bProducts]--;
 			BusinessData[InBusiness[playerid]][bTill] += floatround(BusinessData[InBusiness[playerid]][bItems][0] * 0.7);
 
@@ -10610,6 +10615,11 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
 			TakePlayerMoney(playerid, BusinessData[InBusiness[playerid]][bItems][1]);
 
+			PlayerData[playerid][pHunger] += 60;
+			if(PlayerData[playerid][pHunger] > 100) PlayerData[playerid][pHunger] = 100;
+			PlayerData[playerid][pThirst] += 25;
+			if(PlayerData[playerid][pThirst] > 100) PlayerData[playerid][pThirst] = 100;
+
 			BusinessData[InBusiness[playerid]][bProducts]--;
 			BusinessData[InBusiness[playerid]][bTill] += floatround(BusinessData[InBusiness[playerid]][bItems][1]*0.7);
 
@@ -10695,6 +10705,10 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
 			TakePlayerMoney(playerid, BusinessData[InBusiness[playerid]][bItems][2]);
 
+			PlayerData[playerid][pHunger] = 100;
+			PlayerData[playerid][pThirst] += 40;
+			if(PlayerData[playerid][pThirst] > 100) PlayerData[playerid][pThirst] = 100;
+
 			BusinessData[InBusiness[playerid]][bProducts]--;
 			BusinessData[InBusiness[playerid]][bTill] += floatround(BusinessData[InBusiness[playerid]][bItems][2]*0.7);
 
@@ -10733,48 +10747,54 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
-					    SetPlayerHealthEx(playerid, 100);
+					    if(PlayerData[playerid][pHealth] + 15 <= 100) SetPlayerHealthEx(playerid, PlayerData[playerid][pHealth] + 15);
+					    else SetPlayerHealthEx(playerid, 100);
 				    }
 
-				    SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s orders a meal.", ReturnName(playerid, 0));
-				    SendClientMessageEx(playerid, COLOR_WHITE, "Ordered {FF6347}Salad Meal{FFFFFF} for {FF6347}%s{FFFFFF}.", FormatNumber(BusinessData[InBusiness[playerid]][bItems][3]));
+				    SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s buys and drinks a beverage.", ReturnName(playerid, 0));
+				    SendClientMessageEx(playerid, COLOR_WHITE, "Bought and drank {FF6347}Sprunk Drink{FFFFFF} for {FF6347}%s{FFFFFF}.", FormatNumber(BusinessData[InBusiness[playerid]][bItems][3]));
+				}
+				case 3: // Rusty Browns Donuts
+				{
+				    if(PlayerData[playerid][pHealth] < 100)
+				    {
+					    if(PlayerData[playerid][pHealth] + 15 <= 100) SetPlayerHealthEx(playerid, PlayerData[playerid][pHealth] + 15);
+					    else SetPlayerHealthEx(playerid, 100);
+				    }
 
-					MealHolding[playerid] = 2355;
+				    SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s buys and drinks a beverage.", ReturnName(playerid, 0));
+				    SendClientMessageEx(playerid, COLOR_WHITE, "Bought and drank {FF6347}Rusty's Iced Coffee{FFFFFF} for {FF6347}%s{FFFFFF}.", FormatNumber(BusinessData[InBusiness[playerid]][bItems][3]));
 				}
 				case 1: // Burger Shot
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
-					    SetPlayerHealthEx(playerid, 100);
+					    if(PlayerData[playerid][pHealth] + 15 <= 100) SetPlayerHealthEx(playerid, PlayerData[playerid][pHealth] + 15);
+					    else SetPlayerHealthEx(playerid, 100);
 				    }
 
-				    SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s orders a meal.", ReturnName(playerid, 0));
-				    SendClientMessageEx(playerid, COLOR_WHITE, "Ordered {FF6347}Salad Meal{FFFFFF} for {FF6347}%s{FFFFFF}.", FormatNumber(BusinessData[InBusiness[playerid]][bItems][3]));
-
-                    MealHolding[playerid] = 2354;
+				    SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s buys and drinks a beverage.", ReturnName(playerid, 0));
+				    SendClientMessageEx(playerid, COLOR_WHITE, "Bought and drank {FF6347}Large Soda Drink{FFFFFF} for {FF6347}%s{FFFFFF}.", FormatNumber(BusinessData[InBusiness[playerid]][bItems][3]));
 				}
 				case 0: // Cluckin Bell
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
-					    SetPlayerHealthEx(playerid, 100);
+					    if(PlayerData[playerid][pHealth] + 15 <= 100) SetPlayerHealthEx(playerid, PlayerData[playerid][pHealth] + 15);
+					    else SetPlayerHealthEx(playerid, 100);
 				    }
 
-				    SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s orders a meal.", ReturnName(playerid, 0));
-				    SendClientMessageEx(playerid, COLOR_WHITE, "Ordered {FF6347}Salad Meal{FFFFFF} for {FF6347}%s{FFFFFF}.", FormatNumber(BusinessData[InBusiness[playerid]][bItems][3]));
-
-                    MealHolding[playerid] = 2353;
+				    SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s buys and drinks a beverage.", ReturnName(playerid, 0));
+				    SendClientMessageEx(playerid, COLOR_WHITE, "Bought and drank {FF6347}Cluckin' Soft Drink{FFFFFF} for {FF6347}%s{FFFFFF}.", FormatNumber(BusinessData[InBusiness[playerid]][bItems][3]));
 				}
 			}
 
 			TakePlayerMoney(playerid, BusinessData[InBusiness[playerid]][bItems][3]);
 
+			PlayerData[playerid][pThirst] = 100;
+
 			BusinessData[InBusiness[playerid]][bProducts]--;
 			BusinessData[InBusiness[playerid]][bTill] += floatround(BusinessData[InBusiness[playerid]][bItems][3]*0.7);
-
-			SetPlayerSpecialAction(playerid, SPECIAL_ACTION_CARRY);
-			SetPlayerMealHold(playerid, MealHolding[playerid]);
-			SendClientMessage(playerid, COLOR_WHITE, "You can{FF6347} /meal place{FFFFFF} it on a table or {FF6347}/meal throw{FFFFFF} it away.");
 
 			for(new i = 0; i != sizeof(TD_Restaurant); ++i)
 				TextDrawHideForPlayer(playerid, TD_Restaurant[i]);

@@ -40,6 +40,13 @@ new PlayerText:HV2_WindShort  [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...
 new PlayerText:HV2_WindLong   [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
 new PlayerText:HV2_Location   [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
 
+/* Hunger & Thirst HUD */
+new PlayerText:HV2_HTBG       [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
+new PlayerText:HV2_HungerIcon [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
+new PlayerText:HV2_HungerVal  [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
+new PlayerText:HV2_ThirstIcon [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
+new PlayerText:HV2_ThirstVal  [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
+
 /* Radio HUD */
 new PlayerText:HV2_BaseRadio  [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
 new PlayerText:HV2_RadioSlot  [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
@@ -151,6 +158,57 @@ CreateHudV2PlayerTDs(playerid)
     PlayerTextDrawBackgroundColour(playerid, HV2_Location[playerid], 150);
     PlayerTextDrawFont(playerid, HV2_Location[playerid], TEXT_DRAW_FONT_3);
     PlayerTextDrawSetProportional(playerid, HV2_Location[playerid], true);
+
+    // ── Hunger & Thirst HUD ───────────────────────────────────────────
+    HV2_HTBG[playerid] = CreatePlayerTextDraw(playerid, 507.000, 137.000, "LD_SPAC:white");
+    PlayerTextDrawTextSize(playerid, HV2_HTBG[playerid], 99.000, 34.000);
+    PlayerTextDrawAlignment(playerid, HV2_HTBG[playerid], TEXT_DRAW_ALIGN_LEFT);
+    PlayerTextDrawColour(playerid, HV2_HTBG[playerid], 130);
+    PlayerTextDrawSetShadow(playerid, HV2_HTBG[playerid], 0);
+    PlayerTextDrawSetOutline(playerid, HV2_HTBG[playerid], 0);
+    PlayerTextDrawBackgroundColour(playerid, HV2_HTBG[playerid], 255);
+    PlayerTextDrawFont(playerid, HV2_HTBG[playerid], TEXT_DRAW_FONT_SPRITE_DRAW);
+    PlayerTextDrawSetProportional(playerid, HV2_HTBG[playerid], true);
+
+    HV2_HungerIcon[playerid] = CreatePlayerTextDraw(playerid, 511.000, 144.000, "HUD:radar_pizza");
+    PlayerTextDrawTextSize(playerid, HV2_HungerIcon[playerid], 21.000, 21.000);
+    PlayerTextDrawAlignment(playerid, HV2_HungerIcon[playerid], TEXT_DRAW_ALIGN_LEFT);
+    PlayerTextDrawColour(playerid, HV2_HungerIcon[playerid], -1);
+    PlayerTextDrawSetShadow(playerid, HV2_HungerIcon[playerid], 0);
+    PlayerTextDrawSetOutline(playerid, HV2_HungerIcon[playerid], 0);
+    PlayerTextDrawBackgroundColour(playerid, HV2_HungerIcon[playerid], 255);
+    PlayerTextDrawFont(playerid, HV2_HungerIcon[playerid], TEXT_DRAW_FONT_SPRITE_DRAW);
+    PlayerTextDrawSetProportional(playerid, HV2_HungerIcon[playerid], true);
+
+    HV2_HungerVal[playerid] = CreatePlayerTextDraw(playerid, 533.000, 147.000, "100");
+    PlayerTextDrawLetterSize(playerid, HV2_HungerVal[playerid], 0.280, 1.500);
+    PlayerTextDrawAlignment(playerid, HV2_HungerVal[playerid], TEXT_DRAW_ALIGN_LEFT);
+    PlayerTextDrawColour(playerid, HV2_HungerVal[playerid], -1);
+    PlayerTextDrawSetShadow(playerid, HV2_HungerVal[playerid], 1);
+    PlayerTextDrawSetOutline(playerid, HV2_HungerVal[playerid], 1);
+    PlayerTextDrawBackgroundColour(playerid, HV2_HungerVal[playerid], 150);
+    PlayerTextDrawFont(playerid, HV2_HungerVal[playerid], TEXT_DRAW_FONT_2);
+    PlayerTextDrawSetProportional(playerid, HV2_HungerVal[playerid], true);
+
+    HV2_ThirstIcon[playerid] = CreatePlayerTextDraw(playerid, 559.000, 144.000, "HUD:radar_dateDrink");
+    PlayerTextDrawTextSize(playerid, HV2_ThirstIcon[playerid], 20.000, 21.000);
+    PlayerTextDrawAlignment(playerid, HV2_ThirstIcon[playerid], TEXT_DRAW_ALIGN_LEFT);
+    PlayerTextDrawColour(playerid, HV2_ThirstIcon[playerid], -1);
+    PlayerTextDrawSetShadow(playerid, HV2_ThirstIcon[playerid], 0);
+    PlayerTextDrawSetOutline(playerid, HV2_ThirstIcon[playerid], 0);
+    PlayerTextDrawBackgroundColour(playerid, HV2_ThirstIcon[playerid], 255);
+    PlayerTextDrawFont(playerid, HV2_ThirstIcon[playerid], TEXT_DRAW_FONT_SPRITE_DRAW);
+    PlayerTextDrawSetProportional(playerid, HV2_ThirstIcon[playerid], true);
+
+    HV2_ThirstVal[playerid] = CreatePlayerTextDraw(playerid, 580.000, 147.000, "100");
+    PlayerTextDrawLetterSize(playerid, HV2_ThirstVal[playerid], 0.280, 1.500);
+    PlayerTextDrawAlignment(playerid, HV2_ThirstVal[playerid], TEXT_DRAW_ALIGN_LEFT);
+    PlayerTextDrawColour(playerid, HV2_ThirstVal[playerid], -1);
+    PlayerTextDrawSetShadow(playerid, HV2_ThirstVal[playerid], 1);
+    PlayerTextDrawSetOutline(playerid, HV2_ThirstVal[playerid], 1);
+    PlayerTextDrawBackgroundColour(playerid, HV2_ThirstVal[playerid], 150);
+    PlayerTextDrawFont(playerid, HV2_ThirstVal[playerid], TEXT_DRAW_FONT_2);
+    PlayerTextDrawSetProportional(playerid, HV2_ThirstVal[playerid], true);
 
     // ── Radio Background ──────────────────────────────────────────────
     HV2_BaseRadio[playerid] = CreatePlayerTextDraw(playerid, 507.000, 100.000, "LD_SPAC:white");
@@ -313,6 +371,11 @@ DestroyHudV2PlayerTDs(playerid)
     _DESTROY_P(HV2_WindShort)
     _DESTROY_P(HV2_WindLong)
     _DESTROY_P(HV2_Location)
+    _DESTROY_P(HV2_HTBG)
+    _DESTROY_P(HV2_HungerIcon)
+    _DESTROY_P(HV2_HungerVal)
+    _DESTROY_P(HV2_ThirstIcon)
+    _DESTROY_P(HV2_ThirstVal)
     _DESTROY_P(HV2_BaseRadio)
     _DESTROY_P(HV2_RadioSlot)
     _DESTROY_P(HV2_RadioChan)
@@ -341,6 +404,13 @@ ShowHudV2Base(playerid)
     if(HV2_WindShort[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_WindShort[playerid]);
     if(HV2_WindLong[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_WindLong[playerid]);
     if(HV2_Location[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_Location[playerid]);
+
+    if(HV2_HTBG[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_HTBG[playerid]);
+    if(HV2_HungerIcon[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_HungerIcon[playerid]);
+    if(HV2_HungerVal[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_HungerVal[playerid]);
+    if(HV2_ThirstIcon[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_ThirstIcon[playerid]);
+    if(HV2_ThirstVal[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_ThirstVal[playerid]);
+
     ShowHudV2Radio(playerid);
 }
 
@@ -353,6 +423,13 @@ HideHudV2Base(playerid)
     if(HV2_WindShort[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_WindShort[playerid]);
     if(HV2_WindLong[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_WindLong[playerid]);
     if(HV2_Location[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_Location[playerid]);
+
+    if(HV2_HTBG[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_HTBG[playerid]);
+    if(HV2_HungerIcon[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_HungerIcon[playerid]);
+    if(HV2_HungerVal[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_HungerVal[playerid]);
+    if(HV2_ThirstIcon[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_ThirstIcon[playerid]);
+    if(HV2_ThirstVal[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_ThirstVal[playerid]);
+
     HideHudV2Radio(playerid);
 }
 
@@ -479,6 +556,14 @@ UpdateHudV2Player(playerid, vehicleid)
 {
     if(PlayerFlags[playerid][toggleHUD]) return;
     if(HV2_WindShort[playerid] == PlayerText:INVALID_TEXT_DRAW) return;
+
+    // ── Hunger & Thirst Values ─────────────────────────────────
+    new htStr[16];
+    format(htStr, sizeof(htStr), "%d", PlayerData[playerid][pHunger]);
+    PlayerTextDrawSetString(playerid, HV2_HungerVal[playerid], htStr);
+
+    format(htStr, sizeof(htStr), "%d", PlayerData[playerid][pThirst]);
+    PlayerTextDrawSetString(playerid, HV2_ThirstVal[playerid], htStr);
 
     // ── Wind Direction ─────────────────────────────────────────
     new Float:angle;
