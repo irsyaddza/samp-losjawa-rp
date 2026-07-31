@@ -8,6 +8,8 @@
 
 #include <a_samp>
 
+#pragma warning disable 203, 204, 213, 217, 221, 225, 239, 240, 252
+
 #undef MAX_PLAYERS
 #define MAX_PLAYERS (200)
 
@@ -2205,7 +2207,10 @@ public OnGameModeInit()
     #include "modules/mapping/Ship.pwn"
     #include "modules/mapping/Pickups.pwn"
 
-    SendRconCommand("hostname "SERVER_NAME"");
+    SendRconCommand("hostname [Los Jawa RP is restarting, please wait...]");
+    SendRconCommand("password restartlock123");
+    SetTimer("OnServerRestartLockFinish", 120000, false);
+
     SendRconCommand("weburl "SERVER_SITE"");
     SendRconCommand("mapname Pulau Jawa");
 

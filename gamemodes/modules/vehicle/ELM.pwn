@@ -7,20 +7,27 @@ new bool:vELMActive[MAX_VEHICLES];
 new vELMPattern[MAX_VEHICLES];
 new vELMOriginalLights[MAX_VEHICLES];
 
-// Initializer: start the 120ms flasher timer
+// Global active ELM timer handle
+new gELMTimer = -1;
+
 stock ELM_Init()
 {
-	SetTimer("ELM_FlashTimer", 120, true);
+	// Timer is created dynamically when first vehicle activates ELM
 	return 1;
 }
 
 forward ELM_FlashTimer();
 public ELM_FlashTimer()
 {
-	for(new v = 1, x = GetVehiclePoolSize(); v <= x; v++)
+	new activeCount = 0;
+	new poolSize = GetVehiclePoolSize();
+
+	for(new v = 1; v <= poolSize; v++)
 	{
 		if(vELMActive[v])
 		{
+			activeCount++;
+
 			new panels, doors_status, lights_status, tires;
 			GetVehicleDamageStatus(v, panels, doors_status, lights_status, tires);
 
@@ -51,6 +58,13 @@ public ELM_FlashTimer()
 			UpdateVehicleDamageStatus(v, panels, doors_status, new_lights, tires);
 		}
 	}
+
+	// Auto-kill timer when no vehicles are using ELM to prevent long callback log spam
+	if(activeCount == 0 && gELMTimer != -1)
+	{
+		KillTimer(gELMTimer);
+		gELMTimer = -1;
+	}
 	return 1;
 }
 
@@ -62,6 +76,12 @@ stock ToggleEmergencyLights(vehicleid, bool:toggle)
 		{
 			vELMActive[vehicleid] = true;
 			vELMPattern[vehicleid] = 0;
+
+			// Start timer if not running
+			if(gELMTimer == -1)
+			{
+				gELMTimer = SetTimer("ELM_FlashTimer", 150, true);
+			}
 
 			// Save original lights param and force them ON
 			new engine, lights, alarm, doors, bonnet, boot, objective;

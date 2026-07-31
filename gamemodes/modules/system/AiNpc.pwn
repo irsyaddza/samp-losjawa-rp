@@ -226,8 +226,6 @@ stock SendAiNpcQuery(playerid, npcSlot, const userMessage[])
 
 	new authHeader[200];
 	format(authHeader, sizeof(authHeader), "Bearer %s", gOpenRouterKey);
-	printf("[AI NPC DEBUG]: Sending query to OpenRouter with key: '%.15s...' and model: '%s'", gOpenRouterKey, gOpenRouterModel);
-	printf("[AI NPC DEBUG]: Payload Body: %.300s", bodyString);
 
 	new Headers:headers = RequestHeaders("Authorization", authHeader, "Content-Type", "application/json", "HTTP-Referer", "https://losjawa-roleplay.com");
 
@@ -244,9 +242,9 @@ stock SendAiNpcQuery(playerid, npcSlot, const userMessage[])
 forward OnAiNpcRawResponse(Request:id, E_HTTP_STATUS:status, data[]);
 public OnAiNpcRawResponse(Request:id, E_HTTP_STATUS:status, data[])
 {
-	printf("[AI NPC RAW RESPONSE]: HTTP status %d | Response Body: %.500s", _:status, data);
 	if(status != HTTP_STATUS_OK)
 	{
+		printf("[AI NPC ERROR]: OpenRouter returned HTTP %d | Body: %.200s", _:status, data);
 		foreach(new i : AiNpc)
 		{
 			if(AiNpcData[i][npcIsThinking])

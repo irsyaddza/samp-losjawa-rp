@@ -50,10 +50,10 @@
     "logging": {
         "enable": true,
         "file": "log.txt",
-        "log_chat": true,
-        "log_connection_messages": true,
+        "log_chat": false,
+        "log_connection_messages": false,
         "log_cookies": false,
-        "log_deaths": true,
+        "log_deaths": false,
         "log_queries": false,
         "log_sqlite": false,
         "log_sqlite_queries": false,

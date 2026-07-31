@@ -1305,6 +1305,64 @@ CMD:maketester(playerid, params[])
     return true;
 }
 
+// GMX & Restart Lock System
+new bool:gServerRestarting = false;
+new gGMXTimerID = -1;
+new gGMXCountdown = 0;
+
+forward OnGMXCountdownTimer();
+public OnGMXCountdownTimer()
+{
+	gGMXCountdown--;
+	if(gGMXCountdown > 0)
+	{
+		SendClientMessageToAllEx(COLOR_LIGHTRED, "[SERVER]: The server will restart in %d minutes! Please secure your position and items.", gGMXCountdown);
+	}
+	else
+	{
+		KillTimer(gGMXTimerID);
+		gGMXTimerID = -1;
+
+		SendClientMessageToAll(COLOR_LIGHTRED, "[SERVER]: The server is currently locked and reloading data. All players have been disconnected.");
+		SendRconCommand("password restartlock123");
+
+		foreach(new i : Player)
+		{
+			Kick(i);
+		}
+	}
+	return 1;
+}
+
+forward OnServerRestartLockFinish();
+public OnServerRestartLockFinish()
+{
+	SendRconCommand("password 0");
+	SendRconCommand("hostname "SERVER_NAME"");
+	printf("[SERVER RESTART]: The 2-minute restart lock is over. The server is open to the public again!");
+	return 1;
+}
+
+CMD:gmx(playerid, params[])
+{
+	if(PlayerData[playerid][pAdmin] < 1337)
+		return SendUnauthMessage(playerid, "Only Head Admin (Level 1337) can use this command.");
+
+	new minutes;
+	if(sscanf(params, "d", minutes) || minutes < 1 || minutes > 60)
+		return SendSyntaxMessage(playerid, "/gmx [minute (1-60)]");
+
+	if(gGMXTimerID != -1)
+		return SendErrorMessage(playerid, "Server restart is running!");
+
+	gGMXCountdown = minutes;
+	gGMXTimerID = SetTimer("OnGMXCountdownTimer", 60000, true);
+
+	SendClientMessageToAllEx(COLOR_LIGHTRED, "[SERVER]: Admin %s is scheduling a server restart in %d minute!", ReturnName(playerid), minutes);
+	SendAdminAlert(COLOR_LIGHTRED, JUNIOR_ADMINS, "AdmCmd: %s (Head Admin) initiated /gmx restart in %d minute(s).", ReturnName(playerid), minutes);
+	return true;
+}
+
 CMD:updatemotd(playerid, params[])
 {
 	if(PlayerData[playerid][pAdmin] < 1337)
