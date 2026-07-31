@@ -1,5 +1,5 @@
-#define SERVER_SITE "https://ucp.rusdi-bot.site"
-#define SERVER_MODE "LJ:RP 0.1.0"
+new gServerSite[128] = "https://ucp.rusdi-bot.site";
+new gServerMode[64] = "LJ:RP 0.1.0";
 
 #if IS_LOCAL_HOST == true
 	#define SERVER_NAME "[open.mp] Los Jawa Roleplay | Dev Server!"

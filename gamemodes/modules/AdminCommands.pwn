@@ -1343,6 +1343,83 @@ public OnServerRestartLockFinish()
 	return 1;
 }
 
+CMD:webedit(playerid, params[])
+{
+	if(PlayerData[playerid][pAdmin] < 1337)
+		return SendUnauthMessage(playerid, "Only Head Admin who can change website domain.");
+
+	new newDomain[128];
+	if(sscanf(params, "s[128]", newDomain))
+		return SendSyntaxMessage(playerid, "/webedit [new_domain] (ex: /webedit losjawarp.net)");
+
+	// Update variabel runtime
+	format(gServerSite, sizeof(gServerSite), "%s", newDomain);
+
+	// Update RCON WebURL
+	new rconCmd[200];
+	format(rconCmd, sizeof(rconCmd), "weburl %s", gServerSite);
+	SendRconCommand(rconCmd);
+
+	// Simpan permanen ke MySQL server_settings
+	new query[256];
+	mysql_format(dbCon, query, sizeof(query), "UPDATE `server_settings` SET `web_url` = '%e' WHERE `id` = 1", gServerSite);
+	mysql_tquery(dbCon, query);
+
+	SendServerMessage(playerid, "Website domain succesfully changed to: {FFBF00}%s", gServerSite);
+	SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmCmd: Head Admin %s changed website domain to '%s'.", ReturnName(playerid), gServerSite);
+	return true;
+}
+
+CMD:versionedit(playerid, params[])
+{
+	if(PlayerData[playerid][pAdmin] < 1337)
+		return SendUnauthMessage(playerid, "Only Head Admin who can change server version.");
+
+	new newVersion[64];
+	if(sscanf(params, "s[64]", newVersion))
+		return SendSyntaxMessage(playerid, "/versionedit [mode name or version] (ex: /versionedit LJ:RP 0.2.0)");
+
+	// Update variabel runtime & GameModeText
+	format(gServerMode, sizeof(gServerMode), "%s", newVersion);
+	SetGameModeText(gServerMode);
+
+	// Simpan permanen ke MySQL server_settings
+	new query[256];
+	mysql_format(dbCon, query, sizeof(query), "UPDATE `server_settings` SET `server_mode` = '%e' WHERE `id` = 1", gServerMode);
+	mysql_tquery(dbCon, query);
+
+	return true;
+}
+
+CMD:addchangelog(playerid, params[])
+{
+	if(PlayerData[playerid][pAdmin] < 4)
+		return SendUnauthMessage(playerid, "You are not authorized to use this command.");
+
+	new logEntry[256];
+	if(sscanf(params, "s[256]", logEntry))
+		return SendSyntaxMessage(playerid, "/addchangelog [text update] (ex: /addchangelog [ADD] New JOB)");
+
+	new dateStr[64];
+	format(dateStr, sizeof(dateStr), "%s", ReturnSiteDate());
+
+	new query[512];
+	mysql_format(dbCon, query, sizeof(query), "INSERT INTO `server_changelogs` (`entry`, `added_by`, `added_date`) VALUES ('%e', '%e', '%e')", logEntry, AccountName(playerid), dateStr);
+	mysql_tquery(dbCon, query);
+
+	return true;
+}
+
+CMD:clearchangelog(playerid, params[])
+{
+	if(PlayerData[playerid][pAdmin] < 1337)
+		return SendUnauthMessage(playerid, "You are not authorized to use this command.");
+
+	mysql_tquery(dbCon, "TRUNCATE TABLE `server_changelogs`");
+	
+	return true;
+}
+
 CMD:gmx(playerid, params[])
 {
 	if(PlayerData[playerid][pAdmin] < 1337)
@@ -1359,7 +1436,7 @@ CMD:gmx(playerid, params[])
 	gGMXTimerID = SetTimer("OnGMXCountdownTimer", 60000, true);
 
 	SendClientMessageToAllEx(COLOR_LIGHTRED, "[SERVER]: Admin %s is scheduling a server restart in %d minute!", ReturnName(playerid), minutes);
-	SendAdminAlert(COLOR_LIGHTRED, JUNIOR_ADMINS, "AdmCmd: %s (Head Admin) initiated /gmx restart in %d minute(s).", ReturnName(playerid), minutes);
+	SendAdminAlert(COLOR_LIGHTRED, JUNIOR_ADMINS, "AdmCmd: %s (Head Admin) initiated server restart in %d minute(s).", ReturnName(playerid), minutes);
 	return true;
 }
 

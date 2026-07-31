@@ -18710,18 +18710,41 @@ Dialog:FuelRefill(playerid, response, listitem, inputtext[])
 
 CMD:motd(playerid, params[]) return showServerMOTD(playerid);
 
+forward OnLoadPlayerChangelog(playerid);
+public OnLoadPlayerChangelog(playerid)
+{
+	new rows;
+	cache_get_row_count(rows);
+
+	gstr[0] = EOS;
+	if(!rows)
+	{
+		strcat(gstr, "{FF0000}Changelog not updated yet.\n\nAdmin must use /addchangelog.");
+	}
+	else
+	{
+		strcat(gstr, "{FFFFFF}No. | Log Update | Updated By\n{A9C4E4}------------------------------------------------------------\n");
+		for(new i = 0; i < rows && i < 20; i++)
+		{
+			new entry[140], addedBy[24], addedDate[32], line[256];
+			cache_get_value_name(i, "entry", entry, sizeof(entry));
+			cache_get_value_name(i, "added_by", addedBy, sizeof(addedBy));
+			cache_get_value_name(i, "added_date", addedDate, sizeof(addedDate));
+
+			format(line, sizeof(line), "{FFBF00}%d. {FFFFFF}%s {7E98B6}(by %s - %s)\n", i + 1, entry, addedBy, addedDate);
+			strcat(gstr, line);
+		}
+	}
+
+	new title[64];
+	format(title, sizeof(title), "Server Changelogs | %s", gServerMode);
+	ShowPlayerDialog(playerid, DIALOG_CHANGELOG, DIALOG_STYLE_MSGBOX, title, gstr, "Close", "");
+	return 1;
+}
+
 CMD:changelog(playerid, params[])
 {
-	format(gstr, sizeof(gstr), 
-	"{ffffff}1. [ADD] Fitur pemilihan senjata dari dalam kendaraan 'Y'\n\
-	2. [ADD] Fitur stop drive by klik 'HH'\n\
-	3. [ADD] ELM untuk kendaraan faction\n\
-	4. [ADD] Mapping SASD HQ\n\
-	5. [ADD] Fitur discord CMD untuk ganti skin, dan daftar akun\n\
-	6. [ADD] Textdraw logo server, jam, tanggal, lokasi\n\
-	7. [CHANGED] Penggantian beberapa list dari chatlog menjadi dialog\n\
-	8. [FIXED] Mapping interior hilang", gstr);
-	ShowPlayerDialog(playerid, DIALOG_CHANGELOG, DIALOG_STYLE_MSGBOX, "Changelog | LJ-RP 6.6.6", gstr, "Close", "");
+	mysql_tquery(dbCon, "SELECT * FROM `server_changelogs` ORDER BY `id` DESC LIMIT 25", "OnLoadPlayerChangelog", "d", playerid);
 	return 1;
 }
 

@@ -2211,11 +2211,13 @@ public OnGameModeInit()
     SendRconCommand("password restartlock123");
     SetTimer("OnServerRestartLockFinish", 120000, false);
 
-    SendRconCommand("weburl "SERVER_SITE"");
+    new rconWeb[200];
+    format(rconWeb, sizeof(rconWeb), "weburl %s", gServerSite);
+    SendRconCommand(rconWeb);
     SendRconCommand("mapname Pulau Jawa");
 
     SetNameTagDrawDistance(20.0);
-	SetGameModeText(SERVER_MODE);
+	SetGameModeText(gServerMode);
 	gettime(ghour, gminute, gsecond);
 	FixHour(ghour);
 	ghour = shifthour;

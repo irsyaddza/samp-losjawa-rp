@@ -38,6 +38,21 @@ SQL_Connect()
 		mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `Hunger` INT(11) NOT NULL DEFAULT '100';");
 		mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `Thirst` INT(11) NOT NULL DEFAULT '100';");
 
+		// Ensure server_settings table exists
+		mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `server_settings` (" \
+			"`id` INT(11) NOT NULL PRIMARY KEY DEFAULT '1'," \
+			"`web_url` VARCHAR(128) NOT NULL DEFAULT 'https://ucp.rusdi-bot.site'," \
+			"`server_mode` VARCHAR(64) NOT NULL DEFAULT 'LJ:RP 0.1.0'" \
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;", "OnServerSettingsTableInit", "");
+
+		// Ensure server_changelogs table exists
+		mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `server_changelogs` (" \
+			"`id` INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY," \
+			"`entry` VARCHAR(256) NOT NULL," \
+			"`added_by` VARCHAR(32) NOT NULL DEFAULT 'Admin'," \
+			"`added_date` VARCHAR(64) NOT NULL DEFAULT 'Current'" \
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
 		// Ensure AI NPC table exists
 		mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `npc_ai` (" \
 			"`id` INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY," \
@@ -58,6 +73,31 @@ SQL_Connect()
 	}
 
 	return true;
+}
+
+forward OnServerSettingsTableInit();
+public OnServerSettingsTableInit()
+{
+	mysql_tquery(dbCon, "INSERT IGNORE INTO `server_settings` (`id`, `web_url`, `server_mode`) VALUES (1, 'https://ucp.rusdi-bot.site', 'LJ:RP 0.1.0');");
+	mysql_tquery(dbCon, "SELECT * FROM `server_settings` WHERE `id` = 1 LIMIT 1", "LoadServerSettings", "");
+	return 1;
+}
+
+forward LoadServerSettings();
+public LoadServerSettings()
+{
+	if(cache_num_rows())
+	{
+		cache_get_value_name(0, "web_url", gServerSite, sizeof(gServerSite));
+		cache_get_value_name(0, "server_mode", gServerMode, sizeof(gServerMode));
+
+		new rconCmd[200];
+		format(rconCmd, sizeof(rconCmd), "weburl %s", gServerSite);
+		SendRconCommand(rconCmd);
+		SetGameModeText(gServerMode);
+		printf("[SERVER CONFIG]: Loaded Web URL: '%s' | Mode: '%s'", gServerSite, gServerMode);
+	}
+	return 1;
 }
 
 forward OnAiNpcTableInit();
