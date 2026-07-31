@@ -47,6 +47,8 @@ enum E_BUSINESS_DATA
 	Float:bBuyingAirY,
 	Float:bBuyingAirZ,
 	Float:bBuyingAirA,
+	bPickupModel,
+	Text3D:bTextLabel
 };
 
 new BusinessData[MAX_BUSINESS][E_BUSINESS_DATA];
@@ -74,8 +76,7 @@ Business_Inside(playerid)
 
 Business_IsOwner(playerid, bizid)
 {
-	if(!SQL_IsLogged(playerid) || PlayerData[playerid][pID] == -1)
-	    return true;
+	if(!Iter_Contains(Business, bizid)) return false;
 
 	if(PlayerData[playerid][pAdmin] > 3 && AdminDuty{playerid})
 		return true;
@@ -93,22 +94,41 @@ Business_Refresh(bizid)
 		if(IsValidDynamicPickup(BusinessData[bizid][bPickup]))
 		    DestroyDynamicPickup(BusinessData[bizid][bPickup]);
 
+		if(BusinessData[bizid][bTextLabel])
+		{
+		    DestroyDynamic3DTextLabel(BusinessData[bizid][bTextLabel]);
+		    BusinessData[bizid][bTextLabel] = Text3D:INVALID_3DTEXT_ID;
+		}
+
 		if(BusinessData[bizid][bType] == 13) return true; // Black Market
 
-		switch(BusinessData[bizid][bType])
+		new model = BusinessData[bizid][bPickupModel];
+		if(!model)
 		{
-		    case 2, 3, 6, 8:
-		    {
-		        BusinessData[bizid][bPickup] = CreateDynamicPickup(1239, 2, BusinessData[bizid][bEntranceX], BusinessData[bizid][bEntranceY], BusinessData[bizid][bEntranceZ]);
-		    }
-		    default:
-		    {
-				if(BusinessData[bizid][bOwned])
-					BusinessData[bizid][bPickup] = CreateDynamicPickup(1239, 2, BusinessData[bizid][bEntranceX], BusinessData[bizid][bEntranceY], BusinessData[bizid][bEntranceZ]);
-				else
-					BusinessData[bizid][bPickup] = CreateDynamicPickup(1272, 2, BusinessData[bizid][bEntranceX], BusinessData[bizid][bEntranceY], BusinessData[bizid][bEntranceZ]);
+			if(BusinessData[bizid][bType] == 2 || BusinessData[bizid][bType] == 3 || BusinessData[bizid][bType] == 6 || BusinessData[bizid][bType] == 8)
+			{
+				model = 1239;
+			}
+			else
+			{
+				model = BusinessData[bizid][bOwned] ? 1239 : 1272;
 			}
 		}
+		BusinessData[bizid][bPickup] = CreateDynamicPickup(model, 23, BusinessData[bizid][bEntranceX], BusinessData[bizid][bEntranceY], BusinessData[bizid][bEntranceZ], -1, -1, -1, 100.0);
+
+		new labelText[256];
+		if(BusinessData[bizid][bOwned] == 1)
+		{
+			format(labelText, sizeof(labelText), "{33CCFF}[BIZ ID: %d]\n{FFFFFF}%s\n{A8C4E4}Owner: %s\n{FFFF00}Use 'F' or /enter", 
+				bizid, BusinessData[bizid][bInfo], BusinessData[bizid][bOwner]);
+		}
+		else
+		{
+			format(labelText, sizeof(labelText), "{33CCFF}[BIZ ID: %d]\n{FFFFFF}%s\n{2ECC71}For Sale: %s\n{FFFF00}Use /buybiz to purchase", 
+				bizid, BusinessData[bizid][bInfo], FormatNumber(BusinessData[bizid][bBuyPrice]));
+		}
+
+		BusinessData[bizid][bTextLabel] = CreateDynamic3DTextLabel(labelText, 0xFFFFFFFF, BusinessData[bizid][bEntranceX], BusinessData[bizid][bEntranceY], BusinessData[bizid][bEntranceZ] + 0.7, 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, -1, -1);
 	}
 	return true;
 }

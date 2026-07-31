@@ -1,12 +1,12 @@
-#define SERVER_SITE "https://ucp.ljrp.my.id"
-#define SERVER_MODE "LS:RP 6.6.6"
+new gServerSite[128] = "https://ucp.rusdi-bot.site";
+new gServerMode[64] = "LJ:RP 0.1.0";
 
 #if IS_LOCAL_HOST == true
-	#define SERVER_NAME "[0.3-DL] Los Jawa Roleplay | Development!"
-	#define SQL_HOSTNAME "localhost"
-	#define SQL_USERNAME "root"
+	#define SERVER_NAME "[open.mp] Los Jawa Roleplay | Dev Server!"
+	#define SQL_HOSTNAME "mysql"
+	#define SQL_USERNAME "samp"
 	#define SQL_DATABASE "jawa"
-	#define SQL_PASSWORD ""
+	#define SQL_PASSWORD "samppassword"
 #else
 	#define SERVER_NAME "[0.3-DL] Los Jawa Roleplay | Development!"
 	#define SQL_HOSTNAME "192.168.1.46"
@@ -25,10 +25,10 @@ new
 
 /*
 	#define SERVER_NAME "[0.3-DL] Los Jawa Roleplay | Development!"
-	#define SQL_HOSTNAME "localhost"
-	#define SQL_USERNAME "root"
+	#define SQL_HOSTNAME "mysql"
+	#define SQL_USERNAME "samp"
 	#define SQL_DATABASE "jawa"
-	#define SQL_PASSWORD ""
+	#define SQL_PASSWORD "samppassword"
 
 	#define SERVER_NAME "[0.3-DL] Los Jawa Roleplay | Sotot Everyday!"
 	#define SQL_HOSTNAME "eu2.ultra-h.com"

@@ -8,6 +8,8 @@
 
 #include <a_samp>
 
+#pragma warning disable 203, 204, 213, 217, 221, 225, 239, 240, 252
+
 #undef MAX_PLAYERS
 #define MAX_PLAYERS (200)
 
@@ -18,6 +20,7 @@
 #define MAX_ACTORS (50)
 
 #include <a_mysql>
+#include <requests>
 #include <sscanf2>
 #include <streamer>
 #include <easyDialog>
@@ -27,8 +30,8 @@
 #include <timestamptodate>
 #include <evi>
 #include <sort>
-#include <discord-connector>
-#include <discord-cmd>
+#include <samp_bcrypt>
+#include <map-zones>
 
 #define DIALOG_STATS 15000  
 
@@ -41,11 +44,9 @@
 #define DIALOG_MISC_COMMANDS 9506
 
 
-#define DCMD_PREFIX '!'
-new DCC_Channel: createacc;
-new DCC_Channel: secureChannel;
+// Discord Connector & CMD features removed
 
-#define MAX_COMMANDS 800
+#define MAX_COMMANDS 1500
 #define YSI_NO_HEAP_MALLOC
 
 new DisabledCommands[MAX_COMMANDS];
@@ -514,148 +515,110 @@ new const VehicleMenuInfo[][] =
 
 new VehicleDealership[][] =
 {
-	{511, 0},
-	{593, 0},
+	// --- Air Vehicles (Category 0 -> dealerType 4) ---
+	{511, 0}, // Beagle
+	{593, 0}, // Dodo
+	{487, 0}, // Maverick
+	{519, 0}, // Shamal
+	{447, 0}, // Seasparrow (Bronze Donator)
+	{513, 0}, // Stuntplane (Silver Donator)
+	{460, 0}, // Skimmer (Gold Donator)
 
-	{417, 1},
-	{487, 1},
-	{488, 1},
+	// --- Bikes (Category 2 -> dealerType 1) ---
+	{462, 2}, // Faggio
+	{463, 2}, // Freeway
+	{468, 2}, // Sanchez
+	{471, 2}, // Quad
+	{481, 2}, // BMX
+	{509, 2}, // Bike
+	{521, 2}, // FCR-900
+	{586, 2}, // Wayfarer
+	{522, 2}, // NRG-500 (Silver Donator)
 
-	{462, 2},
-	{463, 2},
-	{468, 2},
-	{471, 2},
-	{481, 2},
-	{509, 2},
-	{521, 2},
-	{586, 2},
+	// --- Boats (Category 13 -> dealerType 3) ---
+	{446, 13}, // Squalo
+	{453, 13}, // Reefer
+	{454, 13}, // Tropic
+	{473, 13}, // Dinghy
+	{484, 13}, // Marquis
+	{493, 13}, // Jetmax
 
-	{480, 3},
-	{533, 3},
-	{555, 3},
+	// --- Industrial (Category 4 -> dealerType 2) ---
+	{403, 4}, // Linerunner
+	{414, 4}, // Mule
+	{499, 4}, // Benson
+	{456, 4}, // Yankee
+	{422, 4}, // Bobcat
+	{440, 4}, // Rumpo
+	{413, 4}, // Pony
+	{455, 4}, // Flatbed
+	{478, 4}, // Walton
+	{482, 4}, // Burrito
+	{498, 4}, // Boxville
+	{514, 4}, // Tanker (Petrol Tanker)
+	{554, 4}, // Yosemite
+	{543, 4}, // Sadler
+	{515, 4}, // Roadtrain
+	{600, 4}, // Picador
+	{438, 4}, // Cabbie
+	{420, 4}, // Taxi
+	{525, 4}, // Tow Truck
+	{573, 4}, // Duneride (Gold Donator)
 
-	{403, 4},
-	{408, 4},
-	{413, 4},
-	{414, 4},
-	{422, 4},
-	{440, 4},
-	{443, 4},
-	{455, 4},
-	{456, 4},
-	{459, 4},
-	{478, 4},
-	{482, 4},
-	{498, 4}, // ... 609
-	{499, 4},
-	{514, 4},
-	{515, 4},
-	{543, 4}, // ...605
-	{554, 4},
-	{578, 4},
-	{582, 4},
-	{600, 4},
-
-	{412, 5},
-	{439, 5},
-	{534, 5},
-	{535, 5},
-	{536, 5},
-	{566, 5},
-	{567, 5},
-	{575, 5},
-	{576, 5},
-
-	{400, 6},
-	{489, 6},
-	{500, 6},
-	{579, 6},
-
-	{420, 7},
-	{431, 7},
-	{437, 7},
-	{438, 7},
-
-	{490, 8},
-	{497, 8},
-	{523, 8},
-	{528, 8},
-	{596, 8},
-	{597, 8},
-	{598, 8},
-	{599, 8},
-	{601, 8},
-
-	{416, 9},
-
-	{401, 10},
-	{405, 10},
-	{410, 10},
-	{419, 10},
-	{421, 10},
-	{426, 10},
-	{436, 10},
-	{445, 10},
-	{466, 10}, //... 604
-	{467, 10},
-	{474, 10},
-	{491, 10},
-	{492, 10},
-	{507, 10},
-	{516, 10},
-	{517, 10},
-	{518, 10},
-	{526, 10},
-	{527, 10},
-	{529, 10},
-	{540, 10},
-	{542, 10},
-	{546, 10},
-	{547, 10},
-	{549, 10},
-	{550, 10},
-	{551, 10},
-	{560, 10},
-	{562, 10},
-	{580, 10},
-	{585, 10},
-
-	{402, 11},
-	{415, 11},
-	{429, 11},
-	{475, 11},
-	{477, 11},
-	{496, 11},
-	{541, 11},
-	{558, 11},
-	{559, 11},
-	{565, 11},
-	{587, 11},
-	{589, 11},
-	{602, 11},
-	{603, 11},
-
-	{404, 12},
-	{418, 12},
-	{458, 12},
-	{479, 12},
-	{561, 12},
-
-	{446, 13},
-	{453, 13},
-	{454, 13},
-	{472, 13},
-	{473, 13},
-	{484, 13},
-
-	{409, 14},
-	{423, 14},
-	{483, 14},
-	{508, 14},
-	{525, 14},
-	{532, 14},
-	{545, 14},
-	{588, 14}
+	// --- Daily Car (Category 3 -> dealerType 0) ---
+	{480, 3}, // Comet
+	{533, 3}, // Feltzer
+	{555, 3}, // Windsor
+	{412, 3}, // Voodoo
+	{439, 3}, // Stallion
+	{535, 3}, // Remington
+	{536, 3}, // Slamvan
+	{534, 3}, // Blade
+	{566, 3}, // Tahoma
+	{567, 3}, // Savanna
+	{575, 3}, // Broadway
+	{576, 3}, // Tornado
+	{400, 3}, // Landstalker
+	{489, 3}, // Rancher
+	{500, 3}, // Mesa
+	{579, 3}, // Huntley
+	{401, 3}, // Bravura
+	{405, 3}, // Sentinel
+	{421, 3}, // Washington
+	{426, 3}, // Premier
+	{445, 3}, // Admiral
+	{474, 3}, // Hermes
+	{492, 3}, // Greenwood
+	{507, 3}, // Elegant
+	{516, 3}, // Nebula
+	{529, 3}, // Willard
+	{540, 3}, // Vincent
+	{550, 3}, // Sunrise
+	{542, 3}, // Clover
+	{560, 3}, // Sultan
+	{562, 3}, // Elegy
+	{580, 3}, // Stafford
+	{402, 3}, // Buffalo
+	{415, 3}, // Cheetah
+	{429, 3}, // Banshee
+	{475, 3}, // Sabre
+	{477, 3}, // ZR-350
+	{496, 3}, // Blista Compact
+	{541, 3}, // Bullet
+	{558, 3}, // Uranus
+	{559, 3}, // Jester
+	{565, 3}, // Flash
+	{587, 3}, // Euros
+	{589, 3}, // Club
+	{602, 3}, // Alpha
+	{603, 3}, // Phoenix
+	{561, 3}, // Stratum
+	{483, 3}, // Camper
+	{508, 3}, // Journey
+	{545, 3},  // Hustler
+	{502, 3}, // Hotring Racer 2 (Silver Donator)
+	{411, 3}, // Infernus (Gold Donator)
+	{451, 3}  // Turismo (Gold Donator)
 };
 
 new const g_arrVehicleNames[][] =
@@ -856,7 +819,13 @@ enum MOVEABLE_DOORS
 	Float:doorMoveZ,
 	Float:doorMoveRX,
 	Float:doorMoveRY,
-	Float:doorMoveRZ
+	Float:doorMoveRZ,
+	doorCheckpoint,
+	doorCheckpointMove,
+	Float:doorCPX,
+	Float:doorCPY,
+	Float:doorCPZ,
+	doorTimer
 }
 
 new Doors[MAX_MOVEDOORS][MOVEABLE_DOORS];
@@ -1020,7 +989,9 @@ enum e_md
 	mTimer,
 };
 
-new sgstr[128], gstr[2000], gquery[256], vgstr[128]; // Global strings
+new sgstr[128], gstr[2000], gquery[512], vgstr[128]; // Global strings
+new gLobbySound1 = 144;                          // Lobby sound ID (played on connect/char select)
+new gLobbyStream2[256] = "";                     // Lobby audio stream URL (optional, set via /sound lobby2)
 
 new
 	AdvertData[MAX_AD_QUEUE][eadvert],
@@ -1203,7 +1174,7 @@ new nearProperty_var[MAX_PLAYERS];
 new nearApartment_var[MAX_PLAYERS];
 new PropertyViewPage[MAX_PLAYERS];
 new PropertyViewPageIndexes[30][2];
-new TutorialDelay[MAX_PLAYERS];
+new TutorialDelay[MAX_PLAYERS];   // countdown seconds remaining for tutorial auto-advance
 
 new
 	pToAccept[MAX_PLAYERS],
@@ -1256,6 +1227,8 @@ new Text:TD_Restaurant[3];
 new Text:TD_PhoneCover[9];
 new Text:Store_Frame[4];
 new Text:ALPR_UI[2];
+
+
 
 new bool:MDC_Created[MAX_PLAYERS char];
 new bool:UsingMDC[MAX_PLAYERS char];
@@ -1379,7 +1352,27 @@ new bool:UI_Purchase[MAX_PLAYERS char];
 new bool:HudStatus[MAX_PLAYERS char];
 
 // Player TextDraws
+// Old grid char selection TDs (kept for reference during transition)
 new PlayerText:CharSelectionTD[MAX_PLAYERS][13];
+
+// New Cinematic Character Selection TDs (redesigned UI)
+// Index: 0=card_bg, 1=right_arrow, 2=left_arrow, 3=spawn_bg, 4=spawn_text,
+//        5=char_name, 6=char_age, 7=char_lastseen
+new PlayerText:CharSelTD[MAX_PLAYERS][8];
+
+// Character Selection Cache & State
+enum E_CHARSEL_CACHE
+{
+    csID,
+    csName[MAX_PLAYER_NAME],
+    csLevel,
+    csSkin,
+    csLastLogin
+};
+new CharSelCache[MAX_PLAYERS][6][E_CHARSEL_CACHE];
+new SelectedSlot[MAX_PLAYERS];
+new CharSelTotalSlots[MAX_PLAYERS];
+new CharSelActor[MAX_PLAYERS][6];
 new PlayerText:PTD_Restaurant[MAX_PLAYERS][9];
 new PlayerText:TD_PhoneCoverModel[MAX_PLAYERS];
 
@@ -1422,7 +1415,7 @@ new PlayerText:blindfold[MAX_PLAYERS];
 new PlayerText:ALPR_Plate[MAX_PLAYERS];
 new PlayerText:LicensesUI[MAX_PLAYERS][10];
 
-new PlayerText:HudTextDraw[MAX_PLAYERS];
+
 
 // Mobile Data Computer
 new
@@ -1448,6 +1441,21 @@ new
 	PlayerText:PCARTextPrice[MAX_PLAYERS][6],
 	PlayerText:PCARTextLeft[MAX_PLAYERS],
 	PlayerText:PCARTextRight[MAX_PLAYERS],
+
+	// PONYTAIL: Dealership V3 Player Textdraws
+	PlayerText:VDealerBase[MAX_PLAYERS],
+	PlayerText:VDealerCatBG[MAX_PLAYERS],
+	PlayerText:VDealerCatName[MAX_PLAYERS],
+	PlayerText:VDealerPageText[MAX_PLAYERS],
+	PlayerText:VDealerLeftBtn[MAX_PLAYERS],
+	PlayerText:VDealerRightBtn[MAX_PLAYERS],
+	PlayerText:VDealerCloseBtn[MAX_PLAYERS],
+	PlayerText:VDealerCloseLogo[MAX_PLAYERS],
+	PlayerText:VDealerVehBG[MAX_PLAYERS][6],
+	PlayerText:VDealerVehModel[MAX_PLAYERS][6],
+	PlayerText:VDealerVehNameBG[MAX_PLAYERS][6],
+	PlayerText:VDealerVehPrice[MAX_PLAYERS][6],
+	PlayerText:VDealerVehName[MAX_PLAYERS][6],
 
 	// Tuning
 	PlayerText:TDTuning_Component[MAX_PLAYERS],
@@ -1599,21 +1607,24 @@ HoldingKey(playerid, key)
 	return false;
 }
 
-ClearGameTextColor(const string[])
+stock ClearGameTextColor(const string[])
 {
-	new aaa[256];
-
-    new Regex:r = Regex_New("~.~");
-
-    if(r)
+    static aaa[256];
+    new len = 0;
+    
+    for(new i = 0; string[i] != '\0' && len < sizeof(aaa) - 1; )
     {
-        Regex_Replace(string, r, "+", aaa, MATCH_DEFAULT, sizeof(aaa));
-
-        Regex_Delete(r);
-	}
-
-	format(aaa, 256, "%s", str_replaceEx("+", aaa));
-	return aaa;
+        if(string[i] == '~' && string[i+1] != '\0' && string[i+2] == '~')
+        {
+            i += 3; // Skip the ~x~ color code
+        }
+        else
+        {
+            aaa[len++] = string[i++];
+        }
+    }
+    aaa[len] = '\0';
+    return aaa;
 }
 
 // Dialog HELP
@@ -1677,7 +1688,7 @@ new LoginAttempts[MAX_PLAYERS];
 new DeathTimer[MAX_PLAYERS];
 new DeathStamp[MAX_PLAYERS];
 new CharacterCache[MAX_PLAYERS][6];
-new VehicleCache[MAX_PLAYERS][6];
+new VehicleCache[MAX_PLAYERS][50];
 new BrokenLegTimer[MAX_PLAYERS];
 new LastKnockout[MAX_PLAYERS];
 new DeathReason[MAX_PLAYERS];
@@ -1709,7 +1720,6 @@ new bool:ForceKnockout[MAX_PLAYERS char];
 new bool:TesterColor[MAX_PLAYERS char];
 new bool:FactionEars[MAX_PLAYERS char];
 new bool:PrivateMessageEars[MAX_PLAYERS char];
-new bool:EnableTP[MAX_PLAYERS char];
 new bool:TimeTip[MAX_PLAYERS char];
 new bool:SwitchingWeapon[MAX_PLAYERS char];
 new bool:AdminDuty[MAX_PLAYERS char];
@@ -2058,6 +2068,7 @@ new ParticleOffset[MAX_PLAYERS];
 new LastAnnotation[MAX_PLAYERS];
 new UpdatingMOTD[MAX_PLAYERS];
 new UnpackageTimer[MAX_PLAYERS];
+new CraftTimer[MAX_PLAYERS];
 
 // Modules
 
@@ -2077,42 +2088,91 @@ new Iterator:sv_activevehicles<MAX_VEHICLES>;
 #include "modules/vehicle/Player.pwn"
 #include "modules/vehicle/Functions.pwn"
 #include "modules/vehicle/Modshop.pwn"
+#include "modules/vehicle/HarvesterRental.pwn"
+#include "modules/vehicle/ELM.pwn"
 #include "modules/Industry.pwn"
 #include "modules/Furniture.pwn"
 #include "modules/Drugs.pwn"
+#include "modules/system/DrugStore.pwn"
 #include "modules/Weapons.pwn"
 #include "modules/Death.pwn"
 #include "modules/Clothing.pwn"
+#include "modules/player/LoginUI.pwn"
 #include "modules/player/Account.pwn"
 #include "modules/Faction.pwn"
+#include "modules/vehicle/FactionStaticVeh.pwn"
+#include "modules/system/Elevators.pwn"
+#include "modules/MapEditor.pwn"
 #include "modules/Graffiti.pwn"
 #include "modules/Phone.pwn"
 #include "modules/Store.pwn"
 #include "modules/MobileDataComputer.pwn"
+#include "modules/police/CCTV.pwn"
+#include "modules/system/SkinTest.pwn"
 #include "modules/VehicleParts.pwn"
 #include "modules/timers/Server.pwn"
+forward RefreshTutorial(playerid);
 #include "modules/timers/Player.pwn"
 #include "modules/timers/Vehicle.pwn"
 #include "modules/Anticheat.pwn"
 #include "modules/Interface.pwn"
 #include "modules/Prison.pwn"
+new LastEngineToggle[MAX_PLAYERS];
+new PlayerBusVehicle[MAX_PLAYERS] = {INVALID_VEHICLE_ID, ...};
+new PlayerBusVehicleIndex[MAX_PLAYERS] = {-1, ...};
+new PlayerBusCheckpointStep[MAX_PLAYERS] = {0, ...};
+new PlayerBusRouteIndex[MAX_PLAYERS] = {-1, ...};
+new PlayerSweeperVehicle[MAX_PLAYERS] = {INVALID_VEHICLE_ID, ...};
+new PlayerSweeperVehicleIndex[MAX_PLAYERS] = {-1, ...};
+new PlayerSweeperCheckpointStep[MAX_PLAYERS] = {0, ...};
+new PlayerSweeperRouteIndex[MAX_PLAYERS] = {-1, ...};
+#include "modules/system/IllegalWeapon.pwn"
 #include "modules/PlayerCommands.pwn"
 #include "modules/AdminCommands.pwn"
 #include "modules/TesterCommands.pwn"
 #include "modules/Animations.pwn"
 #include "modules/Queries.pwn"
 #include "modules/Textdraws.pwn"
+#include "modules/HudV2.pwn"
+#include "modules/MappingRequest.pwn"
 #include "modules/police/Fines.pwn"
+#include "modules/system/BusJob.pwn"
+#include "modules/system/SweeperJob.pwn"
+#include "modules/system/AdPoints.pwn"
+#include "modules/system/Marriage.pwn"
+#include "modules/system/TrainSystem.pwn"
+#include "modules/system/MedicinePoint.pwn"
+#include "modules/system/AiNpc.pwn"
 
 public OnGameModeInit()
 {
-	createacc = DCC_FindChannelById("1322504649768702034");
-	secureChannel = DCC_FindChannelById("1322504649768702034");
-
 	mysql_log(ERROR);
 
 	SQL_Connect();
+	BusJob_SetupTable();
+	SweeperJob_SetupTable();
     SetupIndustry();
+	DrugStore_Init();
+
+	mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `MarriedTo` VARCHAR(24) NOT NULL DEFAULT 'None';");
+	mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `IllegalJob` INT(11) NOT NULL DEFAULT '0';");
+	mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `Materials` INT(11) NOT NULL DEFAULT '0';");
+	mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `GunCraftDelay` INT(11) NOT NULL DEFAULT '0';");
+	mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `Schematics` VARCHAR(10) NOT NULL DEFAULT '00000000';");
+	IWS_Init();
+	mysql_tquery(dbCon, "ALTER TABLE `propose_points` ADD COLUMN `name` VARCHAR(64) NOT NULL DEFAULT 'Propose Point';");
+	mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `propose_points` (`id` INT AUTO_INCREMENT PRIMARY KEY, `name` VARCHAR(64) NOT NULL DEFAULT 'Propose Point', `posX` FLOAT, `posY` FLOAT, `posZ` FLOAT, `interior` INT, `world` INT);");
+	mysql_tquery(dbCon, "SELECT * FROM `propose_points`", "LoadProposePoints", "");
+
+	mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `train_stations` (`ID` int(11) NOT NULL AUTO_INCREMENT, `Name` varchar(64) NOT NULL, `X` float NOT NULL, `Y` float NOT NULL, `Z` float NOT NULL, `World` int(11) NOT NULL DEFAULT 0, `Interior` int(11) NOT NULL DEFAULT 0, `Price` int(11) NOT NULL DEFAULT 15, PRIMARY KEY (`ID`));");
+	mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `train_centers` (`ID` int(11) NOT NULL AUTO_INCREMENT, `Name` varchar(64) NOT NULL, `X` float NOT NULL, `Y` float NOT NULL, `Z` float NOT NULL, `World` int(11) NOT NULL DEFAULT 0, `Interior` int(11) NOT NULL DEFAULT 0, PRIMARY KEY (`ID`));");
+	mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `rail_crossings` (`ID` int(11) NOT NULL AUTO_INCREMENT, `X` float NOT NULL, `Y` float NOT NULL, `Z` float NOT NULL, `RX` float NOT NULL, `RY` float NOT NULL, `RZ` float NOT NULL, `MoveRX` float NOT NULL, `MoveRY` float NOT NULL, `MoveRZ` float NOT NULL, PRIMARY KEY (`ID`));");
+	mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `train_route_checkpoints` (`ID` int(11) NOT NULL AUTO_INCREMENT, `Name` varchar(64) NOT NULL, `X` float NOT NULL, `Y` float NOT NULL, `Z` float NOT NULL, `Angle` float NOT NULL, `SpeedLimit` float NOT NULL DEFAULT 60.0, PRIMARY KEY (`ID`));");
+
+	mysql_tquery(dbCon, "SELECT * FROM `train_stations`", "LoadTrainStations", "");
+	mysql_tquery(dbCon, "SELECT * FROM `train_centers`", "LoadTrainCenters", "");
+	mysql_tquery(dbCon, "SELECT * FROM `rail_crossings`", "LoadRailCrossings", "");
+	mysql_tquery(dbCon, "SELECT * FROM `train_route_checkpoints` ORDER BY `ID` ASC", "LoadTrainRouteCheckpoints", "");
 
 	mysql_tquery(dbCon, "SELECT * FROM `factions` ORDER BY `factionID` ASC", "Faction_Load", "");
 	mysql_tquery(dbCon, "SELECT * FROM `factionspawns`", "FactionSpawn_Load", "");
@@ -2132,6 +2192,14 @@ public OnGameModeInit()
 	mysql_tquery(dbCon, "SELECT * FROM `motd` LIMIT 1", "LoadMOTD");
 	mysql_tquery(dbCon, "UPDATE characters SET Online = 0 WHERE Online = 1");
     mysql_tquery(dbCon, "UPDATE accounts SET Online = 0 WHERE Online = 1");
+	mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `clothing_shop_skins` (`skin_id` INT PRIMARY KEY, `price` INT NOT NULL DEFAULT 5000)", "OnCreateShopSkinsTable");
+	mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `advertisement_points` (`id` INT AUTO_INCREMENT PRIMARY KEY, `pos_x` FLOAT, `pos_y` FLOAT, `pos_z` FLOAT, `vw` INT, `interior` INT)", "OnCreateAdPointsTable");
+	HarvesterRental_Init();
+	FactionStaticVeh_Init();
+	MapEditor_Init();
+	Elevators_Init();
+	CCTV_Init();
+	ELM_Init();
 
     #include "modules/mapping/Misc.pwn"
     #include "modules/mapping/Main.pwn"
@@ -2146,12 +2214,17 @@ public OnGameModeInit()
     #include "modules/mapping/Ship.pwn"
     #include "modules/mapping/Pickups.pwn"
 
-    SendRconCommand("hostname "SERVER_NAME"");
-    SendRconCommand("weburl "SERVER_SITE"");
+    SendRconCommand("hostname [Los Jawa RP is initializing, please wait...]");
+    SendRconCommand("password restartlock123");
+    SetTimer("OnServerRestartLockFinish", 120000, false);
+
+    new rconWeb[200];
+    format(rconWeb, sizeof(rconWeb), "weburl %s", gServerSite);
+    SendRconCommand(rconWeb);
     SendRconCommand("mapname Pulau Jawa");
 
     SetNameTagDrawDistance(20.0);
-	SetGameModeText(SERVER_MODE);
+	SetGameModeText(gServerMode);
 	gettime(ghour, gminute, gsecond);
 	FixHour(ghour);
 	ghour = shifthour;
@@ -2179,15 +2252,17 @@ public OnGameModeInit()
 
 	CreateTextLabels();
 	CreateGlobalTextDraws();
+	CreateHudV2GlobalTDs();
 	CreateRentalVehicles();
 	CreateLicenseVehicles();
 	CreatePenalCode();
 
-	CreateDynamicPickup(1314, 23, 1481.0662, -1771.3069, 18.7958, 0, 0); // City Hall
-
     systemVariables[OOCStatus] = 1;
 
 	ServerTime = gettime();
+
+    // Load approved property mappings dynamically after server startup
+    SetTimer("LoadAllPropertyMappings", 10000, false);
 
 	return true;
 
@@ -2196,6 +2271,7 @@ public OnGameModeInit()
 public OnGameModeExit()
 {
 	mysql_close(dbCon);
+	DestroyHudV2GlobalTDs();
 
     /*for(new i = 0; i < NUM_SHIP_ATTACHMENTS; ++i)
 	{
@@ -2203,18 +2279,96 @@ public OnGameModeExit()
 	}
 
     DestroyObject(gMainShipObjectId);*/
+    
 	return true;
 }
 
 public OnPlayerConnect(playerid)
 {
+	LastEngineToggle[playerid] = 0;
 	HasSeenPassengerMessage[playerid] = false;
+
+	for(new i = 0; i < 6; i++)
+	{
+		CharSelActor[playerid][i] = INVALID_ACTOR_ID;
+	}
 
 	FinishedDownloadingModels{playerid} = false;
 	AnimationsPreloaded{playerid} = false;
 
   	RemoveBuilding(playerid);
   	CreateTextdraws(playerid);
+	// PONYTAIL: Clothing shop TDs are now created dynamically (on OpenClothingShop) to save slots
+	// Initialize all clothing shop TD vars to INVALID_TEXT_DRAW
+	ShopTD_Background[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	ShopTD_Header[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	ShopTD_Title[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	ShopTD_Page[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	ShopTD_Close[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	ShopTD_Footer[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	ShopTD_PrevPage[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	ShopTD_NextPage[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	for(new _si = 0; _si < 16; ++_si)
+	{
+		ShopTD_Card[playerid][_si] = PlayerText:INVALID_TEXT_DRAW;
+		ShopTD_Btn[playerid][_si] = PlayerText:INVALID_TEXT_DRAW;
+		ShopTD_BtnTxt[playerid][_si] = PlayerText:INVALID_TEXT_DRAW;
+		ShopTD_Preview[playerid][_si] = PlayerText:INVALID_TEXT_DRAW;
+		ShopTD_Price[playerid][_si] = PlayerText:INVALID_TEXT_DRAW;
+	}
+	// PONYTAIL: Initialize MDC TD variables to INVALID_TEXT_DRAW
+	for(new _mi = 0; _mi < 39; ++_mi) MDC_UI[playerid][_mi] = PlayerText:INVALID_TEXT_DRAW;
+	for(new _mi = 0; _mi < 6; ++_mi) MDC_MenuUI[playerid][_mi] = PlayerText:INVALID_TEXT_DRAW;
+	for(new _mi = 0; _mi < 4; ++_mi) MDC_VehicleUI[playerid][_mi] = PlayerText:INVALID_TEXT_DRAW;
+	for(new _mi = 0; _mi < 41; ++_mi) MDC_ChargesUI[playerid][_mi] = PlayerText:INVALID_TEXT_DRAW;
+	for(new _mi = 0; _mi < 37; ++_mi) MDC_LicensesUI[playerid][_mi] = PlayerText:INVALID_TEXT_DRAW;
+	for(new _mi = 0; _mi < 40; ++_mi) MDC_PenalCodeUI[playerid][_mi] = PlayerText:INVALID_TEXT_DRAW;
+	for(new _mi = 0; _mi < 20; ++_mi) MDC_PropertiesUI[playerid][_mi] = PlayerText:INVALID_TEXT_DRAW;
+	for(new _mi = 0; _mi < 27; ++_mi) MDC_Emergency[playerid][_mi] = PlayerText:INVALID_TEXT_DRAW;
+	for(new _mi = 0; _mi < 24; ++_mi) MDC_RosterUI[playerid][_mi] = PlayerText:INVALID_TEXT_DRAW;
+	for(new _mi = 0; _mi < 11; ++_mi) MDC_VehicleBOLO[playerid][_mi] = PlayerText:INVALID_TEXT_DRAW;
+	MDC_Created{playerid} = false;
+
+	// PONYTAIL: Initialize dealership V3 variables to INVALID_TEXT_DRAW
+	VDealerBase[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	VDealerCatBG[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	VDealerCatName[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	VDealerPageText[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	VDealerLeftBtn[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	VDealerRightBtn[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	VDealerCloseBtn[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	VDealerCloseLogo[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	for(new _di = 0; _di < 6; ++_di)
+	{
+		VDealerVehBG[playerid][_di] = PlayerText:INVALID_TEXT_DRAW;
+		VDealerVehModel[playerid][_di] = PlayerText:INVALID_TEXT_DRAW;
+		VDealerVehNameBG[playerid][_di] = PlayerText:INVALID_TEXT_DRAW;
+		VDealerVehPrice[playerid][_di] = PlayerText:INVALID_TEXT_DRAW;
+		VDealerVehName[playerid][_di] = PlayerText:INVALID_TEXT_DRAW;
+	}
+
+	CreateLoginTDs(playerid);
+	StartLoginLoading(playerid);
+
+	// PONYTAIL: Reset color selection state and hide textdraws on connect
+	ColorSelectShow{playerid} = false;
+	ColorSelectShow2{playerid} = false;
+	ColorSelect[playerid] = -1;
+	ColorSelect2[playerid] = -1;
+	ColorSelectPage[playerid] = 1;
+	ColorSelectPage2[playerid] = 1;
+	for(new i = 0; i < 8 ; ++i)
+	{
+		PlayerTextDrawHide(playerid, ColorSelection[playerid][i]);
+		PlayerTextDrawHide(playerid, ColorSelection2[playerid][i]);
+	}
+	PlayerTextDrawHide(playerid, ColorSelectText[playerid]);
+	PlayerTextDrawHide(playerid, ColorSelectLeft[playerid]);
+	PlayerTextDrawHide(playerid, ColorSelectRight[playerid]);
+	PlayerTextDrawHide(playerid, ColorSelectText2[playerid]);
+	PlayerTextDrawHide(playerid, ColorSelectLeft2[playerid]);
+	PlayerTextDrawHide(playerid, ColorSelectRight2[playerid]);
+
 	SetPlayerWeather(playerid, globalWeather);
 
     SetPlayerColor(playerid, COLOR_GRAD2);
@@ -2231,11 +2385,26 @@ public OnPlayerConnect(playerid)
 
     SQL_LogConnection(playerid);
     SQL_CheckAccount(playerid);
+
+	if(GetPVarInt(playerid, "LobbyMusicOff") == 0)
+	{
+		PlayerPlaySound(playerid, gLobbySound1, 0.0, 0.0, 0.0);
+		if(strlen(gLobbyStream2) > 0)
+			PlayAudioStreamForPlayer(playerid, gLobbyStream2);
+	}
 	return true;
 }
 
 public OnPlayerDisconnect(playerid, reason)
 {	
+	StopAudioStreamForPlayer(playerid);
+	ClearPreviewObjects(playerid);
+
+	DestroyHudV2PlayerTDs(playerid);
+	DestroyClothingShopTDs(playerid);
+	DestroyLoginTDs(playerid);
+	DestroyMDC(playerid);
+	DestroyDealershipTDs(playerid);
 	new str[128], szDisconnectReason[3][10] = {"Timeout", "Leaving", "Kicked"};
 
 	format(str, sizeof(str), "** %s (%s)", ReturnName(playerid), szDisconnectReason[reason]);
@@ -2615,6 +2784,18 @@ public OnPlayerGiveDamage(playerid, damagedid, Float: amount, weaponid, bodypart
 			}
 		}
 
+		// Steroids Melee Damage Boost (Melee weapons: weaponid 0..15)
+		if(IsMelee(weaponid) || weaponid == 0)
+		{
+			if(PlayerData[playerid][pDrugEffects] == 8) // Steroids active
+			{
+				new Float:useDose = PlayerData[playerid][pDrugAmountUsed];
+				new Float:bonusPercent = (useDose <= 0.15) ? (0.20) : ((useDose <= 0.25) ? (0.35) : (0.50));
+				if(amount <= 0.0) amount = 3.0; // fallback fist damage if 0
+				amount = amount + (amount * bonusPercent);
+			}
+		}
+
 		DeathReason[damagedid] = weaponid;
 		LastDamageTime[damagedid] = gettime();
 
@@ -2635,7 +2816,7 @@ public OnPlayerGiveDamage(playerid, damagedid, Float: amount, weaponid, bodypart
 
 				case BODY_PART_LEFT_LEG, BODY_PART_RIGHT_LEG:
 				{
-				    amount = amount / 2;
+				    amount /= 2.0;
 
 				    if(random(2))
 				    {
@@ -2651,7 +2832,7 @@ public OnPlayerGiveDamage(playerid, damagedid, Float: amount, weaponid, bodypart
 				{
 					if(!PlayerData[damagedid][pSwat])
 					{
-					    amount += float(floatround(amount / 2, floatround_ceil));
+					    amount *= 1.5;
 					}
 				}
 			}
@@ -2659,7 +2840,7 @@ public OnPlayerGiveDamage(playerid, damagedid, Float: amount, weaponid, bodypart
 			if(PlayerData[damagedid][pSwat] && bodypart != BODY_PART_HEAD) armourhit = true;
 		}
 
-		if(amount < 1) amount = 1;
+		if(amount < 1.0) amount = 1.0;
 
 		if(PlayerData[damagedid][pInjured] && !KnockedOut{damagedid})
 		{
@@ -2671,7 +2852,7 @@ public OnPlayerGiveDamage(playerid, damagedid, Float: amount, weaponid, bodypart
 		}
 		else
 		{
-			if(armour > 0 && armourhit)
+			if(armour > 0.0 && armourhit)
 			{
 	            if(armour > amount)
 				{
@@ -2687,6 +2868,10 @@ public OnPlayerGiveDamage(playerid, damagedid, Float: amount, weaponid, bodypart
 			else
 			{
 				health -= amount;
+				if(armour > 0.0)
+				{
+					SetPlayerArmourEx(damagedid, armour);
+				}
 			}
 
 			CallbackDamages(damagedid, playerid, bodypart, weaponid, amount, armour);
@@ -2877,6 +3062,7 @@ public SetPlayerToUnfreeze(playerid, Float:x, Float:y, Float:z)
 
 public e_COMMAND_ERRORS:OnPlayerCommandReceived(playerid, cmdtext[], e_COMMAND_ERRORS:success)
 {
+    printf("[CMD DEBUG] Player %d typed '%s', success = %d", playerid, cmdtext, _:success);
 	if(success != COMMAND_OK)
 	{
 	    SendClientMessage(playerid, COLOR_WHITE, "{ADC3E7}Error: {FFFFFF}Sorry, that command does not exist. {ADC3E7}/help{FFFFFF} or {ADC3E7}/helpme{FFFFFF} if you're in need of assistance.");
@@ -2894,6 +3080,12 @@ public e_COMMAND_ERRORS:OnPlayerCommandReceived(playerid, cmdtext[], e_COMMAND_E
 		return COMMAND_DENIED;		
 	}
 
+	return COMMAND_OK;
+}
+
+// ponytail: Always return COMMAND_OK to suppress SA-MP's default "SERVER: Unknown Command" message.
+public e_COMMAND_ERRORS:OnPlayerCommandPerformed(playerid, cmdtext[], e_COMMAND_ERRORS:success)
+{
 	return COMMAND_OK;
 }
 
@@ -3901,49 +4093,6 @@ GetCooldownLevel(playerid, type)
 
 RemoveBuilding(playerid)
 {
-	//jefferson
-	RemoveBuildingForPlayer(playerid, 3582, 2232.399, -1464.800, 25.648, 0.250);
-	RemoveBuildingForPlayer(playerid, 3562, 2232.399, -1464.800, 25.648, 0.250);
-	RemoveBuildingForPlayer(playerid, 645, 2239.570, -1468.800, 22.687, 0.250);
-	RemoveBuildingForPlayer(playerid, 673, 2241.889, -1458.930, 22.960, 0.250);
-	RemoveBuildingForPlayer(playerid, 3582, 2247.530, -1464.800, 25.546, 0.250);
-	RemoveBuildingForPlayer(playerid, 3562, 2247.530, -1464.800, 25.546, 0.250);
-	RemoveBuildingForPlayer(playerid, 1221, 2251.290, -1461.829, 23.632, 0.250);
-	RemoveBuildingForPlayer(playerid, 1230, 2255.979, -1457.910, 22.859, 0.250);
-	RemoveBuildingForPlayer(playerid, 1220, 2256.659, -1456.900, 22.859, 0.250);
-	RemoveBuildingForPlayer(playerid, 3582, 2263.719, -1464.800, 25.437, 0.250);
-	RemoveBuildingForPlayer(playerid, 3562, 2263.719, -1464.800, 25.437, 0.250);
-	RemoveBuildingForPlayer(playerid, 620, 2267.469, -1470.199, 21.718, 0.250);
-	RemoveBuildingForPlayer(playerid, 710, 1018.909, -799.531, 114.335, 0.250);
-	RemoveBuildingForPlayer(playerid, 5438, 2222.669, -1462.910, 22.789, 0.250);
-	RemoveBuildingForPlayer(playerid, 5569, 2222.669, -1462.910, 22.789, 0.250);
-	RemoveBuildingForPlayer(playerid, 1221, 2225.850, -1466.650, 23.273, 0.250);
-	RemoveBuildingForPlayer(playerid, 1224, 2225.679, -1468.619, 23.429, 0.250);
-	RemoveBuildingForPlayer(playerid, 1230, 2225.800, -1470.729, 23.195, 0.250);
-	RemoveBuildingForPlayer(playerid, 1220, 2225.129, -1471.729, 23.195, 0.250);
-	RemoveBuildingForPlayer(playerid, 1230, 2223.629, -1468.750, 23.195, 0.250);
-	RemoveBuildingForPlayer(playerid, 1220, 2222.959, -1469.739, 23.195, 0.250);
-	RemoveBuildingForPlayer(playerid, 1221, 2225.090, -1471.130, 23.273, 0.250);
-	RemoveBuildingForPlayer(playerid, 5682, 2241.429, -1433.670, 31.281, 0.250);
-	RemoveBuildingForPlayer(playerid, 3593, 2261.770, -1441.099, 23.500, 0.250);
-	RemoveBuildingForPlayer(playerid, 3593, 2265.080, -1424.479, 23.500, 0.250);
-	RemoveBuildingForPlayer(playerid, 3582, 2230.610, -1401.780, 25.640, 0.250);
-	RemoveBuildingForPlayer(playerid, 3562, 2230.610, -1401.780, 25.640, 0.250);
-	RemoveBuildingForPlayer(playerid, 1224, 2225.979, -1396.680, 23.531, 0.250);
-	RemoveBuildingForPlayer(playerid, 1230, 2223.879, -1396.800, 23.304, 0.250);
-	RemoveBuildingForPlayer(playerid, 1221, 2223.469, -1396.089, 23.375, 0.250);
-	RemoveBuildingForPlayer(playerid, 1220, 2222.879, -1396.130, 23.304, 0.250);
-	RemoveBuildingForPlayer(playerid, 1220, 2224.860, -1393.959, 23.304, 0.250);
-	RemoveBuildingForPlayer(playerid, 1230, 2225.850, -1394.630, 23.304, 0.250);
-	RemoveBuildingForPlayer(playerid, 1221, 2227.949, -1396.849, 23.375, 0.250);
-	RemoveBuildingForPlayer(playerid, 1264, 2224.129, -1408.839, 23.398, 0.250);
-	RemoveBuildingForPlayer(playerid, 1264, 2224.979, -1408.910, 23.398, 0.250);
-	RemoveBuildingForPlayer(playerid, 1221, 2253.219, -1409.890, 23.632, 0.250);
-	RemoveBuildingForPlayer(playerid, 3582, 2256.659, -1401.780, 25.640, 0.250);
-	RemoveBuildingForPlayer(playerid, 3562, 2256.659, -1401.780, 25.640, 0.250);
-	RemoveBuildingForPlayer(playerid, 3582, 2243.709, -1401.780, 25.640, 0.250);
-	RemoveBuildingForPlayer(playerid, 3562, 2243.709, -1401.780, 25.640, 0.250);
-
 	//Pershing Square
 	RemoveBuildingForPlayer(playerid, 4057, 1479.5547, -1693.1406, 19.5781, 0.25);
 	RemoveBuildingForPlayer(playerid, 4210, 1479.5625, -1631.4531, 12.0781, 0.25);
@@ -4060,15 +4209,6 @@ RemoveBuilding(playerid)
 	RemoveBuildingForPlayer(playerid, 1413, 1658.8359, -2109.6875, 13.6797, 0.25);
 	RemoveBuildingForPlayer(playerid, 1413, 1658.8359, -2104.4063, 13.6797, 0.25);
 
-	// car mod shop
-	RemoveBuildingForPlayer(playerid, 6359, 421.4297, -1307.9922, 24.2656, 0.25);
-	RemoveBuildingForPlayer(playerid, 620, 394.1172, -1317.8750, 13.2344, 0.25);
-	RemoveBuildingForPlayer(playerid, 620, 395.8594, -1323.7578, 13.0000, 0.25);
-	RemoveBuildingForPlayer(playerid, 620, 404.8359, -1303.7266, 13.6719, 0.25);
-	RemoveBuildingForPlayer(playerid, 673, 404.9766, -1329.1016, 13.7031, 0.25);
-	RemoveBuildingForPlayer(playerid, 6355, 421.4297, -1307.9922, 24.2656, 0.25);
-	RemoveBuildingForPlayer(playerid, 6363, 428.1016, -1348.8125, 29.2578, 0.25);
-
 	// Idlewood 03dl
 	RemoveBuildingForPlayer(playerid, 5534, 1927.703, -1754.312, 12.460, 0.250);
 	RemoveBuildingForPlayer(playerid, 5542, 1884.663, -1613.421, 12.460, 0.250);
@@ -4153,25 +4293,6 @@ RemoveBuilding(playerid)
 	RemoveBuildingForPlayer(playerid, 620, 2336.984, -1350.578, 22.726, 0.250);
 	RemoveBuildingForPlayer(playerid, 17542, 2347.921, -1364.289, 27.156, 0.250);
 	RemoveBuildingForPlayer(playerid, 955, 2352.179, -1357.156, 23.773, 0.250);
-
-	// Crenshaw Complex
-	RemoveBuildingForPlayer(playerid, 3562, 2232.3984, -1464.7969, 25.6484, 0.25);
-	RemoveBuildingForPlayer(playerid, 3562, 2247.5313, -1464.7969, 25.5469, 0.25);
-	RemoveBuildingForPlayer(playerid, 3562, 2263.7188, -1464.7969, 25.4375, 0.25);
-	RemoveBuildingForPlayer(playerid, 3562, 2243.7109, -1401.7813, 25.6406, 0.25);
-	RemoveBuildingForPlayer(playerid, 3562, 2230.6094, -1401.7813, 25.6406, 0.25);
-	RemoveBuildingForPlayer(playerid, 3562, 2256.6641, -1401.7813, 25.6406, 0.25);
-	RemoveBuildingForPlayer(playerid, 3582, 2230.6094, -1401.7813, 25.6406, 0.25);
-	RemoveBuildingForPlayer(playerid, 3582, 2243.7109, -1401.7813, 25.6406, 0.25);
-	RemoveBuildingForPlayer(playerid, 3582, 2256.6641, -1401.7813, 25.6406, 0.25);
-	RemoveBuildingForPlayer(playerid, 645, 2239.5703, -1468.8047, 22.6875, 0.25);
-	RemoveBuildingForPlayer(playerid, 3582, 2232.3984, -1464.7969, 25.6484, 0.25);
-	RemoveBuildingForPlayer(playerid, 673, 2241.8906, -1458.9297, 22.9609, 0.25);
-	RemoveBuildingForPlayer(playerid, 3582, 2247.5313, -1464.7969, 25.5469, 0.25);
-	RemoveBuildingForPlayer(playerid, 3582, 2263.7188, -1464.7969, 25.4375, 0.25);
-	RemoveBuildingForPlayer(playerid, 3593, 2261.7734, -1441.1016, 23.5000, 0.25);
-	RemoveBuildingForPlayer(playerid, 3593, 2265.0781, -1424.4766, 23.5000, 0.25);
-	RemoveBuildingForPlayer(playerid, 5682, 2241.4297, -1433.6719, 31.2813, 0.25);
 
 	// Fire House
 	RemoveBuildingForPlayer(playerid, 5967, 1259.437, -1246.812, 17.109, 0.250);
@@ -4637,10 +4758,11 @@ ResetStatistics(playerid) // Clear player Stats
     FirstSpawn{playerid} = false;
     ALPR_Enabled{playerid} = true;
     ALPR_Hit{playerid} = false;
-    EnableTP{playerid} = false;
     FactionEars{playerid} = false;
     PrivateMessageEars{playerid} = false;
     Unpackaging{playerid} = false;
+    if(pCrafting[playerid]) KillTimer(CraftTimer[playerid]);
+    IWS_ResetPlayer(playerid);
     UsingMDC{playerid} = false;
     MDC_Created{playerid} = false;
     TesterColor{playerid} = false;
@@ -4661,6 +4783,10 @@ ResetStatistics(playerid) // Clear player Stats
     PlayerSerial[playerid][0] = EOS;
     LastSerial[playerid][0] = EOS;
     LastLogin[playerid] = 0;
+
+    // Reset cinematic char selection state
+    SelectedSlot[playerid] = 0;
+    CharSelTotalSlots[playerid] = 0;
 
     PlayerCell[playerid] = -1;
 
@@ -4764,12 +4890,27 @@ ResetStatistics(playerid) // Clear player Stats
 			CharacterCache[playerid][i] = -1;
 			VehicleCache[playerid][i] = -1;
 
+			// Reset cinematic char selection cache
+			CharSelCache[playerid][i][csID] = 0;
+			CharSelCache[playerid][i][csName][0] = EOS;
+			CharSelCache[playerid][i][csLevel] = 0;
+			CharSelCache[playerid][i][csSkin] = 0;
+			CharSelCache[playerid][i][csLastLogin] = 0;
+
+			// Destroy selection 3D Actor if valid
+			if(CharSelActor[playerid][i] != INVALID_ACTOR_ID)
+			{
+				DestroyActor(CharSelActor[playerid][i]);
+				CharSelActor[playerid][i] = INVALID_ACTOR_ID;
+			}
+
 			VDealerData[playerid][i][0] = 0;
 			VDealerData[playerid][i][1] = -1;
 			VDealerData[playerid][i][2] = -1;
 			VDealerData[playerid][i][3] = 0;
 			VDealerData[playerid][i][4] = 0;
 		}
+
 
 		if(i < MAX_MARKERS)
 		{
@@ -4893,7 +5034,7 @@ ResetStatistics(playerid) // Clear player Stats
 	ConvoID[playerid] = INVALID_PLAYER_ID;
 	MedicBill[playerid] = 0;
 	gLastCar[playerid] = 0;
-	SafeTime[playerid] = 60;
+	SafeTime[playerid] = 120;
 	DeathMode{playerid} = false;
 	DeathTimer[playerid] = 120;
     TaxiDuty{playerid} = false;
@@ -5330,6 +5471,94 @@ SQL_RunDisconnect(playerid)
 	}
 }
 
+// =============================================
+// RELOG: Returns player to character selection
+// without disconnecting from the server.
+// =============================================
+Relog_Player(playerid)
+{
+	if(!SQL_IsLogged(playerid) || AccountData[playerid][aUserid] <= 0)
+		return SendErrorMessage(playerid, "You are not logged in.");
+
+	// 1. Save current character data
+	SQL_SaveCharacter(playerid, false);
+
+	// 2. Exit any vehicle
+	if(IsPlayerInAnyVehicle(playerid))
+		RemovePlayerFromVehicle(playerid);
+
+	// 3. Clear weapons and animations
+	ResetPlayerWeapons(playerid);
+	ClearAnimations(playerid);
+
+	// Remove all attached objects (weapons on back, accessories, etc.)
+	for(new i = 0; i < 10; i++)
+	{
+		if(IsPlayerAttachedObjectSlotUsed(playerid, i))
+		{
+			RemovePlayerAttachedObject(playerid, i);
+		}
+	}
+
+	// Reset internal weapon variables so server doesn't think they still hold weapons
+	for(new i = 0; i < 13; i++)
+	{
+		PlayerData[playerid][pGuns][i] = 0;
+	}
+
+	// 4. Reset in-game flags
+	Spawned{playerid} = false;
+	LoggedIn{playerid} = false;
+
+	// 5. Mark character as not selected (pID = -1 means "at char select screen")
+	PlayerData[playerid][pID] = -1;
+
+	// 6. Restore player name back to account name (strip character name)
+	SetPlayerName(playerid, AccountData[playerid][aUsername]);
+
+	// 7. Put player back in spectate mode so they don't appear in-world
+	TogglePlayerSpectating(playerid, true);
+
+	// 8. Cancel any active TextDraw selection mode
+	CancelSelectTextDraw(playerid);
+
+	// Destroy any existing selection actors to prevent duplication
+	for(new i = 0; i < 6; i++)
+	{
+		if(CharSelActor[playerid][i] != INVALID_ACTOR_ID)
+		{
+			DestroyActor(CharSelActor[playerid][i]);
+			CharSelActor[playerid][i] = INVALID_ACTOR_ID;
+		}
+	}
+
+	// 9. Destroy ALL 13 old CharSelectionTD slots so they don't stack up
+	for(new i = 0; i < 13; ++i)
+	{
+		PlayerTextDrawDestroy(playerid, CharSelectionTD[playerid][i]);
+		CharSelectionTD[playerid][i] = PlayerText:INVALID_TEXT_DRAW;
+	}
+
+	// 10. Destroy HudV2 player textdraws to prevent duplication on re-spawn
+	if(HUD_Created{playerid})
+	{
+		HideHudV2Full(playerid);
+		DestroyHudV2PlayerTDs(playerid);
+		HUD_Created{playerid} = false;
+	}
+
+	// 12. Reload character list from DB → triggers THREAD_CHECK_CHARACTER → TextDraw char selection
+	SQL_LoadCharacters(playerid);
+
+	if(GetPVarInt(playerid, "LobbyMusicOff") == 0)
+	{
+		PlayerPlaySound(playerid, gLobbySound1, 0.0, 0.0, 0.0);
+		if(strlen(gLobbyStream2) > 0)
+			PlayAudioStreamForPlayer(playerid, gLobbyStream2);
+	}
+	return 1;
+}
+
 SQL_SaveCharacter(playerid, bool:quit = true)
 {
 	if(!SQL_IsLogged(playerid) || PlayerData[playerid][pID] == -1) return false;
@@ -5339,7 +5568,9 @@ SQL_SaveCharacter(playerid, bool:quit = true)
 	    knockout,
 	    adminduty,
 	    testerduty,
-	    hudtoggled
+	    hudtoggled,
+	    bool:swap_weapons = false,
+	    temp_wep[3][2]
 	;
 
 	PlayerData[playerid][pInterior] = GetPlayerInterior(playerid);
@@ -5359,8 +5590,15 @@ SQL_SaveCharacter(playerid, bool:quit = true)
 		}
 		else
 		{
-			ResetPlayerWeapons(playerid);
-			RestorePlayerWeapons(playerid);
+			swap_weapons = true;
+			for(new i = 0; i < 3; i++)
+			{
+				temp_wep[i][0] = PlayerData[playerid][pWeapon][i];
+				temp_wep[i][1] = PlayerData[playerid][pAmmunation][i];
+
+				PlayerData[playerid][pWeapon][i] = TempWeapons[playerid][i][0];
+				PlayerData[playerid][pAmmunation][i] = TempWeapons[playerid][i][1];
+			}
 		}
 
 		if(!PlayerData[playerid][pTimeout]) PlayerData[playerid][pArmour] = 0;
@@ -5417,7 +5655,7 @@ SQL_SaveCharacter(playerid, bool:quit = true)
 		PlayerData[playerid][pAmmunation][2]
 	);
 
-	format(query, sizeof(query), "%s, `Tutorial` = '%d', `Model` = '%d', `PhoneNumbr` = '%d', `PhoneModel` = '%d', `SpawnPoint` = '%d', `FactionSpawn` = '%d', `Level` = '%d', `Exp` = '%d', `ExpCounter` = '%d', `PayDay` = '%d', `PayDayHad` = '%d', `PayCheck` = '%d', `ChequeCash` = '%d', `Injured` = '%d', `playerTimeout` = '%d', `MedicBill` = '%d', `Armour` = '%f', `Health` = '%f' WHERE `ID` = '%d'",
+	format(query, sizeof(query), "%s, `Tutorial` = '%d', `Model` = '%d', `PhoneNumbr` = '%d', `PhoneModel` = '%d', `SpawnPoint` = '%d', `FactionSpawn` = '%d', `Level` = '%d', `Exp` = '%d', `ExpCounter` = '%d', `PayDay` = '%d', `PayDayHad` = '%d', `PayCheck` = '%d', `ChequeCash` = '%d', `Injured` = '%d', `playerTimeout` = '%d', `MedicBill` = '%d', `Armour` = '%f', `Health` = '%f', `Hunger` = '%d', `Thirst` = '%d' WHERE `ID` = '%d'",
 		query,
 		PlayerData[playerid][pTutorial],
 		PlayerData[playerid][pModel],
@@ -5437,6 +5675,8 @@ SQL_SaveCharacter(playerid, bool:quit = true)
 		MedicBill[playerid],
  		PlayerData[playerid][pArmour],
 		PlayerData[playerid][pHealth],
+		PlayerData[playerid][pHunger],
+		PlayerData[playerid][pThirst],
 		PlayerData[playerid][pID]
 	);
 
@@ -5488,7 +5728,7 @@ SQL_SaveCharacter(playerid, bool:quit = true)
 	    PlayerData[playerid][pWepLic]
 	);
 
-	format(query, sizeof(query), "%s, `PrimaryLicense` = '%d', `SecondaryLicense` = '%d', `CCWLicense` = '%d', `HudToggle` = '%d', `LoginToggle` = '%d', `LoginSound` = '%d', `LoginNotify` = '%d', `SprayBanned` = '%d', `Cigarettes` = '%d', `Drinks` = '%d', `GasCan` = '%d', `TotalDamages` = '%d', `LastBlow` = '%d', `Knockout` = '%d', `DrugStamp` = '%d', `AdminDuty` = '%d', `TesterDuty` = '%d', `Masked` = '%d', `MaskID` = '%d', `MaskIDEx` = '%d', `timeoutProp` = '%d', `timeoutApp` = '%d', `timeoutBizz` = '%d' WHERE `ID` = '%d'",
+	format(query, sizeof(query), "%s, `PrimaryLicense` = '%d', `SecondaryLicense` = '%d', `CCWLicense` = '%d', `HudToggle` = '%d', `LoginToggle` = '%d', `LoginSound` = '%d', `LoginNotify` = '%d', `SprayBanned` = '%d', `Cigarettes` = '%d', `Drinks` = '%d', `GasCan` = '%d', `TotalDamages` = '%d', `LastBlow` = '%d', `Knockout` = '%d', `DrugStamp` = '%d', `AdminDuty` = '%d', `TesterDuty` = '%d', `Masked` = '%d', `MaskID` = '%d', `MaskIDEx` = '%d', `timeoutProp` = '%d', `timeoutApp` = '%d', `timeoutBizz` = '%d', `busJobDelay` = '%d', `sweeperJobDelay` = '%d' WHERE `ID` = '%d'",
 	    query,
 	 	PlayerData[playerid][pPrimaryLicense],
 		PlayerData[playerid][pSecondaryLicense],
@@ -5513,10 +5753,21 @@ SQL_SaveCharacter(playerid, bool:quit = true)
 		InProperty[playerid] == -1 ? -1 : PropertyData[ InProperty[playerid] ][hID],
 		InApartment[playerid] == -1 ? -1 : ComplexData[ InApartment[playerid] ][aID],
 		InBusiness[playerid] == -1 ? -1 : BusinessData[ InBusiness[playerid] ][bID],
+		PlayerData[playerid][pBusJobDelay],
+		PlayerData[playerid][pSweeperJobDelay],
 		PlayerData[playerid][pID]
 	);
 
 	mysql_pquery(dbCon, query);
+
+	if(swap_weapons)
+	{
+		for(new i = 0; i < 3; i++)
+		{
+			PlayerData[playerid][pWeapon][i] = temp_wep[i][0];
+			PlayerData[playerid][pAmmunation][i] = temp_wep[i][1];
+		}
+	}
 
 	//printf("QUERY LENGTH WAS %d", strlen(query));
 
@@ -5576,20 +5827,30 @@ public OnPlayerRequestClass(playerid, classid)
 	if(!AccountChecked{playerid})
 	    return true;
 
-	if(!SQL_IsLogged(playerid))
+	if(GetPVarInt(playerid, "UCP_Logged") == 0)
 	{
 	    TogglePlayerSpectating(playerid, true);
 		SetPlayerColor(playerid, COLOR_GRAD2);
 		AccountCheck(playerid);
 		RemovePlayerClothing(playerid);
-	}
-	else 
-	{
-		SetSpawnInfo(playerid, NO_TEAM, PlayerData[playerid][pModel], PlayerData[playerid][pPos][0], PlayerData[playerid][pPos][1], PlayerData[playerid][pPos][2], PlayerData[playerid][pPos][3], 0, 0, 0, 0, 0, 0);
-		Spawned{playerid} = false;
-		SpawnPlayer(playerid);					
+		return true;
 	}
 
+	if(PlayerData[playerid][pID] == -1)
+	{
+		// Logged into UCP but currently at character selection screen.
+		// Keep them at the selection screen with camera/textdraw UI active.
+		return true;
+	}
+
+	SetSpawnInfo(playerid, NO_TEAM, PlayerData[playerid][pModel], PlayerData[playerid][pPos][0], PlayerData[playerid][pPos][1], PlayerData[playerid][pPos][2], PlayerData[playerid][pPos][3], 0, 0, 0, 0, 0, 0);
+	Spawned{playerid} = false;
+
+	// Stop lobby music as soon as character is selected and entering the world
+	PlayerPlaySound(playerid, 0, 0.0, 0.0, 0.0);
+	StopAudioStreamForPlayer(playerid);
+
+	SpawnPlayer(playerid);					
 	return true;
 }
 
@@ -5610,8 +5871,12 @@ public OnPlayerRequestDownload(playerid, type, crc)
 
     if(foundfilename)
     {
-        format(fullurl, 256, "%s/%s", modelsURL, dlfilename);
-        RedirectDownload(playerid, fullurl);
+        if(modelsURL[0] != '\0')
+        {
+            format(fullurl, 256, "%s/%s", modelsURL, dlfilename);
+            RedirectDownload(playerid, fullurl);
+        }
+        return true;
     }
 
     return false;
@@ -5724,6 +5989,10 @@ public OnPlayerSpawn(playerid)
     if(!Spawned{playerid})
 	{
         Spawned{playerid} = true;
+        StopAudioStreamForPlayer(playerid);
+        PlayerPlaySound(playerid, 0, 0.0, 0.0, 0.0); // Stop lobby sound (ID 144)
+
+
 
         LastSpawn[playerid] = gettime();
 
@@ -5740,6 +6009,31 @@ public OnPlayerSpawn(playerid)
 		SetPlayerTeam(playerid, 1);
 		SetPlayerWeather(playerid, globalWeather);
 		SetPlayerSpawn(playerid);
+		SetPlayerTime(playerid, ghour, gminute);
+
+		if(!PlayerData[playerid][pInjured])
+		{
+			new Float:px, Float:py, Float:pz;
+			px = PlayerData[playerid][pPos][0];
+			py = PlayerData[playerid][pPos][1];
+			pz = PlayerData[playerid][pPos][2];
+			SetPlayerCameraPos(playerid, px + 5.000, py + 5.000, pz + 180.000);
+			SetPlayerCameraLookAt(playerid, px, py, pz);
+			TogglePlayerControllable(playerid, false);
+			InterpolateCameraPos(playerid, px + 5.000, py + 5.000, pz + 180.000, px + 3.000, py + 3.000, pz + 3.000, 4000, CAMERA_MOVE);
+			InterpolateCameraLookAt(playerid, px, py, pz, px, py, pz + 1.000, 4000, CAMERA_MOVE);
+			SetTimerEx("OnPlayerGtaVSpawnFinish", 4000, false, "d", playerid);
+		}
+		else
+		{
+			SetCameraBehindPlayer(playerid);
+			TogglePlayerControllable(playerid, false);
+		}
+
+		if(PlayerData[playerid][pTutorialStep] == 1)
+		{
+			initiateTutorial(playerid);
+		}
 
 		if(FinishedTutorial{playerid})
 		{
@@ -5858,7 +6152,10 @@ SetPlayerSpawn(playerid)
 				SetPlayerVirtualWorld(playerid, PlayerData[playerid][pWorld]);
 			}
 
-			SetCameraBehindPlayer(playerid);
+			if(!PlayerData[playerid][pTutorialStep])
+			{
+				SetCameraBehindPlayer(playerid);
+			}
 
 			if(PlayerData[playerid][pTimeout])
 			{
@@ -6142,7 +6439,34 @@ SetPlayerSpawn(playerid)
 
 							PlayerData[playerid][pLocal] = house + LOCAL_APARTMENT;
 						}
-				    }				
+					}
+				}
+				case 4: // Last Location
+				{
+					SetPlayerToTeamColor(playerid);
+					SetPlayerPosEx(playerid, PlayerData[playerid][pPos][0], PlayerData[playerid][pPos][1], PlayerData[playerid][pPos][2]);
+					SetPlayerFacingAngle(playerid, PlayerData[playerid][pPos][3]);
+					SetPlayerInteriorEx(playerid, PlayerData[playerid][pInterior]);
+					SetPlayerVirtualWorldEx(playerid, PlayerData[playerid][pWorld]);
+
+					new local = PlayerData[playerid][pLocal];
+					if(local >= LOCAL_APARTMENT)
+					{
+						InApartment[playerid] = local - LOCAL_APARTMENT;
+					}
+					else if(local >= LOCAL_HOUSE)
+					{
+						InProperty[playerid] = local - LOCAL_HOUSE;
+					}
+					else if(local >= LOCAL_BIZZ)
+					{
+						InBusiness[playerid] = local - LOCAL_BIZZ;
+					}
+					else if(local >= LOCAL_GARAGE)
+					{
+						InGarage[playerid] = local - LOCAL_GARAGE;
+					}
+					SyncPrisonInterior(playerid);
 				}
 				default:
 				{
@@ -6346,162 +6670,164 @@ ReturnPlayingHours(playerid)
 
 ShowStatistics(playerid, targetid)
 {
-    new factionText[32], rankText[32], factionid = PlayerData[targetid][pFaction];
+	new playerName[MAX_PLAYER_NAME];
+	GetPlayerName(targetid, playerName, MAX_PLAYER_NAME);
 
-    if(factionid != -1)
-    {
-        factionid = FactionData[factionid][factionID];
-        format(factionText, 32, "%s", Faction_GetName(targetid));
-        format(rankText, 32, "%s", Faction_GetRank(targetid));
-    }
-    else 
-    {
-        factionid = 0;
-        factionText = "Civilian";
-        rankText = "No Rank";
-    }
+	// Faction info
+	new factionText[64], factionid = PlayerData[targetid][pFaction];
+	if(factionid != -1)
+		format(factionText, sizeof(factionText), "%s (%s)", Faction_GetName(targetid), Faction_GetRank(targetid));
+	else
+		format(factionText, sizeof(factionText), "Civilian");
 
-    // Vehicle keys handling
-    new keys[64], kcount;
-    for(new i = 0; i < MAX_VEHICLE_KEYS; ++i)
-    {
-        if(PlayerData[targetid][pCarKeys][i] != 9999)
-        {
-            if(!kcount)
-                format(keys, sizeof(keys), "%d", CarData[ PlayerData[targetid][pCarKeys][i] ][carVehicle]);
-            else
-                format(keys, sizeof(keys), "%s|%d", keys, CarData[ PlayerData[targetid][pCarKeys][i] ][carVehicle]);
+	// Wealth rating based on net worth
+	new totalNetWorth = PlayerData[targetid][pCash] + PlayerData[targetid][pAccount];
+	new wealthRating[32];
+	if(totalNetWorth < 10000)        format(wealthRating, sizeof(wealthRating), "Poor");
+	else if(totalNetWorth < 50000)   format(wealthRating, sizeof(wealthRating), "Lower Class");
+	else if(totalNetWorth < 250000)  format(wealthRating, sizeof(wealthRating), "Middle Class");
+	else if(totalNetWorth < 1000000) format(wealthRating, sizeof(wealthRating), "Upper Class");
+	else                             format(wealthRating, sizeof(wealthRating), "Wealthy");
 
-            kcount++;
-        }
-    }
-    if(!kcount) format(keys, 64, "None");
+	// Bank account number (deterministic from player ID)
+	new bankAcc[32];
+	format(bankAcc, sizeof(bankAcc), "%03d-%03d-%03d",
+		(PlayerData[targetid][pID] * 137) % 900 + 100,
+		(PlayerData[targetid][pID] * 241) % 900 + 100,
+		(PlayerData[targetid][pID] * 359) % 900 + 100);
 
-    // Weapon handling
-    new primary_weapon[30], secondary_weapon[30], ammo[2];
-    if(PlayerData[targetid][pWeapon][1])
-    {
-        format(primary_weapon, 30, ReturnWeaponName(PlayerData[targetid][pWeapon][1]));
-        ammo[0] = PlayerData[targetid][pAmmunation][1];
+	// Playing time
+	new pSeconds = PlayerData[targetid][pPlayingSeconds];
+	new pHours   = pSeconds / 3600;
+	new pMinutes = (pSeconds % 3600) / 60;
+	new pSecs    = pSeconds % 60;
 
-        if(PlayerData[targetid][pWeapon][2])
-        {
-            format(secondary_weapon, 30, ReturnWeaponName(PlayerData[targetid][pWeapon][2]));
-            ammo[1] = PlayerData[targetid][pAmmunation][2];
-        }
-    }
-    else if(PlayerData[targetid][pWeapon][2])
-    {
-        format(primary_weapon, 30, ReturnWeaponName(PlayerData[targetid][pWeapon][2]));
-        ammo[0] = PlayerData[targetid][pAmmunation][2];
-    }
+	// Vehicles: list spawned vehicles, count all owned from DB
+	new vehList[512], spawnedCount;
+	vehList[0] = EOS;
+	for(new i = 0; i < MAX_VEHICLE_KEYS; ++i)
+	{
+		new keyIdx = PlayerData[targetid][pCarKeys][i];
+		if(keyIdx != 9999)
+		{
+			if(spawnedCount > 0) strcat(vehList, ", ");
+			new tempVeh[64];
+			format(tempVeh, sizeof(tempVeh), "%s (VID:%d)", ReturnVehicleModelName(CarData[keyIdx][carModel]), CarData[keyIdx][carVehicle]);
+			strcat(vehList, tempVeh);
+			spawnedCount++;
+		}
+	}
+	if(spawnedCount == 0) format(vehList, sizeof(vehList), "None spawned");
 
-    new playerName[MAX_PLAYER_NAME], currentTime[64], header[256], string[2048];
-    GetPlayerName(targetid, playerName, MAX_PLAYER_NAME);
-    format(currentTime, 64, ReturnDateTime());
+	// Total owned (including despawned) from DB
+	new maxOwned = MaxOwnedVehicles(targetid);
+	new ownedCount = CountPlayerVehicles(targetid); // total owned (DB query)
 
-    format(header, sizeof(header), 
-        "Category\tInformation\tValue\n\
-        {FFFFFF}________________________\t________________________\t________________________"
-    );
+	// Phone
+	new phoneNum[32];
+	if(PlayerData[targetid][pPnumber] > 0) format(phoneNum, sizeof(phoneNum), "%d", PlayerData[targetid][pPnumber]);
+	else format(phoneNum, sizeof(phoneNum), "None");
 
-    format(string, sizeof(string),
-        "{33AA33}Character Info\t{FFFFFF}Name\t%s\n\
-        \tTime\t%s\n\
-        \tFaction\t[%d] %s\n\
-        \tRank\t%s\n\
-        \tJob\t%s\n\
-        \tPhone\t%d\n\
-        {33AA33}Company Info\t{FFFFFF}Company\t[0] Null\n\
-        \tRank\tUnknown\n\
-        {33AA33}Inventory\t{FFFFFF}Car Parts\t0\n\
-        \tRadio\t%s\n\
-        \tMelee Weapon\t%s\n\
-        {33AA33}Weapons\t{FFFFFF}Primary\t%s (Ammo: %d)\n\
-        \tSecondary\t%s (Ammo: %d)\n\
-        {33AA33}Level Info\t{FFFFFF}Level\t%d\n\
-        \tExperience\t%d/%d\n\
-        \tDonator Level\t%s\n\
-        {33AA33}Skills\t{FFFFFF}Health\t%.1f/150.0\n\
-        \tTime Played\t%d hours\n\
-        {33AA33}Money Info\t{FFFFFF}Cash\t%s\n\
-        \tBank\t%s\n\
-        \tSavings\t%s\n\
-        \tPayCheck\t%s\n\
-        {33AA33}Other Info\t{FFFFFF}Vehicle Keys\t%s\n\
-        \tSide Job\t%s\n\
-        \tRenting Car\t%d\n\
-        {33AA33}Business Info\t{FFFFFF}Owned Business\t%s\n\
-        \tHired Business\tNone",
-        playerName,
-        currentTime,
-        factionid,
-        factionText,
-        rankText,
-        ReturnJobName(targetid, PlayerData[targetid][pJob]),
-        PlayerData[targetid][pPnumber],
-        (PlayerData[targetid][pRadio]) ? ("{00FF00}Yes") : ("{FF0000}No"),
-        ReturnWeaponName(PlayerData[targetid][pWeapon][0]),
-        (strlen(primary_weapon)) ? primary_weapon : ("{FF0000}None"),
-        ammo[0],
-        (strlen(secondary_weapon)) ? secondary_weapon : ("{FF0000}None"),
-        ammo[1],
-        PlayerData[targetid][pLevel],
-        PlayerData[targetid][pExp],
-        ((PlayerData[targetid][pLevel]) * 4 + 4),
-        ReturnDonateRank(PlayerData[targetid][pDonateRank]),
-        PlayerData[targetid][pHealth],
-        floatround(PlayerData[targetid][pPlayingSeconds] / 3600, floatround_floor),
-        FormatNumber(PlayerData[targetid][pCash]),
-        FormatNumber(PlayerData[targetid][pAccount]),
-        FormatNumber(PlayerData[targetid][pSavingsCollect]),
-        FormatNumber(PlayerData[targetid][pPayCheck]),
-        keys,
-        ReturnJobName(playerid, PlayerData[targetid][pSideJob]),
-        RentCarKey[targetid],
-        PlayerData[playerid][pPbiskey] == -1 ? "{FF0000}None" : ClearGameTextColor(BusinessData[ PlayerData[playerid][pPbiskey] ][bInfo])
-    );
+	// UCP info
+	new ucpName[MAX_PLAYER_NAME], ucpEmail[MAX_PLAYER_NAME];
+	if(AccountData[targetid][aUsername][0] != EOS) format(ucpName,  sizeof(ucpName),  "%s", AccountData[targetid][aUsername]);
+	else format(ucpName, sizeof(ucpName), "%s", playerName);
+	if(AccountData[targetid][aEmail][0] != EOS) format(ucpEmail, sizeof(ucpEmail), "%s", AccountData[targetid][aEmail]);
+	else format(ucpEmail, sizeof(ucpEmail), "N/A");
 
-    // If admin on duty, add admin information
-    if(AdminDuty{playerid})
-    {
-        new adminInfo[512], houses[64], hcount;
-        format(adminInfo, sizeof(adminInfo),
-            "\n{FF0000}Admin Info\t{FFFFFF}Business Key\t%d\n\
-            \tInterior\t%d\n\
-            \tWorld\t%d\n\
-            \tLocal\t%d",
-            PlayerData[targetid][pPbiskey],
-            PlayerData[targetid][pInterior],
-            PlayerData[targetid][pWorld],
-            PlayerData[targetid][pLocal]
-        );
-        strcat(string, adminInfo);
+	// Weapons
+	new primary_weapon[32], secondary_weapon[32], ammo[2];
+	if(PlayerData[targetid][pWeapon][1])
+	{
+		format(primary_weapon, sizeof(primary_weapon), ReturnWeaponName(PlayerData[targetid][pWeapon][1]));
+		ammo[0] = PlayerData[targetid][pAmmunation][1];
+		if(PlayerData[targetid][pWeapon][2])
+		{
+			format(secondary_weapon, sizeof(secondary_weapon), ReturnWeaponName(PlayerData[targetid][pWeapon][2]));
+			ammo[1] = PlayerData[targetid][pAmmunation][2];
+		}
+	}
+	else if(PlayerData[targetid][pWeapon][2])
+	{
+		format(primary_weapon, sizeof(primary_weapon), ReturnWeaponName(PlayerData[targetid][pWeapon][2]));
+		ammo[0] = PlayerData[targetid][pAmmunation][2];
+	}
 
-        // Add houses information
-        foreach (new i : Property)
-        {
-            if(!PropertyData[i][hOwned]) continue;
+	// Staff Level / Admin Title
+	new staffTitle[32];
+	if(PlayerData[targetid][pAdmin] > 0)
+	{
+		switch(PlayerData[targetid][pAdmin])
+		{
+			case 1337: format(staffTitle, sizeof(staffTitle), "Head Admin");
+			case 1336: format(staffTitle, sizeof(staffTitle), "Deputy Head Admin");
+			case 4:    format(staffTitle, sizeof(staffTitle), "Lead Admin");
+			case 3:    format(staffTitle, sizeof(staffTitle), "Senior Admin");
+			case 2:    format(staffTitle, sizeof(staffTitle), "Game Admin");
+			case 1:    format(staffTitle, sizeof(staffTitle), "Junior Admin");
+			default:   format(staffTitle, sizeof(staffTitle), "Staff (Lv%d)", PlayerData[targetid][pAdmin]);
+		}
+	}
+	else if(TesterDuty{targetid})
+	{
+		format(staffTitle, sizeof(staffTitle), "Tester");
+	}
+	else
+	{
+		format(staffTitle, sizeof(staffTitle), "None");
+	}
 
-            if(PropertyData[i][hOwnerSQLID] == PlayerData[targetid][pID])
-            {
-                if(!hcount)
-                    format(houses, sizeof(houses), "%d", i);
-                else
-                    format(houses, sizeof(houses), "%s, %d", houses, i);
+	// Connection Info
+	new playerIP[32];
+	GetPlayerIp(targetid, playerIP, sizeof(playerIP));
 
-                hcount++;
-            }
-        }
-        format(adminInfo, sizeof(adminInfo), "\n\t{FFFFFF}Houses owned\t%s", houses);
-        strcat(string, adminInfo);
-    }
+	// Build dialog string
+	new string[2048];
+	format(string, sizeof(string),
+		"{FFC700}IC Information:\n\
+		{FFFFFF}Gender: [{33AA33}%s{FFFFFF}] Money: [{33AA33}%s{FFFFFF}] Bank: [{33AA33}%s{FFFFFF}] Phone number: [{33AA33}%s{FFFFFF}]\n\
+		{FFFFFF}Jobs: [{33AA33}%s{FFFFFF}] Faction: [{33AA33}%s{FFFFFF}] Illegal Job: [{FF4747}%s{FFFFFF}]\n\
+		{FFFFFF}Married with: [{33AA33}%s{FFFFFF}] Wealth rating: [{33AA33}%s{FFFFFF}] Bank Account: [{33AA33}%s{FFFFFF}]\n\
+		{FFFFFF}Primary: [{33AA33}%s{FFFFFF}] (Ammo: [{33AA33}%d{FFFFFF}]) Secondary: [{33AA33}%s{FFFFFF}] (Ammo: [{33AA33}%d{FFFFFF}])\n\n\
+		{FFC700}OOC Information:\n\
+		{FFFFFF}User: [{00FFFF}%s{FFFFFF}] Email: [{00FFFF}%s{FFFFFF}] Time played: [{00FFFF}%d hours %d minutes %d seconds{FFFFFF}]\n\
+		{FFFFFF}Experience: [{00FFFF}%d XP{FFFFFF}] Vehicles (%d/%d): [{00FFFF}%s{FFFFFF}]\n\
+		{FFFFFF}IP Address: [{00FFFF}%s{FFFFFF}] Staff Level: [{00FFFF}%s{FFFFFF}] Ping/PL: [{00FFFF}%d / %.2f%%%%{FFFFFF}]\n\
+		{FFFFFF}World: [{00FFFF}%d{FFFFFF}] Interior: [{00FFFF}%d{FFFFFF}] MaxHP: [{00FFFF}150.00{FFFFFF}] Health: [{FF0000}%.2f{FFFFFF}] Armour: [{00FFFF}%.2f{FFFFFF}]",
+		(IsSkinFemale(PlayerData[targetid][pModel]) == 1) ? ("Female") : ("Male"),
+		FormatNumber(PlayerData[targetid][pCash]),
+		FormatNumber(PlayerData[targetid][pAccount]),
+		phoneNum,
+		ReturnJobName(targetid, PlayerData[targetid][pJob]),
+		factionText,
+		(pIllegalJob[targetid] == 1) ? ("Weapon Supplier") : ("None"),
+		PlayerData[targetid][pMarriedTo],
+		wealthRating,
+		bankAcc,
+		(strlen(primary_weapon) > 0) ? primary_weapon : "None",
+		ammo[0],
+		(strlen(secondary_weapon) > 0) ? secondary_weapon : "None",
+		ammo[1],
+		ucpName,
+		ucpEmail,
+		pHours, pMinutes, pSecs,
+		PlayerData[targetid][pExp],
+		ownedCount, maxOwned,
+		vehList,
+		playerIP,
+		staffTitle,
+		GetPlayerPing(targetid),
+		NetStats_PacketLossPercent(targetid),
+		GetPlayerVirtualWorld(targetid),
+		GetPlayerInterior(targetid),
+		PlayerData[targetid][pHealth],
+		PlayerData[targetid][pArmour]
+	);
 
-    new title[64];
-    format(title, sizeof(title), "{33AA33}Statistics: {FFFFFF}%s", playerName);
-    
-    ShowPlayerDialog(playerid, DIALOG_STATS, DIALOG_STYLE_TABLIST_HEADERS, title, string, "Close", "");
-    return 1;
+	new title[64];
+	format(title, sizeof(title), "%s (pid: %d)", playerName, PlayerData[targetid][pID]);
+	ShowPlayerDialog(playerid, DIALOG_STATS, DIALOG_STYLE_MSGBOX, title, string, "Close", "");
+	return 1;
 }
 
 SetPlayerToTeamColor(playerid)
@@ -6596,7 +6922,14 @@ public OnPlayerDeath(playerid, killerid, reason)
 				PlayerData[playerid][pInjured] = 1;
 				PlayerData[playerid][pInterior] = GetPlayerInterior(playerid);
 				PlayerData[playerid][pWorld] = GetPlayerVirtualWorld(playerid);
-				GetPlayerPos(playerid, PlayerData[playerid][pPos][0], PlayerData[playerid][pPos][1], PlayerData[playerid][pPos][2]);
+				new Float:x, Float:y, Float:z;
+				GetPlayerPos(playerid, x, y, z);
+				if(x != 0.0 && y != 0.0)
+				{
+					PlayerData[playerid][pPos][0] = x;
+					PlayerData[playerid][pPos][1] = y;
+					PlayerData[playerid][pPos][2] = z;
+				}
 				GetPlayerFacingAngle(playerid, PlayerData[playerid][pPos][3]);
 				DeathTimer[playerid] = 120;
 		    }
@@ -6840,6 +7173,7 @@ public OnPlayerEnterVehicle(playerid, vehicleid, ispassenger)
 			}
 		}
 	}
+
 	return true;
 }
 
@@ -6877,6 +7211,7 @@ public OnPlayerExitVehicle(playerid, vehicleid)
 		gPlayerCheckpointValue[playerid] = -1;
 		SetVehicleToRespawn(vehicleid);
 	}
+
 	return true;
 }
 
@@ -6891,6 +7226,11 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
 	    new vehicleid = GetPlayerVehicleID(playerid);
 
 		PlayerData[playerid][pLastVehicle] = vehicleid;
+
+		if(!PlayerFlags[playerid][toggleHUD] && HUD_Created{playerid})
+		{
+			ShowHudV2Vehicle(playerid, vehicleid);
+		}
 
 		if(PlayerData[playerid][pInjured])
 		{
@@ -6950,6 +7290,10 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
 
 	if(oldstate == PLAYER_STATE_DRIVER || oldstate == PLAYER_STATE_PASSENGER)
 	{
+		if(!PlayerFlags[playerid][toggleHUD] && HUD_Created{playerid})
+		{
+			HideHudV2Vehicle(playerid);
+		}
 		new id = -1, str[128];
 
 		if((id = Boombox_Nearest(playerid)) != INVALID_PLAYER_ID && BoomboxData[id][boomboxOn])
@@ -7025,7 +7369,7 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
 		{
 			if(!GetEngineStatus(vehicleid))
 			{
-				SendClientMessage(playerid, COLOR_GREEN, "The engine is off. (/engine)");
+				SendClientMessage(playerid, COLOR_GREEN, "The engine is off. (/engine or Left Ctrl)");
 			}
 		}
 
@@ -7744,19 +8088,7 @@ public OnPlayerEnterCheckpoint(playerid)
 
 				//Next Harvesting
 
-				if(PlayerData[playerid][pLevel] > 3)
-				{
-					gPlayerCheckpointX[playerid] = 0.0;
-					gPlayerCheckpointY[playerid] = 0.0;
-					gPlayerCheckpointZ[playerid] = 0.0;
-
-					DisablePlayerCheckpoint(playerid);
-					gPlayerCheckpointStatus[playerid] = CHECKPOINT_NONE;
-
-					far_start[playerid] = 0;
-					far_veh[playerid] = INVALID_VEHICLE_ID;
-				}
-				else StartHarvesting(playerid);
+				StartHarvesting(playerid);
 			}
 		}
 	}
@@ -8834,34 +9166,119 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 		}
     }
 
-	if(PlayerData[playerid][pTutorialStep])
+	if((newkeys & KEY_SECONDARY_ATTACK) || (newkeys & KEY_CTRL_BACK)) // Press F / Enter or H to Interact
 	{
-		if((gettime() - TutorialDelay[playerid]) > 2)
+		if(GetPlayerState(playerid) == PLAYER_STATE_ONFOOT)
 		{
-			if(Released(KEY_SPRINT)) // Forward
+			if(IsPlayerNearMoveDoor(playerid))
 			{
-				PlayerData[playerid][pTutorialStep]++;
-
-				ClearChatBox(playerid);
-
-				RefreshTutorial(playerid);
+				Command_ReProcess(playerid, "/door", 0);
 			}
-			else if(Released(KEY_JUMP)) // Backward
+			else if(IsPlayerNearElevator(playerid))
 			{
-				if(PlayerData[playerid][pTutorialStep] == 1)
-				{
-					PlayerPlaySound(playerid, 1055, 0.0, 0.0, 0.0);
-					return true;
-				}
+				Command_ReProcess(playerid, "/elevator", 0);
+			}
+			else
+			{
+				new cmdText[8];
+				cmdText = "/enter";
+				Command_ReProcess(playerid, cmdText, 0);
 
-				PlayerData[playerid][pTutorialStep]--;
-
-				ClearChatBox(playerid);
-
-				RefreshTutorial(playerid);
+				cmdText = "/exit";
+				Command_ReProcess(playerid, cmdText, 0);
 			}
 		}
-    }
+	}
+
+	if(newkeys & KEY_FIRE) // Press Left Alt (KEY_FIRE in vehicle)
+	{
+		if(GetPlayerState(playerid) == PLAYER_STATE_DRIVER)
+		{
+			if(newkeys & KEY_HANDBRAKE) // Alt + Space (KEY_FIRE + KEY_HANDBRAKE) to toggle lights
+			{
+				new cmdText[10];
+				cmdText = "/v lights";
+				Command_ReProcess(playerid, cmdText, 0);
+			}
+		}
+	}
+
+	if(newkeys & KEY_ACTION) // Press Left Ctrl (KEY_ACTION in vehicle)
+	{
+		if(GetPlayerState(playerid) == PLAYER_STATE_DRIVER)
+		{
+			new vehicleid = GetPlayerVehicleID(playerid);
+			if(newkeys & KEY_NO) // Ctrl + N (KEY_ACTION + KEY_NO) to turn engine OFF
+			{
+				if(GetEngineStatus(vehicleid)) // Only toggle if engine is currently ON
+				{
+					new cmdText[10];
+					cmdText = "/engine";
+					Command_ReProcess(playerid, cmdText, 0);
+				}
+			}
+			else if(!(oldkeys & KEY_ACTION)) // Ctrl only (just pressed) to turn engine ON
+			{
+				if(!GetEngineStatus(vehicleid)) // Only toggle if engine is currently OFF
+				{
+					new cmdText[10];
+					cmdText = "/engine";
+					Command_ReProcess(playerid, cmdText, 0);
+				}
+			}
+		}
+	}
+
+	if((newkeys & KEY_SUBMISSION) && !(oldkeys & KEY_SUBMISSION)) // Press 2 (KEY_SUBMISSION in vehicle) to lock/unlock vehicle
+	{
+		if(GetPlayerState(playerid) == PLAYER_STATE_DRIVER || GetPlayerState(playerid) == PLAYER_STATE_PASSENGER)
+		{
+			new cmdText[6];
+			cmdText = "/lock";
+			Command_ReProcess(playerid, cmdText, 0);
+		}
+	}
+
+	if(newkeys & KEY_CROUCH) // Press H / Horn (KEY_CROUCH in vehicle) to open tolls or gates
+	{
+		if(GetPlayerState(playerid) == PLAYER_STATE_DRIVER)
+		{
+			new bool:nearToll = false;
+			if(IsPlayerInRangeOfPoint(playerid, 10.0, 623.9500, -1183.9774, 19.2260) || IsPlayerInRangeOfPoint(playerid, 10.0, 607.9684, -1194.2866, 19.0043) ||
+			   IsPlayerInRangeOfPoint(playerid, 10.0, 39.7039, -1522.9891, 5.1995) || IsPlayerInRangeOfPoint(playerid, 10.0, 62.7378, -1539.9891, 5.0639) ||
+			   IsPlayerInRangeOfPoint(playerid, 10.0, 1795.9447, 704.2550, 15.0006) || IsPlayerInRangeOfPoint(playerid, 10.0, 1778.9886, 702.6728, 15.2574) ||
+			   IsPlayerInRangeOfPoint(playerid, 10.0, 612.53070, 346.59592, 17.92614) || IsPlayerInRangeOfPoint(playerid, 10.0, 604.37152, 346.88141, 17.92614) ||
+			   IsPlayerInRangeOfPoint(playerid, 10.0, -195.2768, 252.2416, 12.0781) || IsPlayerInRangeOfPoint(playerid, 10.0, -199.5153, 260.3405, 12.0781))
+			{
+				nearToll = true;
+			}
+
+			new bool:nearGate = false;
+			foreach (new x : Gates)
+			{
+				if(GetPlayerDistanceFromPoint(playerid, Gates[x][gatePosX], Gates[x][gatePosY], Gates[x][gatePosZ]) < 10.0)
+				{
+					nearGate = true;
+					break;
+				}
+			}
+
+			if(nearToll)
+			{
+				new cmdText[10];
+				cmdText = "/opentoll";
+				Command_ReProcess(playerid, cmdText, 0);
+			}
+			if(nearGate)
+			{
+				new cmdText[10];
+				cmdText = "/gates";
+				Command_ReProcess(playerid, cmdText, 0);
+			}
+		}
+	}
+
+	// Tutorial auto-advances via ptask Players; no manual key input needed.
 	return true;
 }
 
@@ -8869,7 +9286,8 @@ RefreshTutorial(playerid)
 {
     if(PlayerData[playerid][pTutorialStep])
     {
-		TutorialDelay[playerid] = gettime();
+		TutorialDelay[playerid] = 5; // countdown: 5 seconds per step
+		LastTeleport[playerid] = gettime();
 
     	switch(PlayerData[playerid][pTutorialStep])
         {
@@ -8938,9 +9356,6 @@ RefreshTutorial(playerid)
 			    SendClientMessage(playerid, COLOR_GRAD2, "There are plenty of shops in the mall, such as clothes, tools, electronics, Musical instruments and even more.");
 			    SendClientMessage(playerid, COLOR_GRAD2, "You can buy saveable items that can improve your roleplay atmosphere and your character's look.");
 			    GameTextForPlayer(playerid, "~w~ Los Santos Mall", 3900, 3);
-
-            	/*InterpolateCameraPos(playerid, 2413.5383, -1885.4564, 23.2313, 1129.1364,-1359.0806,60.4063, 3000, CAMERA_MOVE);
-                InterpolateCameraLookAt(playerid, 2412.8733, -1886.1985, 23.0213, 1129.1011,-1488.4135,22.7614, 3000, CAMERA_MOVE);*/
             }
             case 7:
             {
@@ -9012,7 +9427,11 @@ RefreshTutorial(playerid)
 				SetSpawnInfo(playerid, NO_TEAM, PlayerData[playerid][pModel], PlayerData[playerid][pPos][0], PlayerData[playerid][pPos][1], PlayerData[playerid][pPos][2], PlayerData[playerid][pPos][3], 0, 0, 0, 0, 0, 0);
 
 				TogglePlayerSpectating(playerid, false);
-				TogglePlayerControllable(playerid, false);
+				SetPlayerPos(playerid, 1643.0010, -2331.7056, -2.6797);
+				SetPlayerFacingAngle(playerid, 359.8919);
+				SetCameraBehindPlayer(playerid);
+				SetPlayerVirtualWorld(playerid, 0);
+				TogglePlayerControllable(playerid, true);
 
 				SendClientMessageEx(playerid, COLOR_LIGHTRED, "Welcome to Los Jawa Roleplay, %s.", ReturnName(playerid, 0));
 			}
@@ -9373,41 +9792,87 @@ public OnPlayerClickTextDraw(playerid, Text:clickedid)
 
 public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 {
-	//Character Selection
-	if(PlayerData[playerid][pID] == -1)
+	//Character Selection — Cinematic Mode
+	if(PlayerData[playerid][pID] == -1 && CharSelTotalSlots[playerid] > 0)
 	{
-		for(new i = 0; i < 6; ++i)
+	    // Right arrow — next character
+	    if(playertextid == CharSelTD[playerid][1])
 		{
-		    if(playertextid == CharSelectionTD[playerid][i])
+			new total = CharSelTotalSlots[playerid];
+			new prev_slot = SelectedSlot[playerid];
+			SelectedSlot[playerid] = (SelectedSlot[playerid] + 1) % total;
+			SelectedCharacter[playerid] = SelectedSlot[playerid];
+
+			// Smooth camera interpolation sideways to next character (sliding to the right/East)
+			new Float:prev_x = 835.5000 + (prev_slot * 2.5000);
+			new Float:new_x = 835.5000 + (SelectedSlot[playerid] * 2.5000);
+			InterpolateCameraPos(playerid, prev_x, -2066.5000, 13.5000, new_x, -2066.5000, 13.5000, 450, CAMERA_MOVE);
+			InterpolateCameraLookAt(playerid, prev_x, -2061.5000, 13.1000, new_x, -2061.5000, 13.1000, 450, CAMERA_MOVE);
+
+			// Refresh info text
+			UpdateCharSelectionUI(playerid);
+			return true;
+	    }
+
+	    // Left arrow — previous character
+	    if(playertextid == CharSelTD[playerid][2])
+		{
+			new total = CharSelTotalSlots[playerid];
+			new prev_slot = SelectedSlot[playerid];
+			SelectedSlot[playerid] = (SelectedSlot[playerid] - 1 + total) % total;
+			SelectedCharacter[playerid] = SelectedSlot[playerid];
+
+			// Smooth camera interpolation sideways to previous character (sliding to the left/West)
+			new Float:prev_x = 835.5000 + (prev_slot * 2.5000);
+			new Float:new_x = 835.5000 + (SelectedSlot[playerid] * 2.5000);
+			InterpolateCameraPos(playerid, prev_x, -2066.5000, 13.5000, new_x, -2066.5000, 13.5000, 450, CAMERA_MOVE);
+			InterpolateCameraLookAt(playerid, prev_x, -2061.5000, 13.1000, new_x, -2061.5000, 13.1000, 450, CAMERA_MOVE);
+
+			// Refresh info text
+			UpdateCharSelectionUI(playerid);
+			return true;
+	    }
+
+	    // Spawn button (card background is also selectable)
+	    if(playertextid == CharSelTD[playerid][3])
+		{
+			new slot = SelectedSlot[playerid];
+			new charid = CharSelCache[playerid][slot][csID];
+			SelectedCharacter[playerid] = slot;
+
+			// Guard: character must be valid
+			if(charid <= 0) return true;
+
+			// Check if this character is already online on another slot
+			foreach (new x : Player)
 			{
-				if(CharacterCache[playerid][i] == -1) return KickEx(playerid);
-
-	            CancelSelectTextDraw(playerid);
-
-				for(new t = 0; t < 13; ++t)
+			    if(playerid == x) continue;
+			    if(AccountData[playerid][aUserid] == AccountData[x][aUserid])
 				{
-				    PlayerTextDrawDestroy(playerid, CharSelectionTD[playerid][t]);
+			        SendErrorMessage(playerid, "Login unsuccessful (character already logged in?)");
+			        return true;
 				}
-
-				SelectedCharacter[playerid] = i;
-
-				foreach (new x : Player)
-				{
-				    if(playerid == x) continue;
-
-				    if(AccountData[playerid][aUserid] == AccountData[x][aUserid])
-				    {
-				        SendErrorMessage(playerid, "Login unsuccessful (character already logged in?)");
-				        return true;
-					}
-				}
-
-				new query[180];
-				mysql_format(dbCon, query, sizeof(query), "SELECT * FROM `characters` WHERE `ID` = '%d' LIMIT 1", CharacterCache[playerid][i]);
-    			mysql_tquery(dbCon, query, "OnQueryFinished", "dd", playerid, THREAD_LOAD_CHARACTER);
-				return true;
 			}
-		}
+
+			// Hide the UI (leave camera & world as is during load transition)
+			HideCharSelectionUI(playerid);
+
+			// Destroy the 3D actors immediately so they disappear when transitioning to spawn
+			for(new i = 0; i < 6; i++)
+			{
+				if(CharSelActor[playerid][i] != INVALID_ACTOR_ID)
+				{
+					DestroyActor(CharSelActor[playerid][i]);
+					CharSelActor[playerid][i] = INVALID_ACTOR_ID;
+				}
+			}
+
+			// Load the selected character
+			new query[180];
+			mysql_format(dbCon, query, sizeof(query), "SELECT * FROM `characters` WHERE `ID` = '%d' LIMIT 1", charid);
+			mysql_tquery(dbCon, query, "OnQueryFinished", "dd", playerid, THREAD_LOAD_CHARACTER);
+			return true;
+	    }
 	}
 
 	//Store Buy
@@ -9847,70 +10312,50 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 				}
 			}
 		}
-	    else if(PCarType[playerid] == 1)
+		else if(PCarType[playerid] == 1)
 		{
-			if(playertextid == PCARTextLeft[playerid])
+			if(playertextid == VDealerLeftBtn[playerid])
 			{
 			    if(PCarPage[playerid] > 1)
 			    {
 			        PCarPage[playerid] --;
-
 					ShowPlayerDealershipMenu(playerid);
 			    }
 			}
-			else if(playertextid == PCARTextRight[playerid])
+			else if(playertextid == VDealerRightBtn[playerid])
 			{
-			    new caramount;
-
-			    if(VDealerSelectCatalog[playerid] == -1)
+				new caramount = 0;
+				new bizid = Business_Nearest(playerid);
+				new dealerType = (bizid != -1) ? BusinessData[bizid][bsubType] : 0;
+				for(new x = 0; x != sizeof(VehicleDealership); ++x)
 				{
-					caramount = sizeof(VehicleMenuInfo);
-				}
-			    else
-				{
-					for(new x = 0; x != sizeof(VehicleDealership); ++x)
+					if(GetCategoryDealerType(VehicleDealership[x][1]) == dealerType)
 					{
-						if(VehicleDealership[x][1] == VDealerSelectCatalog[playerid])
-						{
-							caramount++;
-						}
+						caramount++;
 					}
 				}
-
-			    if(floatround(caramount/(PCarPage[playerid] * 6), floatround_ceil) && caramount % 6 != 0)
+				new totalPages = (caramount + 5) / 6;
+			    if(PCarPage[playerid] < totalPages)
 			    {
 			        PCarPage[playerid]++;
 					ShowPlayerDealershipMenu(playerid);
 			    }
 			}
-			else if(playertextid == PCARTextHeader[playerid])
+			else if(playertextid == VDealerCloseBtn[playerid])
 			{
-			    if(VDealerSelectCatalog[playerid] != -1)
-			    {
-				    VDealerSelectCatalog[playerid] = -1;
-				    PCarPage[playerid] = 1;
-
-				    ShowPlayerDealershipMenu(playerid);
-			    }
-			    else ClosePlayerCarMenu(playerid);
+				ClosePlayerCarMenu(playerid);
 			}
 			else
 			{
-				for(new i = 0; i != 6; ++i)
+				for(new i = 0; i < 6; ++i)
 				{
-					if(playertextid == PCARTextSlot[playerid][i])
+					if(playertextid == VDealerVehBG[playerid][i])
 					{
-					    if(VDealerSelectCatalog[playerid] == -1)
-					    {
-							VDealerSelectCatalog[playerid] = (PCarPage[playerid] * 6) - (6 - i);
-							PCarPage[playerid] = 1;
-		                    ShowPlayerDealershipMenu(playerid);
-	                    }
-	                    else
-	                    {
+						if(VDealerData[playerid][i][0] != 0)
+						{
 							PutPlayerSettingVehicle(playerid, VDealerData[playerid][i][0], VDealerData[playerid][i][4]);
-                            ClosePlayerCarMenu(playerid);
-	                    }
+							ClosePlayerCarMenu(playerid);
+						}
 						break;
 					}
 				}
@@ -10017,7 +10462,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
 			switch(BusinessData[InBusiness[playerid]][bsubType])
 			{
-				case 1: // Pizza
+				case 2: // Well Stacked Pizza
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
@@ -10029,11 +10474,11 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 				    }
 
 				    SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s orders a meal.", ReturnName(playerid, 0));
-				    SendClientMessageEx(playerid, COLOR_WHITE, "Ordered {FF6347}Cluckin' Little Meal{FFFFFF} for {FF6347}%s{FFFFFF}..", FormatNumber(BusinessData[InBusiness[playerid]][bItems][0]));
+				    SendClientMessageEx(playerid, COLOR_WHITE, "Ordered {FF6347}Buster{FFFFFF} for {FF6347}%s{FFFFFF}..", FormatNumber(BusinessData[InBusiness[playerid]][bItems][0]));
 
 					MealHolding[playerid] = 2218;
 				}
-				case 2: // Donut
+				case 3: // Rusty Browns Donuts
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
@@ -10049,7 +10494,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
                     MealHolding[playerid] = 2221;
 				}
-				case 3: // Burger
+				case 1: // Burger Shot
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
@@ -10065,7 +10510,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
                     MealHolding[playerid] = 2213;
 				}
-				case 4: // Cluckin
+				case 0: // Cluckin Bell
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
@@ -10084,6 +10529,9 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 			}
 
 			TakePlayerMoney(playerid, BusinessData[InBusiness[playerid]][bItems][0]);
+
+			PlayerData[playerid][pHunger] += 30;
+			if(PlayerData[playerid][pHunger] > 100) PlayerData[playerid][pHunger] = 100;
 
             BusinessData[InBusiness[playerid]][bProducts]--;
 			BusinessData[InBusiness[playerid]][bTill] += floatround(BusinessData[InBusiness[playerid]][bItems][0] * 0.7);
@@ -10119,7 +10567,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
 			switch(BusinessData[InBusiness[playerid]][bsubType])
 			{
-				case 1: // Pizza
+				case 2: // Well Stacked Pizza
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
@@ -10135,7 +10583,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
                     MealHolding[playerid] = 2219;
 				}
-				case 2: // Donut
+				case 3: // Rusty Browns Donuts
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
@@ -10151,7 +10599,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
                     MealHolding[playerid] = 2223;
 				}
- 				case 3: // Burger
+  				case 1: // Burger Shot
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
@@ -10167,7 +10615,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
                     MealHolding[playerid] = 2214;
 				}
- 				case 4: // Cluckin
+  				case 0: // Cluckin Bell
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
@@ -10186,6 +10634,11 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 			}
 
 			TakePlayerMoney(playerid, BusinessData[InBusiness[playerid]][bItems][1]);
+
+			PlayerData[playerid][pHunger] += 60;
+			if(PlayerData[playerid][pHunger] > 100) PlayerData[playerid][pHunger] = 100;
+			PlayerData[playerid][pThirst] += 25;
+			if(PlayerData[playerid][pThirst] > 100) PlayerData[playerid][pThirst] = 100;
 
 			BusinessData[InBusiness[playerid]][bProducts]--;
 			BusinessData[InBusiness[playerid]][bTill] += floatround(BusinessData[InBusiness[playerid]][bItems][1]*0.7);
@@ -10221,7 +10674,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
 			switch(BusinessData[InBusiness[playerid]][bsubType])
 			{
-				case 1: // Pizza
+				case 2: // Well Stacked Pizza
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
@@ -10233,7 +10686,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
                     MealHolding[playerid] = 2220;
 				}
-				case 2: // Donut
+				case 3: // Rusty Browns Donuts
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
@@ -10245,7 +10698,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
                     MealHolding[playerid] = 2222;
 				}
- 				case 3: // Burger
+  				case 1: // Burger Shot
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
@@ -10256,7 +10709,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 				    SendClientMessageEx(playerid, COLOR_WHITE, "Ordered {FF6347}Meat Stack{FFFFFF} for {FF6347}%s{FFFFFF}.", FormatNumber(BusinessData[InBusiness[playerid]][bItems][2]));
                     MealHolding[playerid]=2212;
 				}
- 				case 4: // Cluckin
+  				case 0: // Cluckin Bell
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
@@ -10271,6 +10724,10 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 			}
 
 			TakePlayerMoney(playerid, BusinessData[InBusiness[playerid]][bItems][2]);
+
+			PlayerData[playerid][pHunger] = 100;
+			PlayerData[playerid][pThirst] += 40;
+			if(PlayerData[playerid][pThirst] > 100) PlayerData[playerid][pThirst] = 100;
 
 			BusinessData[InBusiness[playerid]][bProducts]--;
 			BusinessData[InBusiness[playerid]][bTill] += floatround(BusinessData[InBusiness[playerid]][bItems][2]*0.7);
@@ -10306,52 +10763,58 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
 			switch(BusinessData[InBusiness[playerid]][bsubType])
 			{
-				case 1: // Pizza
+				case 2: // Well Stacked Pizza
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
-					    SetPlayerHealthEx(playerid, 100);
+					    if(PlayerData[playerid][pHealth] + 15 <= 100) SetPlayerHealthEx(playerid, PlayerData[playerid][pHealth] + 15);
+					    else SetPlayerHealthEx(playerid, 100);
 				    }
 
-				    SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s orders a meal.", ReturnName(playerid, 0));
-				    SendClientMessageEx(playerid, COLOR_WHITE, "Ordered {FF6347}Salad Meal{FFFFFF} for {FF6347}%s{FFFFFF}.", FormatNumber(BusinessData[InBusiness[playerid]][bItems][3]));
-
-					MealHolding[playerid] = 2355;
+				    SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s buys and drinks a beverage.", ReturnName(playerid, 0));
+				    SendClientMessageEx(playerid, COLOR_WHITE, "Bought and drank {FF6347}Sprunk Drink{FFFFFF} for {FF6347}%s{FFFFFF}.", FormatNumber(BusinessData[InBusiness[playerid]][bItems][3]));
 				}
-				case 3: // Burger
+				case 3: // Rusty Browns Donuts
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
-					    SetPlayerHealthEx(playerid, 100);
+					    if(PlayerData[playerid][pHealth] + 15 <= 100) SetPlayerHealthEx(playerid, PlayerData[playerid][pHealth] + 15);
+					    else SetPlayerHealthEx(playerid, 100);
 				    }
 
-				    SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s orders a meal.", ReturnName(playerid, 0));
-				    SendClientMessageEx(playerid, COLOR_WHITE, "Ordered {FF6347}Salad Meal{FFFFFF} for {FF6347}%s{FFFFFF}.", FormatNumber(BusinessData[InBusiness[playerid]][bItems][3]));
-
-                    MealHolding[playerid] = 2354;
+				    SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s buys and drinks a beverage.", ReturnName(playerid, 0));
+				    SendClientMessageEx(playerid, COLOR_WHITE, "Bought and drank {FF6347}Rusty's Iced Coffee{FFFFFF} for {FF6347}%s{FFFFFF}.", FormatNumber(BusinessData[InBusiness[playerid]][bItems][3]));
 				}
-				case 4: // Cluckin
+				case 1: // Burger Shot
 				{
 				    if(PlayerData[playerid][pHealth] < 100)
 				    {
-					    SetPlayerHealthEx(playerid, 100);
+					    if(PlayerData[playerid][pHealth] + 15 <= 100) SetPlayerHealthEx(playerid, PlayerData[playerid][pHealth] + 15);
+					    else SetPlayerHealthEx(playerid, 100);
 				    }
 
-				    SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s orders a meal.", ReturnName(playerid, 0));
-				    SendClientMessageEx(playerid, COLOR_WHITE, "Ordered {FF6347}Salad Meal{FFFFFF} for {FF6347}%s{FFFFFF}.", FormatNumber(BusinessData[InBusiness[playerid]][bItems][3]));
+				    SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s buys and drinks a beverage.", ReturnName(playerid, 0));
+				    SendClientMessageEx(playerid, COLOR_WHITE, "Bought and drank {FF6347}Large Soda Drink{FFFFFF} for {FF6347}%s{FFFFFF}.", FormatNumber(BusinessData[InBusiness[playerid]][bItems][3]));
+				}
+				case 0: // Cluckin Bell
+				{
+				    if(PlayerData[playerid][pHealth] < 100)
+				    {
+					    if(PlayerData[playerid][pHealth] + 15 <= 100) SetPlayerHealthEx(playerid, PlayerData[playerid][pHealth] + 15);
+					    else SetPlayerHealthEx(playerid, 100);
+				    }
 
-                    MealHolding[playerid] = 2353;
+				    SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s buys and drinks a beverage.", ReturnName(playerid, 0));
+				    SendClientMessageEx(playerid, COLOR_WHITE, "Bought and drank {FF6347}Cluckin' Soft Drink{FFFFFF} for {FF6347}%s{FFFFFF}.", FormatNumber(BusinessData[InBusiness[playerid]][bItems][3]));
 				}
 			}
 
 			TakePlayerMoney(playerid, BusinessData[InBusiness[playerid]][bItems][3]);
 
+			PlayerData[playerid][pThirst] = 100;
+
 			BusinessData[InBusiness[playerid]][bProducts]--;
 			BusinessData[InBusiness[playerid]][bTill] += floatround(BusinessData[InBusiness[playerid]][bItems][3]*0.7);
-
-			SetPlayerSpecialAction(playerid, SPECIAL_ACTION_CARRY);
-			SetPlayerMealHold(playerid, MealHolding[playerid]);
-			SendClientMessage(playerid, COLOR_WHITE, "You can{FF6347} /meal place{FFFFFF} it on a table or {FF6347}/meal throw{FFFFFF} it away.");
 
 			for(new i = 0; i != sizeof(TD_Restaurant); ++i)
 				TextDrawHideForPlayer(playerid, TD_Restaurant[i]);
@@ -10457,6 +10920,24 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 				break;
 			}
 		}
+	}
+	if(playertextid == PlayerText:INVALID_TEXT_DRAW && LoginScreenReady[playerid])
+	{
+		SelectTextDraw(playerid, 0xFFD60380);
+		return true;
+	}
+	if(LoginScreenReady[playerid])
+	{
+		if(OnLoginClickPlayerTD(playerid, playertextid)) return true;
+	}
+	if(playertextid == PlayerText:INVALID_TEXT_DRAW && PlayerShopPage[playerid] != -1)
+	{
+		CloseClothingShop(playerid);
+		return true;
+	}
+	if(PlayerShopPage[playerid] != -1)
+	{
+		Clothing_OnClickPlayerTD(playerid, playertextid);
 	}
     return true;
 }
@@ -10933,13 +11414,6 @@ public OnPlayerPickUpDynamicPickup(playerid, pickupid)
 				}
 			}
 
-			if(BusinessData[i][bOwned] == 1)
-			{
-				format(str, sizeof(str), "%s~w~~n~Entrance Fee : ~g~$%d ~n~~p~To use /enter", BusinessData[i][bInfo], BusinessData[i][bEntranceCost]);
-			}
-			else format(str, sizeof(str), "%s~w~~n~This Business is for sale~n~Cost: ~g~$%d ~w~Level : %d ~n~~p~ To buy /buybiz", BusinessData[i][bInfo], BusinessData[i][bBuyPrice], BusinessData[i][bLevelNeeded]);
-
-			GameTextForPlayer(playerid, str, 5000, 3);
 			break;
 		}
 	}
@@ -11036,6 +11510,12 @@ Dialog:ReportConfirm(playerid, response, listitem, inputtext[])
 		else SendAdminAlert(COLOR_LIGHTRED, JUNIOR_ADMINS, "[Report: %d] {FF9900}%s (%d) reported: %s", playerid, ReturnName(playerid), playerid, PlayerData[playerid][pReportMessage]);
 	}
 
+	return true;
+}
+
+Dialog:UCPNotRegistered(playerid, response, listitem, inputtext[])
+{
+	KickEx(playerid);
 	return true;
 }
 
@@ -11306,19 +11786,19 @@ AddTeleToFile(teleid, const mapname[], interior, Float:LX, Float:LY, Float:LZ)
 
 AddGateToFile(id, modelid, faction, interior, virworld, Float:x, Float:y, Float:z, const name[])
 {
-    new clean_name[64];
-    mysql_escape_string(name,clean_name);
-	format(gquery, sizeof(gquery), "INSERT INTO `gates` (model, faction, posx, posy, posz, posrx, posry, posrz, interior, virworld, name) VALUES(%d, %d, %f, %f, %f, 0.0, 0.0, 0.0, %d, %d, '%s')",modelid,faction,x,y,z,interior,virworld,clean_name);
-	mysql_tquery(dbCon, gquery, "OnGateInsert", "d", id);
+    new clean_name[64], query[512];
+    mysql_escape_string(name, clean_name);
+	format(query, sizeof(query), "INSERT INTO `gates` (model, faction, posx, posy, posz, posrx, posry, posrz, interior, virworld, name) VALUES(%d, %d, %f, %f, %f, 0.0, 0.0, 0.0, %d, %d, '%s')", modelid, faction, x, y, z, interior, virworld, clean_name);
+	mysql_tquery(dbCon, query, "OnGateInsert", "d", id);
 	return true;
 }
 
 AddMoveDoorToFile(id, modelid, faction, interior, virworld, Float:x, Float:y, Float:z, const name[])
 {
-    new clean_name[64];
-    mysql_escape_string(name,clean_name);
-	format(gquery, sizeof(gquery), "INSERT INTO `movedoors` (model, faction, posx, posy, posz, posrx, posry, posrz, interior, virworld, name) VALUES(%d, %d, %f, %f, %f, 0.0, 0.0, 0.0, %d, %d, '%s')",modelid,faction,x,y,z,interior,virworld,clean_name);
-	mysql_tquery(dbCon, gquery, "OnMoveDoorInsert", "d", id);
+    new clean_name[64], query[512];
+    mysql_escape_string(name, clean_name);
+	format(query, sizeof(query), "INSERT INTO `movedoors` (model, faction, posx, posy, posz, posrx, posry, posrz, interior, virworld, name, openspeed, movex, movey, movez, moverx, movery, moverz, cpx, cpy, cpz) VALUES(%d, %d, %f, %f, %f, 0.0, 0.0, 0.0, %d, %d, '%s', 2.0, %f, %f, %f, 0.0, 0.0, 0.0, %f, %f, %f)", modelid, faction, x, y, z, interior, virworld, clean_name, x, y, z, x, y, z);
+	mysql_tquery(dbCon, query, "OnMoveDoorInsert", "d", id);
 	return true;
 }
 
@@ -11373,7 +11853,28 @@ public OnGateRemove(objectid)
 forward OnMoveDoorRemove(objectid);
 public OnMoveDoorRemove(objectid)
 {
+	new query[128];
+	format(query, sizeof(query), "DELETE FROM `movedoors` WHERE `id` = %d", Doors[objectid][doorID]);
+	mysql_tquery(dbCon, query);
+
 	DestroyDynamicObject(Doors[objectid][doorObject]);
+	if(IsValidDynamicCP(Doors[objectid][doorCheckpoint]))
+	{
+		DestroyDynamicCP(Doors[objectid][doorCheckpoint]);
+	}
+	Doors[objectid][doorCheckpoint] = INVALID_STREAMER_ID;
+	if(IsValidDynamicCP(Doors[objectid][doorCheckpointMove]))
+	{
+		DestroyDynamicCP(Doors[objectid][doorCheckpointMove]);
+	}
+	Doors[objectid][doorCheckpointMove] = INVALID_STREAMER_ID;
+
+	if(Doors[objectid][doorTimer])
+	{
+		KillTimer(Doors[objectid][doorTimer]);
+		Doors[objectid][doorTimer] = 0;
+	}
+
 	Doors[objectid][doorPosX] = 0.0;
 	Doors[objectid][doorPosY] = 0.0;
 	Doors[objectid][doorPosZ] = 0.0;
@@ -11386,6 +11887,95 @@ public OnMoveDoorRemove(objectid)
 	Doors[objectid][doorLocked] = 0;
 	Doors[objectid][doorVirtualWorld] = 0;
 	return true;
+}
+
+stock Door_Refresh(i)
+{
+	// Destroy existing checkpoints
+	if(IsValidDynamicCP(Doors[i][doorCheckpoint]))
+	{
+		DestroyDynamicCP(Doors[i][doorCheckpoint]);
+	}
+	Doors[i][doorCheckpoint] = INVALID_STREAMER_ID;
+	
+	if(IsValidDynamicCP(Doors[i][doorCheckpointMove]))
+	{
+		DestroyDynamicCP(Doors[i][doorCheckpointMove]);
+	}
+	Doors[i][doorCheckpointMove] = INVALID_STREAMER_ID;
+
+	// Create checkpoint (size 1.2, stream distance 15.0) at player standing coordinates
+	Doors[i][doorCheckpoint] = CreateDynamicCP(Doors[i][doorCPX], Doors[i][doorCPY], Doors[i][doorCPZ], 1.2, Doors[i][doorVirtualWorld], Doors[i][doorInterior], -1, 15.0);
+	return 1;
+}
+
+stock MoveMoveDoor(i, bool:open)
+{
+	if(!Iter_Contains(Movedoors, i)) return 0;
+	
+	new Float:targetX, Float:targetY, Float:targetZ;
+	new Float:targetRX, Float:targetRY, Float:targetRZ;
+	new Float:speed;
+
+	new Float:staticDist = VectorSize(Doors[i][doorMoveX] - Doors[i][doorPosX], Doors[i][doorMoveY] - Doors[i][doorPosY], Doors[i][doorMoveZ] - Doors[i][doorPosZ]);
+
+	if(open)
+	{
+		targetX = Doors[i][doorMoveX];
+		targetY = Doors[i][doorMoveY];
+		targetZ = Doors[i][doorMoveZ];
+		targetRX = Doors[i][doorMoveRX];
+		targetRY = Doors[i][doorMoveRY];
+		targetRZ = Doors[i][doorMoveRZ];
+
+		if(staticDist < 0.05)
+		{
+			targetZ += 0.005; // tiny offset to trigger translation-based rotation
+		}
+	}
+	else
+	{
+		targetX = Doors[i][doorPosX];
+		targetY = Doors[i][doorPosY];
+		targetZ = Doors[i][doorPosZ];
+		targetRX = Doors[i][doorPosRX];
+		targetRY = Doors[i][doorPosRY];
+		targetRZ = Doors[i][doorPosRZ];
+	}
+
+	if(staticDist < 0.05)
+	{
+		new Float:duration = 2.0;
+		if(Doors[i][doorOpenSpeed] > 0.01)
+		{
+			duration = 2.0 / Doors[i][doorOpenSpeed];
+		}
+		if(duration < 0.1) duration = 0.1;
+		speed = 0.005 / duration;
+	}
+	else
+	{
+		speed = Doors[i][doorOpenSpeed];
+	}
+
+	MoveDynamicObject(Doors[i][doorObject], targetX, targetY, targetZ, speed, targetRX, targetRY, targetRZ);
+	return 1;
+}
+
+forward AutoCloseMoveDoor(i);
+public AutoCloseMoveDoor(i)
+{
+	if(Iter_Contains(Movedoors, i))
+	{
+		if(Doors[i][doorOpened] == 1)
+		{
+			Doors[i][doorOpened] = 0;
+			Doors[i][doorTimer] = 0;
+			
+			MoveMoveDoor(i, false);
+		}
+	}
+	return 1;
 }
 
 forward OnGateInsert(id);
@@ -11487,6 +12077,12 @@ public OnBizInsert(BizzID)
 forward OnBizRemove(bizid);
 public OnBizRemove(bizid)
 {
+	if(IsValidDynamicPickup(BusinessData[bizid][bPickup]))
+	{
+		DestroyDynamicPickup(BusinessData[bizid][bPickup]);
+		BusinessData[bizid][bPickup] = INVALID_STREAMER_ID;
+	}
+
 	BusinessData[bizid][bEntranceX] = 0.0000;
 	BusinessData[bizid][bEntranceY] = 0.0000;
 	BusinessData[bizid][bEntranceZ] = 0.0000;
@@ -11532,6 +12128,7 @@ public OnAdminSellBusiness(bizid)
 	BusinessData[bizid][bLocked] = 1;
 
 	format(BusinessData[bizid][bOwner], 24, "The State");
+	Business_Refresh(bizid);
 	return true;
 }
 
@@ -11555,6 +12152,61 @@ StopBoomBox(playerid)
 
 public OnPlayerEditDynamicObject(playerid, objectid, response, Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz)
 {
+	// --- CCTV Object Edit ---
+	if(GetPVarInt(playerid, "EditingCCTV") > 0)
+	{
+		new cctv_id = GetPVarInt(playerid, "EditingCCTV") - 1;
+
+		if(cctv_id >= 0 && cctv_id < MAX_CCTV && CCTVData[cctv_id][cctvExist])
+		{
+			if(response == EDIT_RESPONSE_FINAL)
+			{
+				// Update in-memory position
+				CCTVData[cctv_id][cctvObjX]  = x;
+				CCTVData[cctv_id][cctvObjY]  = y;
+				CCTVData[cctv_id][cctvObjZ]  = z;
+				CCTVData[cctv_id][cctvObjRX] = rx;
+				CCTVData[cctv_id][cctvObjRY] = ry;
+				CCTVData[cctv_id][cctvObjRZ] = rz;
+
+				// Destroy and recreate dynamic object at new coordinates so Streamer internal pool registers new base location
+				if(IsValidDynamicObject(CCTVData[cctv_id][cctvObjID]))
+					DestroyDynamicObject(CCTVData[cctv_id][cctvObjID]);
+
+				CCTVData[cctv_id][cctvObjID] = CreateDynamicObject(1622, x, y, z, rx, ry, rz, CCTVData[cctv_id][cctvWorld], CCTVData[cctv_id][cctvInterior]);
+
+				// Update the 3D text label position
+				if(IsValidDynamic3DTextLabel(CCTVData[cctv_id][cctvLabel]))
+					DestroyDynamic3DTextLabel(CCTVData[cctv_id][cctvLabel]);
+
+				new labelText[128];
+				format(labelText, sizeof(labelText), "{FFC700}[CCTV ID: %d]\n{FFFFFF}%s", cctv_id, CCTVData[cctv_id][cctvName]);
+				CCTVData[cctv_id][cctvLabel] = CreateDynamic3DTextLabel(labelText, 0xFFFFFFFF,
+					x, y, z + 0.8, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0,
+					CCTVData[cctv_id][cctvWorld], CCTVData[cctv_id][cctvInterior], -1, 15.0);
+
+				// Persist to database
+				new query[256];
+				mysql_format(dbCon, query, sizeof(query), "UPDATE `cctv_cameras` SET `obj_x`='%f', `obj_y`='%f', `obj_z`='%f', `obj_rx`='%f', `obj_ry`='%f', `obj_rz`='%f' WHERE `id`='%d';",
+					x, y, z, rx, ry, rz, CCTVData[cctv_id][cctvID]);
+				mysql_tquery(dbCon, query);
+
+				SendNoticeMessage(playerid, "CCTV Position #%d (%s) updated.", cctv_id, CCTVData[cctv_id][cctvName]);
+				DeletePVar(playerid, "EditingCCTV");
+			}
+			else if(response == EDIT_RESPONSE_CANCEL)
+			{
+				// Revert the object to its original position
+				SetDynamicObjectPos(CCTVData[cctv_id][cctvObjID], CCTV_OldObjPos[cctv_id][0], CCTV_OldObjPos[cctv_id][1], CCTV_OldObjPos[cctv_id][2]);
+				SetDynamicObjectRot(CCTVData[cctv_id][cctvObjID], CCTV_OldObjPos[cctv_id][3], CCTV_OldObjPos[cctv_id][4], CCTV_OldObjPos[cctv_id][5]);
+
+				SendClientMessage(playerid, COLOR_YELLOW, "-> CCTV editing canceled.");
+				DeletePVar(playerid, "EditingCCTV");
+			}
+		}
+		return true;
+	}
+
 	if(ParticleSettings[playerid][particleEditID] != -1)
 	{
 	    new particleid = ParticleSettings[playerid][particleEditID];
@@ -11845,6 +12497,7 @@ public OnPlayerEditDynamicObject(playerid, objectid, response, Float:x, Float:y,
 				SendClientMessageEx(playerid, COLOR_YELLOW, "-> Moving door %d's default position adjusted to: %f, %f, %f", x, y, z);
 				
 				SaveEditedMoveDoor(i, x, y, z, rx, ry, rz);
+				Door_Refresh(i);
 				
 				DeletePVar(playerid, "EditingMoveDoor");
 				DeletePVar(playerid, "ObjectEditing");
@@ -11865,18 +12518,18 @@ public OnPlayerEditDynamicObject(playerid, objectid, response, Float:x, Float:y,
 
 	if(GetPVarInt(playerid, "EditingMoveDoorMove") == 1)
 	{
-	    new i = GetPVarInt(playerid, "ObjectEditing");
+		new i = GetPVarInt(playerid, "ObjectEditing");
 	
-	    if(Iter_Contains(Movedoors, i))
-	    {
+		if(Iter_Contains(Movedoors, i))
+		{
 			if(response == EDIT_RESPONSE_FINAL)
 			{
-	      		Doors[i][doorMoveX] = x;
-	      		Doors[i][doorMoveY] = y;
-	      		Doors[i][doorMoveZ] = z;
-	      		Doors[i][doorMoveRX] = rx;
-	      		Doors[i][doorMoveRY] = ry;
-	      		Doors[i][doorMoveRZ] = rz;
+				Doors[i][doorMoveX] = x;
+				Doors[i][doorMoveY] = y;
+				Doors[i][doorMoveZ] = z;
+				Doors[i][doorMoveRX] = rx;
+				Doors[i][doorMoveRY] = ry;
+				Doors[i][doorMoveRZ] = rz;
 	      		
 				SetDynamicObjectPos(objectid, oldX, oldY, oldZ);
 				SetDynamicObjectRot(objectid, oldRotX, oldRotY, oldRotZ);
@@ -11884,6 +12537,7 @@ public OnPlayerEditDynamicObject(playerid, objectid, response, Float:x, Float:y,
 				SendClientMessageEx(playerid, COLOR_YELLOW, "-> Moving door %d's moving position adjusted to: %f, %f, %f", x, y, z);
 				
 				SaveEditedMoveDoorMove(i, x, y, z, rx, ry, rz);
+				Door_Refresh(i);
 
 				DeletePVar(playerid, "EditingMoveDoorMove");
 				DeletePVar(playerid, "ObjectEditing");
@@ -12203,6 +12857,9 @@ public OnAdminSellHouse(houseid)
 	format(PropertyData[houseid][hOwner], MAX_PLAYER_NAME, "The State");
 
 	Property_Refresh(houseid);
+
+	// Auto-remove custom mapping when sold back to the state
+	OnPropertySold(1, PropertyData[houseid][hID]);
 	return true;
 }
 
@@ -13644,20 +14301,37 @@ IsDonateCar(model)
 {
 	switch(model)
 	{
-	    case 481, 509:
+	    // Bronze (Level 1): Mountain Bike, Seasparrow, Marquis
+	    case 509, 447, 484:
 	    {
 	        return 1;
 	    }
- 	    case 477, 471:
+	    // Silver (Level 2): NRG-500, Stuntplane, Hotring Racer 2
+ 	    case 522, 513, 502:
 	    {
 	        return 2;
 	    }
- 	    case 429, 541, 521, 468:
+	    // Gold (Level 3): Infernus, Bullet, Turismo, Shamal, Duneride, Skimmer
+ 	    case 411, 541, 451, 519, 573, 460:
 	    {
 	        return 3;
 	    }
 	}
 	return false;
+}
+
+MaxOwnedVehicles(playerid)
+{
+    if(PlayerData[playerid][pAdmin])
+        return 12;
+
+    switch(PlayerData[playerid][pDonateRank])
+    {
+        case 1: return 4;   // Bronze
+        case 2: return 6;   // Silver
+        case 3: return 12;  // Gold
+    }
+    return 3; // Non-donatur
 }
 
 IsCopCar(model)
@@ -13695,6 +14369,8 @@ RemovePlayerDriveby(playerid)
 
 CanAdvertise(playerid)
 {
+	if(IsPlayerNearAdPoint(playerid) != -1) return 99999;
+
 	new id = Business_Nearest(playerid, 5.0);
 
 	if(id == -1) return -1;
@@ -13787,7 +14463,7 @@ SetPlayerCheckpointEx(playerid, Float:x, Float:y, Float:z, Float:distance, statu
 
 IsJobSide(jobid)
 {
-	if(jobid == JOB_NONE || jobid == JOB_MECHANIC)
+	if(jobid == JOB_NONE || jobid == JOB_MECHANIC || jobid == JOB_TAXI)
 		return true;
 
 	return false;
@@ -13817,6 +14493,7 @@ ReturnJobName(playerid, jobid)
 	    case JOB_TAXI: format(name, 32, "Taxi Driver");
 	    case JOB_WPDEALER: format(name, 32, "Weapon Dealer");
 	    case JOB_SUPPLIER: format(name, 32, "Weapon Supplier");
+	    case JOB_TRAIN_DRIVER: format(name, 32, "Train Driver");
 
 	    default: format(name, 32, "Unemployed");
 	}
@@ -13964,19 +14641,25 @@ initiateTutorial(playerid)
     ClearChatBox(playerid);
     
 	PlayerData[playerid][pTutorialStep] = 1;
+	SetPlayerVirtualWorld(playerid, playerid + 20000);
+	SetPlayerInterior(playerid, 0);
+	LastTeleport[playerid] = gettime();
 
-	SendClientMessage(playerid, COLOR_WHITE, ">> Welcome to Los Jawa Roleplay!");
-	SendClientMessage(playerid, COLOR_GRAD2, "This video tutorial will guide you for your first steps on LosJawa-RP.");
-	SendClientMessage(playerid, COLOR_GRAD2, "The tutorial will go through on its own.");
-	SendClientMessage(playerid, COLOR_GRAD2, "We highly recommend you to take your time reading the text in the chat box.");	
+	TogglePlayerSpectating(playerid, true);
 
-	SetPlayerCameraPos(playerid, 1541.1512, -2287.1345, 91.9661);
-	SetPlayerCameraLookAt(playerid, 1623.3582, -2288.0413, 77.9914);
+	RefreshTutorial(playerid);
 	return true;
 }
 
 GetIDByName(const playername[])
 {
+	new searchName[MAX_PLAYER_NAME];
+	format(searchName, sizeof(searchName), "%s", playername);
+	for(new i = 0, len = strlen(searchName); i < len; i++)
+	{
+		if(searchName[i] == ' ') searchName[i] = '_';
+	}
+
     foreach (new i : Player)
 	{
 		if(SQL_IsLogged(i))
@@ -13984,7 +14667,7 @@ GetIDByName(const playername[])
 			new pName[MAX_PLAYER_NAME];
 			GetPlayerName(i, pName, sizeof(pName));
 
-			if(strcmp(pName, playername, true, strlen(playername)) == 0)
+			if(!strcmp(pName, searchName, true) || !strcmp(ReturnName(i, 0), playername, true))
 			{
 				return i;
 			}
@@ -14844,53 +15527,15 @@ Dialog:xmSubGenresDialog(playerid, response, listitem, inputtext[])
 	return true;
 }
 
-// Main menu dialog
-ShowMainMenuDialog(playerid)
-{
-    new string[512];
-    strcat(string, "General Commands\n");
-    strcat(string, "Chat Commands\n");
-    strcat(string, "Player Commands\n");
-    strcat(string, "Faction Commands\n");
-    strcat(string, "Property Commands\n");
-    strcat(string, "Vehicle Commands\n");
-    strcat(string, "Business Commands\n");
-    strcat(string, "Job Commands\n");
-    strcat(string, "Police Commands\n");
-    strcat(string, "Medical Commands\n");
-    strcat(string, "Drug Commands\n");
-    strcat(string, "Weapon Commands\n");
-    strcat(string, "Phone Commands\n");
-    strcat(string, "Admin Commands\n");
-    
-    ShowPlayerDialog(playerid, DIALOG_MAIN_MENU, DIALOG_STYLE_LIST, "Command Categories", string, "Select", "Cancel");
-    return 1;
-}
-
 public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 {   
+    if (OnMappingRequestDialogResponse(playerid, dialogid, response, listitem, inputtext))
+    {
+        return 1;
+    }
+
 	switch (dialogid)
 	{
-		case DIALOG_MAIN_MENU:
-        {
-            switch (listitem)
-            {
-                case 0: ShowGeneralCommandsDialog(playerid);
-                case 1: ShowChatCommandsDialog(playerid);
-                case 2: ShowPlayerCommandsDialog(playerid);
-                case 3: ShowFactionCommandsDialog(playerid);
-                case 4: ShowPropertyCommandsDialog(playerid);
-                case 5: ShowVehicleCommandsDialog(playerid);
-                case 6: ShowBusinessCommandsDialog(playerid);
-                case 7: ShowJobCommandsDialog(playerid);
-                case 8: ShowPoliceCommandsDialog(playerid);
-                case 9: ShowMedicalCommandsDialog(playerid);
-                case 10: ShowDrugCommandsDialog(playerid);
-                case 11: ShowWeaponCommandsDialog(playerid);
-                case 12: ShowPhoneCommandsDialog(playerid);
-                case 13: ShowAdminCommandsDialog(playerid);
-            }
-        }
 
 		case DIALOG_ADMIN_COMMANDS:
         {
@@ -15114,8 +15759,6 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                         /gotocmdspot - Go to command spot\n\
                         /hints - Show hints\n\
                         /variables - Show variables\n\
-                        /enabletp - Enable teleporting\n\
-                        /disabletp - Disable teleporting\n\
                         /setwpackage - Set weapon package\n\
                         /glog - View game logs\n\
                         /log - View logs\n\
@@ -15331,374 +15974,6 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 		}
 	}
 	return false;
-}
-
-// General commands dialog
-ShowGeneralCommandsDialog(playerid)
-{
-    new string[1024];
-    strcat(string, "/stats - Display your character statistics\n");
-    strcat(string, "/help - Show this command menu\n");
-    strcat(string, "/rules - View server rules\n");
-    strcat(string, "/time - Check server time\n");
-    strcat(string, "/stime - Check server time in another format\n");
-    strcat(string, "/id - Check your ID\n");
-    strcat(string, "/togall - Toggle all HUD elements\n");
-    strcat(string, "/toghud - Toggle HUD\n");
-    strcat(string, "/motd - Message of the day\n");
-    strcat(string, "/changelog - View recent updates\n");
-    
-    ShowPlayerDialog(playerid, DIALOG_GENERAL, DIALOG_STYLE_LIST, "General Commands", string, "Select", "Back");
-    return 1;
-}
-
-// Chat commands dialog
-ShowChatCommandsDialog(playerid)
-{
-    new string[1024];
-    strcat(string, "/me - Roleplay action\n");
-    strcat(string, "/lme - Local roleplay action\n");
-    strcat(string, "/ame - Anonymous roleplay action\n");
-    strcat(string, "/amy - Another roleplay action variation\n");
-    strcat(string, "/my - Personal roleplay action\n");
-    strcat(string, "/lmy - Local personal roleplay action\n");
-    strcat(string, "/do - Describe environment\n");
-    strcat(string, "/ldo - Local environment description\n");
-    strcat(string, "/l - Local chat\n");
-    strcat(string, "/s - Shout\n");
-    strcat(string, "/w - Whisper\n");
-    strcat(string, "/cw - Car whisper\n");
-    strcat(string, "/low - Speak quietly\n");
-    strcat(string, "/tlow - Translate low speech\n");
-    strcat(string, "/autolow - Toggle automatic low speech\n");
-    strcat(string, "/b - OOC chat\n");
-    strcat(string, "/cb - Car OOC chat\n");
-    strcat(string, "/lowb - Quiet OOC chat\n");
-    strcat(string, "/nooc - Toggle OOC chat\n");
-    strcat(string, "/o - Another OOC chat\n");
-    strcat(string, "/r - Radio\n");
-    strcat(string, "/rlow - Radio low\n");
-    strcat(string, "/m - Megaphone\n");
-    strcat(string, "/d - Department chat\n");
-    strcat(string, "/f - Faction chat\n");
-    strcat(string, "/ads - Show advertisements\n");
-    strcat(string, "/ad - Create advertisement\n");
-    strcat(string, "/cad - Create car advertisement\n");
-    strcat(string, "/tognicks - Toggle nicknames\n");
-    
-    ShowPlayerDialog(playerid, DIALOG_CHAT, DIALOG_STYLE_LIST, "Chat Commands", string, "Select", "Back");
-    return 1;
-}
-
-// Player commands dialog
-ShowPlayerCommandsDialog(playerid)
-{
-    new string[1050];
-    strcat(string, "/levelup - Level up your character\n");
-    strcat(string, "/levelinfo - View level information\n");
-    strcat(string, "/attributes - Check your attributes\n");
-    strcat(string, "/examine - Examine another player\n");
-    strcat(string, "/charity - Give money to charity\n");
-    strcat(string, "/pay - Pay another player\n");
-    strcat(string, "/balance - Check bank balance\n");
-    strcat(string, "/bank - Bank menu\n");
-    strcat(string, "/withdraw - Withdraw money\n");
-    strcat(string, "/saving - Savings account\n");
-    strcat(string, "/cheque - Write a cheque\n");
-    strcat(string, "/eat - Eat food\n");
-    strcat(string, "/meal - Order a meal\n");
-    strcat(string, "/frisk - Frisk another player\n");
-    strcat(string, "/friskapprove - Approve being frisked\n");
-    strcat(string, "/helpup - Help someone up\n");
-    strcat(string, "/acceptdeath - Accept death\n");
-    strcat(string, "/lostitems - View lost items\n");
-    strcat(string, "/damages - View damage information\n");
-    strcat(string, "/respawnme - Respawn yourself\n");
-    strcat(string, "/setstyle - Set walking style\n");
-    strcat(string, "/walk - Walk\n");
-    strcat(string, "/jog - Jog\n");
-    strcat(string, "/knock - Knock on door\n");
-    strcat(string, "/ringbell - Ring doorbell\n");
-    strcat(string, "/mask - Wear a mask\n");
-    strcat(string, "/blindfold - Use blindfold\n");
-    strcat(string, "/tie - Tie someone up\n");
-    strcat(string, "/untie - Untie someone\n");
-    strcat(string, "/tackle - Tackle someone\n");
-    strcat(string, "/isafk - Check if someone is AFK\n");
-	strcat(string, "/fill - Fill vehicle\n");
-    strcat(string, "/modmenu - Modification menu\n");
-    
-    ShowPlayerDialog(playerid, DIALOG_PLAYER, DIALOG_STYLE_LIST, "Player Commands", string, "Select", "Back");
-    return 1;
-}
-
-// Faction commands dialog
-ShowFactionCommandsDialog(playerid)
-{
-    new string[1024];
-    strcat(string, "/faction - Faction menu\n");
-    strcat(string, "/onduty - Go on duty\n");
-    strcat(string, "/prisoners - View prisoners\n");
-    strcat(string, "/factionon - View online faction members\n");
-    strcat(string, "/nofam - Leave faction chat\n");
-    strcat(string, "/news - News\n");
-    strcat(string, "/gov - Government announcement\n");
-    strcat(string, "/drugstore - Drugstore menu\n");
-    strcat(string, "/managespawns - Manage faction spawns\n");
-    strcat(string, "/factionmenu - Open faction menu\n");
-    strcat(string, "/factionhelp - Get faction help\n");
-    strcat(string, "/invite - Invite to faction\n");
-    strcat(string, "/uninvite - Remove from faction\n");
-    strcat(string, "/rank - Set faction rank\n");
-    strcat(string, "/accept - Accept faction invitation\n");
-    strcat(string, "/decline - Decline faction invitation\n");
-    strcat(string, "/duty - Go on duty\n");
-    strcat(string, "/badge - Show badge\n");
-    strcat(string, "/favuniform - Set favorite uniform\n");
-    strcat(string, "/uniform - Wear uniform\n");
-    
-    ShowPlayerDialog(playerid, DIALOG_FACTION, DIALOG_STYLE_LIST, "Faction Commands", string, "Select", "Back");
-    return 1;
-}
-
-// Property commands dialog
-ShowPropertyCommandsDialog(playerid)
-{
-    new string[1024];
-    strcat(string, "/gates - Control gates\n");
-    strcat(string, "/door - Control doors\n");
-    strcat(string, "/elevator - Use elevator\n");
-    strcat(string, "/enter - Enter property\n");
-    strcat(string, "/exit - Exit property\n");
-    strcat(string, "/buyhouse - Purchase a house\n");
-    strcat(string, "/offerrent - Offer rent\n");
-    strcat(string, "/setrentable - Set property as rentable\n");
-    strcat(string, "/setrent - Set rent price\n");
-    strcat(string, "/rentroom - Rent a room\n");
-    strcat(string, "/unrent - Stop renting\n");
-    strcat(string, "/houseupgrade - Upgrade house\n");
-    strcat(string, "/cmdspot - Command spot\n");
-    strcat(string, "/propkeys - Property keys\n");
-    strcat(string, "/givepropkey - Give property key\n");
-    strcat(string, "/takepropkey - Take property key\n");
-    strcat(string, "/myhouse - View your house\n");
-    strcat(string, "/tenants - View tenants\n");
-    strcat(string, "/evict - Evict tenant\n");
-    strcat(string, "/evictall - Evict all tenants\n");
-    strcat(string, "/grantbuild - Grant building permissions\n");
-    strcat(string, "/furniture - Furniture menu\n");
-    strcat(string, "/hlock - Lock house\n");
-    
-    ShowPlayerDialog(playerid, DIALOG_PROPERTY, DIALOG_STYLE_LIST, "Property Commands", string, "Select", "Back");
-    return 1;
-}
-
-// Vehicle commands dialog
-ShowVehicleCommandsDialog(playerid)
-{
-    new string[1024];
-    strcat(string, "/rollwindow - Roll window up/down\n");
-    strcat(string, "/rentvehicle - Rent a vehicle\n");
-    strcat(string, "/unrentvehicle - Stop renting a vehicle\n");
-    strcat(string, "/fuel - Fuel vehicle\n");
-    strcat(string, "/park - Park vehicle\n");
-    strcat(string, "/towcars - View towable cars\n");
-    strcat(string, "/towcar - Tow a car\n");
-    strcat(string, "/respawncar - Respawn a car\n");
-    strcat(string, "/changespawn - Change vehicle spawn\n");
-    strcat(string, "/setspawn - Set vehicle spawn\n");
-    strcat(string, "/engine - Toggle engine\n");
-    strcat(string, "/vehiclename - Set vehicle name\n");
-    strcat(string, "/vehicle - Vehicle menu\n");
-    strcat(string, "/hood - Open/close hood\n");
-    strcat(string, "/trunk - Open/close trunk\n");
-    strcat(string, "/vehpackage - Vehicle package\n");
-    strcat(string, "/paintcar - Paint car\n");
-    strcat(string, "/service - Service vehicle\n");
-    strcat(string, "/checkcomponents - Check vehicle components\n");
-    strcat(string, "/colorlist - View color list\n");
-    strcat(string, "/attach - Attach vehicle\n");
-    strcat(string, "/detach - Detach vehicle\n");
-    strcat(string, "/lock - Lock vehicle\n");
-    strcat(string, "/flock - Force lock vehicle\n");
-    strcat(string, "/carsign - Add car sign\n");
-    strcat(string, "/remove_carsign - Remove car sign\n");
-    strcat(string, "/callsign - Set callsign\n");
-    
-    ShowPlayerDialog(playerid, DIALOG_VEHICLE, DIALOG_STYLE_LIST, "Vehicle Commands", string, "Select", "Back");
-    return 1;
-}
-
-// Business commands dialog
-ShowBusinessCommandsDialog(playerid)
-{
-    new string[1024];
-    strcat(string, "/bizinfo - Business information\n");
-    strcat(string, "/compprice - Set component price\n");
-    strcat(string, "/bizfee - Set business fee\n");
-    strcat(string, "/buycomp - Buy components\n");
-    strcat(string, "/bizwithdraw - Withdraw from business\n");
-    strcat(string, "/bizbank - Business bank\n");
-    strcat(string, "/buybiz - Buy business\n");
-    strcat(string, "/sellbiz - Sell business\n");
-    
-    ShowPlayerDialog(playerid, DIALOG_BUSINESS, DIALOG_STYLE_LIST, "Business Commands", string, "Select", "Back");
-    return 1;
-}
-
-// Job commands dialog
-ShowJobCommandsDialog(playerid)
-{
-    new string[1024];
-    strcat(string, "/jobhelp - Job help\n");
-    strcat(string, "/businesshelp - Business help\n");
-    strcat(string, "/leavesidejob - Leave side job\n");
-    strcat(string, "/leavejob - Leave job\n");
-    strcat(string, "/jobswitch - Switch jobs\n");
-    strcat(string, "/mechanicjob - Take mechanic job\n");
-    strcat(string, "/farmerjob - Take farmer job\n");
-    strcat(string, "/truckerjob - Take trucker job\n");
-    strcat(string, "/harvest - Harvest crops\n");
-    strcat(string, "/stopharvest - Stop harvesting\n");
-    strcat(string, "/gofishing - Go fishing\n");
-    strcat(string, "/fish - Fish\n");
-    strcat(string, "/stopfishing - Stop fishing\n");
-    strcat(string, "/unloadfish - Unload fish\n");
-    strcat(string, "/myfish - View your fish\n");
-    strcat(string, "/fishhelp - Fishing help\n");
-    strcat(string, "/taxi - Taxi service\n");
-    strcat(string, "/licenseexam - Take license exam\n");
-    strcat(string, "/licensehelp - License help\n");
-    
-    ShowPlayerDialog(playerid, DIALOG_JOBS, DIALOG_STYLE_LIST, "Job Commands", string, "Select", "Back");
-    return 1;
-}
-
-// Police commands dialog
-ShowPoliceCommandsDialog(playerid)
-{
-    new string[1024];
-    strcat(string, "/swat - SWAT commands\n");
-    strcat(string, "/seb - SEB commands\n");
-    strcat(string, "/tagcolor - Set tag color\n");
-    strcat(string, "/handcuff - Handcuff suspect\n");
-    strcat(string, "/passhandcuffs - Pass handcuffs\n");
-    strcat(string, "/myhandcuffs - View your handcuffs\n");
-    strcat(string, "/unhandcuff - Remove handcuffs\n");
-    strcat(string, "/detain - Detain suspect\n");
-    strcat(string, "/eject - Eject from vehicle\n");
-    strcat(string, "/releaseme - Request release\n");
-    strcat(string, "/arrestrecord - View arrest record\n");
-    strcat(string, "/mdc - Mobile data computer\n");
-    strcat(string, "/jail - Jail suspect\n");
-    strcat(string, "/prison - Prison commands\n");
-    strcat(string, "/siren - Toggle siren\n");
-    strcat(string, "/createscene - Create crime scene\n");
-    strcat(string, "/clearscene - Clear crime scene\n");
-    strcat(string, "/clearsceneall - Clear all crime scenes\n");
-    strcat(string, "/alarm - Trigger alarm\n");
-    strcat(string, "/alarmoff - Turn off alarm\n");
-    strcat(string, "/taser - Use taser\n");
-    strcat(string, "/togalpr - Toggle ALPR\n");
-    strcat(string, "/alprlog - ALPR log\n");
-    strcat(string, "/apb - Issue APB\n");
-    strcat(string, "/fine - Issue fine\n");
-    strcat(string, "/fines - View fines\n");
-    strcat(string, "/cone - Place cone\n");
-    strcat(string, "/stinger - Place stinger\n");
-    
-    ShowPlayerDialog(playerid, DIALOG_POLICE, DIALOG_STYLE_LIST, "Police Commands", string, "Select", "Back");
-    return 1;
-}
-
-// Medical commands dialog
-ShowMedicalCommandsDialog(playerid)
-{
-    new string[1024];
-    strcat(string, "/fireduty - Fire duty\n");
-    strcat(string, "/operation - Perform operation\n");
-    strcat(string, "/putinambu - Put in ambulance\n");
-    strcat(string, "/heal - Heal player\n");
-    strcat(string, "/equip - Equip medical gear\n");
-    
-    ShowPlayerDialog(playerid, DIALOG_MEDICAL, DIALOG_STYLE_LIST, "Medical Commands", string, "Select", "Back");
-    return 1;
-}
-
-// Drug commands dialog
-ShowDrugCommandsDialog(playerid)
-{
-    new string[1024];
-    strcat(string, "/drughelp - Drug help\n");
-    strcat(string, "/drugstore - Drug store\n");
-    strcat(string, "/dealinghelp - Dealing help\n");
-    strcat(string, "/checkdrugs - Check drugs\n");
-    strcat(string, "/takealldrugs - Take all drugs\n");
-    strcat(string, "/takedrug - Take specific drug\n");
-    strcat(string, "/placealldrugs - Place all drugs\n");
-    strcat(string, "/placedrug - Place specific drug\n");
-    strcat(string, "/mydrugs - View your drugs\n");
-    strcat(string, "/transferdrug - Transfer drug\n");
-    strcat(string, "/usedrug - Use drug\n");
-    strcat(string, "/givedrug - Give drug\n");
-    strcat(string, "/mypackage - View your package\n");
-    strcat(string, "/unpackage - Unpackage drugs\n");
-    strcat(string, "/takedrugs - Take drugs\n");
-    
-    ShowPlayerDialog(playerid, DIALOG_DRUGS, DIALOG_STYLE_LIST, "Drug Commands", string, "Select", "Back");
-    return 1;
-}
-
-// Weapon commands dialog
-ShowWeaponCommandsDialog(playerid)
-{
-    new string[1024];
-    strcat(string, "/weaponhelp - Weapon help\n");
-    strcat(string, "/putweapon - Put away weapon\n");
-    strcat(string, "/putallweapons - Put away all weapons\n");
-    strcat(string, "/takeweapon - Take weapon\n");
-    strcat(string, "/takeallweapons - Take all weapons\n");
-    strcat(string, "/weapons - View weapons\n");
-    strcat(string, "/weapon - Weapon menu\n");
-    strcat(string, "/dropgun - Drop gun\n");
-    strcat(string, "/leavegun - Leave gun\n");
-    strcat(string, "/grabgun - Grab gun\n");
-    strcat(string, "/passgun - Pass gun\n");
-    strcat(string, "/takegun - Take gun\n");
-    strcat(string, "/buyweapon - Buy weapon\n");
-    strcat(string, "/buygun - Buy gun\n");
-    
-    ShowPlayerDialog(playerid, DIALOG_WEAPONS, DIALOG_STYLE_LIST, "Weapon Commands", string, "Select", "Back");
-    return 1;
-}
-
-// Phone commands dialog
-ShowPhoneCommandsDialog(playerid)
-{
-    new string[1024];
-    strcat(string, "/phonehelp - Phone help\n");
-    strcat(string, "/phone - Use phone\n");
-    strcat(string, "/pc - Phone call\n");
-    strcat(string, "/call - Make call\n");
-    strcat(string, "/sms - Send SMS\n");
-    strcat(string, "/selfie - Take selfie\n");
-    strcat(string, "/dropcell - Drop cell phone\n");
-    strcat(string, "/loudspeaker - Use loudspeaker\n");
-    strcat(string, "/cellinfo - Cell information\n");
-    
-    ShowPlayerDialog(playerid, DIALOG_PHONES, DIALOG_STYLE_LIST, "Phone Commands", string, "Select", "Back");
-    return 1;
-}
-
-// Admin commands dialog
-ShowAdminCommandsDialog(playerid)
-{
-    new string[1024];
-    strcat(string, "/admins - View online admins\n");
-    strcat(string, "/testers - View online testers\n");
-    
-    ShowPlayerDialog(playerid, DIALOG_ADMIN, DIALOG_STYLE_LIST, "Admin Commands", string, "Select", "Back");
-    return 1;
 }
 
 Dialog:xmSetStationDialog(playerid, response, listitem, inputtext[])
@@ -17178,9 +17453,16 @@ FindFreeATM()
 	return -1;
 }
 
+new GPS_BizzList[MAX_PLAYERS][MAX_BUSINESS];
+#define MAX_GPS_LIST (128)
+new Float:PlayerGPSCoords[MAX_PLAYERS][MAX_GPS_LIST][3];
+new PlayerGPSNames[MAX_PLAYERS][MAX_GPS_LIST][64];
+new PlayerGPSCount[MAX_PLAYERS];
+new PlayerGPSDeleteID[MAX_PLAYERS][MAX_GPS_LIST];
+
 CMD:gps(playerid, params[])
 {
-	Dialog_Show(playerid, SA_MAPS, DIALOG_STYLE_LIST, "GPS - Main Menu", "Find Street\nFind Property\nFind Nearest Gas Station\nFind Nearest 24/7\nFind Nearest Bar/Club\nFind Nearest Fast Food\nAll Businesses\nPoints of Interest", "Next", "Exit");
+	Dialog_Show(playerid, SA_MAPS, DIALOG_STYLE_LIST, "GPS - Main Menu", "Find Street\nFind Property\nFind Nearest Gas Station\nFind Nearest 24/7\nFind Nearest Bar/Club\nFind Nearest Fast Food\nAll Businesses\nPublic Place\nJobs & Activity", "Next", "Exit");
 	return true;
 }
 
@@ -17290,32 +17572,227 @@ Dialog:SA_MAPS(playerid, response, listitem, inputtext[])
 	        }
 	        case 6: // All Businesses
 	        {
-	        
-	        }
-			case 7: // Points of Interest
-			{
 				gstr[0] = EOS;
-
-				for(new i = 0; i < sizeof(PointsOfInterest); ++i)
+				new count = 0;
+				foreach (new i : Business)
 				{
-				    format(gstr, sizeof(gstr), "%s\n%s", gstr, PointsOfInterest[i][poiName]);
+					GPS_BizzList[playerid][count] = i;
+					format(gstr, sizeof(gstr), "%s%s (ID: %d)\n", gstr, ClearGameTextColor(BusinessData[i][bInfo]), i);
+					count++;
 				}
-				
-				Dialog_Show(playerid, POIS, DIALOG_STYLE_LIST, "Points of Interest", gstr, "Go", "Back");
-			}
+				if(!count) return SendErrorMessage(playerid, "No businesses found in the city.");
+				Dialog_Show(playerid, GPS_AllBizz, DIALOG_STYLE_LIST, "GPS - All Businesses", gstr, "Go", "Back");
+	        }
+	        case 7: // Public Place
+	        {
+				mysql_tquery(dbCon, "SELECT `id`, `name`, `x`, `y`, `z` FROM `gps_locations` WHERE `type` = 'public' ORDER BY `name` ASC LIMIT 128", "OnGPSLoadPublic", "d", playerid);
+	        }
+	        case 8: // Jobs & Activity
+	        {
+				mysql_tquery(dbCon, "SELECT `id`, `name`, `x`, `y`, `z` FROM `gps_locations` WHERE `type` = 'jobs' ORDER BY `name` ASC LIMIT 128", "OnGPSLoadJobs", "d", playerid);
+	        }
 	    }
 	}
 	return true;
 }
 
-Dialog:POIS(playerid, response, listitem, inputtext[])
+forward OnGPSLoadPublic(playerid);
+public OnGPSLoadPublic(playerid)
 {
-	if(!response) return true;
+    new rows = cache_num_rows();
+    if(rows == 0)
+    {
+        return SendErrorMessage(playerid, "No public places registered in GPS.");
+    }
+    
+    new list_str[2048];
+    list_str[0] = '\0';
+    PlayerGPSCount[playerid] = 0;
+    
+    for(new i = 0; i < rows && i < MAX_GPS_LIST; ++i)
+    {
+        new Float:x, Float:y, Float:z, name[64];
+        cache_get_value_name_float(i, "x", x);
+        cache_get_value_name_float(i, "y", y);
+        cache_get_value_name_float(i, "z", z);
+        cache_get_value_name(i, "name", name);
+        
+        PlayerGPSCoords[playerid][i][0] = x;
+        PlayerGPSCoords[playerid][i][1] = y;
+        PlayerGPSCoords[playerid][i][2] = z;
+        format(PlayerGPSNames[playerid][i], 64, "%s", name);
+        
+        format(list_str, sizeof(list_str), "%s%s\n", list_str, name);
+        PlayerGPSCount[playerid]++;
+    }
+    
+    Dialog_Show(playerid, GPS_PublicList, DIALOG_STYLE_LIST, "GPS - Public Places", list_str, "Go", "Back");
+    return 1;
+}
+
+Dialog:GPS_PublicList(playerid, response, listitem, inputtext[])
+{
+    if(!response) return Dialog_Show(playerid, SA_MAPS, DIALOG_STYLE_LIST, "GPS - Main Menu", "Find Street\nFind Property\nFind Nearest Gas Station\nFind Nearest 24/7\nFind Nearest Bar/Club\nFind Nearest Fast Food\nAll Businesses\nPublic Place\nJobs & Activity", "Next", "Exit");
+    
+    if(listitem >= 0 && listitem < PlayerGPSCount[playerid])
+    {
+        SetPath(playerid, PlayerGPSCoords[playerid][listitem][0], PlayerGPSCoords[playerid][listitem][1], PlayerGPSCoords[playerid][listitem][2], PlayerGPSNames[playerid][listitem]);
+    }
+    return 1;
+}
+
+forward OnGPSLoadJobs(playerid);
+public OnGPSLoadJobs(playerid)
+{
+    new rows = cache_num_rows();
+    if(rows == 0)
+    {
+        return SendErrorMessage(playerid, "No jobs or activities registered in GPS.");
+    }
+    
+    new list_str[2048];
+    list_str[0] = '\0';
+    PlayerGPSCount[playerid] = 0;
+    
+    for(new i = 0; i < rows && i < MAX_GPS_LIST; ++i)
+    {
+        new Float:x, Float:y, Float:z, name[64];
+        cache_get_value_name_float(i, "x", x);
+        cache_get_value_name_float(i, "y", y);
+        cache_get_value_name_float(i, "z", z);
+        cache_get_value_name(i, "name", name);
+        
+        PlayerGPSCoords[playerid][i][0] = x;
+        PlayerGPSCoords[playerid][i][1] = y;
+        PlayerGPSCoords[playerid][i][2] = z;
+        format(PlayerGPSNames[playerid][i], 64, "%s", name);
+        
+        format(list_str, sizeof(list_str), "%s%s\n", list_str, name);
+        PlayerGPSCount[playerid]++;
+    }
+    
+    Dialog_Show(playerid, GPS_JobsList, DIALOG_STYLE_LIST, "GPS - Jobs & Activity", list_str, "Go", "Back");
+    return 1;
+}
+
+Dialog:GPS_JobsList(playerid, response, listitem, inputtext[])
+{
+    if(!response) return Dialog_Show(playerid, SA_MAPS, DIALOG_STYLE_LIST, "GPS - Main Menu", "Find Street\nFind Property\nFind Nearest Gas Station\nFind Nearest 24/7\nFind Nearest Bar/Club\nFind Nearest Fast Food\nAll Businesses\nPublic Place\nJobs & Activity", "Next", "Exit");
+    
+    if(listitem >= 0 && listitem < PlayerGPSCount[playerid])
+    {
+        SetPath(playerid, PlayerGPSCoords[playerid][listitem][0], PlayerGPSCoords[playerid][listitem][1], PlayerGPSCoords[playerid][listitem][2], PlayerGPSNames[playerid][listitem]);
+    }
+    return 1;
+}
+
+Dialog:GPS_AllBizz(playerid, response, listitem, inputtext[])
+{
+	if(!response) return Dialog_Show(playerid, SA_MAPS, DIALOG_STYLE_LIST, "GPS - Main Menu", "Find Street\nFind Property\nFind Nearest Gas Station\nFind Nearest 24/7\nFind Nearest Bar/Club\nFind Nearest Fast Food\nAll Businesses\nPublic Place\nJobs & Activity", "Next", "Exit");
 	
-	if(listitem < 0 || listitem >= sizeof(PointsOfInterest)) return false;
-	
-	SetPath(playerid, PointsOfInterest[listitem][pointArea][0], PointsOfInterest[listitem][pointArea][1], PointsOfInterest[listitem][pointArea][2], PointsOfInterest[listitem][poiName]);
+	new bizid = GPS_BizzList[playerid][listitem];
+	if(!Iter_Contains(Business, bizid)) return SendErrorMessage(playerid, "Business no longer exists.");
+
+	SetPath(playerid, BusinessData[bizid][bEntranceX], BusinessData[bizid][bEntranceY], BusinessData[bizid][bEntranceZ], ClearGameTextColor(BusinessData[bizid][bInfo]));
 	return true;
+}
+
+CMD:addgps(playerid, params[])
+{
+    if(PlayerData[playerid][pAdmin] < 4)
+        return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+
+    new type[16], name[64];
+    if(sscanf(params, "s[16]s[64]", type, name))
+    {
+        return SendSyntaxMessage(playerid, "/addgps [public / jobs] [name]");
+    }
+
+    if(strcmp(type, "public", true) != 0 && strcmp(type, "jobs", true) != 0)
+    {
+        return SendErrorMessage(playerid, "Invalid type! Must be 'public' or 'jobs'.");
+    }
+
+    new Float:x, Float:y, Float:z;
+    GetPlayerPos(playerid, x, y, z);
+
+    new query[256];
+    mysql_format(dbCon, query, sizeof(query), "INSERT INTO `gps_locations` (`type`, `name`, `x`, `y`, `z`) VALUES ('%e', '%e', %f, %f, %f)", type, name, x, y, z);
+    mysql_tquery(dbCon, query);
+
+    SendNoticeMessage(playerid, "Successfully added GPS location '%s' to list '%s'.", name, type);
+    return true;
+}
+
+CMD:removegps(playerid, params[])
+{
+    if(PlayerData[playerid][pAdmin] < 4)
+        return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+
+    new type[16];
+    if(sscanf(params, "s[16]", type))
+    {
+        return SendSyntaxMessage(playerid, "/removegps [public / jobs]");
+    }
+
+    if(strcmp(type, "public", true) != 0 && strcmp(type, "jobs", true) != 0)
+    {
+        return SendErrorMessage(playerid, "Invalid type! Must be 'public' or 'jobs'.");
+    }
+
+    new query[256];
+    mysql_format(dbCon, query, sizeof(query), "SELECT `id`, `name` FROM `gps_locations` WHERE `type` = '%e' ORDER BY `name` ASC LIMIT 128", type);
+    mysql_tquery(dbCon, query, "OnGPSRemoveList", "ds", playerid, type);
+    return true;
+}
+
+forward OnGPSRemoveList(playerid, const type[]);
+public OnGPSRemoveList(playerid, const type[])
+{
+    new rows = cache_num_rows();
+    if(rows == 0)
+    {
+        return SendErrorMessage(playerid, "No locations found in list '%s'.", type);
+    }
+    
+    new list_str[2048];
+    list_str[0] = '\0';
+    PlayerGPSCount[playerid] = 0;
+    
+    for(new i = 0; i < rows && i < MAX_GPS_LIST; ++i)
+    {
+        new id, name[64];
+        cache_get_value_name_int(i, "id", id);
+        cache_get_value_name(i, "name", name);
+        
+        PlayerGPSDeleteID[playerid][i] = id;
+        format(PlayerGPSNames[playerid][i], 64, "%s", name);
+        
+        format(list_str, sizeof(list_str), "%s%s (ID: %d)\n", list_str, name, id);
+        PlayerGPSCount[playerid]++;
+    }
+    
+    new title[64];
+    format(title, sizeof(title), "Delete GPS - %s", type);
+    Dialog_Show(playerid, GPS_DeleteSelect, DIALOG_STYLE_LIST, title, list_str, "Delete", "Cancel");
+    return 1;
+}
+
+Dialog:GPS_DeleteSelect(playerid, response, listitem, inputtext[])
+{
+    if(!response) return 1;
+    
+    if(listitem >= 0 && listitem < PlayerGPSCount[playerid])
+    {
+        new db_id = PlayerGPSDeleteID[playerid][listitem];
+        
+        new query[128];
+        mysql_format(dbCon, query, sizeof(query), "DELETE FROM `gps_locations` WHERE `id` = %d", db_id);
+        mysql_tquery(dbCon, query);
+        
+        SendNoticeMessage(playerid, "Deleted GPS location '%s' (DB ID: %d) from database.", PlayerGPSNames[playerid][listitem], db_id);
+    }
+    return 1;
 }
 
 Dialog:FindProperty(playerid, response, listitem, inputtext[])
@@ -17378,7 +17855,22 @@ FUNX::WT()
 public OnPlayerFinishedDownloading(playerid, virtualworld)
 {
     FinishedDownloadingModels{playerid} = true;
-	SendClientMessage(playerid,COLOR_WHITE,"Downloads Finished");
+    SendClientMessage(playerid, COLOR_WHITE, "{ADC3E7}Assets: {FFFFFF}Custom models and assets have been downloaded successfully!");
+
+    // Refresh custom login/loading screen sprites if player is not logged in yet
+    if(!LoggedIn{playerid})
+    {
+        if(LoginTD_Bg[playerid] != PlayerText:INVALID_TEXT_DRAW)
+        {
+            PlayerTextDrawHide(playerid, LoginTD_Bg[playerid]);
+            PlayerTextDrawShow(playerid, LoginTD_Bg[playerid]);
+        }
+        if(LoginScreenReady[playerid] && LoginTD_Box[playerid] != PlayerText:INVALID_TEXT_DRAW)
+        {
+            PlayerTextDrawHide(playerid, LoginTD_Box[playerid]);
+            PlayerTextDrawShow(playerid, LoginTD_Box[playerid]);
+        }
+    }
     return true;
 }
 
@@ -17573,142 +18065,7 @@ string_replace(const search[], const replace[], const source[])
 	return newnick;
 }
 
-/*FUNX::DCC_OnChannelMessage(DCC_Channel:channel, const author[], const message[])
-{
-	new channel_name[32];
-	DCC_GetChannelName(channel, channel_name);
-
-	new str[145];
-	format(str, sizeof str, "[Discord/%s] %s: %s", channel_name, author, message);
-	SendClientMessageToAll(-1, str);
-	return 1;
-}
-
-public DCC_OnMessageCreate(DCC_Message:message)
-{
-	if(systemVariables[DiscordStatus])
-	    return true;
-
-    new DCC_Channel:channel;
-
-    DCC_GetMessageChannel(message, channel);
-
-    if(channel != botCommandChannel)
-        return true;
-
-    new string[256];
-    DCC_GetMessageContent(message, string);
-
-    if(!strcmp(string, "&players", true))
-	{
-	    DCC_SendChannelMessage(botCommandChannel, "Players online:");
-
-		foreach (new i : Player)
-		{
-		    format(sgstr, sizeof(sgstr), "(ID %i) %s | Level: %i", i, ReturnName(i), PlayerData[i][pLevel]);
-
-            DCC_SendChannelMessage(botCommandChannel, sgstr);
-		}
-
-		return true;
-    }
-    else if(!strcmp(string, "&admins", true))
-	{
-	    DCC_SendChannelMessage(botCommandChannel, "Admins online:");
-
-		foreach (new i : Player)
-		{
-		    if(PlayerData[i][pAdmin] >= 1)
-		    {
-		        format(sgstr, sizeof(sgstr), "(Level: %d) %s (ID: %d) Adminduty: %s", PlayerData[i][pAdmin], AccountName(i), i, AdminDuty{i} ? ("Yes") : ("No"));
-
-            	DCC_SendChannelMessage(botCommandChannel, sgstr);
-			}
-		}
-
-		return true;
-    }
-	return true;
-}
-
-public DCC_OnMessageCreate(DCC_Message:message)
-{
-    new DCC_Channel:channel;
-
-    DCC_GetMessageChannel(message, channel);
-
-    // This if condition checks that if the channel is not the command channel then it will do nothing and return 1 //
-    if(channel != commandChannel)
-        return 1;
-
-    // But before that we need to save who actually sent the message //
-    new DCC_User:author;
-    DCC_GetMessageAuthor(message, author);
-
-    // We need to check if the author is a bot or not //
-
-    new bool:isBot;
-    DCC_IsUserBot(author, isBot);
-
-    // If the author is a bot then nothing will happen //
-    if(isBot){
-        return 1;
-    }
-
-    // Now we will fetch if the author has the required role or not! //
-    new bool:hasRole;
-    DCC_HasGuildMemberRole(guildName, author, adminRole, hasRole);
-
-    // If the author does not have the role then don't do anything //
-    if(!hasRole){
-        DCC_SendChannelMessage(commandChannel, "You do not have the role required");
-        return 1;
-    }
-
-    // Now to actually make a command after all the checks are done //
-    new str[256];
-    new command[32], params[128];
-
-    DCC_GetMessageContent(message, str); // Storing the entire message of the author in the variable str //
-
-    // Now seperating the command and the params //
-
-    sscanf(str, "s[32]s[128]", command, params);
-
-    // Now we will check the command //
-
-    if(!strcmp(command, "&chat", true))
-	{
-        new playerID, _message[128];
-
-        sscanf(params, "us[128]", playerID, _message); // Seperating the playerID and the message //
-
-        if(!IsPlayerConnected(playerID))
-            return DCC_SendChannelMessage(channel, "The player is not online!");
-
-        SendClientMessage(playerID, -1, _message);
-    }
-
-    // DONE !!! //
-
-    return 1;
-}
-
-VehicleBoloMatch(playerid, plate[])
-{
-	if(ALPR_Hit{playerid}) return true;
-
-    TextDrawShowForPlayer(playerid, ALPR_UI[0]);
-	TextDrawShowForPlayer(playerid, ALPR_UI[1]);
-
-	PlayerTextDrawSetString(playerid, ALPR_Plate[playerid], plate);
-	PlayerTextDrawShow(playerid, ALPR_Plate[playerid]);
-
-	ALPR_Hit{playerid} = true;
-
-	SetTimerEx("HideALPR", 8000, false, "d", playerid);
-	return true;
-}*/
+// Commented DCC blocks removed
 
 FUNX::HideALPR(playerid)
 {

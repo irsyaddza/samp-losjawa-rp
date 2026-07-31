@@ -42,6 +42,88 @@ UpdateLastLoginData(extraid)
 	return mysql_tquery(dbCon, query);
 }
 
+HandleFailedLogin(extraid)
+{
+	LoginAttempts[extraid]--;
+
+	if(LoginAttempts[extraid] <= 0)
+	{
+		SendClientMessage(extraid, COLOR_LIGHTRED, "[SERVER]: You were kicked for bad password attempts.");
+		PlayerTextDrawSetString(extraid, LoginTD_Status[extraid], "Error: Too many failed attempts. Kicking...");
+		SetTimerEx("OnPlayerKickTimer", 3000, false, "d", extraid);
+		return 1;
+	}
+
+	LoginPasswordEntered[extraid] = false;
+	LoginPass[extraid][0] = '\0';
+	PlayerTextDrawSetString(extraid, LoginTD_Password[extraid], "Password");
+	PlayerTextDrawShow(extraid, LoginTD_Password[extraid]);
+
+	new str[128];
+	format(str, sizeof(str), "Error: Invalid password. (%d attempts remaining)", LoginAttempts[extraid]);
+	PlayerTextDrawSetString(extraid, LoginTD_Status[extraid], str);
+	PlayerPlaySound(extraid, 1085, 0.0, 0.0, 0.0);
+	return 1;
+}
+
+HandleSuccessfulLogin(extraid)
+{
+	SetPVarInt(extraid, "UCP_Logged", 1);
+	HideLoginInputs(extraid);
+
+	new query[256];
+	if(isnull(AccountData[extraid][aSecretWord]))
+	{
+ 		Dialog_Show(extraid, AddSecretWord, DIALOG_STYLE_PASSWORD,
+			"Welcome to Los Jawa Roleplay",
+			"{FFFFFF}SECURITY PRECAUTION:\n\nWe have introduced a SECRET CONFIRMATION CODE, this is basically a secret word that you will be presented with if any connection conditions changes.\n\n\
+			You have not yet filled this out, so please take your time and fill in a secret word you {FF0000}will have to remember.\n\n{FFFFFF}IT IS ADVICED THAT THIS IS NOT YOUR PASSWORD!",
+			"Enter", "Cancel"
+		);
+	}
+	else
+	{
+		if(strcmp(LastSerial[extraid], PlayerSerial[extraid], false) != 0)
+		{
+	 		Dialog_Show(extraid, SecretWord, DIALOG_STYLE_PASSWORD, "Welcome to Los Jawa Roleplay", "{FF0000}POSSIBLE SECURITY BREACH\n\n{FFFFFF}The server has flagged you as possibly not being this account's owner, please write the secret word of this account in the box below to confirm it is yours.", "Enter", "Cancel");
+		}
+		else
+		{
+			format(query, sizeof(query), "UPDATE `accounts` SET `Online` = 1, `LoginDate` = '%d', `LastIP` = '%s', `Serial` = '%s' WHERE `ID` = '%d' LIMIT 1", gettime(), PlayerData[extraid][pIP], PlayerSerial[extraid], AccountData[extraid][aUserid]), mysql_pquery(dbCon, query);
+
+            SQL_LoadCharacters(extraid);
+		}
+	}
+	return 1;
+}
+
+forward OnBcryptVerifyLogin(extraid, bool:success);
+public OnBcryptVerifyLogin(extraid, bool:success)
+{
+	if(success)
+	{
+		HandleSuccessfulLogin(extraid);
+	}
+	else
+	{
+		HandleFailedLogin(extraid);
+	}
+	return 1;
+}
+
+forward OnBcryptPasswordUpgrade(extraid);
+public OnBcryptPasswordUpgrade(extraid)
+{
+	new hash[BCRYPT_HASH_LENGTH], query[256];
+	bcrypt_get_hash(hash);
+
+	mysql_format(dbCon, query, sizeof(query), "UPDATE `accounts` SET `Password` = '%e' WHERE `ID` = %d LIMIT 1", hash, AccountData[extraid][aUserid]);
+	mysql_pquery(dbCon, query);
+
+	printf("[Bcrypt Upgrade]: Successfully migrated password hash to Bcrypt for account %s (ID: %d)", AccountData[extraid][aUsername], AccountData[extraid][aUserid]);
+	return 1;
+}
+
 forward OnQueryFinished(extraid, threadid);
 public OnQueryFinished(extraid, threadid)
 {
@@ -88,7 +170,18 @@ public OnQueryFinished(extraid, threadid)
 		 		SendErrorMessage(extraid, "%s is not a valid account name.", ReturnNameEx(extraid));
 
 		 		SendNoticeMessage(extraid, "Make sure you're using your (main) account name, not a character name to log in!");
-			  	SendNoticeMessage(extraid, "To create an account, please visit https://losjawa-rp.net/"), KickEx(extraid);
+			  	SendNoticeMessage(extraid, "To create an account, please visit %s", gServerSite);
+
+			  	new info_str[512];
+			  	format(info_str, sizeof(info_str), \
+			  	    "{FF0000}ERROR: {FFFFFF}The UCP account name \"{7E98B6}%s{FFFFFF}\" is not registered in our database.\n\n\
+			  	    To play on Los Jawa Roleplay, you must first register your account on our User Control Panel (UCP).\n\n\
+			  	    Website: {FFBF00}%s{FFFFFF}\n\n\
+			  	    Please register your UCP account there and reconnect with the registered UCP username.", \
+			  	    ReturnNameEx(extraid),
+			  	    gServerSite
+			  	);
+			  	Dialog_Show(extraid, UCPNotRegistered, DIALOG_STYLE_MSGBOX, "Account Not Registered", info_str, "Close", "");
 			}
   		}
 		case THREAD_BAN_LOOKUP:
@@ -129,89 +222,48 @@ public OnQueryFinished(extraid, threadid)
 		    else
 			{
 			    SafeTime[extraid] = 60;
-
-		        Dialog_Show(extraid, LoginScreen, DIALOG_STYLE_PASSWORD, "Welcome to Los Jawa Roleplay", "Hello,\n\nPlease enter your password below to access character selection.\n\nIf you are not currently registered with Losjawa-RP, you can create\n\nyour account at losjawa-rp.net.", "Submit", "Exit");
+				SetLoginScreenReady(extraid);
 			}
 		}
-     	case THREAD_LOGIN:
+      	case THREAD_LOGIN:
    		{
-    	    cache_get_row_count(rows);
+     	    cache_get_row_count(rows);
+ 
+     	    if(!rows)
+     	    {
+				return HandleFailedLogin(extraid);
+ 			}
+ 			else
+ 			{
+ 			    new stored_hash[129];
+ 			    cache_get_value_name(0, "Password", stored_hash, sizeof(stored_hash));
 
-    	    if(!rows)
-    	    {
-				LoginAttempts[extraid]--;
+ 			    new entered_pass[129];
+ 			    GetPVarString(extraid, "temp_login_pass", entered_pass, sizeof(entered_pass));
+ 			    DeletePVar(extraid, "temp_login_pass");
 
-				if(LoginAttempts[extraid] == 0)
-				{
-					SendClientMessage(extraid, COLOR_LIGHTRED, "[SERVER]: You were kicked for bad password attempts.");
-					return KickEx(extraid);
-				}
-
-				new
-				    str[256]
-				;
-
-				format(str, sizeof(str), "Hello,\n\nPlease enter your password below to access character selection.\n\nIf you are not currently registered with LosJawa-RP, you can create\n\nyour account at losjawa-rp.net.\n\n\n{FF0000}Attempts remaining: %d", LoginAttempts[extraid]);
-				return Dialog_Show(extraid, LoginScreen, DIALOG_STYLE_PASSWORD, "Welcome to Los Jawa Roleplay", str, "Submit", "Exit");
-			}
-			else
-			{
-                /*if(LastLogin[extraid] != 0 && (gettime() - LastLogin[extraid]) >= 1209600) // 14 days or 2 weeks
-                {
-					new email[64], str[64], end, len;
-
-					format(email, 64, "%.1s", AccountData[extraid][aEmail]);
-
-					end = strfind(AccountData[extraid][aEmail], "@", true) - 1;
-
-					if(end == -1) // Invalid Email Address
-					{
-						SendClientMessage(extraid, COLOR_YELLOW, "It seems you have specified an invalid email address for your account.");
-						SendClientMessage(extraid, COLOR_YELLOW, "Update it using the UCP (legacy-rp.net) and then try log back in.");
-						return KickEx(extraid);
-					}
-
-					strmid(str, AccountData[extraid][aEmail], 1, end);
-
-					len = strlen(str);
-
-					for(new i = 0; i < len; ++i) strcat(email, "*");
-
-					format(email, 64, "%s%s", email, AccountData[extraid][aEmail][end]);
-
-					SendClientMessage(extraid, COLOR_YELLOW, "Two Factor Authentication");
-					SendClientMessage(extraid, COLOR_YELLOW, "  You haven't played in a while! For security measures, we need to verify your account before you can play.");
-					SendClientMessageEx(extraid, COLOR_YELLOW, "  An email was sent to %s with instructions on how to verify your account.", email);
-					SendClientMessage(extraid, COLOR_YELLOW, "  This should take up to two minutes. Make sure to check your spam folder.");
-
-					//format(query,sizeof(query),"ip=%s&time=%d&id=%d&username=%s", PlayerData[extraid][pIP], gettime(), PlayerData[extraid][pID], AccountData[extraid][aUsername]);
-				    //HTTP(extraid, HTTP_POST, "localhost/verify_email.php", query, "HttpVerifyRequest");
-				}*/
-
-				if(isnull(AccountData[extraid][aSecretWord]))
-				{
-			 		Dialog_Show(extraid, AddSecretWord, DIALOG_STYLE_PASSWORD,
-						"Welcome to Los Jawa Roleplay",
-						"{FFFFFF}SECURITY PRECAUTION:\n\nWe have introduced a SECRET CONFIRMATION CODE, this is basically a secret word that you will be presented with if any connection conditions changes.\n\n\
-						You have not yet filled this out, so please take your time and fill in a secret word you {FF0000}will have to remember.\n\n{FFFFFF}IT IS ADVICED THAT THIS IS NOT YOUR PASSWORD!",
-						"Enter", "Cancel"
-					);
-				}
-				else
-				{
-					if(strcmp(LastSerial[extraid], PlayerSerial[extraid], false) != 0)
-					{
-				 		Dialog_Show(extraid, SecretWord, DIALOG_STYLE_PASSWORD, "Welcome to Los Jawa Roleplay", "{FF0000}POSSIBLE SECURITY BREACH\n\n{FFFFFF}The server has flagged you as possibly not being this account's owner, please write the secret word of this account in the box below to confirm it is yours.", "Enter", "Cancel");
-					}
-					else
-					{
-						format(query, sizeof(query), "UPDATE `accounts` SET `Online` = 1, `LoginDate` = '%d', `LastIP` = '%s', `Serial` = '%s' WHERE `ID` = '%d' LIMIT 1", gettime(), PlayerData[extraid][pIP], PlayerSerial[extraid], AccountData[extraid][aUserid]), mysql_pquery(dbCon, query);
-
-	                    SQL_LoadCharacters(extraid);
-					}
-				}
-			}
-		}
+ 			    if(strlen(stored_hash) == 128)
+ 			    {
+ 			        new wp_hash_buffer[129];
+ 			        WP_Hash(wp_hash_buffer, sizeof(wp_hash_buffer), entered_pass);
+ 			        
+ 			        if(!strcmp(stored_hash, wp_hash_buffer, false))
+ 			        {
+ 			            bcrypt_hash(extraid, "OnBcryptPasswordUpgrade", entered_pass, 12);
+ 			            return HandleSuccessfulLogin(extraid);
+ 			        }
+ 			        else
+ 			        {
+ 			            return HandleFailedLogin(extraid);
+ 			        }
+ 			    }
+ 			    else
+ 			    {
+ 			        bcrypt_verify(extraid, "OnBcryptVerifyLogin", entered_pass, stored_hash);
+ 			        return 1;
+ 			    }
+ 			}
+ 		}
 		case THREAD_LOAD_CHARACTER:
 		{
 		    //, active;
@@ -248,6 +300,10 @@ public OnQueryFinished(extraid, threadid)
 
 				cache_get_value_name_int(0, "Faction", PlayerData[extraid][pFactionID]);
 				cache_get_value_name_int(0, "FactionRank", PlayerData[extraid][pFactionRank]);
+				cache_get_value_name_int(0, "DBRank", PlayerData[extraid][pDBRank]);
+				cache_get_value_name_int(0, "SWATRank", PlayerData[extraid][pSWATRank]);
+				cache_get_value_name_int(0, "EMSRank", PlayerData[extraid][pEMSRank]);
+				cache_get_value_name_int(0, "FireRank", PlayerData[extraid][pFireRank]);
 				cache_get_value_name_int(0, "FactionSpawn", PlayerData[extraid][pFactionSpawn]);
 
 				cache_get_value_name_int(0, "Injured", PlayerData[extraid][pInjured]);
@@ -287,7 +343,13 @@ public OnQueryFinished(extraid, threadid)
 	            cache_get_value_name_int(0, "playerCareer", PlayerData[extraid][pCareer]);
 	            cache_get_value_name_int(0, "playerHouseKey", PlayerData[extraid][pHouseKey]);
 				cache_get_value_name_int(0, "playerComplexKey", PlayerData[extraid][pComplexKey]);
+				cache_get_value_name_int(0, "busJobDelay", PlayerData[extraid][pBusJobDelay]);
+				cache_get_value_name_int(0, "sweeperJobDelay", PlayerData[extraid][pSweeperJobDelay]);
 	            cache_get_value_name(0, "Attribute", PlayerData[extraid][pAttribute]);
+	            if(cache_get_value_name(0, "MarriedTo", PlayerData[extraid][pMarriedTo]) == 0 || isnull(PlayerData[extraid][pMarriedTo]))
+	            {
+	                format(PlayerData[extraid][pMarriedTo], MAX_PLAYER_NAME, "None");
+	            }
 
 	            cache_get_value_name(0, "PackageWeapons", str);
 	            AssignPlayerWeapons(extraid, str);
@@ -333,6 +395,9 @@ public OnQueryFinished(extraid, threadid)
 		        cache_get_value_name_int(0, "MedicBill", MedicBill[extraid]);
 				cache_get_value_name_float(0, "Health", PlayerData[extraid][pHealth]);
 				cache_get_value_name_float(0, "Armour", PlayerData[extraid][pArmour]);
+
+				if(cache_get_value_name_int(0, "Hunger", PlayerData[extraid][pHunger]) != 0) PlayerData[extraid][pHunger] = 100;
+				if(cache_get_value_name_int(0, "Thirst", PlayerData[extraid][pThirst]) != 0) PlayerData[extraid][pThirst] = 100;
 
 				cache_get_value_name_int(0, "Fishes", PlayerData[extraid][pFishes]);
 
@@ -433,6 +498,8 @@ public OnQueryFinished(extraid, threadid)
 
 				SetPlayerFaction(extraid);
 
+				IWS_LoadPlayer(extraid); // Load illegal job data
+
 				LoggedIn{extraid} = true;
 
 				if(PlayerData[extraid][pAdmin] > 0)
@@ -499,10 +566,11 @@ public OnQueryFinished(extraid, threadid)
 
 				if(!PlayerFlags[extraid][toggleHUD])
 				{
-				    TextHud_Update(extraid);
+				    ShowHudV2Full(extraid);
 				}
 
-				if(IsPolice(extraid) || PlayerData[extraid][pAdmin]) InitMDC(extraid);
+				// PONYTAIL: MDC TDs are now created dynamically when player uses /mdc to save textdraw slots
+				// if(IsPolice(extraid) || PlayerData[extraid][pAdmin]) InitMDC(extraid);
 
 				CheckFightingStyle(extraid);
 
@@ -528,14 +596,19 @@ public OnQueryFinished(extraid, threadid)
 		            PlayerData[extraid][pLevel] = 1;
 		            PlayerData[extraid][pSHealth] = 50.0;
 		            PlayerData[extraid][pHealth] = 150.0;
+		            PlayerData[extraid][pTutorialStep] = 1;
 
-		            initiateTutorial(extraid);
+					SetSpawnInfo(extraid, NO_TEAM, PlayerData[extraid][pModel], PlayerData[extraid][pPos][0], PlayerData[extraid][pPos][1], PlayerData[extraid][pPos][2], PlayerData[extraid][pPos][3], 0, 0, 0, 0, 0, 0);
+					TogglePlayerSpectating(extraid, true);
+					TogglePlayerSpectating(extraid, false);
+					TogglePlayerControllable(extraid, false);
 
 					UpdateLastLoginData(extraid);
 			        return true;
 				}
 
 				SetSpawnInfo(extraid, NO_TEAM, PlayerData[extraid][pModel], PlayerData[extraid][pPos][0], PlayerData[extraid][pPos][1], PlayerData[extraid][pPos][2], PlayerData[extraid][pPos][3], 0, 0, 0, 0, 0, 0);
+				TogglePlayerSpectating(extraid, true);
 				TogglePlayerSpectating(extraid, false);
 				TogglePlayerControllable(extraid, false);
 
@@ -702,53 +775,43 @@ public OnQueryFinished(extraid, threadid)
 
 		    if(!rows)
 			{
-			    if(RegistrationEnabled)
-					return Dialog_Show(extraid, CreateCharacter, DIALOG_STYLE_INPUT, "Character Creation", "Since you have no characters created, you're eligible to create one in-game.\n\nYou can create one right now by typing the name you wish to use down below\n\n{FF0000}**Be sure to type a realistic name or you'll get banned without any questions**", "Create", "Exit");
-
-				SendErrorMessage(extraid, "You don't have any characters created, go to the UCP and create one.");
-				return KickEx(extraid);
+			    // No characters — direct to UCP (no in-game character creation)
+			    SendErrorMessage(extraid, "You don't have any characters. Please create one at %s", gServerSite);
+			    return KickEx(extraid);
 			}
 
-			CreateCharacterMenuTD(extraid, rows);
-
-		    new
-				playerSQLID,
-				playerName[MAX_PLAYER_NAME],
-				playerLevel,
-				playerSkin,
-				count = 0,
-				string[256]
-			;
+		    CharSelTotalSlots[extraid] = rows;
+		    SelectedSlot[extraid] = 0;
+		    SelectedCharacter[extraid] = 0;
 
 		    for(new i = 0; i != rows; ++i)
 		    {
-		        cache_get_value_name_int(i, "ID", playerSQLID);
-		        cache_get_value_name(i, "char_name", playerName);
-		        cache_get_value_name_int(i, "Level", playerLevel);
-		        cache_get_value_name_int(i, "Model", playerSkin);
+		        cache_get_value_name_int(i, "ID",        CharSelCache[extraid][i][csID]);
+		        cache_get_value_name(i,     "char_name", CharSelCache[extraid][i][csName]);
+		        cache_get_value_name_int(i, "Level",     CharSelCache[extraid][i][csLevel]);
+		        cache_get_value_name_int(i, "Model",     CharSelCache[extraid][i][csSkin]);
+		        cache_get_value_name_int(i, "LastLogin", CharSelCache[extraid][i][csLastLogin]);
 
-		    	CharacterCache[extraid][count] = playerSQLID;
+		        // Keep CharacterCache populated for spawn compatibility
+		        CharacterCache[extraid][i] = CharSelCache[extraid][i][csID];
 
-		    	format(string, sizeof(string), "%s~n~Level: %d", playerName, playerLevel);
-		    	PlayerTextDrawSetPreviewModel(extraid, CharSelectionTD[extraid][count], playerSkin);
-		    	PlayerTextDrawSetString(extraid, CharSelectionTD[extraid][count + 6], string);
-
-		    	AccountData[extraid][aCombinedLevel][0] += 1;
-				AccountData[extraid][aCombinedLevel][1] += playerLevel;
-
-		    	count++;
+		        AccountData[extraid][aCombinedLevel][0] += 1;
+		        AccountData[extraid][aCombinedLevel][1] += CharSelCache[extraid][i][csLevel];
 		    }
 
-		    PlayerTextDrawShow(extraid, CharSelectionTD[extraid][12]);
+		    printf("[DEBUG] THREAD_CHECK_CHARACTER: playerid=%d total_chars=%d", extraid, rows);
 
-		    for(new i = 0; i != count; ++i)
-		    {
-		        PlayerTextDrawShow(extraid, CharSelectionTD[extraid][i]);
-		        PlayerTextDrawShow(extraid, CharSelectionTD[extraid][i + 6]);
-		    }
+		    // Set spawn info at Santa Maria Beach Pier (Exterior, Interior 0)
+		    SetSpawnInfo(extraid, 0,
+		        CharSelCache[extraid][0][csSkin],
+		        835.5000, -2061.5000, 12.8600, 180.0,
+		        0, 0, 0, 0, 0, 0
+		    );
 
-		    SelectTextDraw(extraid, 0x000000CC);
+		    // Set a 500ms timer to defer spectate-off and camera setup (avoids relog packet race condition)
+		    SetTimerEx("OnPlayerSetupCharSel", 500, false, "d", extraid);
 		}
+
   		case THREAD_PLAYER_DRUGS:
   		{
 			for(new i = 0; i < cache_num_rows(); ++i)
@@ -872,4 +935,50 @@ public OnQueryFinished(extraid, threadid)
   		}
 	}
 	return true;
+}
+
+forward OnPlayerSetupCharSel(playerid);
+public OnPlayerSetupCharSel(playerid)
+{
+    if(!IsPlayerConnected(playerid)) return 1;
+
+    printf("[DEBUG] OnPlayerSetupCharSel: playerid=%d (setting up character selection camera/actors)", playerid);
+
+    new vw = playerid + 3000;
+    
+    // Set Interior & VW first (Interior 0 = Real World/Exterior)
+    SetPlayerInterior(playerid, 0);
+    SetPlayerVirtualWorld(playerid, vw);
+
+    // Set cinematic time & weather (warm sunset theme)
+    SetPlayerTime(playerid, 18, 0);
+    SetPlayerWeather(playerid, 10);
+
+    // Destroy any existing actors to prevent duplication
+    for(new i = 0; i < 6; i++)
+    {
+        if(CharSelActor[playerid][i] != INVALID_ACTOR_ID)
+        {
+            DestroyActor(CharSelActor[playerid][i]);
+            CharSelActor[playerid][i] = INVALID_ACTOR_ID;
+        }
+    }
+
+    // Spawn 3D Actors side-by-side for all characters the player owns
+    new total = CharSelTotalSlots[playerid];
+    for(new i = 0; i < total; i++)
+    {
+        new Float:x_pos = 835.5000 + (i * 2.5000);
+        CharSelActor[playerid][i] = CreateActor(CharSelCache[playerid][i][csSkin], x_pos, -2061.5000, 12.8600, 180.0);
+        SetActorVirtualWorld(CharSelActor[playerid][i], vw);
+    }
+
+    // Position camera looking at the first character actor (camera at 835.50, -2066.50 is to the South of first actor, looking North)
+    SetCameraBehindPlayer(playerid);
+    SetPlayerCameraPos(playerid, 835.5000, -2066.5000, 13.5000);
+    SetPlayerCameraLookAt(playerid, 835.5000, -2061.5000, 13.1000, CAMERA_MOVE);
+
+    // Render the UI
+    ShowCharSelectionUI(playerid);
+    return 1;
 }

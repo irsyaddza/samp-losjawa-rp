@@ -231,96 +231,185 @@ CreateGlobalTextDraws()
 	TextDrawBackgroundColor(ALPR_UI[1], 255);
 	TextDrawFont(ALPR_UI[1], 2);
 	TextDrawSetProportional(ALPR_UI[1], 1);
+
 }
 
-CreateCharacterMenuTD(playerid, rows)
+// ─────────────────────────────────────────────────────────────────────────
+// CHARACTER SELECTION V2 — CINEMATIC MODE
+// Interior: St. Mark's Bistro (Interior ID 1, VW = playerid + 3000)
+// Layout based on characterselection-open.mp.txt
+// ─────────────────────────────────────────────────────────────────────────
+
+// Returns a human-readable "X ago" string for a unix timestamp difference
+stock FormatLastSeenAgo(seconds)
 {
-	switch(rows)
-	{
-	    case 1:
-	    {
-	        PlayerTextDrawDestroy(playerid, CharSelectionTD[playerid][0]);
-	        PlayerTextDrawDestroy(playerid, CharSelectionTD[playerid][6]);
-
-			CharSelectionTD[playerid][0] = CreatePlayerTextDraw(playerid, 241.666702, 119.740768, "");
-			PlayerTextDrawTextSize(playerid, CharSelectionTD[playerid][0], 150.000000, 150.000000);
-			PlayerTextDrawAlignment(playerid, CharSelectionTD[playerid][0], 1);
-			PlayerTextDrawColor(playerid, CharSelectionTD[playerid][0], -1);
-			PlayerTextDrawSetShadow(playerid, CharSelectionTD[playerid][0], 0);
-			PlayerTextDrawBackgroundColor(playerid, CharSelectionTD[playerid][0], 102);
-			PlayerTextDrawFont(playerid, CharSelectionTD[playerid][0], 5);
-			PlayerTextDrawSetProportional(playerid, CharSelectionTD[playerid][0], 0);
-			PlayerTextDrawSetPreviewModel(playerid, CharSelectionTD[playerid][0], 73);
-			PlayerTextDrawSetPreviewRot(playerid, CharSelectionTD[playerid][0], 0.000000, 0.000000, 0.000000, 1.000000);
-			PlayerTextDrawSetSelectable(playerid, CharSelectionTD[playerid][0], true);
-
-			CharSelectionTD[playerid][6] = CreatePlayerTextDraw(playerid, 243.666702, 121.140701, "Firstname Lastname~n~Level 23");
-			PlayerTextDrawLetterSize(playerid, CharSelectionTD[playerid][6], 0.180996, 0.869925);
-			PlayerTextDrawTextSize(playerid, CharSelectionTD[playerid][6], 549.000000, 0.000000);
-			PlayerTextDrawAlignment(playerid, CharSelectionTD[playerid][6], 1);
-			PlayerTextDrawColor(playerid, CharSelectionTD[playerid][6], -1);
-			PlayerTextDrawSetShadow(playerid, CharSelectionTD[playerid][6], 0);
-			PlayerTextDrawBackgroundColor(playerid, CharSelectionTD[playerid][6], 255);
-			PlayerTextDrawFont(playerid, CharSelectionTD[playerid][6], 1);
-			PlayerTextDrawSetProportional(playerid, CharSelectionTD[playerid][6], 1);
-	    }
-	    case 2:
-	    {
-	        PlayerTextDrawDestroy(playerid, CharSelectionTD[playerid][0]);
-	        PlayerTextDrawDestroy(playerid, CharSelectionTD[playerid][6]);
-	        PlayerTextDrawDestroy(playerid, CharSelectionTD[playerid][1]);
-	        PlayerTextDrawDestroy(playerid, CharSelectionTD[playerid][7]);
-
-			CharSelectionTD[playerid][0] = CreatePlayerTextDraw(playerid, 163.333404, 120.155570, "");
-			PlayerTextDrawTextSize(playerid, CharSelectionTD[playerid][0], 150.000000, 150.000000);
-			PlayerTextDrawAlignment(playerid, CharSelectionTD[playerid][0], 1);
-			PlayerTextDrawColor(playerid, CharSelectionTD[playerid][0], -1);
-			PlayerTextDrawSetShadow(playerid, CharSelectionTD[playerid][0], 0);
-			PlayerTextDrawBackgroundColor(playerid, CharSelectionTD[playerid][0], 102);
-			PlayerTextDrawFont(playerid, CharSelectionTD[playerid][0], 5);
-			PlayerTextDrawSetProportional(playerid, CharSelectionTD[playerid][0], 0);
-			PlayerTextDrawSetPreviewModel(playerid, CharSelectionTD[playerid][0], 73);
-			PlayerTextDrawSetPreviewRot(playerid, CharSelectionTD[playerid][0], 0.000000, 0.000000, 0.000000, 1.000000);
-			PlayerTextDrawSetSelectable(playerid, CharSelectionTD[playerid][0], true);
-
-			CharSelectionTD[playerid][6] = CreatePlayerTextDraw(playerid, 165.000045, 121.970283, "Firstname Lastname~n~Level 23");
-			PlayerTextDrawLetterSize(playerid, CharSelectionTD[playerid][6], 0.152329, 0.749628);
-			PlayerTextDrawTextSize(playerid, CharSelectionTD[playerid][6], 520.000000, 0.000000);
-			PlayerTextDrawAlignment(playerid, CharSelectionTD[playerid][6], 1);
-			PlayerTextDrawColor(playerid, CharSelectionTD[playerid][6], -1);
-			PlayerTextDrawSetShadow(playerid, CharSelectionTD[playerid][6], 0);
-			PlayerTextDrawBackgroundColor(playerid, CharSelectionTD[playerid][6], 255);
-			PlayerTextDrawFont(playerid, CharSelectionTD[playerid][6], 1);
-			PlayerTextDrawSetProportional(playerid, CharSelectionTD[playerid][6], 1);
-
-			CharSelectionTD[playerid][1] = CreatePlayerTextDraw(playerid, 319.666595, 120.740745, "");
-			PlayerTextDrawTextSize(playerid, CharSelectionTD[playerid][1], 150.000000, 150.000000);
-			PlayerTextDrawAlignment(playerid, CharSelectionTD[playerid][1], 1);
-			PlayerTextDrawColor(playerid, CharSelectionTD[playerid][1], -1);
-			PlayerTextDrawSetShadow(playerid, CharSelectionTD[playerid][1], 0);
-			PlayerTextDrawBackgroundColor(playerid, CharSelectionTD[playerid][1], 102);
-			PlayerTextDrawFont(playerid, CharSelectionTD[playerid][1], 5);
-			PlayerTextDrawSetProportional(playerid, CharSelectionTD[playerid][1], 0);
-			PlayerTextDrawSetPreviewModel(playerid, CharSelectionTD[playerid][1], 73);
-			PlayerTextDrawSetPreviewRot(playerid, CharSelectionTD[playerid][1], 0.000000, 0.000000, 0.000000, 1.000000);
-			PlayerTextDrawSetSelectable(playerid, CharSelectionTD[playerid][1], true);
-
-			CharSelectionTD[playerid][7] = CreatePlayerTextDraw(playerid, 321.666625, 121.970283, "Firstname Lastname~n~Level 23");
-			PlayerTextDrawLetterSize(playerid, CharSelectionTD[playerid][7], 0.152329, 0.749628);
-			PlayerTextDrawTextSize(playerid, CharSelectionTD[playerid][7], 520.000000, 0.000000);
-			PlayerTextDrawAlignment(playerid, CharSelectionTD[playerid][7], 1);
-			PlayerTextDrawColor(playerid, CharSelectionTD[playerid][7], -1);
-			PlayerTextDrawSetShadow(playerid, CharSelectionTD[playerid][7], 0);
-			PlayerTextDrawBackgroundColor(playerid, CharSelectionTD[playerid][7], 255);
-			PlayerTextDrawFont(playerid, CharSelectionTD[playerid][7], 1);
-			PlayerTextDrawSetProportional(playerid, CharSelectionTD[playerid][7], 1);
-	    }
-	}
+    new str[48];
+    if(seconds < 60)
+        format(str, sizeof(str), "just now");
+    else if(seconds < 3600)
+        format(str, sizeof(str), "%d minutes ago", seconds / 60);
+    else if(seconds < 86400)
+        format(str, sizeof(str), "%d hours ago", seconds / 3600);
+    else
+        format(str, sizeof(str), "%d days ago", seconds / 86400);
+    return str;
 }
+
+// Creates (or re-creates) all PlayerTextDraws for the cinematic char selection
+ShowCharSelectionUI(playerid)
+{
+    // Destroy any existing char selection TDs first
+    for(new i = 0; i < 8; i++)
+        PlayerTextDrawDestroy(playerid, CharSelTD[playerid][i]);
+
+    // [0] Card background (semi-transparent dark box)
+    CharSelTD[playerid][0] = CreatePlayerTextDraw(playerid, 42.000, 291.000, "LD_SPAC:white");
+    PlayerTextDrawTextSize(playerid, CharSelTD[playerid][0], 154.000, 77.000);
+    PlayerTextDrawAlignment(playerid, CharSelTD[playerid][0], 1);
+    PlayerTextDrawColor(playerid, CharSelTD[playerid][0], 224); // 0x000000E0
+    PlayerTextDrawSetShadow(playerid, CharSelTD[playerid][0], 0);
+    PlayerTextDrawSetOutline(playerid, CharSelTD[playerid][0], 0);
+    PlayerTextDrawBackgroundColor(playerid, CharSelTD[playerid][0], 255);
+    PlayerTextDrawFont(playerid, CharSelTD[playerid][0], 4);
+    PlayerTextDrawSetProportional(playerid, CharSelTD[playerid][0], 1);
+
+    // [1] Right arrow (next character)
+    CharSelTD[playerid][1] = CreatePlayerTextDraw(playerid, 198.000, 335.000, "LD_BEAT:right");
+    PlayerTextDrawTextSize(playerid, CharSelTD[playerid][1], 24.000, 25.000);
+    PlayerTextDrawAlignment(playerid, CharSelTD[playerid][1], 1);
+    PlayerTextDrawColor(playerid, CharSelTD[playerid][1], -1);
+    PlayerTextDrawSetShadow(playerid, CharSelTD[playerid][1], 0);
+    PlayerTextDrawSetOutline(playerid, CharSelTD[playerid][1], 0);
+    PlayerTextDrawBackgroundColor(playerid, CharSelTD[playerid][1], 255);
+    PlayerTextDrawFont(playerid, CharSelTD[playerid][1], 4);
+    PlayerTextDrawSetProportional(playerid, CharSelTD[playerid][1], 1);
+    PlayerTextDrawSetSelectable(playerid, CharSelTD[playerid][1], true);
+
+    // [2] Left arrow (previous character)
+    CharSelTD[playerid][2] = CreatePlayerTextDraw(playerid, 16.000, 335.000, "LD_BEAT:left");
+    PlayerTextDrawTextSize(playerid, CharSelTD[playerid][2], 24.000, 25.000);
+    PlayerTextDrawAlignment(playerid, CharSelTD[playerid][2], 1);
+    PlayerTextDrawColor(playerid, CharSelTD[playerid][2], -1);
+    PlayerTextDrawSetShadow(playerid, CharSelTD[playerid][2], 0);
+    PlayerTextDrawSetOutline(playerid, CharSelTD[playerid][2], 0);
+    PlayerTextDrawBackgroundColor(playerid, CharSelTD[playerid][2], 255);
+    PlayerTextDrawFont(playerid, CharSelTD[playerid][2], 4);
+    PlayerTextDrawSetProportional(playerid, CharSelTD[playerid][2], 1);
+    PlayerTextDrawSetSelectable(playerid, CharSelTD[playerid][2], true);
+
+    // [3] Spawn button background (selectable)
+    CharSelTD[playerid][3] = CreatePlayerTextDraw(playerid, 42.000, 373.000, "LD_SPAC:white");
+    PlayerTextDrawTextSize(playerid, CharSelTD[playerid][3], 154.000, 20.000);
+    PlayerTextDrawAlignment(playerid, CharSelTD[playerid][3], 1);
+    PlayerTextDrawColor(playerid, CharSelTD[playerid][3], 224);
+    PlayerTextDrawSetShadow(playerid, CharSelTD[playerid][3], 0);
+    PlayerTextDrawSetOutline(playerid, CharSelTD[playerid][3], 0);
+    PlayerTextDrawBackgroundColor(playerid, CharSelTD[playerid][3], 255);
+    PlayerTextDrawFont(playerid, CharSelTD[playerid][3], 4);
+    PlayerTextDrawSetProportional(playerid, CharSelTD[playerid][3], 1);
+    PlayerTextDrawSetSelectable(playerid, CharSelTD[playerid][3], true);
+
+    // [4] "SPAWN NOW!" label
+    CharSelTD[playerid][4] = CreatePlayerTextDraw(playerid, 86.000, 376.000, "SPAWN NOW!");
+    PlayerTextDrawLetterSize(playerid, CharSelTD[playerid][4], 0.300, 1.500);
+    PlayerTextDrawAlignment(playerid, CharSelTD[playerid][4], 1);
+    PlayerTextDrawColor(playerid, CharSelTD[playerid][4], 1804477439); // warm gold
+    PlayerTextDrawSetShadow(playerid, CharSelTD[playerid][4], 1);
+    PlayerTextDrawSetOutline(playerid, CharSelTD[playerid][4], 1);
+    PlayerTextDrawBackgroundColor(playerid, CharSelTD[playerid][4], 150);
+    PlayerTextDrawFont(playerid, CharSelTD[playerid][4], 3);
+    PlayerTextDrawSetProportional(playerid, CharSelTD[playerid][4], 1);
+
+    // [5] Character name (dynamic)
+    CharSelTD[playerid][5] = CreatePlayerTextDraw(playerid, 46.000, 296.000, "Loading...");
+    PlayerTextDrawLetterSize(playerid, CharSelTD[playerid][5], 0.300, 1.500);
+    PlayerTextDrawAlignment(playerid, CharSelTD[playerid][5], 1);
+    PlayerTextDrawColor(playerid, CharSelTD[playerid][5], -1);
+    PlayerTextDrawSetShadow(playerid, CharSelTD[playerid][5], 1);
+    PlayerTextDrawSetOutline(playerid, CharSelTD[playerid][5], 1);
+    PlayerTextDrawBackgroundColor(playerid, CharSelTD[playerid][5], 150);
+    PlayerTextDrawFont(playerid, CharSelTD[playerid][5], 3);
+    PlayerTextDrawSetProportional(playerid, CharSelTD[playerid][5], 1);
+
+    // [6] Level info (dynamic)
+    CharSelTD[playerid][6] = CreatePlayerTextDraw(playerid, 46.000, 313.000, "Level --");
+    PlayerTextDrawLetterSize(playerid, CharSelTD[playerid][6], 0.300, 1.500);
+    PlayerTextDrawAlignment(playerid, CharSelTD[playerid][6], 1);
+    PlayerTextDrawColor(playerid, CharSelTD[playerid][6], -1);
+    PlayerTextDrawSetShadow(playerid, CharSelTD[playerid][6], 1);
+    PlayerTextDrawSetOutline(playerid, CharSelTD[playerid][6], 1);
+    PlayerTextDrawBackgroundColor(playerid, CharSelTD[playerid][6], 150);
+    PlayerTextDrawFont(playerid, CharSelTD[playerid][6], 3);
+    PlayerTextDrawSetProportional(playerid, CharSelTD[playerid][6], 1);
+
+    // [7] Last seen (dynamic)
+    CharSelTD[playerid][7] = CreatePlayerTextDraw(playerid, 46.000, 332.000, "Last seen recently");
+    PlayerTextDrawLetterSize(playerid, CharSelTD[playerid][7], 0.300, 1.500);
+    PlayerTextDrawAlignment(playerid, CharSelTD[playerid][7], 1);
+    PlayerTextDrawColor(playerid, CharSelTD[playerid][7], -1);
+    PlayerTextDrawSetShadow(playerid, CharSelTD[playerid][7], 1);
+    PlayerTextDrawSetOutline(playerid, CharSelTD[playerid][7], 1);
+    PlayerTextDrawBackgroundColor(playerid, CharSelTD[playerid][7], 150);
+    PlayerTextDrawFont(playerid, CharSelTD[playerid][7], 3);
+    PlayerTextDrawSetProportional(playerid, CharSelTD[playerid][7], 1);
+
+    // Fill in dynamic data for the currently selected slot
+    UpdateCharSelectionUI(playerid);
+
+    // Show all TDs
+    printf("[DEBUG] ShowCharSelectionUI: playerid=%d", playerid);
+    for(new i = 0; i < 8; i++)
+    {
+        printf("[DEBUG] CharSelTD[%d][%d] = %d (showing: %d)", playerid, i, _:CharSelTD[playerid][i], PlayerTextDrawShow(playerid, CharSelTD[playerid][i]));
+    }
+
+    // Enable mouse-click mode
+    SelectTextDraw(playerid, 0x00000099);
+}
+
+// Updates only the dynamic text fields (name, level, last seen) for current slot
+UpdateCharSelectionUI(playerid)
+{
+    new slot = SelectedSlot[playerid];
+    new str[128];
+
+    // Character name
+    PlayerTextDrawSetString(playerid, CharSelTD[playerid][5], CharSelCache[playerid][slot][csName]);
+
+    // Level
+    format(str, sizeof(str), "Level %d", CharSelCache[playerid][slot][csLevel]);
+    PlayerTextDrawSetString(playerid, CharSelTD[playerid][6], str);
+
+    // Last seen
+    new lastLogin = CharSelCache[playerid][slot][csLastLogin];
+    if(lastLogin > 0)
+    {
+        new diff = gettime() - lastLogin;
+        format(str, sizeof(str), "Last seen %s", FormatLastSeenAgo(diff));
+    }
+    else
+    {
+        format(str, sizeof(str), "Never logged in");
+    }
+    PlayerTextDrawSetString(playerid, CharSelTD[playerid][7], str);
+}
+
+// Hides and destroys all cinematic char selection TDs
+HideCharSelectionUI(playerid)
+{
+    CancelSelectTextDraw(playerid);
+    for(new i = 0; i < 8; i++)
+    {
+        PlayerTextDrawHide(playerid, CharSelTD[playerid][i]);
+        PlayerTextDrawDestroy(playerid, CharSelTD[playerid][i]);
+        CharSelTD[playerid][i] = PlayerText:INVALID_TEXT_DRAW;
+    }
+}
+
+
 
 CreateTextdraws(playerid)
 {
-
 	//txd sel
 	CharSelectionTD[playerid][0] = CreatePlayerTextDraw(playerid, 160.666656, 119.740737, "");
 	PlayerTextDrawTextSize(playerid, CharSelectionTD[playerid][0], 100.000000, 100.000000);
@@ -982,17 +1071,10 @@ CreateTextdraws(playerid)
 	PlayerTextDrawSetProportional(playerid, ColorSelectRight2[playerid], 1);
 	PlayerTextDrawSetSelectable(playerid, ColorSelectRight2[playerid], true);
 
-	HudTextDraw[playerid] = CreatePlayerTextDraw(playerid, 545.000000, 110.000000, "~b~RADIO INFO~n~~b~Chan: ~g~0~n~~b~Slot: ~g~1");
-	PlayerTextDrawLetterSize(playerid, HudTextDraw[playerid], 0.480000, 1.120000);
-	PlayerTextDrawTextSize(playerid, HudTextDraw[playerid], 60.000000, 100.000000);
-	PlayerTextDrawAlignment(playerid, HudTextDraw[playerid], 2);
-	PlayerTextDrawColor(playerid, HudTextDraw[playerid], -1);
-	PlayerTextDrawSetShadow(playerid, HudTextDraw[playerid], 2);
-	PlayerTextDrawSetOutline(playerid, HudTextDraw[playerid], 0);
-	PlayerTextDrawBackgroundColor(playerid, HudTextDraw[playerid], 255);
-	PlayerTextDrawFont(playerid, HudTextDraw[playerid], 3);
-	PlayerTextDrawSetProportional(playerid, HudTextDraw[playerid], 1);
-	PlayerTextDrawSetSelectable(playerid, HudTextDraw[playerid], false);
+
+	// HUD textdraw handled by HudV2.pwn (CreateHudV2PlayerTDs)
+
+
 
 /*
 TextDraw ID: 2063, Text: ~b~RADIO INFO~n~~b~Chan: ~g~0~n~~b~Slot: ~g~1

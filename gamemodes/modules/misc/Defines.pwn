@@ -100,3 +100,52 @@
 #define JOB_GUIDE        	5
 #define JOB_WPDEALER		6
 #define JOB_SUPPLIER  	    7
+#define JOB_TRAIN_DRIVER	8
+
+new bool:PlayerOnTrainJob[MAX_PLAYERS];
+new Float:PlayerTrainSpeedLimit[MAX_PLAYERS];
+new PlayerOverspeedWarns[MAX_PLAYERS];
+new PlayerTotalFines[MAX_PLAYERS];
+new PlayerHornCooldown[MAX_PLAYERS];
+new PlayerTrainJobDelay[MAX_PLAYERS];
+
+#define MAX_SALARY_HISTORY 20
+
+enum enum_SalaryHistory
+{
+    shAmount,
+    shSource[48],
+    shTime[12]
+}
+
+new SalaryHistory[MAX_PLAYERS][MAX_SALARY_HISTORY][enum_SalaryHistory];
+new SalaryHistoryCount[MAX_PLAYERS];
+
+stock AddSalaryHistory(playerid, amount, const sourceStr[])
+{
+    if(!IsPlayerConnected(playerid)) return 0;
+
+    new hour, minute, second;
+    gettime(hour, minute, second);
+
+    new slot = SalaryHistoryCount[playerid];
+    if(slot >= MAX_SALARY_HISTORY)
+    {
+        for(new i = 0; i < MAX_SALARY_HISTORY - 1; i++)
+        {
+            SalaryHistory[playerid][i][shAmount] = SalaryHistory[playerid][i + 1][shAmount];
+            format(SalaryHistory[playerid][i][shSource], 48, "%s", SalaryHistory[playerid][i + 1][shSource]);
+            format(SalaryHistory[playerid][i][shTime], 12, "%s", SalaryHistory[playerid][i + 1][shTime]);
+        }
+        slot = MAX_SALARY_HISTORY - 1;
+    }
+    else
+    {
+        SalaryHistoryCount[playerid]++;
+    }
+
+    SalaryHistory[playerid][slot][shAmount] = amount;
+    format(SalaryHistory[playerid][slot][shSource], 48, "%s", sourceStr);
+    format(SalaryHistory[playerid][slot][shTime], 12, "[%02d:%02d:%02d]", hour, minute, second);
+    return 1;
+}

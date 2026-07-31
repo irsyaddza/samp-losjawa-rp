@@ -1,3 +1,45 @@
+CMD:relog(playerid, params[])
+{
+	if(!SQL_IsLogged(playerid))
+		return SendErrorMessage(playerid, "You are not logged in.");
+
+	if(PlayerData[playerid][pID] == -1)
+		return SendErrorMessage(playerid, "You're already at the character selection screen.");
+
+	if(IsBrutallyWounded(playerid))
+		return SendErrorMessage(playerid, "You cannot relog while critically injured.");
+
+	if(!PlayerData[playerid][pAdmin] && !PlayerData[playerid][pDonateRank])
+		return SendUnauthMessage(playerid, "This command is only available for Donators and Admins.");
+
+	SendClientMessage(playerid, COLOR_YELLOW, "SERVER: Returning you to character selection...");
+	Relog_Player(playerid);
+	return true;
+}
+
+CMD:togmusic(playerid, params[])
+{
+	if(GetPVarInt(playerid, "LobbyMusicOff") == 1)
+	{
+		SetPVarInt(playerid, "LobbyMusicOff", 0);
+		SendClientMessage(playerid, COLOR_YELLOW, "Lobby/character selection music has been enabled.");
+		if(PlayerData[playerid][pID] == -1)
+		{
+			PlayerPlaySound(playerid, gLobbySound1, 0.0, 0.0, 0.0);
+			if(strlen(gLobbyStream2) > 0)
+				PlayAudioStreamForPlayer(playerid, gLobbyStream2);
+		}
+	}
+	else
+	{
+		SetPVarInt(playerid, "LobbyMusicOff", 1);
+		SendClientMessage(playerid, COLOR_YELLOW, "Lobby/character selection music has been disabled.");
+		PlayerPlaySound(playerid, 0, 0.0, 0.0, 0.0);
+		StopAudioStreamForPlayer(playerid);
+	}
+	return true;
+}
+
 CMD:stats(playerid, params[])
 {
 	new
@@ -1700,8 +1742,475 @@ CMD:tackle(playerid, params[])
 
 CMD:help(playerid, params[])
 {
-    ShowMainMenuDialog(playerid);
+    ShowHelpCategories(playerid);
     return 1;
+}
+
+ShowHelpCategories(playerid)
+{
+	gstr[0] = EOS;
+	strcat(gstr, "1\tWhat is Roleplay? (Server & Rules Guide)\n");
+	strcat(gstr, "2\tBasic Commands\n");
+	strcat(gstr, "3\tChat & Communication Commands\n");
+	strcat(gstr, "4\tNeeds & Character Status\n");
+	strcat(gstr, "5\tInventory & Item Commands\n");
+	strcat(gstr, "6\tPhone & Communication Commands\n");
+	strcat(gstr, "7\tMoney, Banking & Economy\n");
+	strcat(gstr, "8\tJob & Sidejob Commands\n");
+	strcat(gstr, "9\tVehicle & Transportation Commands\n");
+	strcat(gstr, "10\tFaction / Family / Organization Help\n");
+	strcat(gstr, "11\tHouse & Property Commands\n");
+	strcat(gstr, "12\tApartment / Flat Commands\n");
+	strcat(gstr, "13\tBusiness & Enterprise Commands\n");
+	strcat(gstr, "14\tGarage Commands\n");
+	strcat(gstr, "15\tVIP & Donator Commands\n");
+	strcat(gstr, "16\tIllegal Weapon System");
+
+	Dialog_Show(playerid, Help_Main, DIALOG_STYLE_TABLIST, "Help Categories", gstr, "Select", "Close");
+	return 1;
+}
+
+Dialog:Help_Main(playerid, response, listitem, inputtext[])
+{
+	if(!response) return 1;
+
+	switch(listitem)
+	{
+		case 0: // What is Roleplay?
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== WHAT IS ROLEPLAY & SERVER RULES ===\n\n");
+			strcat(gstr, "{7E98B6}Roleplay (RP):{FFFFFF} Acting as your character in a realistic fictional world.\n");
+			strcat(gstr, "{7E98B6}In-Character (IC):{FFFFFF} Everything related to your character's life in-game.\n");
+			strcat(gstr, "{7E98B6}Out-of-Character (OOC):{FFFFFF} Everything related to real life (/b, /pm, /o).\n\n");
+			strcat(gstr, "{FF6347}STRICTLY PROHIBITED RULES:{FFFFFF}\n");
+			strcat(gstr, "• {7E98B6}Deathmatching (DM):{FFFFFF} Killing or attacking players without a valid IC roleplay reason.\n");
+			strcat(gstr, "• {7E98B6}MetaGaming (MG):{FFFFFF} Using OOC information for IC advantage.\n");
+			strcat(gstr, "• {7E98B6}PowerGaming (PG):{FFFFFF} Doing impossible actions or forcing RP without giving others a chance.\n");
+			strcat(gstr, "• {7E98B6}Revenge Killing (RK):{FFFFFF} Returning to kill your killer right after dying.\n");
+			strcat(gstr, "• {7E98B6}Chicken Running / Bunny Hopping:{FFFFFF} Exploiting movement mechanics.\n");
+			strcat(gstr, "• {7E98B6}Ninja Jacking (NJ):{FFFFFF} Stealing vehicles without roleplay.\n\n");
+			strcat(gstr, "{FFFFFF}Useful Help Commands:\n");
+			strcat(gstr, "{A9C4E4}/rules{FFFFFF} - View server rules info\n");
+			strcat(gstr, "{A9C4E4}/stats{FFFFFF} - View your character statistics\n");
+			strcat(gstr, "{A9C4E4}/id / /getid{FFFFFF} - Search player ID & level\n");
+			strcat(gstr, "{A9C4E4}/admins / /testers{FFFFFF} - View online staff & helpers");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: What is Roleplay?", gstr, "<< Back", "Close");
+		}
+		case 1: // Basic Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== BASIC COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}/stats{FFFFFF} - View your character profile, level, money, and stats\n");
+			strcat(gstr, "{A9C4E4}/id / /getid [Name/ID]{FFFFFF} - Search for a player's ID and level\n");
+			strcat(gstr, "{A9C4E4}/admins{FFFFFF} - View list of online administrators\n");
+			strcat(gstr, "{A9C4E4}/testers{FFFFFF} - View list of online community helpers / testers\n");
+			strcat(gstr, "{A9C4E4}/time / /stime / /servertime{FFFFFF} - Check current server time and date\n");
+			strcat(gstr, "{A9C4E4}/rules{FFFFFF} - View server rules info\n");
+			strcat(gstr, "{A9C4E4}/motd / /changelog{FFFFFF} - View server message of the day & updates\n");
+			strcat(gstr, "{A9C4E4}/relog{FFFFFF} - Reconnect your character to server\n");
+			strcat(gstr, "{A9C4E4}/isafk [ID]{FFFFFF} - Check if a player is AFK\n");
+			strcat(gstr, "{A9C4E4}/changespawn / /setspawn - Change login spawn location\n");
+			strcat(gstr, "{A9C4E4}/stopanim{FFFFFF} - Stop roleplay animation (/dance /sit /lay /handsup /salute /wave /smoke /crack /cpr /flex)\n");
+			strcat(gstr, "{A9C4E4}/setstyle / /walk / /jog{FFFFFF} - Set character walking style\n");
+			strcat(gstr, "{A9C4E4}/tog / /togall / /toghud / /tognicks{FFFFFF} - Toggle HUD, chat & interface elements");
+			strcat(gstr, "{A9C4E4}/licenseexam / /licenses / /licensehelp{FFFFFF} - License exam & status\n");
+			strcat(gstr, "{A9C4E4}/propose / /divorce / /spouse / /sw / /findspouse{FFFFFF} - Marriage & spouse commands\n");
+			strcat(gstr, "{A9C4E4}/onduty{FFFFFF} - Check list on duty\n");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Basic Commands", gstr, "<< Back", "Close");
+		}
+		case 2: // Chat & Communication Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== CHAT & ROLEPLAY COMMUNICATION ===\n\n");
+			strcat(gstr, "{A9C4E4}[Normal Chat]{FFFFFF} Type text normally to talk in local IC chat\n");
+			strcat(gstr, "{A9C4E4}/b / /cb / /lowb / /nooc / /ooc / /o{FFFFFF} - Out-of-Character (OOC) chat\n");
+			strcat(gstr, "{A9C4E4}/me / /lme / /ame / /my / /lmy / /amy{FFFFFF} - In-Character physical actions\n");
+			strcat(gstr, "{A9C4E4}/do / /ldo / /ddo{FFFFFF} - Environmental descriptions or outcomes\n");
+			strcat(gstr, "{A9C4E4}/low / /tlow / /autolow{FFFFFF} - Quiet whisper chat\n");
+			strcat(gstr, "{A9C4E4}/shout / /s / /dshout / /ds{FFFFFF} - Loud shouting chat\n");
+			strcat(gstr, "{A9C4E4}/whisper / /w / /cw{FFFFFF} - Private whisper to nearby player\n");
+			strcat(gstr, "{A9C4E4}/spouse / /sw{FFFFFF} - Private chat with your married spouse\n");
+			strcat(gstr, "{A9C4E4}/pm / /blockpm{FFFFFF} - Private OOC message to player\n");
+			strcat(gstr, "{A9C4E4}/greet / /acceptshake{FFFFFF} - Handshake / greeting\n");
+			strcat(gstr, "{A9C4E4}/convo / /endconvo{FFFFFF} - Conversation system\n");
+			strcat(gstr, "{A9C4E4}/knock / /ringbell{FFFFFF} - Knock on door / ring bell\n");
+			strcat(gstr, "{A9C4E4}/ad / /ads / /advert / /cad{FFFFFF} - Commercial & vehicle advertisements");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Chat Commands", gstr, "<< Back", "Close");
+		}
+		case 3: // Needs & Character Status
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== NEEDS & CHARACTER STATUS ===\n\n");
+			strcat(gstr, "{A9C4E4}/eat / /meal{FFFFFF} - Consume food to replenish hunger\n");
+			strcat(gstr, "{A9C4E4}/bdrink / /givedrink / /passdrink / /passbottle{FFFFFF} - Drink beverages\n");
+			strcat(gstr, "{A9C4E4}/cig / /cigs / /cigarette / /passcig / /passjoint{FFFFFF} - Smoke cigarettes\n");
+			strcat(gstr, "{A9C4E4}/helpup [ID]{FFFFFF} - Help up an injured player\n");
+			strcat(gstr, "{A9C4E4}/acceptdeath / /respawnme{FFFFFF} - Accept death / respawn at hospital\n");
+			strcat(gstr, "{A9C4E4}/lostitems{FFFFFF} - View lost items list\n");
+			strcat(gstr, "{A9C4E4}/attributes / /examine{FFFFFF} - Inspect player attributes / body\n");
+			strcat(gstr, "{A9C4E4}/damages{FFFFFF} - View damage log & inspect body");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Needs & Character", gstr, "<< Back", "Close");
+		}
+		case 4: // Inventory & Items
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== INVENTORY & ITEM COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}/pitems{FFFFFF} - Open prison items\n");
+			strcat(gstr, "{A9C4E4}/items{FFFFFF} - Open your items\n");
+			strcat(gstr, "{A9C4E4}/clothing / /clothinghelp{FFFFFF} - Change clothes / outfits\n");
+			strcat(gstr, "{A9C4E4}/note / /viewnotes{FFFFFF} - Create, view, or manage paper notes\n");
+			strcat(gstr, "{A9C4E4}/mask{FFFFFF} - Wear or remove face mask\n");
+			strcat(gstr, "{A9C4E4}/boombox / /setstation{FFFFFF} - Place and tune portable boombox\n");
+			strcat(gstr, "{A9C4E4}/gascan{FFFFFF} - Refuel vehicle using gas can item\n");
+			strcat(gstr, "{A9C4E4}/dice / /coin{FFFFFF} - Roll dice or flip coin\n");
+			strcat(gstr, "{A9C4E4}/mydrugs / /usedrug / /givedrug / /passdrug / /takedrugs / /placedrug / /checkdrugs / /drugstore{FFFFFF} - Drugs\n");
+			strcat(gstr, "{A9C4E4}/mypackage / /unpackage / /putweapon / /putallweapons / /takeweapon / /takeallweapons / /sellpackage{FFFFFF} - Weapon packages");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Inventory & Items", gstr, "<< Back", "Close");
+		}
+		case 5: // Phone Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== PHONE & COMMUNICATION COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}/phone{FFFFFF} - Open smartphone GUI\n");
+			strcat(gstr, "{A9C4E4}/call [Number]{FFFFFF} - Call a phone number or service\n");
+			strcat(gstr, "{A9C4E4}/hangup / /h{FFFFFF} - End active call\n");
+			strcat(gstr, "{A9C4E4}/p{FFFFFF} - Answer incoming call\n");
+			strcat(gstr, "{A9C4E4}/sms [Number] [Text]{FFFFFF} - Send text message (SMS)\n");
+			strcat(gstr, "{A9C4E4}/dropcell / /loudspeaker / /convo{FFFFFF} - Phone options\n");
+			strcat(gstr, "{A9C4E4}/setchannel / /setslot / /part / /r / /radio / /rlow / /r1../r8{FFFFFF} - Portable radio");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Phone & Radio", gstr, "<< Back", "Close");
+		}
+		case 6: // Money & Banking
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== MONEY, BANKING & ECONOMY ===\n\n");
+			strcat(gstr, "{A9C4E4}/pay [ID] [Amount]{FFFFFF} - Hand cash money to player\n");
+			strcat(gstr, "{A9C4E4}/balance / /bank / /withdraw / /savings{FFFFFF} - Bank account management\n");
+			strcat(gstr, "{A9C4E4}/cheque{FFFFFF} - Write a bank cheque\n");
+			strcat(gstr, "{A9C4E4}/charity [Amount]{FFFFFF} - Donate cash to charity\n");
+			strcat(gstr, "{A9C4E4}/fines{FFFFFF} - Police fines & tickets");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Money & Banking", gstr, "<< Back", "Close");
+		}
+		case 7: // Job Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== JOB & SIDEJOB COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}/jobhelp / /businesshelp{FFFFFF} - View job guide & instructions\n");
+			strcat(gstr, "{A9C4E4}/jobswitch / /leavejob / /leavesidejob{FFFFFF} - Switch or leave jobs\n\n");
+			strcat(gstr, "{7E98B6}Specific Job Commands:{FFFFFF}\n");
+			strcat(gstr, "• {A9C4E4}Mechanic:{FFFFFF} /mechanicjob\n");
+			strcat(gstr, "• {A9C4E4}Farmer:{FFFFFF} /farmerjob /harvest /stopharvest\n");
+			strcat(gstr, "• {A9C4E4}Trucker:{FFFFFF} /truckerjob /cargo /trailer\n");
+			strcat(gstr, "• {A9C4E4}Fisherman:{FFFFFF} /gofishing /fish /stopfishing /unloadfish /myfish /fishhelp\n");
+			strcat(gstr, "• {A9C4E4}Taxi Driver:{FFFFFF} /taxi\n");
+			strcat(gstr, "• {A9C4E4}Train Driver:{FFFFFF} /trainjob\n");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Job Commands", gstr, "<< Back", "Close");
+		}
+		case 8: // Vehicle Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== VEHICLE & TRANSPORTATION COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}/v / /vehicle{FFFFFF} - Open main vehicle management GUI\n");
+			strcat(gstr, "{A9C4E4}/engine{FFFFFF} - Toggle vehicle engine on/off\n");
+			strcat(gstr, "{A9C4E4}/lock / /flock{FFFFFF} - Lock or force lock vehicle doors\n");
+			strcat(gstr, "{A9C4E4}/v buypark{FFFFFF} - Buy parking location\n");
+			strcat(gstr, "{A9C4E4}/v park{FFFFFF} - Park your vehicle\n");
+			strcat(gstr, "{A9C4E4}/hood / /trunk / /vehpackage{FFFFFF} - Vehicle hood, trunk & package\n");
+			strcat(gstr, "{A9C4E4}/fill / /fuel{FFFFFF} - Refuel vehicle at gas station\n");
+			strcat(gstr, "{A9C4E4}/rw / /rollwindow{FFFFFF} - Roll vehicle windows up/down\n");
+			strcat(gstr, "{A9C4E4}/vehiclename / /colorlist / /paintcar{FFFFFF} - Vehicle name & colors\n");
+			strcat(gstr, "{A9C4E4}/service / /checkcomponents / /setbuycomp / /buycomp{FFFFFF} - Repairs & components\n");
+			strcat(gstr, "{A9C4E4}/attach / /detach / /towcar / /towcars{FFFFFF} - Towing & trailers\n");
+			strcat(gstr, "{A9C4E4}/carsign / /remove_carsign / /callsign{FFFFFF} - Vehicle sign & callsign\n");
+			strcat(gstr, "{A9C4E4}/rentvehicle / /unrentvehicle{FFFFFF} - Rent or return rental vehicle");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Vehicle Commands", gstr, "<< Back", "Close");
+		}
+		case 9: // Faction Help
+		{
+			ShowFactionHelpMenu(playerid);
+		}
+		case 10: // House Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== HOUSE & PROPERTY COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}/myhouse / /househelp{FFFFFF} - House info & guide\n");
+			strcat(gstr, "{A9C4E4}/buyhouse{FFFFFF} - Purchase an unowned house\n");
+			strcat(gstr, "{A9C4E4}/hlock{FFFFFF} - Lock or unlock house front door\n");
+			strcat(gstr, "{A9C4E4}/furniture{FFFFFF} - Place and customize house furniture\n");
+			strcat(gstr, "{A9C4E4}/offerrent / /setrentable / /setrent / /rentroom / /stoprent / /unrent{FFFFFF} - Rental\n");
+			strcat(gstr, "{A9C4E4}/tenants / /evict / /evictall{FFFFFF} - Tenant management\n");
+			strcat(gstr, "{A9C4E4}/houseupgrade / /grantbuild / /cmdspot{FFFFFF} - Upgrades & building\n");
+			strcat(gstr, "{A9C4E4}/propkeys / /givepropkey / /takepropkey{FFFFFF} - House keys");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: House Commands", gstr, "<< Back", "Close");
+		}
+		case 11: // Apartment / Flat Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== APARTMENT & FLAT COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}/enter / /exit{FFFFFF} - Enter or exit apartment building\n");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Apartment Commands", gstr, "<< Back", "Close");
+		}
+		case 12: // Business Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== BUSINESS & ENTERPRISE COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}/bizinfo{FFFFFF} - View business information\n");
+			strcat(gstr, "{A9C4E4}/buybiz / /sellbiz{FFFFFF} - Purchase or sell business\n");
+			strcat(gstr, "{A9C4E4}/bizbank / /bizwithdraw{FFFFFF} - Business bank vault & cash withdrawal\n");
+			strcat(gstr, "{A9C4E4}/buycomp / /setbuycomp / /compprice / /bizfee{FFFFFF} - Components & pricing");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Business Commands", gstr, "<< Back", "Close");
+		}
+		case 13: // Garage Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== GARAGE PROPERTY COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}Coming Soon\n");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Garage Commands", gstr, "<< Back", "Close");
+		}
+		case 14: // Donator Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== VIP & DONATOR COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}Coming Soon\n");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Donator Commands", gstr, "<< Back", "Close");
+		}
+	}
+	return 1;
+}
+
+ShowFactionHelpMenu(playerid)
+{
+	gstr[0] = EOS;
+	strcat(gstr, "1\tLos Santos Police Department (LSPD)\n");
+	strcat(gstr, "2\tLos Santos Fire Department (LSFD)\n");
+	strcat(gstr, "3\tLos Santos Sheriff Department (LSSD)\n");
+	strcat(gstr, "4\tSan Andreas News Agency (SANews / SANA)\n");
+	strcat(gstr, "5\tSan Andreas Government Service (SAGS)\n");
+	strcat(gstr, "6\tDepartment of Corrections (Correctional / DOC)\n");
+	strcat(gstr, "7\tOrganized Crime / Mafia / Families / Gangs");
+
+	Dialog_Show(playerid, Help_FactionList, DIALOG_STYLE_TABLIST, "Faction Help Categories", gstr, "Select", "<< Back");
+	return 1;
+}
+
+Dialog:Help_FactionList(playerid, response, listitem, inputtext[])
+{
+	if(!response) return ShowHelpCategories(playerid);
+
+	switch(listitem)
+	{
+		case 0: // LSPD
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== LOS SANTOS POLICE DEPARTMENT (LSPD) ===\n\n");
+			strcat(gstr, "{A9C4E4}/duty / /uniform / /favuniform / /badge{FFFFFF} - Duty, uniform & badge\n");
+			strcat(gstr, "{A9C4E4}/takegun and /check{FFFFFF} - Take weapon from vehicle gun rack\n");
+			strcat(gstr, "{A9C4E4}/r / /m / /d / /departments / /dep / /setdep{FFFFFF} - Radios & megaphone\n");
+			strcat(gstr, "{A9C4E4}/db / /setdbrank{FFFFFF} - Detective Bureau duty & rank\n");
+			strcat(gstr, "{A9C4E4}/swat / /setswatrank{FFFFFF} - SWAT tactical duty & rank\n");
+			strcat(gstr, "{A9C4E4}/handcuff (/hc) / /unhandcuff (/uhc) / /passhandcuffs / /myhandcuffs{FFFFFF} - Handcuffs\n");
+			strcat(gstr, "{A9C4E4}/taser / /frisk / /friskapprove{FFFFFF} - Taser & frisking\n");
+			strcat(gstr, "{A9C4E4}/fine / /fines / /vehiclefines{FFFFFF} - Issue & view fines\n");
+			strcat(gstr, "{A9C4E4}/jail / /prison / /prisoners / /releaseme / /arrestrecord{FFFFFF} - Jail & prisoners\n");
+			strcat(gstr, "{A9C4E4}/detain / /eject{FFFFFF} - Detain or eject from vehicle\n");
+			strcat(gstr, "{A9C4E4}/roadblock (/rb) / /cone / /stinger{FFFFFF} - Barriers & spike strips\n");
+			strcat(gstr, "{A9C4E4}/siren / /alarm / /alarmoff{FFFFFF} - Siren & alarm control\n");
+			strcat(gstr, "{A9C4E4}/createscene (/cs) / /clearscene (/csall, /clearsceneall){FFFFFF} - Crime scenes\n");
+			strcat(gstr, "{A9C4E4}/togalpr / /alprlog / /apb / /mdc{FFFFFF} - ALPR, APB & MDC database\n");
+			strcat(gstr, "{A9C4E4}/fmenu / /factionmenu / /faction / /factionon / /invite / /uninvite / /rank / /accept / /decline{FFFFFF} - Faction");
+
+			Dialog_Show(playerid, Help_FactionDetail, DIALOG_STYLE_MSGBOX, "Faction Help: LSPD", gstr, "<< Back", "Close");
+		}
+		case 1: // LSFD
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== LOS SANTOS FIRE DEPARTMENT (LSFD) ===\n\n");
+			strcat(gstr, "{A9C4E4}/duty / /onduty / /fireduty / /uniform / /favuniform / /badge{FFFFFF} - Duty, uniform & badge\n");
+			strcat(gstr, "{A9C4E4}/r / /m / /d / /departments / /dep{FFFFFF} - Radio, megaphone & department chat\n");
+			strcat(gstr, "{A9C4E4}/heal / /equip{FFFFFF} - Heal patient & equip medical gear\n");
+			strcat(gstr, "{A9C4E4}/operation{FFFFFF} - Perform medical surgery at hospital\n");
+			strcat(gstr, "{A9C4E4}/putinambu{FFFFFF} - Load patient into ambulance\n");
+			strcat(gstr, "{A9C4E4}/fmenu / /factionmenu / /faction / /factionon / /invite / /uninvite / /rank / /accept / /decline{FFFFFF} - Faction & Division Ranks");
+
+			Dialog_Show(playerid, Help_FactionDetail, DIALOG_STYLE_MSGBOX, "Faction Help: LSFD", gstr, "<< Back", "Close");
+		}
+		case 2: // LSSD
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== LOS SANTOS SHERIFF DEPARTMENT (LSSD) ===\n\n");
+			strcat(gstr, "{A9C4E4}/duty / /onduty / /uniform / /favuniform / /badge{FFFFFF} - Duty, uniform & badge\n");
+			strcat(gstr, "{A9C4E4}/r / /m / /d / /departments / /dep{FFFFFF} - Radios & megaphone\n");
+			strcat(gstr, "{A9C4E4}/seb / /setsebrank{FFFFFF} - Special Enforcement Bureau (SEB) duty & rank\n");
+			strcat(gstr, "{A9C4E4}/db / /setdbrank{FFFFFF} - ISD / Detective duty & rank\n");
+			strcat(gstr, "{A9C4E4}/handcuff (/hc) / /unhandcuff (/uhc) / /passhandcuffs / /myhandcuffs{FFFFFF} - Handcuffs\n");
+			strcat(gstr, "{A9C4E4}/taser / /frisk / /friskapprove{FFFFFF} - Taser & frisking\n");
+			strcat(gstr, "{A9C4E4}/fine / /fines / /vehiclefines{FFFFFF} - Fines\n");
+			strcat(gstr, "{A9C4E4}/jail / /prison / /prisoners / /arrestrecord{FFFFFF} - County jail & prisoners\n");
+			strcat(gstr, "{A9C4E4}/detain / /eject / /siren / /alarm / /alarmoff{FFFFFF} - Detain & sirens\n");
+			strcat(gstr, "{A9C4E4}/roadblock (/rb) / /cone / /stinger{FFFFFF} - Barriers & stingers\n");
+			strcat(gstr, "{A9C4E4}/createscene (/cs) / /clearscene (/csall, /clearsceneall){FFFFFF} - Crime scenes\n");
+			strcat(gstr, "{A9C4E4}/togalpr / /alprlog / /apb / /mdc{FFFFFF} - ALPR, APB & MDC database\n");
+			strcat(gstr, "{A9C4E4}/fmenu / /factionmenu / /faction / /factionon / /invite / /uninvite / /rank / /accept / /decline{FFFFFF} - Faction");
+
+			Dialog_Show(playerid, Help_FactionDetail, DIALOG_STYLE_MSGBOX, "Faction Help: LSSD", gstr, "<< Back", "Close");
+		}
+		case 3: // SANews
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== SAN ANDREAS NEWS AGENCY (SANA) ===\n\n");
+			strcat(gstr, "{A9C4E4}/duty / /onduty / /uniform / /badge{FFFFFF} - Go on News reporter duty\n");
+			strcat(gstr, "{A9C4E4}/r{FFFFFF} - Internal news radio channel\n");
+			strcat(gstr, "{A9C4E4}/news / /bcast{FFFFFF} - Broadcast news update to server\n");
+			strcat(gstr, "{A9C4E4}/fmenu / /factionmenu / /faction / /factionon / /invite / /uninvite / /rank / /accept / /decline{FFFFFF} - Faction");
+
+			Dialog_Show(playerid, Help_FactionDetail, DIALOG_STYLE_MSGBOX, "Faction Help: SANews", gstr, "<< Back", "Close");
+		}
+		case 4: // SAGS
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== SAN ANDREAS GOVERNMENT SERVICE (SAGS) ===\n\n");
+			strcat(gstr, "{A9C4E4}/duty / /onduty / /uniform / /badge{FFFFFF} - Go on Government duty\n");
+			strcat(gstr, "{A9C4E4}/r / /m / /d / /departments / /dep{FFFFFF} - Radios & megaphone\n");
+			strcat(gstr, "{A9C4E4}/gov / /government{FFFFFF} - Official government announcement\n");
+			strcat(gstr, "{A9C4E4}/fmenu / /factionmenu / /faction / /factionon / /invite / /uninvite / /rank / /accept / /decline{FFFFFF} - Faction");
+
+			Dialog_Show(playerid, Help_FactionDetail, DIALOG_STYLE_MSGBOX, "Faction Help: SAGS", gstr, "<< Back", "Close");
+		}
+		case 5: // DOC
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== DEPARTMENT OF CORRECTIONS (DOC) ===\n\n");
+			strcat(gstr, "{A9C4E4}/duty / /onduty / /uniform / /badge{FFFFFF} - Go on DOC officer duty\n");
+			strcat(gstr, "{A9C4E4}/r / /m / /d / /departments / /dep{FFFFFF} - Radios & megaphone\n");
+			strcat(gstr, "{A9C4E4}/jail / /prison / /prisoners / /releaseme / /arrestrecord{FFFFFF} - Prison cellblocks & inmates\n");
+			strcat(gstr, "{A9C4E4}/handcuff (/hc) / /unhandcuff (/uhc) / /frisk / /friskapprove{FFFFFF} - Restraints & frisking\n");
+			strcat(gstr, "{A9C4E4}/fmenu / /factionmenu / /faction / /factionon / /invite / /uninvite / /rank / /accept / /decline{FFFFFF} - Faction");
+
+			Dialog_Show(playerid, Help_FactionDetail, DIALOG_STYLE_MSGBOX, "Faction Help: DOC", gstr, "<< Back", "Close");
+		}
+		case 6: // Organized Crime / Mafia / Families
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== ORGANIZED CRIME / MAFIA / FAMILIES ===\n\n");
+			strcat(gstr, "{A9C4E4}/f / /g / /fchat / /nofam / /disband{FFFFFF} - Organization IC & OOC chat\n");
+			strcat(gstr, "{A9C4E4}/fmenu / /factionmenu / /faction / /factionon / /invite / /uninvite / /rank / /accept / /decline{FFFFFF} - Organization\n");
+		}
+		case 8: // Vehicle Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== VEHICLE & TRANSPORTATION COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}/v / /vehicle{FFFFFF} - Open main vehicle management GUI\n");
+			strcat(gstr, "{A9C4E4}/engine{FFFFFF} - Toggle vehicle engine on/off\n");
+			strcat(gstr, "{A9C4E4}/lock / /flock{FFFFFF} - Lock or force lock vehicle doors\n");
+			strcat(gstr, "{A9C4E4}/v buypark{FFFFFF} - Buy parking location\n");
+			strcat(gstr, "{A9C4E4}/v park{FFFFFF} - Park your vehicle\n");
+			strcat(gstr, "{A9C4E4}/hood / /trunk / /vehpackage{FFFFFF} - Vehicle hood, trunk & package\n");
+			strcat(gstr, "{A9C4E4}/fill / /fuel{FFFFFF} - Refuel vehicle at gas station\n");
+			strcat(gstr, "{A9C4E4}/rw / /rollwindow{FFFFFF} - Roll vehicle windows up/down\n");
+			strcat(gstr, "{A9C4E4}/vehiclename / /colorlist / /paintcar{FFFFFF} - Vehicle name & colors\n");
+			strcat(gstr, "{A9C4E4}/service / /checkcomponents / /setbuycomp / /buycomp{FFFFFF} - Repairs & components\n");
+			strcat(gstr, "{A9C4E4}/attach / /detach / /towcar / /towcars{FFFFFF} - Towing & trailers\n");
+			strcat(gstr, "{A9C4E4}/carsign / /remove_carsign / /callsign{FFFFFF} - Vehicle sign & callsign\n");
+			strcat(gstr, "{A9C4E4}/rentvehicle / /unrentvehicle{FFFFFF} - Rent or return rental vehicle");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Vehicle Commands", gstr, "<< Back", "Close");
+		}
+		case 9: // Faction Help
+		{
+			ShowFactionHelpMenu(playerid);
+		}
+		case 10: // House Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== HOUSE & PROPERTY COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}/myhouse / /househelp{FFFFFF} - House info & guide\n");
+			strcat(gstr, "{A9C4E4}/buyhouse{FFFFFF} - Purchase an unowned house\n");
+			strcat(gstr, "{A9C4E4}/hlock{FFFFFF} - Lock or unlock house front door\n");
+			strcat(gstr, "{A9C4E4}/furniture{FFFFFF} - Place and customize house furniture\n");
+			strcat(gstr, "{A9C4E4}/offerrent / /setrentable / /setrent / /rentroom / /stoprent / /unrent{FFFFFF} - Rental\n");
+			strcat(gstr, "{A9C4E4}/tenants / /evict / /evictall{FFFFFF} - Tenant management\n");
+			strcat(gstr, "{A9C4E4}/houseupgrade / /grantbuild / /cmdspot{FFFFFF} - Upgrades & building\n");
+			strcat(gstr, "{A9C4E4}/propkeys / /givepropkey / /takepropkey{FFFFFF} - House keys");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: House Commands", gstr, "<< Back", "Close");
+		}
+		case 11: // Apartment / Flat Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== APARTMENT & FLAT COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}/enter / /exit{FFFFFF} - Enter or exit apartment building\n");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Apartment Commands", gstr, "<< Back", "Close");
+		}
+		case 12: // Business Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== BUSINESS & ENTERPRISE COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}/bizinfo{FFFFFF} - View business information\n");
+			strcat(gstr, "{A9C4E4}/buybiz / /sellbiz{FFFFFF} - Purchase or sell business\n");
+			strcat(gstr, "{A9C4E4}/bizbank / /bizwithdraw{FFFFFF} - Business bank vault & cash withdrawal\n");
+			strcat(gstr, "{A9C4E4}/buycomp / /setbuycomp / /compprice / /bizfee{FFFFFF} - Components & pricing");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Business Commands", gstr, "<< Back", "Close");
+		}
+		case 13: // Garage Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== GARAGE PROPERTY COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}Coming Soon\n");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Garage Commands", gstr, "<< Back", "Close");
+		}
+		case 14: // Donator Commands
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== VIP & DONATOR COMMANDS ===\n\n");
+			strcat(gstr, "{A9C4E4}Coming Soon\n");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Donator Commands", gstr, "<< Back", "Close");
+		}
+		case 15: // Illegal Weapon System
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== ILLEGAL WEAPON SYSTEM (IWS) ===\n\n");
+			strcat(gstr, "{A9C4E4}/illegaljob join / /weaponsupplier join{FFFFFF} - Join the Weapon Supplier illegal job\n");
+			strcat(gstr, "{A9C4E4}/buymaterial [amount]{FFFFFF} - Buy materials at material supply points\n");
+			strcat(gstr, "{A9C4E4}/buyschematic{FFFFFF} - Buy weapon schematics at schematic shops\n");
+			strcat(gstr, "{A9C4E4}/gun create [weapon name] [ammo]{FFFFFF} - Craft weapons from schematics & materials\n");
+			strcat(gstr, "{A9C4E4}/delays{FFFFFF} - Check remaining crafting and job cooldowns\n");
+			strcat(gstr, "{A9C4E4}/items{FFFFFF} - View your materials, schematics, and weapon packages");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Illegal Weapon System", gstr, "<< Back", "Close");
+		}
+	}
+	return 1;
+}
+
+Dialog:Help_Detail(playerid, response, listitem, inputtext[])
+{
+	ShowHelpCategories(playerid);
+	return 1;
+}
+
+Dialog:Help_FactionDetail(playerid, response, listitem, inputtext[])
+{
+	ShowFactionHelpMenu(playerid);
+	return 1;
 }
 
 CMD:rules(playerid, params[])
@@ -1723,12 +2232,198 @@ CMD:drughelp(playerid, params[])
 	SendClientMessage(playerid, COLOR_WHITE, "/mydrugs - /givedrug - /dropdrug - /usedrug");
 	SendClientMessage(playerid, COLOR_WHITE, "/placedrug (/pd) - /placealldrugs (pad) - /takedrug (/td) - /takealldrugs (/tad)");
 	SendClientMessage(playerid, COLOR_WHITE, "/checkdrugs - /transferdrug - /buildpackage - /adjustpackage - /givealldrugs - /vehdrugs");
+	SendClientMessage(playerid, COLOR_WHITE, "/druginfo - View detailed drug effects guide.");
 	return true;
+}
+
+YCMD:di(playerid, params[], help) = druginfo;
+
+stock ShowDrugInfoOverview(playerid)
+{
+	new body[2048];
+	format(body, sizeof(body), "Drug Name\tCategory\tPrimary Buff\tDuration\n");
+
+	new line[192];
+
+	format(line, sizeof(line), "{FF6666}Cocaine\t{FFAA00}Combat\t{00FF88}+25 HP Burst, Stamina\t{CCCCCC}60s\n");
+	strcat(body, line);
+
+	format(line, sizeof(line), "{88DD44}Marijuana\t{7799CC}Utility\t{00FF88}+15 HP over time\t{CCCCCC}90s\n");
+	strcat(body, line);
+
+	format(line, sizeof(line), "{AABBFF}Xanax\t{7799CC}Utility\t{00FF88}Clears visual debuffs (Keeps Buffs)\t{CCCCCC}120s\n");
+	strcat(body, line);
+
+	format(line, sizeof(line), "{FFCC44}Heroin\t{FFAA00}Combat\t{00FF88}Restores Armor (Max 100%)\t{CCCCCC}120s\n");
+	strcat(body, line);
+
+	format(line, sizeof(line), "{CC88FF}Ketamine\t{FFAA00}Combat\t{00FF88}Dissociative + Stumble Chance\t{CCCCCC}90s\n");
+	strcat(body, line);
+
+	format(line, sizeof(line), "{FF4444}Fentanyl\t{FF4444}God-Tier\t{00FF88}Over-Armour (150%) + OD Risk\t{CCCCCC}90s\n");
+	strcat(body, line);
+
+	format(line, sizeof(line), "{FFFF44}Meth\t{FFAA00}Combat\t{00FF88}Restores Armor (Max 50%) + Crash\t{CCCCCC}50s\n");
+	strcat(body, line);
+
+	format(line, sizeof(line), "{44CCFF}Steroids\t{FFAA00}Combat\t{00FF88}Extra Melee Damage (+20%-50%)\t{CCCCCC}120s\n");
+	strcat(body, line);
+
+	format(line, sizeof(line), "{FFBB55}Oxycodone\t{FFAA00}Combat\t{00FF88}Healing + Ignore pincang\t{CCCCCC}90s\n");
+	strcat(body, line);
+
+	Dialog_Show(playerid, DrugInfo_Overview, DIALOG_STYLE_TABLIST_HEADERS,
+		"Drug Encyclopedia",
+		body, "Details", "Close");
+	return 1;
+}
+
+CMD:druginfo(playerid, params[])
+{
+	ShowDrugInfoOverview(playerid);
+	return true;
+}
+
+Dialog:DrugInfo_Detail(playerid, response, listitem, inputtext[])
+{
+	if(!response) return 1;
+
+	ShowDrugInfoOverview(playerid);
+	return 1;
+}
+
+Dialog:DrugInfo_Overview(playerid, response, listitem, inputtext[])
+{
+	if(!response) return 1;
+
+	for(new drug; drug < sizeof(d_DATA); drug++)
+	{
+		if(strfind(inputtext, d_DATA[drug][dName], true) != -1)
+		{
+			listitem = drug;
+			break;
+		}
+	}
+	if(listitem < 0 || listitem >= sizeof(d_DATA)) return 1;
+
+	new detail[1024];
+	new title[64];
+	new tol = PlayerData[playerid][pDrugTolerance][listitem];
+	detail[0] = EOS;
+
+	switch(listitem)
+	{
+		case 0: // Cocaine
+		{
+			format(title, sizeof(title), "Cocaine - Adrenaline & Sprint");
+			strcat(detail, "{FF6666}[ COCAINE ]{FFFFFF}  |  Category: {FFAA00}Combat & Gunfight{FFFFFF}\n\n");
+			strcat(detail, "{00FF88}BUFFS:{FFFFFF}\n  + Instant HP Burst: {00FF88}+10 HP (0.1g) | +18 HP (0.2g) | +25 HP (0.3g){FFFFFF}\n  + Infinite sprint stamina during effect\n\n");
+			strcat(detail, "{FF4444}DEBUFFS:{FFFFFF}\n  - Short duration (20s - 60s based on dose)\n  - Slight movement slowdown after effect expires\n\n");
+			strcat(detail, "{FFFF00}VISUAL:{FFFFFF} Clear vision (No screen sway)\n{FFFF00}DOSAGE SCALING:{FFFFFF} 0.1g (+10 HP, 20s) | 0.2g (+18 HP, 40s) | 0.3g (+25 HP, 60s)\n\n");
+			format(detail, sizeof(detail), "%s{AAAAAA}Your current tolerance: {FF6666}%d / 100", detail, tol);
+		}
+		case 1: // Marijuana
+		{
+			format(title, sizeof(title), "Marijuana - Passive Relief");
+			strcat(detail, "{88DD44}[ MARIJUANA ]{FFFFFF}  |  Category: {7799CC}Utility & RP{FFFFFF}\n\n");
+			strcat(detail, "{00FF88}BUFFS:{FFFFFF}\n  + Slow passive health regen over time (+5 to +15 HP total)\n  + Safest drug with minimal overdose risk\n\n");
+			strcat(detail, "{FF4444}DEBUFFS:{FFFFFF}\n  - Emits visible joint smoke aura (Law Enforcement risk)\n  - Gentle camera sway\n\n");
+			strcat(detail, "{FFFF00}VISUAL:{FFFFFF} Light camera sway (DrunkLevel 5500)\n{FFFF00}DOSAGE SCALING:{FFFFFF} 0.1g (+5 HP, 20s) | 0.2g (+10 HP, 40s) | 0.3g (+15 HP, 60s)\n\n");
+			format(detail, sizeof(detail), "%s{AAAAAA}Your current tolerance: {88DD44}%d / 100", detail, tol);
+		}
+		case 2: // Xanax
+		{
+			format(title, sizeof(title), "Xanax - Visual Stabilizer & Cleanser");
+			strcat(detail, "{AABBFF}[ XANAX ]{FFFFFF}  |  Category: {7799CC}Utility / Cleanser{FFFFFF}\n\n");
+			strcat(detail, "{00FF88}BUFFS:{FFFFFF}\n  + {00FF88}Instantly clears visual camera sway & disorientation{FFFFFF}\n  + {00FF88}KEEPS ACTIVE BUFFS INTACT{FFFFFF} (Painkiller Oxycodone & Armor regen remain active)\n\n");
+			strcat(detail, "{FF4444}DEBUFFS:{FFFFFF}\n  - Does not provide direct HP or Armor regeneration\n\n");
+			strcat(detail, "{FFFF00}VISUAL:{FFFFFF} Cleanser (Resets camera to clear baseline)\n{FFFF00}DOSAGE SCALING:{FFFFFF} 0.1g (40s) | 0.2g (80s) | 0.3g (120s)\n\n");
+			format(detail, sizeof(detail), "%s{AAAAAA}Your current tolerance: {AABBFF}%d / 100", detail, tol);
+		}
+		case 3: // MDMA
+		{
+			format(title, sizeof(title), "MDMA - Euphoria & Stamina");
+			strcat(detail, "{FF88CC}[ MDMA ]{FFFFFF}  |  Category: {AA55FF}Roleplay & Utility{FFFFFF}\n\n");
+			strcat(detail, "{00FF88}BUFFS:{FFFFFF}\n  + Continuous stamina regeneration\n  + Social euphoria RP boost\n\n");
+			strcat(detail, "{FF4444}DEBUFFS:{FFFFFF}\n  - Occasional stumble animations while walking\n  - Slower weapon aiming focus\n\n");
+			strcat(detail, "{FFFF00}VISUAL:{FFFFFF} Vibrant visual disorientation\n{FFFF00}DOSAGE SCALING:{FFFFFF} 0.1g (30s) | 0.2g (60s) | 0.3g (90s)\n\n");
+			format(detail, sizeof(detail), "%s{AAAAAA}Your current tolerance: {FF88CC}%d / 100", detail, tol);
+		}
+		case 4: // Heroin
+		{
+			format(title, sizeof(title), "Heroin - Heavy Armor Tank");
+			strcat(detail, "{FFCC44}[ HEROIN ]{FFFFFF}  |  Category: {FFAA00}Combat & Heavy Tank{FFFFFF}\n\n");
+			strcat(detail, "{00FF88}BUFFS:{FFFFFF}\n  + {00FF88}Restores Armor up to 100%% (Full Armor){FFFFFF}\n  + Strong pain numbness\n\n");
+			strcat(detail, "{FF4444}DEBUFFS:{FFFFFF}\n  - Severe camera disorientation (DrunkLevel 25000)\n  - Requires multiple doses to reach 100%% Armor\n\n");
+			strcat(detail, "{FFFF00}VISUAL:{FFFFFF} Heavy camera sway\n{FFFF00}DOSAGE SCALING:{FFFFFF} 0.1g (+15%% Armor, 18s) | 0.2g (+30%% Armor, 32s) | 0.3g (+50%% Armor, 50s)\n\n");
+			format(detail, sizeof(detail), "%s{AAAAAA}Your current tolerance: {FFCC44}%d / 100", detail, tol);
+		}
+		case 5: // Ketamine
+		{
+			format(title, sizeof(title), "Ketamine - Dissociative Damage Buffer");
+			strcat(detail, "{CC88FF}[ KETAMINE ]{FFFFFF}  |  Category: {FFAA00}Combat & Defensive{FFFFFF}\n\n");
+			strcat(detail, "{00FF88}BUFFS:{FFFFFF}\n  + {00FF88}25%% Damage Reduction{FFFFFF} against incoming bullet & melee damage\n  + Continuous HP regeneration\n\n");
+			strcat(detail, "{FF4444}DEBUFFS:{FFFFFF}\n  - Heavy screen sway (DrunkLevel 25000)\n  - {FF4444}Random Stumble Animation{FFFFFF} (loses balance periodically)\n\n");
+			strcat(detail, "{FFFF00}VISUAL:{FFFFFF} Heavy camera sway\n{FFFF00}DOSAGE SCALING:{FFFFFF} 0.1g (30s) | 0.2g (60s) | 0.3g (90s)\n\n");
+			format(detail, sizeof(detail), "%s{AAAAAA}Your current tolerance: {CC88FF}%d / 100", detail, tol);
+		}
+		case 6: // Fentanyl
+		{
+			format(title, sizeof(title), "Fentanyl - High Risk God-Tier");
+			strcat(detail, "{FF4444}[ FENTANYL ]{FFFFFF}  |  Category: {FF4444}God-Tier / High Risk{FFFFFF}\n\n");
+			strcat(detail, "{00FF88}BUFFS:{FFFFFF}\n  + Instant HP & Armor Over-boost\n  + Maximum combat numbness\n\n");
+			strcat(detail, "{FF4444}DEBUFFS:{FFFFFF}\n  - {FF4444}Extremely High Overdose Risk{FFFFFF} (knocks out player)\n  - Requires Narcan administration from LSFD Paramedics\n\n");
+			strcat(detail, "{FFFF00}VISUAL:{FFFFFF} Minimal screen effect\n{FFFF00}DOSAGE SCALING:{FFFFFF} 0.1g (30s) | 0.2g (60s) | 0.3g (90s)\n\n");
+			format(detail, sizeof(detail), "%s{AAAAAA}Your current tolerance: {FF4444}%d / 100", detail, tol);
+		}
+		case 7: // Methamphetamine
+		{
+			format(title, sizeof(title), "Methamphetamine - Speed & Medium Armor");
+			strcat(detail, "{FFFF44}[ METHAMPHETAMINE ]{FFFFFF}  |  Category: {FFAA00}Combat & Speed{FFFFFF}\n\n");
+			strcat(detail, "{00FF88}BUFFS:{FFFFFF}\n  + {00FF88}Restores Armor up to 50%% max{FFFFFF}\n  + Infinite sprint stamina during effect\n\n");
+			strcat(detail, "{FF4444}DEBUFFS:{FFFFFF}\n  - Fast camera shake effect (DrunkLevel 12000)\n\n");
+			strcat(detail, "{FFFF00}VISUAL:{FFFFFF} Camera shake\n{FFFF00}DOSAGE SCALING:{FFFFFF} 0.1g (+10%% Armor, 18s) | 0.2g (+20%% Armor, 32s) | 0.3g (+30%% Armor, 50s)\n\n");
+			format(detail, sizeof(detail), "%s{AAAAAA}Your current tolerance: {FFFF44}%d / 100", detail, tol);
+		}
+		case 8: // Steroids
+		{
+			format(title, sizeof(title), "Steroids - Heavy Brawler");
+			strcat(detail, "{44CCFF}[ STEROIDS ]{FFFFFF}  |  Category: {FFAA00}Brawler & Melee{FFFFFF}\n\n");
+			strcat(detail, "{00FF88}BUFFS:{FFFFFF}\n  + {00FF88}3x Melee Damage Multiplier{FFFFFF} (Fists & blunt melee weapons)\n  + HP regen over time\n\n");
+			strcat(detail, "{FF4444}DEBUFFS:{FFFFFF}\n  - Reduced firearm accuracy focus\n\n");
+			strcat(detail, "{FFFF00}VISUAL:{FFFFFF} No screen effect\n{FFFF00}DOSAGE SCALING:{FFFFFF} 0.1g (40s) | 0.2g (80s) | 0.3g (120s)\n\n");
+			format(detail, sizeof(detail), "%s{AAAAAA}Your current tolerance: {44CCFF}%d / 100", detail, tol);
+		}
+		case 9: // Oxycodone
+		{
+			format(title, sizeof(title), "Oxycodone - Painkiller");
+			strcat(detail, "{FFBB55}[ OXYCODONE ]{FFFFFF}  |  Category: {FFAA00}Combat & Injury Relief{FFFFFF}\n\n");
+			strcat(detail, "{00FF88}BUFFS:{FFFFFF}\n  + {00FF88}Suppresses leg injury animation (pincang){FFFFFF} when shot in legs\n  + Prevents sprint/jump collapse from gunshot wounds\n\n");
+			strcat(detail, "{FF4444}DEBUFFS:{FFFFFF}\n  - Mild vision blur (Can be neutralized with Xanax WITHOUT losing painkiller buff)\n\n");
+			strcat(detail, "{FFFF00}VISUAL:{FFFFFF} Tunnel vision blur (DrunkLevel 7000)\n{FFFF00}DOSAGE SCALING:{FFFFFF} 0.1g (28s) | 0.2g (52s) | 0.3g (80s)\n\n");
+			format(detail, sizeof(detail), "%s{AAAAAA}Your current tolerance: {FFBB55}%d / 100", detail, tol);
+		}
+	}
+
+	// Show tolerance bar as ASCII
+	new tolBar[32];
+	new filled = tol / 10;
+	tolBar[0] = EOS;
+	for(new b = 0; b < 10; b++)
+	{
+		if(b < filled) strcat(tolBar, "|");
+		else strcat(tolBar, ".");
+	}
+
+	new finalDetail[1200];
+	format(finalDetail, sizeof(finalDetail), "%s\n\n{FFFF00}Tolerance Bar: {FF6666}[%s]{FFFFFF} %d%%\n{AAAAAA}Higher tolerance reduces duration & boost by up to 40%%.", detail, tolBar, tol);
+
+	Dialog_Show(playerid, DrugInfo_Detail, DIALOG_STYLE_MSGBOX, title, finalDetail, "Back", "Close");
+	return 1;
 }
 
 CMD:radiohelp(playerid, params[])
 {
-	SendClientMessage(playerid, COLOR_GREEN, "|_____________________Radio_help______________________|");
 	SendClientMessage(playerid, COLOR_YELLOW, "HINT: You can buy radio in 24-7's!");
 	SendClientMessage(playerid, COLOR_WHITE, "/setchannel - Sets which channel you want on which slot.");
 	SendClientMessage(playerid, COLOR_WHITE, "/setslot - Sets which slot on your radio you're currently responding too.");
@@ -1869,6 +2564,12 @@ CMD:jobhelp(playerid, params[])
 		//if(PlayerData[playerid][pCareer]) SendClientMessageEx(playerid, COLOR_WHITE, "You have %d career hours.", PlayerData[playerid][pCareer]);
 
 		SendClientMessage(playerid, COLOR_GREEN, "_______________________________________");
+	}
+
+	if(PlayerData[playerid][pJob] == JOB_TRAIN_DRIVER || PlayerData[playerid][pSideJob] == JOB_TRAIN_DRIVER)
+	{
+		SendClientMessage(playerid, COLOR_LIGHTRED, "Train Driver Commands:");
+		SendClientMessage(playerid, COLOR_WHITE, "/trainjob [join / queue / leavequeue / leave / status / start]");
 	}
 
 	SendNoticeMessage(playerid, "You have logged 0 hours on this job.");
@@ -2300,6 +3001,9 @@ stock ResetDrugBoost(playerid)
 	PlayerData[playerid][pDrugBoost] = 0;
 	PlayerData[playerid][pDrugEffects] = -1;
 	PlayerData[playerid][pDrugTick] = 0;
+	PlayerData[playerid][pDrugDuration] = 0;
+	// Reset visual effect to normal FPS counter baseline
+	SetPlayerDrunkLevel(playerid, 2000);
 }
 
 //(1-20, 21-50, 51-75, 79-90, 91-99, 100)
@@ -2330,46 +3034,180 @@ CMD:usedrug(playerid, params[])
 	    return SendErrorMessage(playerid, "You don't have that much %s.", d_DATA[ Player_Drugs[playerid][package - 1][dType] ][dName]);
 
 	new string[128];
+	new drugType = Player_Drugs[playerid][package - 1][dType];
 
-	if(isSmokable(Player_Drugs[playerid][package - 1][dType]))
+	if(isSmokable(drugType))
 	{
 		SetPlayerSpecialAction(playerid, SPECIAL_ACTION_SMOKE_CIGGY);
-
 		SendNoticeMessage(playerid, "You can pass the joint to another player with /passjoint!");
-
-		SendClientMessageEx(playerid, COLOR_YELLOW, "You've smoked some %s.", d_DATA[ Player_Drugs[playerid][package - 1][dType] ][dName]);
-		
-		format(string, sizeof(string), "* %s uses %s.", ReturnName(playerid, 0), d_DATA[ Player_Drugs[playerid][package - 1][dType] ][dName]);
+		SendClientMessageEx(playerid, COLOR_YELLOW, "You've smoked some %s.", d_DATA[drugType][dName]);
+		format(string, sizeof(string), "* %s smokes %s.", ReturnName(playerid, 0), d_DATA[drugType][dName]);
 	}
 	else
 	{
-	    new boost;
-
-	    switch(floatround(Player_Drugs[playerid][package - 1][dStrength]))
-	    {
-	        case 100:
-				boost = randomEx(30, 40);
-			case 91..99:
-			    boost = randomEx(30, 35);
-			case 79..90:
-			    boost = randomEx(25, 30);
-			case 51..78:
-			    boost = randomEx(20, 25);
-			case 21..50:
-			    boost = randomEx(15, 20);
-			case 1..20:
-			    boost = randomEx(5, 10);
-		}
-
-		PlayerData[playerid][pDrugBoost] = boost;
-		PlayerData[playerid][pDrugEffects] = Player_Drugs[playerid][package - 1][dType];
-		PlayerData[playerid][pDrugTick] = 0;
-		PlayerData[playerid][pDrugStamp] = gettime();
-
-		SendClientMessageEx(playerid, COLOR_YELLOW, "You've taken %.1f%s of %s.", amount, (d_DATA[ Player_Drugs[playerid][package - 1][dType] ][IsPill] == true) ? (" Pills") : ("g"), d_DATA[ Player_Drugs[playerid][package - 1][dType] ][dName]);
-
-        format(string, sizeof(string), "* %s takes %s.", ReturnName(playerid, 0), d_DATA[ Player_Drugs[playerid][package - 1][dType] ][dName]);
+		format(string, sizeof(string), "* %s takes %s.", ReturnName(playerid, 0), d_DATA[drugType][dName]);
 	}
+
+	new strength = floatround(Player_Drugs[playerid][package - 1][dStrength]);
+
+	// Tolerance reduces boost (cap tolerance at 80)
+	new tol = PlayerData[playerid][pDrugTolerance][drugType];
+	if(tol > 80) tol = 80;
+
+	new boost;
+	switch(strength)
+	{
+		case 100:		 boost = randomEx(30, 40);
+		case 91..99:	 boost = randomEx(30, 35);
+		case 79..90:	 boost = randomEx(25, 30);
+		case 51..78:	 boost = randomEx(20, 25);
+		case 21..50:	 boost = randomEx(15, 20);
+		case 1..20:		 boost = randomEx(5, 10);
+	}
+
+	// Apply tolerance penalty to boost
+	boost = boost - (boost * tol / 100);
+	if(boost < 1) boost = 1;
+
+	// === Duration per drug type (scaled by amount 0.1, 0.2, 0.3) ===
+	new baseDuration;
+	switch(drugType)
+	{
+		case 0: baseDuration = 60;   // Cocaine
+		case 1: baseDuration = 60;   // Marijuana
+		case 2: baseDuration = 120;  // Xanax
+		case 3: baseDuration = 90;   // MDMA
+		case 4: baseDuration = 50;   // Heroin
+		case 5: baseDuration = 90;   // Ketamine
+		case 6: baseDuration = 90;   // Fentanyl
+		case 7: baseDuration = 50;   // Methamphetamine
+		case 8: baseDuration = 120;  // Steroids
+		case 9: baseDuration = 80;   // Oxycodone
+	}
+
+	new duration;
+	if(amount <= 0.15) duration = floatround(baseDuration * 0.35);      // 0.1g dose -> 35% duration
+	else if(amount <= 0.25) duration = floatround(baseDuration * 0.65); // 0.2g dose -> 65% duration
+	else duration = baseDuration;                                        // 0.3g dose -> 100% duration
+
+	duration = duration - (duration * tol / 200); // tolerance reduces duration by up to 40%
+	if(duration < 15) duration = 15;
+
+	PlayerData[playerid][pDrugBoost] = boost;
+	PlayerData[playerid][pDrugAmountUsed] = amount;
+	PlayerData[playerid][pDrugTick] = 0;
+	PlayerData[playerid][pDrugStamp] = gettime();
+	PlayerData[playerid][pDrugDuration] = duration;
+
+	// Increase tolerance: 0.1g (+3%), 0.2g (+5%), 0.3g (+10%)
+	new tolGain = (amount <= 0.15) ? (3) : ((amount <= 0.25) ? (5) : (10));
+	if(PlayerData[playerid][pDrugTolerance][drugType] < 100)
+		PlayerData[playerid][pDrugTolerance][drugType] += tolGain;
+
+	// === Drug-specific side-effects on use ===
+	switch(drugType)
+	{
+		case 0: // Cocaine – HP burst scaled by dose (+10 HP for 0.1g, +18 HP for 0.2g, +25 HP for 0.3g)
+		{
+			new Float:curHp = PlayerData[playerid][pHealth];
+			new Float:burst = (amount <= 0.15) ? (10.0) : ((amount <= 0.25) ? (18.0) : (25.0));
+			new Float:newHp = curHp + burst;
+			if(newHp > MAX_DRUG_HEALTH) newHp = MAX_DRUG_HEALTH;
+			SetPlayerHealthEx(playerid, newHp);
+			GameTextForPlayer(playerid, "~r~COCAINE~n~~w~Adrenaline Rush!", 3000, 3);
+			PlayerData[playerid][pDrugEffects] = drugType;
+		}
+		case 1: // Marijuana – light visual effect
+		{
+			SetPlayerDrunkLevel(playerid, 5500);
+			GameTextForPlayer(playerid, "~g~MARIJUANA~n~~w~You feel relaxed...", 3000, 3);
+			PlayerData[playerid][pDrugEffects] = drugType;
+		}
+		case 2: // Xanax – Cleanser: clears visual drunk level WITHOUT cancelling active drug buffs (e.g. Oxycodone)
+		{
+			SetPlayerDrunkLevel(playerid, 2000);
+			GameTextForPlayer(playerid, "~p~XANAX~n~~w~Nerves calmed (Visual Cleared)!", 3000, 3);
+
+			// If player is NOT under another active drug effect, set effect to Xanax
+			if(PlayerData[playerid][pDrugEffects] == -1)
+			{
+				PlayerData[playerid][pDrugEffects] = drugType;
+			}
+			// If already under Oxycodone or another drug, keep the previous pDrugEffects so painkiller/buff stays active!
+		}
+		case 4: // Heroin – heavy visual + 100% max armor regen
+		{
+			SetPlayerDrunkLevel(playerid, 25000);
+			GameTextForPlayer(playerid, "~y~HEROIN~n~~w~Heavy Numbness (Restoring Armor)...", 3000, 3);
+			PlayerData[playerid][pDrugEffects] = drugType;
+		}
+		case 5: // Ketamine – strong visual disorientation
+		{
+			SetPlayerDrunkLevel(playerid, 25000);
+			GameTextForPlayer(playerid, "~p~KETAMINE~n~~w~Dissociating...", 3000, 3);
+			PlayerData[playerid][pDrugEffects] = drugType;
+		}
+		case 6: // Fentanyl – God-Tier: Over-Armour up to 150% (requires 100% Armor first) + Overdose risk
+		{
+			new Float:curArm = PlayerData[playerid][pArmour];
+			if(curArm >= 100.0)
+			{
+				new Float:addArm = (amount <= 0.15) ? (15.0) : ((amount <= 0.25) ? (30.0) : (50.0));
+				new Float:newArm = curArm + addArm;
+				if(newArm > 150.0) newArm = 150.0;
+				SetPlayerArmourEx(playerid, newArm);
+				SendClientMessageEx(playerid, COLOR_YELLOW, "[FENTANYL] Over-Armour boosted to %.1f%%!", newArm);
+			}
+			else
+			{
+				SendClientMessage(playerid, COLOR_LIGHTRED, "[FENTANYL NOTICE] You need 100% Armor first to unleash Fentanyl's 150% Over-Armour!");
+			}
+
+			// Overdose chance: 0.1g (5%), 0.2g (25%), 0.3g (60%)
+			new odChance = (amount <= 0.15) ? (5) : ((amount <= 0.25) ? (25) : (60));
+			if(random(100) < odChance)
+			{
+				PlayerData[playerid][pOverdosing] = 1;
+				PlayerData[playerid][pOverdoseTimer] = 180;
+				ApplyAnimation(playerid, "CRACK", "crckidle2", 4.1, 0, 0, 0, 1, 0, 1);
+				TogglePlayerControllable(playerid, 0);
+				GameTextForPlayer(playerid, "~r~OVERDOSE!~n~~w~Collapsed! Need Narcan!", 5000, 3);
+				SendClientMessage(playerid, COLOR_LIGHTRED, "[OVERDOSE] You collapsed from a Fentanyl overdose! Ask for Narcan or wait 3 minutes to recover.");
+			}
+			else
+			{
+				GameTextForPlayer(playerid, "~r~FENTANYL~n~~w~God-Tier Power!", 3000, 3);
+			}
+			PlayerData[playerid][pDrugEffects] = drugType;
+		}
+		case 7: // Methamphetamine – camera shake + 50% max armor regen
+		{
+			SetPlayerDrunkLevel(playerid, 12000);
+			GameTextForPlayer(playerid, "~y~METH~n~~w~Heart racing & Restoring Armor (Max 50%)!", 3000, 3);
+			PlayerData[playerid][pDrugEffects] = drugType;
+		}
+		case 8: // Steroids – Extra Melee Damage (+20% for 0.1g, +35% for 0.2g, +50% for 0.3g)
+		{
+			GameTextForPlayer(playerid, "~r~STEROIDS~n~~w~Raw Muscle Power (+Melee Damage)!", 3000, 3);
+			PlayerData[playerid][pDrugEffects] = drugType;
+		}
+		case 9: // Oxycodone – ignore broken leg + vision blur
+		{
+			SetPlayerDrunkLevel(playerid, 7000);
+			GameTextForPlayer(playerid, "~y~OXYCODONE~n~~w~Painkillers kicking in...", 3000, 3);
+			PlayerData[playerid][pDrugEffects] = drugType;
+		}
+		default:
+		{
+			new gstr_drug[64];
+			format(gstr_drug, sizeof(gstr_drug), "~p~%s~n~~w~Effect active.", d_DATA[drugType][dName]);
+			GameTextForPlayer(playerid, gstr_drug, 3000, 3);
+			PlayerData[playerid][pDrugEffects] = drugType;
+		}
+	}
+
+	SendClientMessageEx(playerid, COLOR_YELLOW, "You've used %.1f%s of %s. Effect lasts ~%d seconds.",
+		amount, (d_DATA[drugType][IsPill] == true) ? (" Pills") : ("g"), d_DATA[drugType][dName], duration);
 
 	SetPlayerChatBubble(playerid, string, COLOR_PURPLE, 30.0, 6000);
 
@@ -2968,7 +3806,7 @@ CMD:sellpackage(playerid, params[])
 
 public OnPlayerClickMap(playerid, Float:fX, Float:fY, Float:fZ)
 {
-	if(EnableTP{playerid})
+	if(AdminDuty{playerid})
 	{
         if(!fX || !fY || !fZ) return true;
 
@@ -3060,6 +3898,13 @@ CMD:selfie(playerid, params[])
     if(DeathMode{playerid} || PlayerData[playerid][pInjured] || Dialog_Opened(playerid))
 		return SendClientMessage(playerid, COLOR_LIGHTRED, "You cannot use the phone at this time.");
 
+    // If already in selfie mode, exit it (toggle off) — workaround for ENTER key detection issue
+    if(ph_menuid[playerid] == 0 && ph_sub_menuid[playerid] == 2)
+    {
+        PhoneSelfie_Stop(playerid);
+        return true;
+    }
+
     OnPhoneClick_Selfie(playerid);
 	return true;
 }
@@ -3094,6 +3939,31 @@ CMD:dropcell(playerid, params[])
 	}
 	else SendClientMessage(playerid, COLOR_GRAD1, "   You don't have a phone");
 
+	return true;
+}
+
+CMD:buycell(playerid, params[])
+{
+	if(PlayerData[playerid][pInjured])
+		return SendClientMessage(playerid, COLOR_LIGHTRED, "Error: You are not able to do this right now.");
+
+	if(DeathMode{playerid})
+		return SendClientMessage(playerid, COLOR_LIGHTRED, "Error: You are not able to do this right now.");
+
+	if(PlayerData[playerid][pPnumber])
+		return SendClientMessage(playerid, COLOR_GRAD1, "   You already own a phone.");
+
+	if(PlayerData[playerid][pCash] < 500)
+		return SendClientMessageEx(playerid, COLOR_LIGHTRED, "Error: You need at least %s to buy a phone.", FormatNumber(500));
+
+	// Assign a unique random number (100000-199999)
+	new newNumber = 100000 + random(99999);
+	PlayerData[playerid][pPnumber] = newNumber;
+	PlayerData[playerid][pPhoneModel] = 0; // default black cover
+
+	TakePlayerMoney(playerid, 500);
+
+	SendNoticeMessage(playerid, "You purchased a new phone for $500. Your number: %d", newNumber);
 	return true;
 }
 
@@ -3782,6 +4652,25 @@ CMD:buy(playerid, params[])
 	        ShowShopList(playerid, true);
 	        return true;
 		}
+		else if(InBusiness[playerid] == id && BusinessData[id][bType] == 7) // Clothing Shop
+		{
+			if(BusinessData[id][bLocked] == 1)
+				return GameTextForPlayer(playerid, "~r~Closed", 5000, 1);
+
+			if(BusinessData[id][bProducts] == 0)
+				return GameTextForPlayer(playerid, "~r~Out Of Stock", 5000, 1);
+
+			new category = BusinessData[id][bsubType];
+			if(category != BUYZIP && category != BUYSPORTS && category != BUYMUSIC)
+			{
+				category = BUYZIP; // Default to ZIP
+			}
+			cl_buying[playerid] = category;
+
+			Dialog_Show(playerid, ClothingShopSelect, DIALOG_STYLE_LIST, "Clothing Shop Menu", "1. Clothes\n2. Accessories", "Select", "Cancel");
+			return true;
+		}
+		else return SendErrorMessage(playerid, "You can't purchase anything here.");
     }
     else return SendErrorMessage(playerid, "You can't purchase anything here.");
 
@@ -4058,36 +4947,247 @@ CMD:friskapprove(playerid, params[])
 	return true;
 }
 
-stock FriskPlayer(playerid, userid)
+// ponytail: Clean function to build & show owned/rented properties in tablist dialog
+CMD:myproperty(playerid, params[])
 {
-	SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s performs a frisk on %s.", ReturnName(playerid, 0), ReturnName(userid, 0));
+	new body[2048], line[160], count = 0;
 
-	SendClientMessage(playerid, COLOR_LIGHTRED, "");
-	SendClientMessage(playerid, COLOR_LIGHTRED, "");
-	SendClientMessageEx(playerid, COLOR_LIGHTRED, "%s's General items:", ReturnName(userid, 0));
+	format(body, sizeof(body), "Type\tProperty Name / Address\tStatus\n");
 
-	if(PlayerData[userid][pCash] > 0 && PlayerData[userid][pCash] <= 500) SendClientMessageEx(playerid, COLOR_LIGHTRED, "[ {FFFFFF}$%d+{FF6347} ]", floatround(float(PlayerData[userid][pCash]), floatround_floor));
-	else if(PlayerData[userid][pCash] > 500) SendClientMessage(playerid, COLOR_LIGHTRED, "[ {FFFFFF}$500+{FF6347} ]");
-
-	SendClientMessageEx(playerid, COLOR_LIGHTRED, "[ {FFFFFF}Cellphone{FF6347} ]");
-
-	for(new i = 0; i < 3; ++i)
+	// 1. Owned House
+	for(new i = 0; i < MAX_PROPERTIES; i++)
 	{
-		if(PlayerData[userid][pWeapon][i] != 0 && PlayerData[userid][pAmmunation][i] != 0)
+		if(PropertyData[i][hOwned] && PropertyData[i][hOwnerSQLID] == PlayerData[playerid][pID])
 		{
-		    SendClientMessageEx(playerid, COLOR_LIGHTRED, "[ {FFFFFF}%s{FF6347} ]", ReturnWeaponName(PlayerData[userid][pWeapon][i]));
+			format(line, sizeof(line), "{FFCC44}[HOUSE]\t{FFFFFF}%s (ID: %d)\t{00FF88}Owner\n", ReturnPropertyAddress(i), i);
+			strcat(body, line);
+			count++;
 		}
 	}
 
-	SendClientMessage(playerid, COLOR_LIGHTRED, "");
-    ShowPlayerDrugs(userid, playerid); // drugs
+	// 2. Rented House / Room
+	new rentHouse = PlayerData[playerid][pHouseKey];
+	if(rentHouse != -1 && rentHouse < MAX_PROPERTIES)
+	{
+		if(!Property_IsOwner(playerid, rentHouse) && PropertyData[rentHouse][hOwned])
+		{
+			format(line, sizeof(line), "{44CCFF}[RENTED HOUSE]\t{FFFFFF}%s (ID: %d)\t{FFFF00}Renter ($%d/hr)\n", 
+				ReturnPropertyAddress(rentHouse), rentHouse, PropertyData[rentHouse][hRentprice]);
+			strcat(body, line);
+			count++;
+		}
+	}
 
-	SendClientMessage(playerid, COLOR_LIGHTRED, "");
-	ShowPlayerWeapons(userid, playerid); // weapon packages
+	// 3. Owned Business
+	new pName[MAX_PLAYER_NAME];
+	format(pName, sizeof(pName), "%s", ReturnName(playerid, 0));
 
-	SendClientMessage(playerid, COLOR_LIGHTRED, "");
-	SendClientMessageEx(playerid, COLOR_LIGHTRED, "%s's Prison items:", ReturnName(userid, 0));
-	SendClientMessage(playerid, COLOR_WHITE, "This player has no prison items.");
+	for(new i = 0; i < MAX_BUSINESS; i++)
+	{
+		if(BusinessData[i][bID] != 0 && BusinessData[i][bOwned])
+		{
+			if(strcmp(BusinessData[i][bOwner], pName, true) == 0 || PlayerData[playerid][pPbiskey] == i)
+			{
+				format(line, sizeof(line), "{FF8844}[BUSINESS]\t{FFFFFF}%s (ID: %d)\t{00FF88}Owner\n", BusinessData[i][bInfo], i);
+				strcat(body, line);
+				count++;
+			}
+		}
+	}
+
+	if(count == 0)
+	{
+		strcat(body, "{AAAAAA}(No Properties)\t{AAAAAA}You don't own or rent any property\t{AAAAAA}None\n");
+	}
+
+	new title[64];
+	format(title, sizeof(title), "My Properties (%d Owned/Rented)", count);
+	Dialog_Show(playerid, Player_Property_Dialog, DIALOG_STYLE_TABLIST_HEADERS, title, body, "Close", "");
+	return 1;
+}
+
+Dialog:Player_Property_Dialog(playerid, response, listitem, inputtext[])
+{
+	return 1;
+}
+
+// ponytail: Single clean function to build & show inventory dialog for /items and /frisk
+stock ShowPlayerInventoryDialog(playerid, targetid)
+{
+	new body[2048], line[128], count = 0;
+
+	format(body, sizeof(body), "Item\tAmount\n");
+
+	// Money
+	if(PlayerData[targetid][pCash] > 0)
+	{
+		format(line, sizeof(line), "{00FF88}Money\t{FFFFFF}%s\n", FormatNumber(PlayerData[targetid][pCash]));
+		strcat(body, line);
+		count++;
+	}
+
+	// Cellphone
+	if(PlayerData[targetid][pPnumber] > 0)
+	{
+		format(line, sizeof(line), "{AABBFF}Cellphone\t{FFFFFF}1 (On) (#%d)\n", PlayerData[targetid][pPnumber]);
+		strcat(body, line);
+		count++;
+	}
+
+	// Radio
+	if(PlayerData[targetid][pRadio] > 0)
+	{
+		format(line, sizeof(line), "{AABBFF}Radio\t{FFFFFF}1 (Slot #%d)\n", PlayerData[targetid][pRSlot]);
+		strcat(body, line);
+		count++;
+	}
+
+	// Equipped Weapons
+	for(new i = 0; i < 3; i++)
+	{
+		if(PlayerData[targetid][pWeapon][i] != 0 && PlayerData[targetid][pAmmunation][i] > 0)
+		{
+			format(line, sizeof(line), "{FF4444}[EQUIPPED] %s\t{FFFFFF}%d Ammo\n", ReturnWeaponName(PlayerData[targetid][pWeapon][i]), PlayerData[targetid][pAmmunation][i]);
+			strcat(body, line);
+			count++;
+		}
+	}
+
+	// Weapon Packages
+	for(new i = 0; i < MAX_PLAYER_WEAPON_PACKAGE; i++)
+	{
+		if(PlayerData[targetid][pPackageWP][i] > 0)
+		{
+			format(line, sizeof(line), "{FF6347}[PACKAGE] %s\t{FFFFFF}1 Pkg (%d Ammo)\n", GetWeaponPackageName(PlayerData[targetid][pPackageWP][i]), PlayerData[targetid][pPackageAmmo][i]);
+			strcat(body, line);
+			count++;
+		}
+	}
+
+	// Drugs
+	for(new i = 0; i < MAX_PLAYER_DRUGS; i++)
+	{
+		if(Player_Drugs[targetid][i][dID] != -1 && Player_Drugs[targetid][i][dAmount] > 0.0)
+		{
+			new drugType = Player_Drugs[targetid][i][dType];
+			format(line, sizeof(line), "{FFAA00}[DRUGS] %s\t{FFFFFF}%.1f%s (%.0f%% Str)\n", 
+				d_DATA[drugType][dName], 
+				Player_Drugs[targetid][i][dAmount], 
+				(d_DATA[drugType][IsPill] ? (" Pills") : ("g")), 
+				Player_Drugs[targetid][i][dStrength]);
+			strcat(body, line);
+			count++;
+		}
+	}
+
+	// Medical
+	if(PlayerData[targetid][pNarcan] > 0)
+	{
+		format(line, sizeof(line), "{FF8888}[MEDICINE] Narcan Dose\t{FFFFFF}%d Dose(s)\n", PlayerData[targetid][pNarcan]);
+		strcat(body, line);
+		count++;
+	}
+	if(PlayerData[targetid][pMedkits] > 0)
+	{
+		format(line, sizeof(line), "{FF8888}[MEDICINE] First Aid Kit\t{FFFFFF}%d Kit(s)\n", PlayerData[targetid][pMedkits]);
+		strcat(body, line);
+		count++;
+	}
+
+	// Utility Items
+	if(PlayerData[targetid][pCigarettes] > 0)
+	{
+		format(line, sizeof(line), "{FFFF88}Cigarettes\t{FFFFFF}%d Pcs\n", PlayerData[targetid][pCigarettes]);
+		strcat(body, line);
+		count++;
+	}
+	if(PlayerData[targetid][pGasCan] > 0)
+	{
+		format(line, sizeof(line), "{FFFF88}Gas Can (Jerigen)\t{FFFFFF}%d Pcs\n", PlayerData[targetid][pGasCan]);
+		strcat(body, line);
+		count++;
+	}
+	if(PlayerData[targetid][pBoombox] > 0)
+	{
+		format(line, sizeof(line), "{FFFF88}Portable Boombox\t{FFFFFF}1 Pcs\n");
+		strcat(body, line);
+		count++;
+	}
+	if(PlayerData[targetid][pHandCuffs] > 0)
+	{
+		format(line, sizeof(line), "{FFFF88}Handcuffs (Borgol)\t{FFFFFF}%d Pcs\n", PlayerData[targetid][pHandCuffs]);
+		strcat(body, line);
+		count++;
+	}
+
+	// Fishes
+	if(PlayerData[targetid][pFishes] > 0)
+	{
+		format(line, sizeof(line), "{44CCFF}[FISHER] Caught Fish\t{FFFFFF}%d Lbs\n", PlayerData[targetid][pFishes]);
+		strcat(body, line);
+		count++;
+	}
+
+	// Materials (IWS)
+	if(pMaterials[targetid] > 0)
+	{
+		format(line, sizeof(line), "{88FF88}[IWS] Materials\t{FFFFFF}%d Units\n", pMaterials[targetid]);
+		strcat(body, line);
+		count++;
+	}
+
+	// Schematics (IWS)
+	new sch_count = 0;
+	for(new i = 0; i < MAX_SCHEMATICS; i++)
+	{
+		if(pSchematics[targetid][i] > 0)
+		{
+			sch_count++;
+		}
+	}
+	if(sch_count > 0)
+	{
+		new sch_str[128];
+		sch_str[0] = '\0';
+		for(new i = 0; i < MAX_SCHEMATICS; i++)
+		{
+			if(pSchematics[targetid][i] > 0)
+			{
+				if(strlen(sch_str) > 0)
+					strcat(sch_str, ", ");
+				strcat(sch_str, schematic_names[i]);
+			}
+		}
+		format(line, sizeof(line), "{88FF88}[IWS] Schematics\t{FFFFFF}%s\n", sch_str);
+		strcat(body, line);
+		count++;
+	}
+
+	if(count == 0)
+	{
+		strcat(body, "{AAAAAA}(No items in inventory)\t{AAAAAA}Empty\n");
+	}
+
+	new title[64];
+	format(title, sizeof(title), "Inventory of %s (%d Items)", ReturnName(targetid, 0), count);
+	Dialog_Show(playerid, Player_Inventory_Dialog, DIALOG_STYLE_TABLIST_HEADERS, title, body, "Close", "");
+	return 1;
+}
+
+Dialog:Player_Inventory_Dialog(playerid, response, listitem, inputtext[])
+{
+	return 1;
+}
+
+CMD:items(playerid, params[])
+{
+	return ShowPlayerInventoryDialog(playerid, playerid);
+}
+
+stock FriskPlayer(playerid, userid)
+{
+	SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s performs a frisk on %s.", ReturnName(playerid, 0), ReturnName(userid, 0));
+	ShowPlayerInventoryDialog(playerid, userid);
 	return true;
 }
 
@@ -4476,10 +5576,10 @@ CMD:government(playerid, params[])
 	return true;
 }
 
-YCMD:f(playerid, params[], help) = fchat;
-YCMD:g(playerid, params[], help) = fchat;
+YCMD:fchat(playerid, params[], help) = f;
+YCMD:g(playerid, params[], help) = f;
 
-CMD:fchat(playerid, params[])
+CMD:f(playerid, params[])
 {
     new factionid = PlayerData[playerid][pFaction];
 
@@ -4525,19 +5625,41 @@ CMD:fchat(playerid, params[])
 
 CMD:drugstore(playerid, params[])
 {
-	new factionid = PlayerData[playerid][pFaction];
-
-	if(factionid == -1)
+	if(PlayerData[playerid][pFaction] == -1)
 	    return SendErrorMessage(playerid, "You're not in a faction.");
 
-	if(!HasFactionRank(playerid, 1))
-	    return SendErrorMessage(playerid, "You're not the leader.");
+	if(GetFactionType(playerid) != FACTION_GANG)
+	    return SendErrorMessage(playerid, "Only Mafia/Gang faction members can access the Drug Store.");
 
-	SendClientMessage(playerid, COLOR_GREY, "Coming Soon");
+	new nearStore = -1;
+	for(new i = 0; i < MAX_DRUG_STORES; i++)
+	{
+		if(DrugStores[i][dsID] != 0 && IsPlayerInRangeOfPoint(playerid, 3.0, DrugStores[i][dsX], DrugStores[i][dsY], DrugStores[i][dsZ]))
+		{
+			nearStore = i;
+			break;
+		}
+	}
+
+	if(nearStore == -1)
+		return SendErrorMessage(playerid, "You must be near a Drug Store pickup point.");
+
+	new body[256];
+	body[0] = EOS;
+
+	for(new d = 0; d < sizeof(d_DATA); ++d)
+	{
+		strcat(body, d_DATA[d][dName]);
+		strcat(body, "\n");
+	}
+
+	Dialog_Show(playerid, DrugStore_Type, DIALOG_STYLE_LIST, "Drug Store - Select Drug:", body, "Next", "Cancel");
 	return true;
 }
 
-CMD:managespawns(playerid, params[])
+YCMD:managespawns(playerid, params[], help) = managespawn;
+
+CMD:managespawn(playerid, params[])
 {
 	new factionid = PlayerData[playerid][pFaction];
 
@@ -4551,7 +5673,9 @@ CMD:managespawns(playerid, params[])
 	return true;
 }
 
-CMD:factionmenu(playerid, params[])
+YCMD:factionmenu(playerid, params[], help) = fmenu;
+
+CMD:fmenu(playerid, params[])
 {
 	new factionid = PlayerData[playerid][pFaction];
 
@@ -4653,13 +5777,46 @@ CMD:invite(playerid, params[])
 	if(playerid == userid)
 		return SendErrorMessage(playerid, "You can't invite yourself.");	
 
+	if(GetFactionType(playerid) == FACTION_MEDIC)
+	{
+		SetPVarInt(playerid, "LSFD_InviteTarget", userid);
+		Dialog_Show(playerid, LSFD_InviteSelect, DIALOG_STYLE_LIST, "LSFD Recruitment - Select Division", "1\tHospital / Medical Services Division (EMS)\n2\tFire & Rescue Operations Division (Firefighter)", "Select", "Cancel");
+		return true;
+	}
+
 	PlayerData[userid][pFactionOffer] = playerid;
     PlayerData[userid][pFactionOffered] = PlayerData[playerid][pFaction];
 
    	SendClientMessageEx(playerid, COLOR_YELLOW, "You invited %s to join %s, they'll have to accept first.", ReturnName(userid, 0), Faction_GetName(playerid));
 
-    SendClientMessageEx(userid, COLOR_YELLOW, "%s invited you to join %s, type /accept to accept the invitation.", ReturnName(playerid, 0), Faction_GetName(playerid));
+    SendClientMessageEx(userid, COLOR_YELLOW, "%s invited you to join %s, type /accept invite to accept the invitation.", ReturnName(playerid, 0), Faction_GetName(playerid));
     SendClientMessage(userid, COLOR_YELLOW, "You can use /decline if you don't want to join.");
+	return true;
+}
+
+Dialog:LSFD_InviteSelect(playerid, response, listitem, inputtext[])
+{
+	new userid = GetPVarInt(playerid, "LSFD_InviteTarget");
+	DeletePVar(playerid, "LSFD_InviteTarget");
+
+	if(response)
+	{
+		if(!IsPlayerConnected(userid) || PlayerData[userid][pFaction] != -1)
+			return SendErrorMessage(playerid, "The player specified is no longer available for invitation.");
+
+		new divType = listitem + 1; // 1 = EMS, 2 = Fire
+		SetPVarInt(userid, "LSFD_InviteDiv", divType);
+
+		PlayerData[userid][pFactionOffer] = playerid;
+		PlayerData[userid][pFactionOffered] = PlayerData[playerid][pFaction];
+
+		new divName[40];
+		format(divName, sizeof(divName), (divType == 1) ? ("Hospital / EMS Division") : ("Fire & Rescue Division"));
+
+		SendClientMessageEx(playerid, COLOR_YELLOW, "You invited %s to join %s (%s).", ReturnName(userid, 0), Faction_GetName(playerid), divName);
+		SendClientMessageEx(userid, COLOR_YELLOW, "%s invited you to join %s (%s), type /accept invite to accept.", ReturnName(playerid, 0), Faction_GetName(playerid), divName);
+		SendClientMessage(userid, COLOR_YELLOW, "You can use /decline if you don't want to join.");
+	}
 	return true;
 }
 
@@ -4780,61 +5937,72 @@ stock CanUseMDC(playerid, type)
 
 CMD:accept(playerid, params[])
 {
-	if(isnull(params))
-		return SendSyntaxMessage(playerid, "/accept male or /accept female, write it properly.");
+	if(!isnull(params) && strcmp(params, "invite", true) != 0 && strcmp(params, "male", true) != 0 && strcmp(params, "female", true) != 0)
+	{
+		return SendSyntaxMessage(playerid, "/accept invite");
+	}
 
 	if(PlayerData[playerid][pFactionOffer] == INVALID_PLAYER_ID)
 	    return SendErrorMessage(playerid, "You don't have any invitation to accept.");
 
-	if(strcmp(params, "male", false) == 0 || strcmp(params, "female", true) == 0)
+	new 
+		targetid = PlayerData[playerid][pFactionOffer], 
+		factionid = PlayerData[playerid][pFactionOffered]
+	;
+
+	if(!FactionData[factionid][factionExists] || PlayerData[targetid][pFactionRank] > 1)
 	{
-	    new 
-			targetid = PlayerData[playerid][pFactionOffer], 
-			factionid = PlayerData[playerid][pFactionOffered]
-		;
+		PlayerData[playerid][pFactionOffer] = INVALID_PLAYER_ID;
+		PlayerData[playerid][pFactionOffered] = -1;
+		return SendErrorMessage(playerid, "Faction doesn't exist or you're already in it.");
+	}
 
-		if(!FactionData[factionid][factionExists] || PlayerData[targetid][pFactionRank] > 1)
+	SetFaction(playerid, factionid);
+
+	new rank;
+	for(new i = 18; i >= 0; i--)
+	{
+		if(strlen(FactionRanks[factionid][i]) >= 1)
 		{
-		    PlayerData[playerid][pFactionOffer] = INVALID_PLAYER_ID;
-        	PlayerData[playerid][pFactionOffered] = -1;
-	   	 	return SendErrorMessage(playerid, "Faction doesn't exist or you're already in it.");
+			rank = i + 1;
+			break;
+		}
+	}
+
+	PlayerData[playerid][pFactionRank] = rank;
+
+	SendClientMessageEx(playerid, COLOR_YELLOW, "You are now a member of %s!", Faction_GetName(targetid));
+	SendClientMessageEx(targetid, COLOR_YELLOW, "%s has joined your faction %s.", ReturnName(playerid, 0), Faction_GetName(targetid));
+
+	AssignFactionPermissions(playerid);
+
+	PlayerData[playerid][pFactionOffer] = INVALID_PLAYER_ID;
+	PlayerData[playerid][pFactionOffered] = -1;
+
+	if(GetFactionType(targetid) == FACTION_MEDIC)
+	{
+		new divType = GetPVarInt(playerid, "LSFD_InviteDiv");
+		DeletePVar(playerid, "LSFD_InviteDiv");
+
+		if(divType == 2)
+		{
+			PlayerData[playerid][pFireRank] = 1;
+			PlayerData[playerid][pEMSRank] = 0;
+		}
+		else
+		{
+			PlayerData[playerid][pEMSRank] = 1;
+			PlayerData[playerid][pFireRank] = 0;
 		}
 
-		SetFaction(playerid, factionid);
-
-		new rank;
-
-		for(new i = 18; i >= 0; i--)
-		{
-		    if(strlen(FactionRanks[factionid][i]) >= 1)
-		    {
-		        rank = i + 1;
-		        break;
-		    }
-		}
-
-		PlayerData[playerid][pFactionRank] = rank;
-
-		SendClientMessageEx(playerid, COLOR_YELLOW, "You are now a member of %s!", Faction_GetName(targetid));
-		SendClientMessageEx(targetid, COLOR_YELLOW, "%s has joined your faction %s.", ReturnName(playerid, 0), Faction_GetName(targetid));
-
-		AssignFactionPermissions(playerid);
-
-        PlayerData[playerid][pFactionOffer] = INVALID_PLAYER_ID;
-        PlayerData[playerid][pFactionOffered] = -1;
-
-  		if(IsPolice(playerid) && PlayerData[playerid][pAdmin] < 1)
-		{
-			if(!MDC_Created{playerid})
-			{
-				InitMDC(playerid);
-			}
-		}
-
- 		mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `characters` SET `Faction` = '%d', `FactionRank` = '%d' WHERE `ID` = '%d' LIMIT 1", PlayerData[playerid][pFactionID], PlayerData[playerid][pFactionRank], PlayerData[playerid][pID]);
+		mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `characters` SET `Faction` = '%d', `FactionRank` = '%d', `EMSRank` = '%d', `FireRank` = '%d' WHERE `ID` = '%d' LIMIT 1", PlayerData[playerid][pFactionID], PlayerData[playerid][pFactionRank], PlayerData[playerid][pEMSRank], PlayerData[playerid][pFireRank], PlayerData[playerid][pID]);
 		mysql_tquery(dbCon, gquery);
 	}
-	else SendSyntaxMessage(playerid, "/accept male or /accept female, write it properly.");
+	else
+	{
+		mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `characters` SET `Faction` = '%d', `FactionRank` = '%d' WHERE `ID` = '%d' LIMIT 1", PlayerData[playerid][pFactionID], PlayerData[playerid][pFactionRank], PlayerData[playerid][pID]);
+		mysql_tquery(dbCon, gquery);
+	}
 
 	return true;
 }
@@ -4901,11 +6069,25 @@ CMD:gates(playerid, params[])
 				Gates[i][gateOpened] = 1;
 
 				MoveDynamicObject(Gates[i][gateObject], Gates[i][gateMoveX], Gates[i][gateMoveY], Gates[i][gateMoveZ], Gates[i][gateOpenSpeed], Gates[i][gateMoveRX], Gates[i][gateMoveRY], Gates[i][gateMoveRZ]);
+
+				// Auto-close gate after 4 seconds
+				SetTimerEx("AutoCloseGate", 4000, false, "d", i);
 			}
 			return true;
 		}
 	}
 	return true;
+}
+
+forward AutoCloseGate(gateid);
+public AutoCloseGate(gateid)
+{
+	if(gateid < 0 || gateid >= MAX_GATES) return;
+	if(!Iter_Contains(Gates, gateid)) return;
+	if(Gates[gateid][gateOpened] != 1) return;
+
+	Gates[gateid][gateOpened] = 0;
+	MoveDynamicObject(Gates[gateid][gateObject], Gates[gateid][gatePosX], Gates[gateid][gatePosY], Gates[gateid][gatePosZ], Gates[gateid][gateOpenSpeed], Gates[gateid][gatePosRX], Gates[gateid][gatePosRY], Gates[gateid][gatePosRZ]);
 }
 
 GateFactionPermissible(playerid, gatefaction, faction)
@@ -5012,7 +6194,7 @@ CMD:door(playerid, params[])
 	{
 		TogglePrisonCell(house);
 	}	
-    else
+	else
 	{
 		new
 			Float:fDistance[2] = {99999.0, 0.0},
@@ -5021,34 +6203,44 @@ CMD:door(playerid, params[])
 
 		foreach (new x: Movedoors)
 		{
-			fDistance[1] = GetPlayerDistanceFromPoint(playerid, Doors[x][doorPosX], Doors[x][doorPosY], Doors[x][doorPosZ]);
-
+			fDistance[1] = GetPlayerDistanceFromPoint(playerid, Doors[x][doorCPX], Doors[x][doorCPY], Doors[x][doorCPZ]);
 			if(fDistance[1] < fDistance[0])
 			{
 				fDistance[0] = fDistance[1];
-
 				i = x;
 			}
 		}
 
-		if(i != -1 && fDistance[0] < 3)
+		if(i != -1 && fDistance[0] < 3.0)
 		{
-			if(Doors[i][doorFaction] == -1 || (Doors[i][doorFaction] != -1 && GetFactionType(playerid) == Doors[i][doorFaction]))
+			if(Doors[i][doorFaction] == -1 || (Doors[i][doorFaction] != -1 && GetFactionType(playerid) == Doors[i][doorFaction]) || PlayerData[playerid][pAdmin] >= 4)
 			{
 				if(Doors[i][doorOpened] == 1)
 				{
 					Doors[i][doorOpened] = 0;
 
-					MoveDynamicObject(Doors[i][doorObject], Doors[i][doorPosX], Doors[i][doorPosY], Doors[i][doorPosZ], Doors[i][doorOpenSpeed], Doors[i][doorPosRX], Doors[i][doorPosRY], Doors[i][doorPosRZ]);
+					if(Doors[i][doorTimer])
+					{
+						KillTimer(Doors[i][doorTimer]);
+						Doors[i][doorTimer] = 0;
+					}
+					MoveMoveDoor(i, false);
 				}
 				else
 				{
-					if(Doors[i][doorLocked])
+					if(Doors[i][doorLocked] && PlayerData[playerid][pAdmin] < 4)
 					    return SendClientMessage(playerid, COLOR_LIGHTRED, "Door is locked.");
 
 					Doors[i][doorOpened] = 1;
 
-					MoveDynamicObject(Doors[i][doorObject], Doors[i][doorMoveX], Doors[i][doorMoveY], Doors[i][doorMoveZ], Doors[i][doorOpenSpeed], Doors[i][doorMoveRX], Doors[i][doorMoveRY], Doors[i][doorMoveRZ]);
+					if(Doors[i][doorTimer])
+					{
+						KillTimer(Doors[i][doorTimer]);
+						Doors[i][doorTimer] = 0;
+					}
+					Doors[i][doorTimer] = SetTimerEx("AutoCloseMoveDoor", 3000, false, "d", i);
+
+					MoveMoveDoor(i, true);
 				}
 				return true;
 			}
@@ -5057,10 +6249,25 @@ CMD:door(playerid, params[])
 	return true;
 }
 
+stock IsPlayerNearMoveDoor(playerid)
+{
+	foreach(new x : Movedoors)
+	{
+		if(GetPlayerDistanceFromPoint(playerid, Doors[x][doorCPX], Doors[x][doorCPY], Doors[x][doorCPZ]) < 3.0)
+		{
+			return 1;
+		}
+	}
+	return 0;
+}
+
 CMD:elevator(playerid, params[])
 {
 	if(GetPlayerState(playerid) != PLAYER_STATE_ONFOOT)
 	    return SendErrorMessage(playerid, "You're not on foot.");
+
+	if(Elevator_OnPlayerUse(playerid))
+	    return 1;
 
 	foreach	(new i: Entrance)
 	{
@@ -5092,7 +6299,7 @@ CMD:elevator(playerid, params[])
 	        else
 			{
 				SetPlayerInterior(playerid, 0);
-				SetPlayerVirtualWorld(playerid, 0);
+				SetPlayerVirtualWorldEx(playerid, EntranceData[i][insideWorld]);
 
 				DesyncPlayerInterior(playerid);
 			}
@@ -5115,7 +6322,7 @@ CMD:elevator(playerid, params[])
 	        else
 			{
 				SetPlayerInterior(playerid, 0);
-				SetPlayerVirtualWorld(playerid, 0);
+				SetPlayerVirtualWorldEx(playerid, EntranceData[i][outsideWorld]);
 
 				DesyncPlayerInterior(playerid);
 			}
@@ -5352,6 +6559,8 @@ CMD:enter(playerid, params[])
 	foreach	(new i: Entrance)
 	{
 	    if(InApartment[playerid] != EntranceData[i][outsideApartmentID]) continue;
+	    // VW check: if outside is in open world (no apartment), make sure VW matches
+	    if(EntranceData[i][outsideApartmentID] == -1 && GetPlayerVirtualWorld(playerid) != EntranceData[i][outsideWorld]) continue;
 
 	    if(IsPlayerInRangeOfPoint(playerid, EntranceData[i][pointRange], EntranceData[i][outsidePos][0], EntranceData[i][outsidePos][1], EntranceData[i][outsidePos][2]))
 	    {
@@ -5393,6 +6602,11 @@ CMD:enter(playerid, params[])
 			            LinkVehicleToInterior(vehicleid, ComplexData[ EntranceData[i][insideApartmentID] ][aInterior]);
 			            SetVehicleVirtualWorld(vehicleid, ComplexData[ EntranceData[i][insideApartmentID] ][aWorld]);
 			        }
+			        else
+			        {
+			            LinkVehicleToInterior(vehicleid, 0);
+			            SetVehicleVirtualWorld(vehicleid, EntranceData[i][insideWorld]);
+			        }
 				}
 				case POINT_TYPE_BOTH:
 				{
@@ -5407,6 +6621,11 @@ CMD:enter(playerid, params[])
 				        {
 				            LinkVehicleToInterior(vehicleid, ComplexData[ EntranceData[i][insideApartmentID] ][aInterior]);
 				            SetVehicleVirtualWorld(vehicleid, ComplexData[ EntranceData[i][insideApartmentID] ][aWorld]);
+				        }
+				        else
+				        {
+				            LinkVehicleToInterior(vehicleid, 0);
+				            SetVehicleVirtualWorld(vehicleid, EntranceData[i][insideWorld]);
 				        }
 				    }
 				    else
@@ -5431,7 +6650,7 @@ CMD:enter(playerid, params[])
 	        else
 			{
 				SetPlayerInterior(playerid, 0);
-				SetPlayerVirtualWorld(playerid, 0);
+				SetPlayerVirtualWorldEx(playerid, EntranceData[i][insideWorld]);
 
 				DesyncPlayerInterior(playerid);
 			}
@@ -5583,27 +6802,27 @@ CMD:meal(playerid, params[])
 
 						switch(BusinessData[InBusiness[playerid]][bsubType])
 						{
-						    case 1:
+						    case 2: // Well Stacked Pizza
 						    {
 	          					SendClientMessageEx(playerid, -1, "1. Buster - %s", FormatNumber(BusinessData[InBusiness[playerid]][bItems][0]));
 	          					SendClientMessageEx(playerid, -1, "2. Double D-Luxe - %s", FormatNumber(BusinessData[InBusiness[playerid]][bItems][1]));
 	          					SendClientMessageEx(playerid, -1, "3. Full Rack - %s", FormatNumber(BusinessData[InBusiness[playerid]][bItems][2]));
 	          					SendClientMessageEx(playerid, -1, "4. Salad Meal - %s", FormatNumber(BusinessData[InBusiness[playerid]][bItems][3]));
 						    }
-						    case 2:
+						    case 3: // Rusty Browns Donuts
 						    {
 	          					SendClientMessageEx(playerid, -1, "1. Rusty's D-Luxe - %s", FormatNumber(BusinessData[InBusiness[playerid]][bItems][0]));
 	          					SendClientMessageEx(playerid, -1, "2. Rusty's Double Barrel - %s", FormatNumber(BusinessData[InBusiness[playerid]][bItems][1]));
 	          					SendClientMessageEx(playerid, -1, "3. Rusty's Huge Double - %s", FormatNumber(BusinessData[InBusiness[playerid]][bItems][2]));
 						    }
-						    case 3:
+						    case 1: // Burger Shot
 						    {
 	          					SendClientMessageEx(playerid, -1, "1. Moo Kids Meal - %s", FormatNumber(BusinessData[InBusiness[playerid]][bItems][0]));
 	          					SendClientMessageEx(playerid, -1, "2. Beef Tower - %s", FormatNumber(BusinessData[InBusiness[playerid]][bItems][1]));
 	          					SendClientMessageEx(playerid, -1, "3. Meat Stack - %s", FormatNumber(BusinessData[InBusiness[playerid]][bItems][2]));
 	          					SendClientMessageEx(playerid, -1, "4. Salad Meal - %s", FormatNumber(BusinessData[InBusiness[playerid]][bItems][3]));
 						    }
-						    case 4:
+						    case 0: // Cluckin Bell
 						    {
 	          					SendClientMessageEx(playerid, -1, "1. Cluckin' Little Meal - %s", FormatNumber(BusinessData[InBusiness[playerid]][bItems][0]));
 	          					SendClientMessageEx(playerid, -1, "2. Cluckin' Big Meal - %s", FormatNumber(BusinessData[InBusiness[playerid]][bItems][1]));
@@ -5614,7 +6833,7 @@ CMD:meal(playerid, params[])
 				        return 1;
 				    }
 
-				    if(menuid >= 1 && (menuid <= 3 || (menuid <= 4 && BusinessData[InBusiness[playerid]][bsubType] != 2)))
+				    if(menuid >= 1 && (menuid <= 3 || (menuid <= 4 && BusinessData[InBusiness[playerid]][bsubType] != 3)))
 				    {
 						if(value < 1 || value > 9999)
 						    return SendClientMessage(playerid, COLOR_GRAD2, "Price must be at least 1 and less than 9999.");
@@ -5647,7 +6866,7 @@ stock ShowPlayerRestaurantMenu(playerid, id)
 
 	switch(BusinessData[id][bsubType])
 	{
-		case 1: // Pizza
+		case 2: // Well Stacked Pizza
 		{
 		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][0], 2218);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][0]);
@@ -5658,7 +6877,7 @@ stock ShowPlayerRestaurantMenu(playerid, id)
 		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][2], 2220);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][2]);
 
-		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][3], 2355);
+		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][3], 2647); // Soda / Drink Cup
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][3]);
 
 			format(string, sizeof(string), "Buster~n~~r~Health: +30~n~Removes hunger~n~~b~Price: %s", FormatNumber(BusinessData[id][bItems][0]));
@@ -5673,11 +6892,11 @@ stock ShowPlayerRestaurantMenu(playerid, id)
 			PlayerTextDrawSetString(playerid,PTD_Restaurant[playerid][6], string);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][6]);
 
-		    format(string, sizeof(string), "Salad Meal~n~~r~Health: +100~n~Removes hunger~n~~b~Price: %s", FormatNumber(BusinessData[id][bItems][3]));
+		    format(string, sizeof(string), "Sprunk Drink~n~~b~Thirst: +100%%~n~~r~Health: +15~n~~b~Price: %s", FormatNumber(BusinessData[id][bItems][3]));
 			PlayerTextDrawSetString(playerid,PTD_Restaurant[playerid][7], string);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][7]);
 		}
- 		case 2: // Donut
+ 		case 3: // Rusty Browns Donuts
 		{
 		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][0], 2221);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][0]);
@@ -5687,6 +6906,9 @@ stock ShowPlayerRestaurantMenu(playerid, id)
 
 		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][2], 2222);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][2]);
+
+		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][3], 2647); // Coffee / Hot Drink
+		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][3]);
 
             format(string, sizeof(string), "Rusty's D-Luxe~n~~r~Health: +30~n~Removes hunger~n~~b~Price: %s", FormatNumber(BusinessData[id][bItems][0]));
 			PlayerTextDrawSetString(playerid,PTD_Restaurant[playerid][4], string);
@@ -5699,8 +6921,12 @@ stock ShowPlayerRestaurantMenu(playerid, id)
 		    format(string, sizeof(string), "Rusty's Huge Double~n~~r~Health: +100~n~Removes hunger~n~~b~Price: %s", FormatNumber(BusinessData[id][bItems][2]));
 			PlayerTextDrawSetString(playerid,PTD_Restaurant[playerid][6], string);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][6]);
+
+		    format(string, sizeof(string), "Rusty's Iced Coffee~n~~b~Thirst: +100%%~n~~r~Health: +15~n~~b~Price: %s", FormatNumber(BusinessData[id][bItems][3]));
+			PlayerTextDrawSetString(playerid,PTD_Restaurant[playerid][7], string);
+		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][7]);
 		}
- 		case 3: // Burger
+ 		case 1: // Burger Shot
 		{
 		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][0], 2213);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][0]);
@@ -5711,7 +6937,7 @@ stock ShowPlayerRestaurantMenu(playerid, id)
 		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][2], 2212);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][2]);
 
-		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][3], 2354);
+		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][3], 2647);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][3]);
 
             format(string, sizeof(string), "Moo Kids Meal~n~~r~Health: +30~n~Removes hunger~n~~b~Price: %s", FormatNumber(BusinessData[id][bItems][0]));
@@ -5726,11 +6952,11 @@ stock ShowPlayerRestaurantMenu(playerid, id)
 			PlayerTextDrawSetString(playerid,PTD_Restaurant[playerid][6], string);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][6]);
 
-            format(string, sizeof(string), "Salad Meal~n~~r~Health: +100~n~Removes hunger~n~~b~Price: %s", FormatNumber(BusinessData[id][bItems][3]));
+            format(string, sizeof(string), "Large Soda Drink~n~~b~Thirst: +100%%~n~~r~Health: +15~n~~b~Price: %s", FormatNumber(BusinessData[id][bItems][3]));
 			PlayerTextDrawSetString(playerid,PTD_Restaurant[playerid][7], string);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][7]);
 		}
- 		case 4: // Cluckin
+ 		case 0: // Cluckin Bell
 		{
 		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][0], 2215);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][0]);
@@ -5741,7 +6967,7 @@ stock ShowPlayerRestaurantMenu(playerid, id)
 		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][2], 2217);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][2]);
 
-		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][3], 2353);
+		    PlayerTextDrawSetPreviewModel(playerid,PTD_Restaurant[playerid][3], 2647);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][3]);
 
             format(string, sizeof(string), "Cluckin' Little Meal~n~~r~Health: +30~n~Removes hunger~n~~b~Price: %s", FormatNumber(BusinessData[id][bItems][0]));
@@ -5756,7 +6982,7 @@ stock ShowPlayerRestaurantMenu(playerid, id)
 			PlayerTextDrawSetString(playerid,PTD_Restaurant[playerid][6], string);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][6]);
 
-            format(string, sizeof(string), "Salad Meal~n~~r~Health: +100~n~Removes hunger~n~~b~Price: %s", FormatNumber(BusinessData[id][bItems][3]));
+            format(string, sizeof(string), "Cluckin' Soft Drink~n~~b~Thirst: +100%%~n~~r~Health: +15~n~~b~Price: %s", FormatNumber(BusinessData[id][bItems][3]));
 			PlayerTextDrawSetString(playerid,PTD_Restaurant[playerid][7], string);
 		    PlayerTextDrawShow(playerid, PTD_Restaurant[playerid][7]);
 		}
@@ -5889,6 +7115,8 @@ CMD:exit(playerid, params[])
 	foreach	(new i: Entrance)
 	{
 	    if(InApartment[playerid] != EntranceData[i][insideApartmentID]) continue;
+	    // VW check: if inside is in open world (no apartment), make sure VW matches
+	    if(EntranceData[i][insideApartmentID] == -1 && GetPlayerVirtualWorld(playerid) != EntranceData[i][insideWorld]) continue;
 
 	    if(IsPlayerInRangeOfPoint(playerid, EntranceData[i][pointRange], EntranceData[i][insidePos][0], EntranceData[i][insidePos][1], EntranceData[i][insidePos][2]))
 	    {
@@ -5916,10 +7144,15 @@ CMD:exit(playerid, params[])
 					SetVehicleDynamicPos(vehicleid, EntranceData[i][outsidePos][0], EntranceData[i][outsidePos][1], EntranceData[i][outsidePos][2], playerid);
 					SetVehicleZAngle(vehicleid, EntranceData[i][outsidePos][3]);
 
-			        if(EntranceData[i][insideApartmentID] != -1)
+			        if(EntranceData[i][outsideApartmentID] != -1)
 			        {
 			            LinkVehicleToInterior(vehicleid, ComplexData[ EntranceData[i][outsideApartmentID] ][aInterior]);
 			            SetVehicleVirtualWorld(vehicleid, ComplexData[ EntranceData[i][outsideApartmentID] ][aWorld]);
+			        }
+			        else
+			        {
+			            LinkVehicleToInterior(vehicleid, 0);
+			            SetVehicleVirtualWorld(vehicleid, EntranceData[i][outsideWorld]);
 			        }
 				}
 				case POINT_TYPE_BOTH:
@@ -5931,10 +7164,15 @@ CMD:exit(playerid, params[])
 						SetVehicleDynamicPos(vehicleid, EntranceData[i][outsidePos][0], EntranceData[i][outsidePos][1], EntranceData[i][outsidePos][2], playerid);
 						SetVehicleZAngle(vehicleid, EntranceData[i][outsidePos][3]);
 
-				        if(EntranceData[i][insideApartmentID] != -1)
+				        if(EntranceData[i][outsideApartmentID] != -1)
 				        {
 				            LinkVehicleToInterior(vehicleid, ComplexData[ EntranceData[i][outsideApartmentID] ][aInterior]);
 				            SetVehicleVirtualWorld(vehicleid, ComplexData[ EntranceData[i][outsideApartmentID] ][aWorld]);
+				        }
+				        else
+				        {
+				            LinkVehicleToInterior(vehicleid, 0);
+				            SetVehicleVirtualWorld(vehicleid, EntranceData[i][outsideWorld]);
 				        }
 				    }
 				    else
@@ -5959,7 +7197,7 @@ CMD:exit(playerid, params[])
 	        else
 			{
 				SetPlayerInterior(playerid, 0);
-				SetPlayerVirtualWorld(playerid, 0);
+				SetPlayerVirtualWorldEx(playerid, EntranceData[i][outsideWorld]);
 
 				DesyncPlayerInterior(playerid);
 			}
@@ -7091,9 +8329,9 @@ CMD:packetloss(playerid, params[])
 	return true;
 }
 
-YCMD:cc(playerid, params[], help) = clearchat;
+YCMD:clearchat(playerid, params[], help) = cc;
 
-CMD:clearchat(playerid, params[])
+CMD:cc(playerid, params[])
 {
 	for(new i = 0; i < 21; ++i)
 	{
@@ -7726,10 +8964,56 @@ CMD:trailer(playerid, params[])
 	return true;
 }
 
+CMD:setdbrank(playerid, params[])
+{
+	if(GetFactionType(playerid) != FACTION_POLICE)
+		return SendErrorMessage(playerid, "You are not in the LSPD.");
+
+	if(PlayerData[playerid][pFactionRank] > 4)
+		return SendErrorMessage(playerid, "Only Commander (Rank 4) and above can set DB ranks.");
+
+	new userid, db_rank;
+	if(sscanf(params, "ud", userid, db_rank))
+		return SendSyntaxMessage(playerid, "/setdbrank [playerid/Name] [rank (0: None, 1: Det I, 2: Det II, 3: Det III)]");
+
+	if(!IsPlayerConnected(userid))
+		return SendErrorMessage(playerid, "Invalid player specified.");
+
+	if(PlayerData[userid][pFaction] != PlayerData[playerid][pFaction])
+		return SendErrorMessage(playerid, "That player is not in your faction.");
+
+	if(db_rank < 0 || db_rank > 3)
+		return SendErrorMessage(playerid, "DB Rank must be between 0 and 3.");
+
+	PlayerData[userid][pDBRank] = db_rank;
+
+	new query[128];
+	mysql_format(dbCon, query, sizeof(query), "UPDATE `characters` SET `DBRank` = '%d' WHERE `ID` = '%d' LIMIT 1", db_rank, PlayerData[userid][pID]);
+	mysql_tquery(dbCon, query);
+
+	new rankTitle[32];
+	switch(db_rank)
+	{
+		case 1: rankTitle = "Detective I";
+		case 2: rankTitle = "Detective II";
+		case 3: rankTitle = "Detective III";
+		default: rankTitle = "None (Removed)";
+	}
+
+	SendClientMessageEx(playerid, COLOR_YELLOW, "-> You set %s's DB rank to %s (DB Level %d).", ReturnName(userid, 0), rankTitle, db_rank);
+	SendClientMessageEx(userid, COLOR_YELLOW, "[LSPD] %s has updated your Detective Bureau rank to: %s.", ReturnName(playerid, 0), rankTitle);
+	return true;
+}
+
+YCMD:setsubrank(playerid, params[], help) = setdbrank;
+
 CMD:db(playerid, params[])
 {
 	if(!IsPolice(playerid))
 	    return SendErrorMessage(playerid, "You're not Police.");
+
+	if(PlayerData[playerid][pDBRank] < 1)
+		return SendErrorMessage(playerid, "You are not assigned to the Detective Bureau (DB Rank 1-3 required). Leader must use /setdbrank.");
 
     if(!IsNearFactionSpawn(playerid, PlayerData[playerid][pFaction]))
         return SendErrorMessage(playerid, "You can't /db here.");
@@ -7743,15 +9027,73 @@ CMD:db(playerid, params[])
 	SetPlayerArmourEx(playerid, 100.0);
 	SetPlayerHealthEx(playerid, 100.0 + PlayerData[playerid][pSHealth]);
 
-	SendClientMessage(playerid, -1, "Now you duty as Detective Bureau");
-	SendClientMessage(playerid, -1, "You got Deagle(350), Camera(200), Armour(100), Health(100)!");
+	new dbTitle[32];
+	switch(PlayerData[playerid][pDBRank])
+	{
+		case 1: dbTitle = "Detective I";
+		case 2: dbTitle = "Detective II";
+		case 3: dbTitle = "Detective III";
+		default: dbTitle = "Detective";
+	}
+
+	SendClientMessageEx(playerid, COLOR_YELLOW, "Now on duty as %s (Detective Bureau).", dbTitle);
+	SendClientMessage(playerid, COLOR_WHITE, "Equipped: Deagle (350), Camera (200), Armour (100), Health (100).");
 	return true;
 }
+
+CMD:setswatrank(playerid, params[])
+{
+	new ftype = GetFactionType(playerid);
+	if(ftype != FACTION_POLICE && ftype != FACTION_SHERIFF)
+		return SendErrorMessage(playerid, "You are not in LSPD or LSSD.");
+
+	if(PlayerData[playerid][pFactionRank] > 4)
+		return SendErrorMessage(playerid, "Only High Ranks (Rank 4+) can set SWAT/SEB ranks.");
+
+	new userid, swat_rank;
+	if(sscanf(params, "ud", userid, swat_rank))
+		return SendSyntaxMessage(playerid, "/setswatrank [playerid/Name] [rank (0: None, 1: Operator, 2: Leader, 3: Commander)]");
+
+	if(!IsPlayerConnected(userid))
+		return SendErrorMessage(playerid, "Invalid player specified.");
+
+	if(PlayerData[userid][pFaction] != PlayerData[playerid][pFaction])
+		return SendErrorMessage(playerid, "That player is not in your faction.");
+
+	if(swat_rank < 0 || swat_rank > 3)
+		return SendErrorMessage(playerid, "Rank must be between 0 and 3.");
+
+	PlayerData[userid][pSWATRank] = swat_rank;
+
+	new query[128];
+	mysql_format(dbCon, query, sizeof(query), "UPDATE `characters` SET `SWATRank` = '%d' WHERE `ID` = '%d' LIMIT 1", swat_rank, PlayerData[userid][pID]);
+	mysql_tquery(dbCon, query);
+
+	new divName[16], rankTitle[32];
+	format(divName, sizeof(divName), (ftype == FACTION_POLICE) ? ("SWAT") : ("SEB"));
+
+	switch(swat_rank)
+	{
+		case 1: format(rankTitle, sizeof(rankTitle), "%s Operator", divName);
+		case 2: format(rankTitle, sizeof(rankTitle), "%s Team Leader", divName);
+		case 3: format(rankTitle, sizeof(rankTitle), "%s Commander", divName);
+		default: format(rankTitle, sizeof(rankTitle), "None (Removed)");
+	}
+
+	SendClientMessageEx(playerid, COLOR_YELLOW, "-> You set %s's %s rank to %s (Level %d).", ReturnName(userid, 0), divName, rankTitle, swat_rank);
+	SendClientMessageEx(userid, COLOR_YELLOW, "[%s] %s updated your %s rank to: %s.", Faction_GetAbbreviation(playerid), ReturnName(playerid, 0), divName, rankTitle);
+	return true;
+}
+
+YCMD:setsebrank(playerid, params[], help) = setswatrank;
 
 CMD:swat(playerid, params[])
 {
 	if(GetFactionType(playerid) != FACTION_POLICE)
-		return SendErrorMessage(playerid, "You aren't in the LSPD.");
+		return SendErrorMessage(playerid, "You aren't in the LSPD. LSSD members use /seb.");
+
+	if(PlayerData[playerid][pSWATRank] < 1)
+		return SendErrorMessage(playerid, "You are not assigned to SWAT (SWAT Rank 1-3 required). Leader must use /setswatrank or /fmenu.");
 
 	if(!PlayerData[playerid][pOnDuty])
 	    return SendErrorMessage(playerid, "You're not on duty.");
@@ -7763,16 +9105,22 @@ CMD:swat(playerid, params[])
 	{
 		PlayerData[playerid][pSwat] = true;
 
-		SendPoliceMessage(COLOR_POLICE, "** HQ: SWAT Operative %s is now ready for orders! **", ReturnName(playerid, 0));
+		new title[32];
+		switch(PlayerData[playerid][pSWATRank])
+		{
+			case 1: title = "SWAT Operator";
+			case 2: title = "SWAT Team Leader";
+			case 3: title = "SWAT Commander";
+			default: title = "SWAT Member";
+		}
 
+		SendPoliceMessage(COLOR_POLICE, "** HQ: %s %s is now ready for tactical orders! **", title, ReturnName(playerid, 0));
 		SetPlayerArmourEx(playerid, 200.0);
 	}
 	else
 	{
 		PlayerData[playerid][pSwat] = false;
-
 		SendPoliceMessage(COLOR_POLICE, "** HQ: SWAT Operative %s is now Off Duty! **", ReturnName(playerid, 0));
-
 		SetPlayerArmourEx(playerid, 100.0);
 	}
 	return true;
@@ -7781,7 +9129,10 @@ CMD:swat(playerid, params[])
 CMD:seb(playerid, params[])
 {
 	if(GetFactionType(playerid) != FACTION_SHERIFF)
-		return SendErrorMessage(playerid, "You aren't in the LSSD.");
+		return SendErrorMessage(playerid, "You aren't in the LSSD. LSPD members use /swat.");
+
+	if(PlayerData[playerid][pSWATRank] < 1)
+		return SendErrorMessage(playerid, "You are not assigned to SEB (SEB Rank 1-3 required). Leader must use /setsebrank or /fmenu.");
 
 	if(!PlayerData[playerid][pOnDuty])
 	    return SendErrorMessage(playerid, "You're not on duty.");
@@ -7793,16 +9144,22 @@ CMD:seb(playerid, params[])
 	{
 		PlayerData[playerid][pSwat] = true;
 
-		SendPoliceMessage(COLOR_POLICE, "** HQ: Special Enforcement Bureau %s is now ready for orders! **", ReturnName(playerid, 0));
+		new title[32];
+		switch(PlayerData[playerid][pSWATRank])
+		{
+			case 1: title = "SEB Operator";
+			case 2: title = "SEB Team Leader";
+			case 3: title = "SEB Commander";
+			default: title = "SEB Member";
+		}
 
+		SendPoliceMessage(COLOR_POLICE, "** HQ: Special Enforcement Bureau (%s) %s is now ready for orders! **", title, ReturnName(playerid, 0));
 		SetPlayerArmourEx(playerid, 200.0);
 	}
 	else
 	{
 		PlayerData[playerid][pSwat] = false;
-
 		SendPoliceMessage(COLOR_POLICE, "** HQ: Special Enforcement Bureau %s is now Off Duty! **", ReturnName(playerid, 0));
-
 		SetPlayerArmourEx(playerid, 100.0);
 	}
 
@@ -7904,6 +9261,9 @@ CMD:duty(playerid, params[])
         if(PlayerData[playerid][pFavUniform] != 0)
 			SetPlayerSkin(playerid, PlayerData[playerid][pFavUniform]);
 
+		PlayerData[playerid][pOnDuty] = true;
+		PlayerData[playerid][pOnDutySkin] = GetPlayerSkin(playerid);
+
 		switch(type)
 		{
 		    case FACTION_POLICE, FACTION_SHERIFF, FACTION_CORRECTIONAL:
@@ -7935,7 +9295,6 @@ CMD:duty(playerid, params[])
 		}
 
 		TagColor{playerid} = false;
-		PlayerData[playerid][pOnDuty] = true;
 		SetPlayerToTeamColor(playerid);
 	}
 	else
@@ -7946,7 +9305,6 @@ CMD:duty(playerid, params[])
 		TagColor{playerid} = false;
   		CallSign[playerid][0] = EOS;
 		PlayerData[playerid][pHandCuffs] = 0;
-		PlayerData[playerid][pOnDuty] = false;
 
 		if(TazerActive{playerid})
 		{
@@ -7961,6 +9319,7 @@ CMD:duty(playerid, params[])
 		SetPlayerArmourEx(playerid, 0.0);
 		SetPlayerToTeamColor(playerid);
 		SetPlayerSkin(playerid, PlayerData[playerid][pModel]);
+		PlayerData[playerid][pOnDutySkin] = 0;
 
 	    switch(type)
 		{
@@ -7976,9 +9335,13 @@ CMD:duty(playerid, params[])
 			{
                 PlayerData[playerid][pFireman] = false;
 
+				SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "* %s places medical gear and equipment inside a locker.", ReturnName(playerid, 0));
+
 				SendMedicMessage(COLOR_POLICE, "** HQ: %s %s is now Off Duty! **", Faction_GetRank(playerid), ReturnName(playerid, 0));
 			}
 		}
+
+		PlayerData[playerid][pOnDuty] = false;
 	}
 	return true;
 }
@@ -9437,10 +10800,15 @@ CMD:place(playerid, params[])
     if(PlayerData[playerid][pLevel] < 2)
 	    return SendClientMessage(playerid, COLOR_GRAD1, "   You must have level 2 or above.");
 
-	new weaponid, ammo, id = -1, slot, string[256];
+	new weaponid = 0, ammo, id = -1, slot, string[256];
 
 	if(sscanf(params, "d", weaponid))
-		return SendClientMessage(playerid, COLOR_WHITE, "/place weapon_id (ID List in /weapons.)");
+	{
+		weaponid = GetPlayerWeapon(playerid);
+	}
+
+	if(weaponid <= 0 || weaponid == 46)
+		return SendErrorMessage(playerid, "You must be holding a weapon in your hand to place it.");
 
 	if(!PlayerHasWeapon(playerid, weaponid))
 	   return SendServerMessage(playerid, "Sorry, only the guns that are part of your /stats.");
@@ -10327,7 +11695,7 @@ CMD:lock(playerid, params[])
 
 		foreach (new x: Movedoors)
 		{
-			fDistance[1] = GetPlayerDistanceFromPoint(playerid, Doors[x][doorPosX], Doors[x][doorPosY], Doors[x][doorPosZ]);
+			fDistance[1] = GetPlayerDistanceFromPoint(playerid, Doors[x][doorCPX], Doors[x][doorCPY], Doors[x][doorCPZ]);
 
 			if(fDistance[1] < fDistance[0])
 			{
@@ -10338,7 +11706,7 @@ CMD:lock(playerid, params[])
 
 		if(i != -1 && fDistance[0] < 3)
 		{
-			if(Doors[i][doorFaction] == -1 || (Doors[i][doorFaction] != -1 && GetFactionType(playerid) == Doors[i][doorFaction]) || (Doors[i][doorFaction] == FACTION_CORRECTIONAL && IsPolice(playerid)))
+			if(Doors[i][doorFaction] == -1 || (Doors[i][doorFaction] != -1 && GetFactionType(playerid) == Doors[i][doorFaction]) || (Doors[i][doorFaction] == FACTION_CORRECTIONAL && IsPolice(playerid)) || PlayerData[playerid][pAdmin] >= 4)
 			{
 				if(Doors[i][doorLocked] == 1)
 				{
@@ -10444,6 +11812,43 @@ CMD:lock(playerid, params[])
 
 	return true;
 }*/
+
+CMD:setbuycomp(playerid, params[])
+{
+	if(PlayerData[playerid][pAdmin] < 4)
+		return SendErrorMessage(playerid, "You are not authorized to use this command.");
+
+	new Float:x, Float:y, Float:z;
+	GetPlayerPos(playerid, x, y, z);
+
+	new compid = 60; // Component storage index
+
+	StorageData[compid][in_posx] = x;
+	StorageData[compid][in_posy] = y;
+	StorageData[compid][in_posz] = z;
+
+	if(IsValidDynamicPickup(StorageData[compid][in_pickup]))
+		DestroyDynamicPickup(StorageData[compid][in_pickup]);
+
+	if(IsValidDynamic3DTextLabel(StorageData[compid][in_label]))
+		DestroyDynamic3DTextLabel(StorageData[compid][in_label]);
+
+	if(!IndustryData[StorageData[compid][in_industryid]][in_close])
+	{
+		StorageData[compid][in_pickup] = CreateDynamicPickup(1318, 23, x, y, z, 0, 0);
+
+		new msg[128];
+		format(msg, sizeof(msg), "[{E5FF00}%s{FFFFFF}]\nStorage: %d / %d\nPrice: %s / unit", GetBusinessCargoDesc(StorageData[compid][in_item]), StorageData[compid][in_stock], StorageData[compid][in_maximum], FormatNumber(StorageData[compid][in_price]));
+		StorageData[compid][in_label] = CreateDynamic3DTextLabel(msg, -1, x, y, z, 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, -1, -1, -1, 100.0);
+	}
+
+	new query[256];
+	mysql_format(dbCon, query, sizeof(query), "UPDATE `industry` SET `posx` = %f, `posy` = %f, `posz` = %f WHERE `id` = %d", x, y, z, StorageData[compid][in_id]);
+	mysql_tquery(dbCon, query, "", "");
+
+	SendClientMessageEx(playerid, COLOR_GREEN, "Component purchase location has been set to your current position (Storage DB ID: %d).", StorageData[compid][in_id]);
+	return 1;
+}
 
 CMD:buycomp(playerid, params[])
 {
@@ -10949,8 +12354,7 @@ CMD:mechanicjob(playerid, params[])
 
 CMD:farmerjob(playerid, params[])
 {
-	if(PlayerData[playerid][pLevel] > 3)
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "This job is for level 3+ only.");
+
 
 	if(GetFactionType(playerid) != 0)
 	    return SendClientMessage(playerid, COLOR_WHITE, "Only civilians can have this job");
@@ -11044,8 +12448,7 @@ CMD:harvest(playerid, params[])
 	if(PlayerData[playerid][pJob] != JOB_FARMER)
 	    return SendClientMessage(playerid, COLOR_GRAD2, "City boys can not do that!");
 
-	if(PlayerData[playerid][pLevel] > 3)
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "This is for Level 1-3 only!!");
+
 
 	new vehicleid = GetPlayerVehicleID(playerid);
 
@@ -11767,6 +13170,9 @@ CMD:sellbiz(playerid, params[])
 
 			Business_Save(house);
 
+			// Auto-remove custom mapping when business is sold
+			OnPropertySold(2, BusinessData[house][bID]);
+
 			if(InBusiness[playerid] == house)
 			{
 				SetCameraBehindPlayer(playerid);
@@ -12299,7 +13705,7 @@ Dialog:SetFactionSpawn(playerid, response, listitem, inputtext[])
 CMD:setspawn(playerid, params[])
 {
 	if(isnull(params))
-		return SendSyntaxMessage(playerid, "/changespawn [type (0-Normal, 1-Faction, 2-House)]");
+		return SendSyntaxMessage(playerid, "/setspawn [type (0-Normal, 1-Faction, 2-House, 3-Last Location)]");
 
 	new type = strval(params);
 
@@ -12337,9 +13743,18 @@ CMD:setspawn(playerid, params[])
 	    {
 	        SendErrorMessage(playerid, "To change your spawn to a property you own, go to the entrance on foot and /changespawn.");
 	    }
+	    case 3: // Last Location
+	    {
+	        PlayerData[playerid][pSpawnPoint] = 4;
+
+	        SendClientMessage(playerid, COLOR_YELLOW, "You will now spawn at your last location.");
+
+	        mysql_format(dbCon, sgstr, sizeof(sgstr), "UPDATE `characters` SET `SpawnPoint` = '4' WHERE `ID` = '%d' LIMIT 1", PlayerData[playerid][pID]);
+	        mysql_tquery(dbCon, sgstr);
+	    }
 	    default:
 		{
-	        SendSyntaxMessage(playerid, "/changespawn [type (0-Normal, 1-Faction, 2-House)]");
+	        SendSyntaxMessage(playerid, "/setspawn [type (0-Normal, 1-Faction, 2-House, 3-Last Location)]");
 	    }
 	}
 	return true;
@@ -12483,6 +13898,9 @@ CMD:engine(playerid, params[])
 	if(!IsPlayerInAnyVehicle(playerid) || GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
 	    return SendServerMessage(playerid, "You need to be in the driver seat of a vehicle.");
 
+	if(gettime() - LastEngineToggle[playerid] < 5)
+		return SendErrorMessage(playerid, "Please wait 5 seconds before toggling the engine again.");
+
 	new vehicleid = GetPlayerVehicleID(playerid), id = -1, Float:vhealth, bool:canstart;
 
 	if(!IsEngineVehicle(vehicleid))
@@ -12518,6 +13936,7 @@ CMD:engine(playerid, params[])
 
 					format(string, sizeof(string), "* %s starts hotwiring the vehicle.", ReturnName(playerid, 0));
 					SetPlayerChatBubble(playerid, string, COLOR_PURPLE, 20.0, 6000);						
+					LastEngineToggle[playerid] = gettime();
 				}
 			}
 			else
@@ -12533,7 +13952,15 @@ CMD:engine(playerid, params[])
 	{
 		if((id = Vehicle_GetID(vehicleid)) != -1)
 		{
-			if(vehicleVariables[id][vVehicleFaction] == PlayerData[playerid][pFaction])
+			if(vehicleVariables[id][vVehicleSideJob] == 1 && PlayerBusVehicle[playerid] == vehicleid)
+			{
+				canstart = true;
+			}
+			else if(vehicleVariables[id][vVehicleSideJob] == 2 && PlayerSweeperVehicle[playerid] == vehicleid)
+			{
+				canstart = true;
+			}
+			else if(vehicleVariables[id][vVehicleFaction] == PlayerData[playerid][pFaction])
 			{
 				canstart = true;
 			}
@@ -12559,6 +13986,7 @@ CMD:engine(playerid, params[])
 					SetEngineStatus(vehicleid, true);
 					GameTextForPlayer(playerid, "~g~Engine On", 2000, 4);
 					SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s started the engine of the %s.", ReturnName(playerid, 0), ReturnVehicleName(vehicleid));
+					LastEngineToggle[playerid] = gettime();
 				}
 				else if(vhealth < 390)
 				{
@@ -12604,6 +14032,7 @@ CMD:engine(playerid, params[])
 
 					GameTextForPlayer(playerid, "~g~Engine On", 2000, 4);
 					SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s started the engine of the %s.", ReturnName(playerid, 0), ReturnVehicleName(vehicleid));
+					LastEngineToggle[playerid] = gettime();
 				}
 			}
 			case true:
@@ -12613,6 +14042,7 @@ CMD:engine(playerid, params[])
 				GameTextForPlayer(playerid, "~r~Engine Off", 2000, 4);
 				SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s stopped the engine of the %s.", ReturnName(playerid, 0), ReturnVehicleName(vehicleid));
                 StopCarBoomBox(vehicleid);
+				LastEngineToggle[playerid] = gettime();
 			}
 		}
 	}
@@ -12628,36 +14058,21 @@ CMD:m(playerid, params[])
 	if(GetFactionType(playerid) != FACTION_POLICE && GetFactionType(playerid) != FACTION_SHERIFF && GetFactionType(playerid) != FACTION_CORRECTIONAL)
 	    return SendUnauthMessage(playerid, "You can't access this.");
 
+	if(!PlayerData[playerid][pOnDuty])
+		return SendErrorMessage(playerid, "You must be on duty to use the megaphone.");
+
+	if(!IsPlayerInAnyVehicle(playerid))
+		return SendErrorMessage(playerid, "You must be inside a faction vehicle to use the megaphone.");
+
+	new vehicleid = GetPlayerVehicleID(playerid);
+	if(IsAFactionCar(vehicleid, PlayerData[playerid][pFaction]) == -1)
+		return SendErrorMessage(playerid, "You must be inside a faction vehicle to use the megaphone.");
+
 	if(isnull(params))
 		return SendSyntaxMessage(playerid, "/m [megaphone text]");
 
     if(PlayerData[playerid][pInjured])
-        return SendErrorMessage(playerid, "You cannot perform this action right now.");		
-
-	new bool:can_use;
-
-	if(IsPlayerInAnyVehicle(playerid))
-	{
-	    new vehicleid = GetPlayerVehicleID(playerid);
-
-	    if(IsAFactionCar(vehicleid, PlayerData[playerid][pFaction]))
-		{
-			can_use = true;
-		}
-	}
-	else
-	{
-		foreach (new i : sv_vehicles)
-		{
-			if(vehicleVariables[i][vVehicleFaction] == PlayerData[playerid][pFaction] && IsPlayerNearDriverDoor(playerid, vehicleVariables[i][vVehicleScriptID]))
-			{
-				can_use = true;
-			}
-		}
-	}
-
-	if(!can_use)
-	    return SendErrorMessage(playerid, "You aren't next to a megaphone.");
+        return SendErrorMessage(playerid, "You cannot perform this action right now.");
 
 	if(strlen(params) > 80)
     {
@@ -12863,7 +14278,19 @@ stock GetChannelSlot(playerid, chan)
 	return 0;
 }
 
-YCMD:r(playerid, params[], help) = radio;
+CMD:r(playerid, params[])
+{
+	static cmdText[144];
+	if (isnull(params))
+	{
+		cmdText = "/radio";
+	}
+	else
+	{
+		format(cmdText, sizeof(cmdText), "/radio %s", params);
+	}
+	return Command_ReProcess(playerid, cmdText, 0);
+}
 
 CMD:radio(playerid, params[])
 {
@@ -13400,24 +14827,14 @@ CMD:v(playerid, params[])
 		vehicleid,
 		carkey,
 		carid,
-		query[128],
+		query[256],
 		cf[16],
 		cf2[16],
 		cf3[16];
 
 	if(sscanf(params, "s[24]S()[16]S()[16]S()[16]", type, cf, cf2, cf3))
  	{
-		SendClientMessage(playerid, COLOR_YELLOW3, "____________________________________________________");
-		SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle [action]");
-		SendClientMessage(playerid, COLOR_YELLOW3, "[Actions] get, park, sell, register, unregister, buy, upgrade, lights, opendoor, prices");
-		SendClientMessage(playerid, COLOR_YELLOW3, "[Actions] stats, tow, duplicatekey, takekey, dropkey, faction, find, buypark, lock, location");
-		SendClientMessage(playerid, COLOR_YELLOW3, "[Actions] company, keys, UItag");
-		SendClientMessage(playerid, COLOR_YELLOW3, "[Delete] scrap (warning: deletes your vehicle completely)");
-		SendClientMessage(playerid, COLOR_YELLOW3, "[Hint] There is a guide how to use all these actions at forum.losjawa-rp.net");
-		SendClientMessage(playerid, COLOR_YELLOW3, "[Hint] You can show other players your vehicle's stats by /v stats [playerid]");
-		SendClientMessage(playerid, COLOR_YELLOW3, "[Hint] Want a custom vehicle name? Request one by using /vehiclename");
-		SendClientMessage(playerid, COLOR_YELLOW3, "[Hint] You can do /v lights auto to toggle auto-lights turning on during night time.");
-		SendClientMessage(playerid, COLOR_YELLOW3, "____________________________________________________");
+		ShowPlayerVehMainDialog(playerid);
 		return true;
 	}
 
@@ -13429,9 +14846,9 @@ CMD:v(playerid, params[])
 		if(!CountPlayerVehicles(playerid))
 		    return SendServerMessage(playerid, "You do not own any vehicles.");
 
-		PCarPage[playerid] = 1;
-
-		ShowPlayerCarMenu(playerid);
+		// ponytail: Skip textdraw complexity, use simple dialog list
+		mysql_format(dbCon, query, sizeof(query), "SELECT `carID`, `carModel`, `carColor1`, `carColor2`, `carName`, `carUItag` FROM `cars` WHERE `carOwner` = '%d' ORDER BY `carDate` ASC LIMIT 50", PlayerData[playerid][pID]);
+		mysql_tquery(dbCon, query, "ShowPlayerVehicleList", "d", playerid);
 	}
 	else if(!strcmp(type, "sell", true))
 	{
@@ -13472,7 +14889,7 @@ CMD:v(playerid, params[])
 		if(CountVehicleKeys(userid) >= MaxVehiclesSpawned(userid))
             return SendServerMessage(playerid, "This player already has a vehicle spawned.");
 
-		if(CountPlayerVehicles(userid) >= 12)
+		if(CountPlayerVehicles(userid) >= MaxOwnedVehicles(userid))
 			return SendClientMessage(playerid, COLOR_LIGHTRED, "This player the has maxium amount of vehicles.");
 
 		if(price < 0)
@@ -14392,6 +15809,54 @@ CMD:v(playerid, params[])
 
 	return true;
 }
+// ponytail: Simple vehicle list dialog callback - replaces broken textdraw system
+forward ShowPlayerVehicleList(playerid);
+public ShowPlayerVehicleList(playerid)
+{
+	new rows = cache_num_rows();
+	
+	if(!rows)
+		return SendServerMessage(playerid, "You don't have any vehicles.");
+	
+	static dialog_text[2048];
+	new model, color1, model_name[64], ui_tag[15];
+	
+	dialog_text[0] = EOS;
+	PCarPage[playerid] = 1;
+	PCarType[playerid] = 0;
+
+	for(new i = 0; i < 50; ++i)
+	{
+		VehicleCache[playerid][i] = -1;
+	}
+
+	for(new i = 0; i < rows && i < 50; ++i)
+	{
+		cache_get_value_name_int(i, "carID", VehicleCache[playerid][i]);
+		cache_get_value_name_int(i, "carModel", model);
+		cache_get_value_name_int(i, "carColor1", color1);
+		cache_get_value_name(i, "carName", ui_tag, 15);
+		
+		if(strlen(ui_tag) >= 3)
+			format(model_name, sizeof(model_name), "%s", ui_tag);
+		else
+			format(model_name, sizeof(model_name), "%s", ReturnVehicleModelNameEx(model));
+		
+		format(dialog_text, sizeof(dialog_text), "%s%s\n", dialog_text, model_name);
+	}
+	
+	Dialog_Show(playerid, PlayerVehicles, DIALOG_STYLE_LIST, "My Vehicles", dialog_text, "Select", "Close");
+	return true;
+}
+
+Dialog:PlayerVehicles(playerid, response, listitem, inputtext[])
+{
+	if(!response) return 1;
+	
+	PCarOpening{playerid} = true;
+	SpawnPlayerCar(playerid, listitem);
+	return 1;
+}
 
 CMD:hood(playerid, params[])
 {
@@ -14599,20 +16064,17 @@ CMD:cheque(playerid, params[])
 	}
 	else if(strcmp(tmp,"paycheck",true) == 0)
 	{
-	    if(PlayerData[playerid][pLocal] != 502 && PlayerData[playerid][pLocal] != 503 && PlayerData[playerid][pLocal] != 504)
-			return SendClientMessage(playerid, COLOR_GREY, "   You are not at the bank!");
+	    if(PlayerData[playerid][pLocal] != 502 && PlayerData[playerid][pLocal] != 503 && PlayerData[playerid][pLocal] != 504 && ATM_Nearest(playerid) == -1)
+			return SendErrorMessage(playerid, "You are not at the Bank or near an ATM!");
 
-	    new
-			string[16]
-		;
+		if(PlayerData[playerid][pPayCheck] <= 0)
+			return SendErrorMessage(playerid, "You do not have any pending paycheck to collect.");
 
-		if(sscanf(tmp2, "s[16]", string))
-			return SendClientMessage(playerid,COLOR_LIGHTRED,"/cheque paycheck yes to confirm");
-
-        if(strcmp(string, "yes", true) == 0)
-		{
-            printf("paycheck yes");
-		}
+		new amount = PlayerData[playerid][pPayCheck];
+		PlayerData[playerid][pPayCheck] = 0;
+		GivePlayerMoney(playerid, amount);
+		SendServerMessage(playerid, "You have successfully collected your paycheck of %s in cash!", FormatNumber(amount));
+		PlayerPlaySound(playerid, 1150, 0.0, 0.0, 0.0);
 		return true;
 	}
 	else if(strcmp(tmp,"cash",true) == 0)
@@ -14695,6 +16157,62 @@ CMD:cheque(playerid, params[])
 	}
 	return true;
 }
+
+CMD:mysalary(playerid, params[])
+{
+    new string[2048], line[128];
+    format(string, sizeof(string), "Time\tAmount\tSource\n");
+
+    if(SalaryHistoryCount[playerid] == 0)
+    {
+        strcat(string, "No history recorded yet.\t$0\t--\n");
+    }
+    else
+    {
+        for(new i = SalaryHistoryCount[playerid] - 1; i >= 0; i--)
+        {
+            if(SalaryHistory[playerid][i][shAmount] >= 0)
+            {
+                format(line, sizeof(line), "{A9C4E4}%s\t{00FF00}+%s\t{FFFFFF}%s\n",
+                    SalaryHistory[playerid][i][shTime],
+                    FormatNumber(SalaryHistory[playerid][i][shAmount]),
+                    SalaryHistory[playerid][i][shSource]);
+            }
+            else
+            {
+                format(line, sizeof(line), "{A9C4E4}%s\t{FF0000}-%s\t{FFFFFF}%s\n",
+                    SalaryHistory[playerid][i][shTime],
+                    FormatNumber(-SalaryHistory[playerid][i][shAmount]),
+                    SalaryHistory[playerid][i][shSource]);
+            }
+            strcat(string, line);
+        }
+    }
+
+    format(line, sizeof(line), "{FFFFFF}Total Pending Paycheck:\t{00FF00}%s\t{7E98B6}[Collect at Bank via /cheque paycheck]\n", FormatNumber(PlayerData[playerid][pPayCheck]));
+    strcat(string, line);
+
+    ShowPlayerDialog(playerid, 16999, DIALOG_STYLE_TABLIST_HEADERS, "My Salary & Paycheck Statement", string, "Close", "");
+    return 1;
+}
+
+CMD:collectpay(playerid, params[])
+{
+	if(PlayerData[playerid][pPayCheck] <= 0)
+		return SendErrorMessage(playerid, "You do not have any pending paycheck to collect.");
+
+	// Verify player is inside Bank or near an ATM
+	if(PlayerData[playerid][pLocal] != 502 && PlayerData[playerid][pLocal] != 503 && PlayerData[playerid][pLocal] != 504 && ATM_Nearest(playerid) == -1)
+		return SendErrorMessage(playerid, "You must be inside the Bank or near an ATM to collect your paycheck.");
+
+	new amount = PlayerData[playerid][pPayCheck];
+	PlayerData[playerid][pPayCheck] = 0;
+	GivePlayerMoney(playerid, amount);
+	SendServerMessage(playerid, "You have successfully collected your paycheck of $%s in cash!", FormatNumber(amount));
+	PlayerPlaySound(playerid, 1150, 0.0, 0.0, 0.0);
+	return true;
+}
+YCMD:paycheck(playerid, params[], help) = collectpay;
 
 CMD:boombox(playerid, params[])
 {
@@ -15159,10 +16677,12 @@ CMD:advert(playerid, params[])
 	}
 	else adTick[playerid] = 60;
 
-	BusinessData[id][bProducts] --;
-	BusinessData[id][bTill] += floatround(price * 0.7);
-
-	Business_Save(id);
+	if(id >= 0 && id < MAX_BUSINESS)
+	{
+		BusinessData[id][bProducts] --;
+		BusinessData[id][bTill] += floatround(price * 0.7);
+		Business_Save(id);
+	}
 	return true;
 }
 
@@ -15230,10 +16750,12 @@ CMD:cad(playerid, params[])
 	}
 	else adTick[playerid] = 60;
 
-	BusinessData[id][bProducts] --;
-	BusinessData[id][bTill] += floatround(price * 0.7);
-
-	Business_Save(id);
+	if(id >= 0 && id < MAX_BUSINESS)
+	{
+		BusinessData[id][bProducts] --;
+		BusinessData[id][bTill] += floatround(price * 0.7);
+		Business_Save(id);
+	}
 	return true;
 }
 
@@ -15731,9 +17253,6 @@ CMD:setstyle(playerid, params[])
 	{
 		if(option == 1)
 		{
-		    if(PlayerData[playerid][pDonateRank] < 1)
-				return SendUnauthMessage(playerid, "Sorry but Walk Styles are for Donators only. Check out losjawa-rp.net to purchase premium!");
-
 			new style;
 
 			if(sscanf(params, "{d}d", style))
@@ -15758,9 +17277,6 @@ CMD:setstyle(playerid, params[])
 		}
 		else if(option == 2)
 		{
-		    if(PlayerData[playerid][pDonateRank] < 1)
-				return SendUnauthMessage(playerid, "Sorry but Chat Styles are for Donators only. Check out losjawa-rp.net to purchase premium!");
-
 			new style;
 
 			if(sscanf(params, "{d}d", style) || (style < 0 || style > 8))
@@ -15782,35 +17298,7 @@ CMD:setstyle(playerid, params[])
 		}
 		else if(option == 3)
 		{
-		    if(PlayerData[playerid][pDonateRank] < 1)
-    			return SendUnauthMessage(playerid, "Sorry but HUD Styles are for Donators only. Check out losjawa-rp.net to purchase premium!");
-
-			new style;
-
-			if(sscanf(params, "{d}d", style) || (style < 0 || style > 4))
-			{
-				SendSyntaxMessage(playerid, "/setstyle 3 [StyleID]");
-				SendClientMessage(playerid, COLOR_WHITE, "HUD Styles: 0 1 4");
-				SendClientMessage(playerid, COLOR_WHITE, "HUD Styles: 2 3 [Vehicles Only]");				
-				//SendClientMessage(playerid, COLOR_WHITE, "HUD Styles: 0 1 3 4");
-				//SendClientMessage(playerid, COLOR_WHITE, "HUD Styles: 2 5 [Vehicles Only]");
-				return true;
-			}
-
-			PlayerFlags[playerid][toggleHUD] = true;
-
-			ToggleHudTextdraw(playerid, false);
-			PlayerTextDrawHide(playerid, MaskTD[playerid]);
-
-			PlayerData[playerid][pHUDStyle] = style;
-
-			CreatePlayerHUD(playerid);
-
-			SendClientMessageEx(playerid, COLOR_YELLOW, "Your HUD Style is now %d!", style);
-			SendClientMessage(playerid, COLOR_YELLOW, "/toghud to turn it back on!");
-
-			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `characters` SET `pHUDStyle` = '%d' WHERE `ID` = '%d'", style, PlayerData[playerid][pID]);
-			mysql_pquery(dbCon, gquery);
+			SendClientMessage(playerid, COLOR_YELLOW, "HUD style selection is not available. Use /toghud to toggle your HUD.");
 		}
 		else if(option == 4)
 		{
@@ -15872,8 +17360,8 @@ CMD:toghud(playerid, params[])
 	{
 		PlayerFlags[playerid][toggleHUD] = true;
 
-		ToggleHudTextdraw(playerid, false);
-        PlayerTextDrawHide(playerid, MaskTD[playerid]);
+		HideHudV2Full(playerid);
+		PlayerTextDrawHide(playerid, MaskTD[playerid]);
 
  		SendClientMessage(playerid, COLOR_YELLOW, "HUD togged off.");
 	}
@@ -15881,7 +17369,7 @@ CMD:toghud(playerid, params[])
 	{
 		PlayerFlags[playerid][toggleHUD] = false;
 
-		ToggleHudTextdraw(playerid, true);
+		ShowHudV2Full(playerid);
 
 		if(IsMasked{playerid})
 		{
@@ -16078,7 +17566,39 @@ CMD:stinger(playerid, params[])
 	if(!PlayerData[playerid][pOnDuty])
 		return SendErrorMessage(playerid, "You're not on duty!");
 
-    DeployRoadblock(playerid, 10, "");
+	// Deploy stinger instantly at ground level in front of player (no edit dialog)
+	new idx = -1;
+	for(new i = 0; i < 10; ++i)
+	{
+		if(RoadBlocks[playerid][i][roadblockObject] == INVALID_OBJECT_ID)
+		{
+			idx = i;
+			break;
+		}
+	}
+
+	if(idx == -1) return SendErrorMessage(playerid, "Roadblock limit exceeded (max 10).");
+
+	new Float:px, Float:py, Float:pz, Float:angle, date[6];
+	getdate(date[2], date[1], date[0]);
+	gettime(date[3], date[4], date[5]);
+
+	GetPlayerPos(playerid, px, py, pz);
+	GetPlayerFacingAngle(playerid, angle);
+
+	// Position stinger 2 units in front of player, flush with the ground
+	new Float:sx = px + (2.0 * floatsin(-angle, degrees));
+	new Float:sy = py + (2.0 * floatcos(-angle, degrees));
+	new Float:sz = pz - 1.0; // flush to feet level
+
+	RoadBlocks[playerid][idx][roadblockID] = 10; // 10 = stinger
+	format(RoadBlocks[playerid][idx][roadblockNote], 24, "");
+	Get2DZone(px, py, RoadBlocks[playerid][idx][roadblockLocation], MAX_ZONE_NAME);
+	format(RoadBlocks[playerid][idx][roadblockDate], 60, "%d-%d-%d %02d:%02d", date[0], date[1], date[2], date[3], date[4]);
+	RoadBlocks[playerid][idx][roadblockObject] = CreateDynamicObject(Road_Blocks[10][rbObjectID], sx, sy, sz, 0.0, 0.0, angle);
+
+	SendNoticeMessage(playerid, "Stinger deployed in front of you. Use /disband to retrieve it.");
+	PlayerPlaySound(playerid, 1150, 0.0, 0.0, 0.0);
 	return true;
 }
 
@@ -16177,7 +17697,11 @@ CMD:mdc(playerid, params[])
 		    return SendErrorMessage(playerid, "You can't use the MDC here.");
 	}
 
-	if(!MDC_Created{playerid}) return true;
+	// PONYTAIL: Initialize MDC dynamically on first use instead of at spawn
+	if(!MDC_Created{playerid})
+	{
+		InitMDC(playerid);
+	}
 
 	if(UsingMDC{playerid}) TogglePlayerMDC(playerid, false);
 
@@ -16520,12 +18044,18 @@ CMD:siren(playerid, params[])
 			}
 		}
 
+		// ponytail: toggle emergency lights (ELM) flashing
+		ToggleEmergencyLights(vehicleid, true);
+
         GameTextForPlayer(playerid, "~g~SIREN TURNED ON!", 5000, 4);
 	}
 	else
 	{
 	    DestroyDynamicObject(vehicleSiren[vehicleid]);
 	    vehicleSiren[vehicleid] = INVALID_OBJECT_ID;
+
+		// ponytail: toggle emergency lights (ELM) flashing off
+		ToggleEmergencyLights(vehicleid, false);
 
 	    GameTextForPlayer(playerid, "~r~SIREN TURNED OFF!", 5000, 4);
 	}
@@ -17005,38 +18535,39 @@ CMD:fine(playerid, params[])
 
 CMD:fines(playerid, params[])
 {
-	if(!IsPolice(playerid))
+	if(isnull(params) || !IsPolice(playerid))
+	{
+		ListPlayerFines(playerid, playerid);
+		return true;
+	}
+
+	new userid;
+	if(sscanf(params, "u", userid))
+	{
+		ListPlayerFines(playerid, playerid);
+		return true;
+	}
+
+	if(userid == playerid)
 	{
 		ListPlayerFines(playerid, playerid);
 	}
 	else
 	{
-		new userid;
+		if(!PlayerData[playerid][pOnDuty])
+			return SendErrorMessage(playerid, "You're not on duty.");
 
-		if(sscanf(params, "u", userid))
-			return SendSyntaxMessage(playerid, "/fines [playerid/PartOfName]");
-
-        if(userid == playerid)
+		if(userid == INVALID_PLAYER_ID)
 		{
-			ListPlayerFines(playerid, playerid);
-        }
-        else
-		{
-            if(!PlayerData[playerid][pOnDuty])
-				return SendClientMessage(playerid, COLOR_GRAD1, "You're not on duty.");
-
-			if(userid == INVALID_PLAYER_ID)
+			new maskid[MAX_PLAYER_NAME];
+			sscanf(params, "s[24]", maskid);
+			if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
 			{
-				new maskid[MAX_PLAYER_NAME];
-				sscanf(params, "s[24]", maskid);
-				if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-				{
-					return SendErrorMessage(playerid, "The player you specified isn't connected.");
-				}
+				return SendErrorMessage(playerid, "The player you specified isn't connected.");
 			}
-
-			ListPlayerFines(playerid, userid);
 		}
+
+		ListPlayerFines(playerid, userid);
 	}
 	return true;
 }
@@ -17109,6 +18640,22 @@ CMD:vehiclefines(playerid, params[])
 	return true;
 }*/
 
+stock ReturnAdminRankName(level)
+{
+    new name[32];
+    switch(level)
+    {
+        case 1: name = "Intern";
+        case 2, 1338: name = "Junior Admin";
+        case 3: name = "Senior Admin";
+        case 4: name = "Senior Admin 2";
+        case 1336: name = "Deputy Head Admin";
+        case 1337: name = "Head Admin";
+        default: name = "Unknown";
+    }
+    return name;
+}
+
 CMD:admins(playerid, params[])
 {
 	SendClientMessage(playerid, COLOR_GREY, "Admins Online:");
@@ -17121,7 +18668,7 @@ CMD:admins(playerid, params[])
 	{
 		if(PlayerData[i][pAdmin] > 0)
 		{
-		    SendClientMessageEx(playerid, AdminDuty{i} ? COLOR_GREEN : COLOR_GRAD2, " (Level: %d) %s (ID: %d) Adminduty: %s", PlayerData[i][pAdmin] == 1338 ? 2 : PlayerData[i][pAdmin], AccountName(i), i, AdminDuty{i} ? "Yes" : "No");
+		    SendClientMessageEx(playerid, AdminDuty{i} ? COLOR_GREEN : COLOR_GRAD2, " [%s] %s (ID: %d) Adminduty: %s", ReturnAdminRankName(PlayerData[i][pAdmin]), AccountName(i), i, AdminDuty{i} ? "Yes" : "No");
 
 			count++;
 		}
@@ -17212,18 +18759,41 @@ Dialog:FuelRefill(playerid, response, listitem, inputtext[])
 
 CMD:motd(playerid, params[]) return showServerMOTD(playerid);
 
+forward OnLoadPlayerChangelog(playerid);
+public OnLoadPlayerChangelog(playerid)
+{
+	new rows;
+	cache_get_row_count(rows);
+
+	gstr[0] = EOS;
+	if(!rows)
+	{
+		strcat(gstr, "{FF0000}Changelog not updated yet.\n\nAdmin must use /addchangelog.");
+	}
+	else
+	{
+		strcat(gstr, "{FFFFFF}No. | Log Update | Updated By\n{A9C4E4}------------------------------------------------------------\n");
+		for(new i = 0; i < rows && i < 20; i++)
+		{
+			new entry[140], addedBy[24], addedDate[32], line[256];
+			cache_get_value_name(i, "entry", entry, sizeof(entry));
+			cache_get_value_name(i, "added_by", addedBy, sizeof(addedBy));
+			cache_get_value_name(i, "added_date", addedDate, sizeof(addedDate));
+
+			format(line, sizeof(line), "{FFBF00}%d. {FFFFFF}%s {7E98B6}(by %s - %s)\n", i + 1, entry, addedBy, addedDate);
+			strcat(gstr, line);
+		}
+	}
+
+	new title[64];
+	format(title, sizeof(title), "Server Changelogs | %s", gServerMode);
+	ShowPlayerDialog(playerid, DIALOG_CHANGELOG, DIALOG_STYLE_MSGBOX, title, gstr, "Close", "");
+	return 1;
+}
+
 CMD:changelog(playerid, params[])
 {
-	format(gstr, sizeof(gstr), 
-	"{ffffff}1. [ADD] Fitur pemilihan senjata dari dalam kendaraan 'Y'\n\
-	2. [ADD] Fitur stop drive by klik 'HH'\n\
-	3. [ADD] ELM untuk kendaraan faction\n\
-	4. [ADD] Mapping SASD HQ\n\
-	5. [ADD] Fitur discord CMD untuk ganti skin, dan daftar akun\n\
-	6. [ADD] Textdraw logo server, jam, tanggal, lokasi\n\
-	7. [CHANGED] Penggantian beberapa list dari chatlog menjadi dialog\n\
-	8. [FIXED] Mapping interior hilang", gstr);
-	ShowPlayerDialog(playerid, DIALOG_CHANGELOG, DIALOG_STYLE_MSGBOX, "Changelog | LJ-RP 6.6.6", gstr, "Close", "");
+	mysql_tquery(dbCon, "SELECT * FROM `server_changelogs` ORDER BY `id` DESC LIMIT 25", "OnLoadPlayerChangelog", "d", playerid);
 	return 1;
 }
 
@@ -17350,273 +18920,1154 @@ stock PrintLicenses(playerid, forplayerid)
 	return true;
 }
 
-//DISCORD CMD
-DCMD:cmd(user, channel, params[])
+
+// DISCORD CMD REMOVED (Website registration/skin selection now used)
+
+
+// ==========================================
+// PONYTAIL: Unified Player Vehicle GUI Menu (/v)
+// ==========================================
+
+stock ShowPlayerVehMainDialog(playerid)
 {
-    new DCC_Embed:embed = DCC_CreateEmbed(
-        "Los Jawa RP Bot CMD List", 
-        "!createacc\n!createchar\n!skin\n!changelog\n!cache\n!cmdrp\n!ip", 
-        "https://bit.ly/LosJawaRP", 
-        "", 
-        0xCDD400, 
-        "", 
-        "", 
-        "https://www.upload.ee/image/16836591/logo.png", 
-        ""
-    );
+	if(IsBrutallyWounded(playerid))
+		return SendClientMessage(playerid, COLOR_LIGHTRED, "You're brutally wounded, or dead. No /vehicle right now.");
 
-    if(channel != createacc) return DCC_SendChannelEmbedMessage(channel, embed);
-    if(sscanf(params, "ss", params[0]))
-        return DCC_SendChannelEmbedMessage(channel, embed);
-
-    return 1;
-}
-
-DCMD:createacc(user, channel, params[]) {    
-    // Create embeds
-    new DCC_Embed:embed = DCC_CreateEmbed(
-        "Account Creation", 
-        "Usage: !createacc [username] [password]",
-        "", 
-        "", 
-        0xCDD400
-    );
-    
-    new DCC_Embed:embed1 = DCC_CreateEmbed(
-        "Wrong Channel", 
-        "Use the right channel kang\nUsage: !createacc [username] [password]",
-        "", 
-        "", 
-        0xFF0000
-    );
-    
-    new DCC_Embed:embed2 = DCC_CreateEmbed(
-        "Invalid Username", 
-        "Username must be between 3 and 24 characters.",
-        "", 
-        "", 
-        0xFF0000
-    );
-    
-    new DCC_Embed:embed3 = DCC_CreateEmbed(
-        "Invalid Password", 
-        "Password must be between 3 and 64 characters.",
-        "", 
-        "", 
-        0xFF0000
-    );
-    
-    new DCC_Embed:embed4 = DCC_CreateEmbed(
-        "Account Exists", 
-        "An account already exists with that username.",
-        "", 
-        "", 
-        0xFF0000
-    );
-
-    new username[MAX_PLAYER_NAME], password[64];
-    
-    // Check if command is used in the correct channel
-    if(channel != secureChannel) {
-        return DCC_SendChannelEmbedMessage(channel, embed1);
-    }
-    
-    // Parse parameters
-    if(sscanf(params, "s[24]s[64]", username, password)) {
-        return DCC_SendChannelEmbedMessage(channel, embed);
-    }
-    
-    // Validate username
-    if(strlen(username) < 3 || strlen(username) > MAX_PLAYER_NAME) {
-        return DCC_SendChannelEmbedMessage(channel, embed2);
-    }
-    
-    // Validate password
-    if(strlen(password) < 3 || strlen(password) > 64) {
-        return DCC_SendChannelEmbedMessage(channel, embed3);
-    }
-    
-    // Check if account exists
-    if(IsValidAccount(username)) {
-        return DCC_SendChannelEmbedMessage(channel, embed4);
-    }
-    
-    // Create account
-    new buffer[129];
-    WP_Hash(buffer, sizeof(buffer), password);
-    
-    mysql_format(dbCon, gstr, sizeof(gstr), 
-        "INSERT INTO accounts (Username, Password, Quiz, SecretWord) VALUES ('%e', '%e', 1, '%e')", 
-        username, buffer, password
-    );
-    mysql_tquery(dbCon, gstr);
-    
-    // Success embed
-    new DCC_Embed:successEmbed = DCC_CreateEmbed(
-        "Account Created", 
-        "Your account has been successfully created!",
-        "", 
-        "", 
-        0x00FF00
-    );
-    
-    DCC_AddEmbedField(successEmbed, "Username", username, true);
-    DCC_SendChannelEmbedMessage(channel, successEmbed);
-    
-    return 1;
-}
-
-DCMD:createchar(user, channel, params[])
-{
-    new DCC_Embed:embed = DCC_CreateEmbed("!createchar [accountName] [Firstname_Lastname]", "", "", "", 0xCDD400), 
-    DCC_Embed:embed1 = DCC_CreateEmbed("Wrong channel.", "", "", "", 0xFF0000),
-    DCC_Embed:embed2 = DCC_CreateEmbed("Invalid username length given.", "", "", "", 0xFF0000),
-    DCC_Embed:embed3 = DCC_CreateEmbed("Invalid character name specified, must be Firstname_Lastname.", "", "", "", 0xFF0000);
-    if(channel != createacc) 
-        return DCC_SendChannelEmbedMessage(channel, embed1);
-
-    new username[MAX_PLAYER_NAME], character[MAX_PLAYER_NAME];
-    if(sscanf(params, "s[24]s[24]", username, character))
-        return DCC_SendChannelEmbedMessage(channel, embed);
-    
-    if(strlen(username) < 3 || strlen(username) > MAX_PLAYER_NAME)
-        return DCC_SendChannelEmbedMessage(channel, embed2);
-
-    if(!IsValidRoleplayName(character))
-        return DCC_SendChannelEmbedMessage(channel, embed3);
-    
-    mysql_format(dbCon, gquery, sizeof(gquery), "SELECT `ID` from `accounts` WHERE `Username` = '%e' LIMIT 1", username);
-    mysql_tquery(dbCon, gquery, "OnAccountCheckDC", "ss", username, character);    
-    DCC_SendChannelMessage(channel, "Your character is successfully added to your account");
-    return true;
-}
-
-forward OnAccountCheckDC(account[], character[]);
-public OnAccountCheckDC(account[], character[])
-{
-    new accountSQLID, query[200], phoneNumber = randomEx(100000, 999999);
-    cache_get_value_name_int(0, "ID", accountSQLID);    
-
-    mysql_format(dbCon, query, sizeof(query), "INSERT INTO `characters` (master, char_name, PhoneNumbr, Activated, Tutorial, PhoneModel) VALUES (%d, '%e', %d, 1, 1, 1)", accountSQLID, character, phoneNumber);
-    mysql_tquery(dbCon, query);
-	return true;
-}
-
-DCMD:skin(user, channel, params[])
-{
-	new DCC_Embed:embed = DCC_CreateEmbed("!skin [id skin] [char_name]", "", "", "", 0xCDD400), 
-	DCC_Embed:embed1 = DCC_CreateEmbed("Wrong channel", "", "", "", 0xFF0000);
-
-	new skin, character[MAX_PLAYER_NAME];
-	if(channel != createacc) return DCC_SendChannelEmbedMessage(channel, embed1);
-	if(sscanf(params, "ds[24]", skin, character))
-		return DCC_SendChannelEmbedMessage(channel, embed);
+	new string[1024], line[256];
 	
-	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `characters` SET `Model` = '%d' WHERE `char_name` = '%e'", skin, character);
-	mysql_tquery(dbCon, gquery, "OnSkinChanged", "ds",skin, character);
-    DCC_SendChannelMessage(channel, "Your skin has changed");
+	// Option 0
+	strcat(string, "1. Manage Spawned Vehicles (Graphic GUI)\n");
+	
+	// Option 1
+	new nearest_veh = IsPlayerInAnyVehicle(playerid) ? GetPlayerVehicleID(playerid) : Car_Nearest(playerid);
+	new nearest_carid = (nearest_veh != -1 && nearest_veh != 0) ? Car_GetID(nearest_veh) : -1;
+		
+	if(nearest_carid != -1 && HasVehicleKey(playerid, nearest_carid, true))
+	{
+		format(line, sizeof(line), "2. Lock/Unlock: %s [State: %s]\n", ReturnVehicleModelName(CarData[nearest_carid][carModel]), CarData[nearest_carid][carLocked] ? "{FF0000}Locked{FFFFFF}" : "{00FF00}Unlocked{FFFFFF}");
+		strcat(string, line);
+	}
+	else
+	{
+		strcat(string, "2. Lock/Unlock nearest/current vehicle\n");
+	}
+	
+	// Option 2
+	new current_veh = GetPlayerVehicleID(playerid);
+	new current_carkey = GetVehicleKeyID(playerid, current_veh);
+	if(current_veh != 0 && current_carkey != -1)
+	{
+		strcat(string, "3. View Current Vehicle Stats\n");
+	}
+	else
+	{
+		strcat(string, "{C0C0C0}3. View Current Vehicle Stats (Must be inside){FFFFFF}\n");
+	}
+	
+	// Option 3
+	if(current_veh != 0 && current_carkey != -1)
+	{
+		strcat(string, "4. Park Current Vehicle\n");
+	}
+	else
+	{
+		strcat(string, "{C0C0C0}4. Park Current Vehicle (Must be inside){FFFFFF}\n");
+	}
+	
+	// Option 4
+	strcat(string, "5. Locate Spawned Vehicles (GPS/Find)\n");
+	
+	// Option 5
+	strcat(string, "6. Vehicle Keys Administration\n");
+	
+	// Option 6
+	strcat(string, "7. Vehicle Settings (Lights, Name Tag)\n");
+	
+	// Option 7
+	strcat(string, "8. Sell or Scrap Vehicle");
+	
+	Dialog_Show(playerid, PlayerVehMain, DIALOG_STYLE_LIST, "Vehicle Menu", string, "Select", "Cancel");
 	return 1;
 }
 
-DCMD:changelog(user, channel, params[])
+Dialog:PlayerVehMain(playerid, response, listitem, inputtext[])
 {
-	new DCC_Embed:embed = DCC_CreateEmbed("Changelog | LJ-RP 6.6.6", "1. [ADD] Fitur pemilihan senjata dari dalam kendaraan 'Y'\n2. [ADD] Fitur stop drive by klik 'HH'\n3. [ADD] ELM untuk kendaraan faction\n4. [ADD] Mapping SASD HQ\n5. [ADD] Fitur discord CMD untuk ganti skin, dan daftar akun\n6. [ADD] Textdraw logo server, jam, tanggal, lokasi\n7. [CHANGED] Penggantian beberapa list dari chatlog menjadi dialog\n8. [FIXED] Mapping interior hilang", "https://bit.ly/LosJawaRP", "", 0xCDD400, "", "", "https://www.upload.ee/image/16836591/logo.png", "");
+	if(!response) return 1;
+	
+	switch(listitem)
+	{
+		case 0: // Manage Spawned Vehicles (Graphic GUI -> Dialog List)
+		{
+			if(UsingMDC{playerid})
+				return SendServerMessage(playerid, "You can't do this right now.");
 
-	if(channel != createacc) return DCC_SendChannelEmbedMessage(channel, embed);
-	if(sscanf(params, "ss", params[0]))
-		return DCC_SendChannelEmbedMessage(channel, embed);
+			if(!CountPlayerVehicles(playerid))
+				return SendServerMessage(playerid, "You do not own any vehicles.");
 
+			new query[256];
+			mysql_format(dbCon, query, sizeof(query), "SELECT `carID`, `carModel`, `carColor1`, `carColor2`, `carName`, `carUItag` FROM `cars` WHERE `carOwner` = '%d' ORDER BY `carDate` ASC LIMIT 50", PlayerData[playerid][pID]);
+			mysql_tquery(dbCon, query, "ShowPlayerVehicleList", "d", playerid);
+		}
+		case 1: // Lock/Unlock
+		{
+			new vehicleid = IsPlayerInAnyVehicle(playerid) ? GetPlayerVehicleID(playerid) : Car_Nearest(playerid);
+			if(vehicleid != 0 && vehicleid != -1)
+			{
+				new id = Car_GetID(vehicleid);
+				if(id != -1)
+				{
+					if(HasVehicleKey(playerid, id, true))
+					{
+						new engine, lights, alarm, doors, bonnet, boot, objective;
+						GetVehicleParamsEx(vehicleid, engine, lights, alarm, doors, bonnet, boot, objective);
+						new query[128];
+						if(!CarData[id][carLocked])
+						{
+							CarData[id][carLocked] = true;
+							format(query, sizeof(query), "~r~%s Locked", ReturnVehicleModelName(CarData[id][carModel]));
+							GameTextForPlayer(playerid, query, 2000, 4);
+							PlayerPlaySound(playerid, 1052, 0.0, 0.0, 0.0);
+							SetVehicleParamsEx(vehicleid, engine, lights, alarm, 1, bonnet, boot, objective);
+						}
+						else
+						{
+							CarData[id][carLocked] = false;
+							format(query, sizeof(query), "~g~%s Unlocked", ReturnVehicleModelName(CarData[id][carModel]));
+							GameTextForPlayer(playerid, query, 2000, 4);
+							PlayerPlaySound(playerid, 1052, 0.0, 0.0, 0.0);
+							SetVehicleParamsEx(vehicleid, engine, lights, 0, 0, bonnet, boot, objective);
+						}
+					}
+					else
+					{
+						SendServerMessage(playerid, "You cannot access this vehicle.");
+					}
+				}
+				else
+				{
+					// Temp/Non-player vehicle locking
+					new engine, lights, alarm, doors, bonnet, boot, objective;
+					GetVehicleParamsEx(vehicleid, engine, lights, alarm, doors, bonnet, boot, objective);
+					if(doors != 1)
+					{
+						SetVehicleParamsEx(vehicleid, engine, lights, alarm, 1, bonnet, boot, objective);
+						GameTextForPlayer(playerid, "~r~Locked", 2000, 4);
+					}
+					else
+					{
+						SetVehicleParamsEx(vehicleid, engine, lights, alarm, 0, bonnet, boot, objective);
+						GameTextForPlayer(playerid, "~g~Unlocked", 2000, 4);
+					}
+				}
+			}
+			else
+			{
+				SendErrorMessage(playerid, "You are not inside or near any vehicle.");
+			}
+			ShowPlayerVehMainDialog(playerid);
+		}
+		case 2: // View Current Vehicle Stats
+		{
+			new vehicleid = GetPlayerVehicleID(playerid);
+			new carkey = GetVehicleKeyID(playerid, vehicleid);
+			if(vehicleid != 0 && carkey != -1)
+			{
+				new carid = PlayerData[playerid][pCarKeys][carkey];
+				Car_PrintStats(playerid, carid);
+			}
+			else
+			{
+				SendErrorMessage(playerid, "You must be inside your vehicle.");
+				ShowPlayerVehMainDialog(playerid);
+			}
+		}
+		case 3: // Park Current Vehicle
+		{
+			new vehicleid = GetPlayerVehicleID(playerid);
+			new carkey = GetVehicleKeyID(playerid, vehicleid);
+			if(vehicleid != 0 && carkey != -1)
+			{
+				new carid = PlayerData[playerid][pCarKeys][carkey];
+				if(IsPlayerInRangeOfPoint(playerid, 4.0, CarData[carid][carPos][0], CarData[carid][carPos][1], CarData[carid][carPos][2]))
+				{
+					SendClientMessage(playerid, COLOR_GREEN, "Vehicle parked.");
+					RemoveVehicleKey(playerid, carid);
+					SaveVehicleDamageID(carid);
+					Car_SaveID(carid);
+					Car_DespawnEx(carid);
+				}
+				else
+				{
+					SendClientMessage(playerid, COLOR_LIGHTRED, "You have to be at vehicle's parking place.");
+					SendClientMessage(playerid, 0xFF00FFFF, "Follow the marker.");
+					SetPlayerCheckpoint(playerid, CarData[carid][carPos][0], CarData[carid][carPos][1], CarData[carid][carPos][2], 4.0);
+					gPlayerCheckpointStatus[playerid] = CHECKPOINT_VEH;
+				}
+			}
+			else
+			{
+				SendErrorMessage(playerid, "You must be inside your vehicle.");
+				ShowPlayerVehMainDialog(playerid);
+			}
+		}
+		case 4: // Locate Spawned Vehicles (GPS/Find)
+		{
+			new string[512], count = 0;
+			new key[32];
+			for(new i = 0; i < MAX_VEHICLE_KEYS; ++i)
+			{
+				if(PlayerData[playerid][pCarKeys][i] != 9999)
+				{
+					new carid = PlayerData[playerid][pCarKeys][i];
+					format(string, sizeof(string), "%sSlot %d: %s (VehID: %d)\n", string, i + 1, ReturnVehicleModelName(CarData[carid][carModel]), CarData[carid][carVehicle]);
+					format(key, sizeof(key), "Vfind_KeyIdx_%d", count);
+					SetPVarInt(playerid, key, i);
+					count++;
+				}
+			}
+			if(!count)
+			{
+				SendErrorMessage(playerid, "You do not have any spawned vehicles.");
+				return ShowPlayerVehMainDialog(playerid);
+			}
+			Dialog_Show(playerid, PlayerVehGPS, DIALOG_STYLE_LIST, "Locate Spawned Vehicles", string, "Locate", "Back");
+		}
+		case 5: // Vehicle Keys Administration
+		{
+			Dialog_Show(playerid, PlayerVehKeysAdmin, DIALOG_STYLE_LIST, "Keys Administration", "1. View my spare keys\n2. Duplicate key (Give copy)\n3. Drop spare key", "Select", "Back");
+		}
+		case 6: // Vehicle Settings (Lights, Name Tag)
+		{
+			new vehicleid = GetPlayerVehicleID(playerid);
+			new carkey = GetVehicleKeyID(playerid, vehicleid);
+			new string[256];
+			
+			if(vehicleid != 0)
+			{
+				format(string, sizeof(string), "1. Toggle Vehicle Lights [State: %s]\n", GetLightStatus(vehicleid) ? "{00FF00}ON{FFFFFF}" : "{FF0000}OFF{FFFFFF}");
+			}
+			else
+			{
+				strcat(string, "{C0C0C0}1. Toggle Vehicle Lights (Must be inside vehicle){FFFFFF}\n");
+			}
+			
+			if(vehicleid != 0 && carkey != -1)
+			{
+				new carid = PlayerData[playerid][pCarKeys][carkey];
+				if(strlen(CarData[carid][carUItag]) >= 3)
+				{
+					format(string, sizeof(string), "%s2. Remove Name Tag: '%s'\n", string, CarData[carid][carUItag]);
+				}
+				else
+				{
+					strcat(string, "2. Set Custom Name Tag\n");
+				}
+			}
+			else
+			{
+				strcat(string, "{C0C0C0}2. Set Custom Name Tag (Must be inside your vehicle){FFFFFF}\n");
+			}
+			
+			Dialog_Show(playerid, PlayerVehSettings, DIALOG_STYLE_LIST, "Vehicle Settings", string, "Select", "Back");
+		}
+		case 7: // Sell or Scrap
+		{
+			new vehicleid = GetPlayerVehicleID(playerid);
+			new carkey = GetVehicleKeyID(playerid, vehicleid);
+			new string[256];
+			
+			if(vehicleid != 0 && carkey != -1)
+			{
+				new carid = PlayerData[playerid][pCarKeys][carkey];
+				if(IsDonateCar(CarData[carid][carModel]))
+				{
+					strcat(string, "{C0C0C0}1. Sell to Player (Donator cars cannot be sold){FFFFFF}\n");
+				}
+				else
+				{
+					strcat(string, "1. Sell to Player\n");
+				}
+				strcat(string, "2. Scrap Vehicle (Sell to State)");
+			}
+			else
+			{
+				strcat(string, "{C0C0C0}1. Sell to Player (Must be inside){FFFFFF}\n");
+				strcat(string, "{C0C0C0}2. Scrap Vehicle (Must be inside){FFFFFF}");
+			}
+			Dialog_Show(playerid, PlayerVehSellScrap, DIALOG_STYLE_LIST, "Sell or Scrap Vehicle", string, "Select", "Back");
+		}
+	}
 	return 1;
 }
 
-DCMD:kontol(user, channel, params[])
+Dialog:PlayerVehGPS(playerid, response, listitem, inputtext[])
 {
-	if(channel != createacc) return DCC_SendChannelMessage(channel, "poso kontol");
-	if(sscanf(params, "ss", params[0]))
-		return DCC_SendChannelMessage(channel, "poso kontol");
+	new key[32];
+	if(!response)
+	{
+		for(new i = 0; i < MAX_VEHICLE_KEYS; ++i)
+		{
+			format(key, sizeof(key), "Vfind_KeyIdx_%d", i);
+			DeletePVar(playerid, key);
+		}
+		return ShowPlayerVehMainDialog(playerid);
+	}
+	
+	format(key, sizeof(key), "Vfind_KeyIdx_%d", listitem);
+	new keyid = GetPVarInt(playerid, key);
+	
+	for(new i = 0; i < MAX_VEHICLE_KEYS; ++i)
+	{
+		format(key, sizeof(key), "Vfind_KeyIdx_%d", i);
+		DeletePVar(playerid, key);
+	}
+	
+	if(keyid < 0 || keyid >= MAX_VEHICLE_KEYS || PlayerData[playerid][pCarKeys][keyid] == 9999)
+	{
+		SendErrorMessage(playerid, "Invalid selection.");
+		return ShowPlayerVehMainDialog(playerid);
+	}
+	
+	new carid = PlayerData[playerid][pCarKeys][keyid];
+	new vehicleid = CarData[carid][carVehicle];
+	
+	if(GetVehicleDriver(vehicleid) != INVALID_PLAYER_ID || VehicleLabel[vehicleid][vLabelTime])
+	{
+		SendClientMessage(playerid, COLOR_LIGHTRED, "There's someone in your car, we can't find it!");
+		return 1;
+	}
+	
+	new Float:vehDistance[3];
+	GetVehiclePos(vehicleid, vehDistance[0], vehDistance[1], vehDistance[2]);
+	SetPlayerCheckpoint(playerid, vehDistance[0], vehDistance[1], vehDistance[2], 4.0);
+	gPlayerCheckpointStatus[playerid] = CHECKPOINT_VEH;
+	SendClientMessage(playerid, COLOR_GREEN, "Vehicle marked on your GPS. Follow the red checkpoint.");
 	return 1;
 }
 
-DCMD:cache(user, channel, params[])
+Dialog:PlayerVehKeysAdmin(playerid, response, listitem, inputtext[])
 {
-    new DCC_Embed:embed = DCC_CreateEmbed(
-        "Cache Download | LJ-RP 6.6.6", 
-        "Silahkan download cache server terbaru LOS JAWA ROLEPLAY\n\nLink Download:\nhttps://cdn.discordapp.com/attachments/1050604673742163998/1322450555322372127/91.134.166.74.7778.7z?ex=6770eb8e&is=676f9a0e&hm=1a5f078b118a752f82e5e067f780f870037df50483dff4cf724d9acf059e3fa7&\n\nJangan lupa extract ke Documents-GTA San Andreas User Files-SAMP-cache.", 
-        "https://ucp.ljrp.my.id",
-        "", 
-        0xCDD400,
-        "",
-        "",
-        "https://www.upload.ee/image/16836591/logo.png",
-        ""
-    );
+	if(!response) return ShowPlayerVehMainDialog(playerid);
+	
+	switch(listitem)
+	{
+		case 0: // View my spare keys
+		{
+			new string[1024], count = 0, rows, model, plate[30], query[128];
+			format(string, sizeof(string), "Slot\tVehicle Model\tLicense Plate\n");
+			for(new i = 0; i < 10; ++i)
+			{
+				if(PlayerData[playerid][pDupKeys][i] != 9999)
+				{
+					mysql_format(dbCon, query, sizeof(query), "SELECT `carModel`, `carPlate` FROM `cars` WHERE `carID` = '%d' LIMIT 1", PlayerData[playerid][pDupKeys][i]);
+					new Cache:cache = mysql_query(dbCon, query);
+					cache_get_row_count(rows);
+					if(rows)
+					{
+						cache_get_value_name_int(0, "carModel", model);
+						cache_get_value_name(0, "carPlate", plate, 30);
+						format(string, sizeof(string), "%sSlot %d\t%s\t%s\n", string, i + 1, ReturnVehicleModelNameEx(model), plate);
+						count++;
+					}
+					cache_delete(cache);
+				}
+			}
+			if(!count)
+			{
+				SendErrorMessage(playerid, "You do not hold any spare keys.");
+				return ShowPlayerVehMainDialog(playerid);
+			}
+			Dialog_Show(playerid, PlayerVehKeysList, DIALOG_STYLE_TABLIST_HEADERS, "My Spare Keys", string, "Close", "Back");
+		}
+		case 1: // Duplicate Key
+		{
+			new vehicleid = GetPlayerVehicleID(playerid);
+			new carkey = GetVehicleKeyID(playerid, vehicleid);
+			if(vehicleid == 0 || carkey == -1)
+			{
+				SendErrorMessage(playerid, "You must be inside your vehicle to duplicate its keys.");
+				return ShowPlayerVehMainDialog(playerid);
+			}
+			if(PlayerData[playerid][pCash] < 2000)
+			{
+				SendErrorMessage(playerid, "You don't have enough money ($2,000 required).");
+				return ShowPlayerVehMainDialog(playerid);
+			}
+			Dialog_Show(playerid, PlayerVehKeysDupTarget, DIALOG_STYLE_INPUT, "Duplicate Key", "Enter Player ID/Name to give spare keys to:", "Give", "Back");
+		}
+		case 2: // Drop Key
+		{
+			new string[512], count = 0, rows, model, plate[30], query[128];
+			new key[32];
+			for(new i = 0; i < 10; ++i)
+			{
+				if(PlayerData[playerid][pDupKeys][i] != 9999)
+				{
+					mysql_format(dbCon, query, sizeof(query), "SELECT `carModel`, `carPlate` FROM `cars` WHERE `carID` = '%d' LIMIT 1", PlayerData[playerid][pDupKeys][i]);
+					new Cache:cache = mysql_query(dbCon, query);
+					cache_get_row_count(rows);
+					if(rows)
+					{
+						cache_get_value_name_int(0, "carModel", model);
+						cache_get_value_name(0, "carPlate", plate, 30);
+						format(string, sizeof(string), "%sSlot %d: %s [%s]\n", string, i + 1, ReturnVehicleModelNameEx(model), plate);
+						format(key, sizeof(key), "Vdrop_KeyIdx_%d", count);
+						SetPVarInt(playerid, key, i);
+						count++;
+					}
+					cache_delete(cache);
+				}
+			}
+			if(!count)
+			{
+				SendErrorMessage(playerid, "You do not hold any spare keys to drop.");
+				return ShowPlayerVehMainDialog(playerid);
+			}
+			Dialog_Show(playerid, PlayerVehKeysDropList, DIALOG_STYLE_LIST, "Drop Spare Key", string, "Drop", "Back");
+		}
+	}
+	return 1;
+}
 
-    if(channel != createacc) return DCC_SendChannelEmbedMessage(channel, embed);
-    if(sscanf(params, "ss", params[0]))
-        return DCC_SendChannelEmbedMessage(channel, embed);
+Dialog:PlayerVehKeysList(playerid, response, listitem, inputtext[])
+{
+	ShowPlayerVehMainDialog(playerid);
+	return 1;
+}
 
+Dialog:PlayerVehKeysDupTarget(playerid, response, listitem, inputtext[])
+{
+	if(!response) return ShowPlayerVehMainDialog(playerid);
+	
+	new vehicleid = GetPlayerVehicleID(playerid);
+	new carkey = GetVehicleKeyID(playerid, vehicleid);
+	if(vehicleid == 0 || carkey == -1)
+	{
+		SendErrorMessage(playerid, "You must be inside your vehicle.");
+		return ShowPlayerVehMainDialog(playerid);
+	}
+	
+	new carid = PlayerData[playerid][pCarKeys][carkey];
+	if(PlayerData[playerid][pCash] < 2000)
+	{
+		SendErrorMessage(playerid, "You don't have enough money ($2,000 required).");
+		return ShowPlayerVehMainDialog(playerid);
+	}
+	
+	new userid;
+	if(sscanf(inputtext, "u", userid) || userid == INVALID_PLAYER_ID)
+	{
+		new maskid[MAX_PLAYER_NAME];
+		format(maskid, sizeof(maskid), "%s", inputtext);
+		userid = GetPlayerMaskID(maskid);
+		if(userid == INVALID_PLAYER_ID)
+		{
+			SendErrorMessage(playerid, "The player you specified isn't connected.");
+			return Dialog_Show(playerid, PlayerVehKeysDupTarget, DIALOG_STYLE_INPUT, "Duplicate Key", "{FF0000}Player not found!{FFFFFF}\nEnter Player ID/Name to give spare keys to:", "Give", "Back");
+		}
+	}
+	
+	if(userid == playerid)
+	{
+		SendErrorMessage(playerid, "You cannot duplicate keys to yourself.");
+		return ShowPlayerVehMainDialog(playerid);
+	}
+	
+	if(!IsPlayerNearPlayer(playerid, userid, 5.0))
+	{
+		SendErrorMessage(playerid, "You are not close enough to that player.");
+		return ShowPlayerVehMainDialog(playerid);
+	}
+	
+	if(CountVehicleDupKeys(userid) >= 10)
+	{
+		SendErrorMessage(playerid, "This player cannot hold any more keys.");
+		return ShowPlayerVehMainDialog(playerid);
+	}
+	
+	TakePlayerMoney(playerid, 2000);
+	GiveVehicleDupKey(userid, CarData[carid][carID]);
+	
+	SendClientMessageEx(playerid, COLOR_GREEN, "* %s gives a set of spare keys for their %s to %s", ReturnName(playerid, 0), ReturnVehicleName(vehicleid), ReturnName(userid, 0));
+	SendNoticeMessage(userid, "You have received a set of spare keys for %s's %s", ReturnName(playerid, 0), ReturnVehicleName(vehicleid));
+	SendNoticeMessage(userid, "These keys now persist when you log off, you can remove them using '/v dropkey'");
+	return 1;
+}
+
+Dialog:PlayerVehKeysDropList(playerid, response, listitem, inputtext[])
+{
+	new key[32];
+	if(!response)
+	{
+		for(new i = 0; i < 10; ++i)
+		{
+			format(key, sizeof(key), "Vdrop_KeyIdx_%d", i);
+			DeletePVar(playerid, key);
+		}
+		return ShowPlayerVehMainDialog(playerid);
+	}
+	
+	format(key, sizeof(key), "Vdrop_KeyIdx_%d", listitem);
+	new keyid = GetPVarInt(playerid, key);
+	
+	for(new i = 0; i < 10; ++i)
+	{
+		format(key, sizeof(key), "Vdrop_KeyIdx_%d", i);
+		DeletePVar(playerid, key);
+	}
+	
+	if(keyid < 0 || keyid >= 10 || PlayerData[playerid][pDupKeys][keyid] == 9999)
+	{
+		SendErrorMessage(playerid, "Invalid selection.");
+		return ShowPlayerVehMainDialog(playerid);
+	}
+	
+	new rows, model, plate[30], query[128];
+	mysql_format(dbCon, query, sizeof(query), "SELECT `carModel`, `carPlate` FROM `cars` WHERE `carID` = '%d' LIMIT 1", PlayerData[playerid][pDupKeys][keyid]);
+	new Cache:cache = mysql_query(dbCon, query);
+	cache_get_row_count(rows);
+	if(!rows)
+	{
+		cache_delete(cache);
+		return SendErrorMessage(playerid, "Fatal error dropping your spare key.");
+	}
+	cache_get_value_name_int(0, "carModel", model);
+	cache_get_value_name(0, "carPlate", plate, 30);
+	cache_delete(cache);
+	
+	RemoveVehicleDupKey(playerid, PlayerData[playerid][pDupKeys][keyid]);
+	SendClientMessageEx(playerid, COLOR_YELLOW, "SERVER: You dropped the spare key to a %s with the license plate %s.", ReturnVehicleModelNameEx(model), plate);
+	return 1;
+}
+
+Dialog:PlayerVehSettings(playerid, response, listitem, inputtext[])
+{
+	if(!response) return ShowPlayerVehMainDialog(playerid);
+	
+	if(listitem == 0) // Toggle Lights
+	{
+		new vehicleid = GetPlayerVehicleID(playerid);
+		if(vehicleid == 0)
+		{
+			SendErrorMessage(playerid, "You must be inside your vehicle.");
+			return ShowPlayerVehMainDialog(playerid);
+		}
+		if(!IsEngineVehicle(vehicleid))
+		{
+			SendErrorMessage(playerid, "This vehicle doesn't have lights.");
+			return ShowPlayerVehMainDialog(playerid);
+		}
+		SetLightStatus(vehicleid, !GetLightStatus(vehicleid));
+		SendClientMessage(playerid, COLOR_GREEN, "Vehicle lights toggled.");
+		ShowPlayerVehMainDialog(playerid);
+	}
+	else if(listitem == 1) // Name Tag
+	{
+		new vehicleid = GetPlayerVehicleID(playerid);
+		new carkey = GetVehicleKeyID(playerid, vehicleid);
+		if(vehicleid == 0 || carkey == -1)
+		{
+			SendErrorMessage(playerid, "You must be inside your vehicle.");
+			return ShowPlayerVehMainDialog(playerid);
+		}
+		
+		new carid = PlayerData[playerid][pCarKeys][carkey];
+		if(strlen(CarData[carid][carUItag]) >= 3)
+		{
+			SendClientMessageEx(playerid, COLOR_YELLOW3, "SERVER: Removed the tag '%s' from your %s.", CarData[carid][carUItag], ReturnVehicleName(vehicleid));
+			CarData[carid][carUItag][0] = EOS;
+			Car_SaveID(carid);
+			ShowPlayerVehMainDialog(playerid);
+		}
+		else
+		{
+			Dialog_Show(playerid, PlayerVehSetTag, DIALOG_STYLE_INPUT, "Set Custom Name Tag", "Enter a name tag for your vehicle (3-15 characters):\nThis tag will display on the vehicle menu GUI.", "Set", "Back");
+		}
+	}
+	return 1;
+}
+
+Dialog:PlayerVehSetTag(playerid, response, listitem, inputtext[])
+{
+	if(!response) return ShowPlayerVehMainDialog(playerid);
+	
+	new vehicleid = GetPlayerVehicleID(playerid);
+	new carkey = GetVehicleKeyID(playerid, vehicleid);
+	if(vehicleid == 0 || carkey == -1)
+	{
+		SendErrorMessage(playerid, "You must be inside your vehicle.");
+		return ShowPlayerVehMainDialog(playerid);
+	}
+	
+	new carid = PlayerData[playerid][pCarKeys][carkey];
+	if(strlen(inputtext) < 3 || strlen(inputtext) > 15)
+	{
+		return Dialog_Show(playerid, PlayerVehSetTag, DIALOG_STYLE_INPUT, "Set Custom Name Tag", "{FF0000}Tag must be between 3 and 15 characters!{FFFFFF}\nEnter a name tag for your vehicle:", "Set", "Back");
+	}
+	
+	format(CarData[carid][carUItag], 15, "%s", inputtext);
+	Car_SaveID(carid);
+	SendClientMessageEx(playerid, COLOR_YELLOW3, "SERVER: Added tag '%s' to your %s. It'll appear in the /v get UI.", inputtext, ReturnVehicleName(vehicleid));
+	ShowPlayerVehMainDialog(playerid);
+	return 1;
+}
+
+Dialog:PlayerVehSellScrap(playerid, response, listitem, inputtext[])
+{
+	if(!response) return ShowPlayerVehMainDialog(playerid);
+	
+	new vehicleid = GetPlayerVehicleID(playerid);
+	new carkey = GetVehicleKeyID(playerid, vehicleid);
+	if(vehicleid == 0 || carkey == -1)
+	{
+		SendErrorMessage(playerid, "You must be inside your vehicle.");
+		return ShowPlayerVehMainDialog(playerid);
+	}
+	
+	new carid = PlayerData[playerid][pCarKeys][carkey];
+	if(listitem == 0) // Sell to Player
+	{
+		if(IsDonateCar(CarData[carid][carModel]))
+		{
+			SendErrorMessage(playerid, "You cannot sell this donator vehicle.");
+			return ShowPlayerVehMainDialog(playerid);
+		}
+		Dialog_Show(playerid, PlayerVehSellPlayer, DIALOG_STYLE_INPUT, "Sell to Player", "Enter player ID/Name and price (Format: [player_id] [price]):", "Sell", "Back");
+	}
+	else if(listitem == 1) // Scrap Vehicle
+	{
+		new scrap_price = VehicleData[GetVehicleModel(vehicleid) - 400][c_scrap];
+		if(!scrap_price)
+		{
+			SendErrorMessage(playerid, "Incorrect vehicle price, contact an administrator.");
+			return ShowPlayerVehMainDialog(playerid);
+		}
+		
+		new prompt[256];
+		format(prompt, sizeof(prompt), "Are you sure you want to scrap this vehicle?\nYou will receive %s from the debris.", FormatNumber(scrap_price));
+		Dialog_Show(playerid, PlayerVehScrapConfirm, DIALOG_STYLE_MSGBOX, "Scrap Vehicle", prompt, "Scrap", "Back");
+	}
+	return 1;
+}
+
+Dialog:PlayerVehSellPlayer(playerid, response, listitem, inputtext[])
+{
+	if(!response) return ShowPlayerVehMainDialog(playerid);
+	
+	new vehicleid = GetPlayerVehicleID(playerid);
+	new carkey = GetVehicleKeyID(playerid, vehicleid);
+	if(vehicleid == 0 || carkey == -1)
+	{
+		SendErrorMessage(playerid, "You must be inside your vehicle.");
+		return ShowPlayerVehMainDialog(playerid);
+	}
+	
+	new carid = PlayerData[playerid][pCarKeys][carkey];
+	new userid = INVALID_PLAYER_ID, price = 0;
+	if(sscanf(inputtext, "ud", userid, price) || userid == INVALID_PLAYER_ID || price <= 0)
+	{
+		return Dialog_Show(playerid, PlayerVehSellPlayer, DIALOG_STYLE_INPUT, "Sell to Player", "{FF0000}Invalid format!{FFFFFF}\nEnter player ID/Name and price (Format: [player_id] [price]):", "Sell", "Back");
+	}
+	
+	if(userid == playerid)
+	{
+		SendErrorMessage(playerid, "You cannot sell a vehicle to yourself.");
+		return ShowPlayerVehMainDialog(playerid);
+	}
+	
+	if(!IsPlayerConnected(userid))
+	{
+		SendErrorMessage(playerid, "The player you specified isn't connected.");
+		return ShowPlayerVehMainDialog(playerid);
+	}
+	
+	if(!IsPlayerNearPlayer(playerid, userid, 5.0))
+	{
+		SendErrorMessage(playerid, "You are not close enough to that player.");
+		return ShowPlayerVehMainDialog(playerid);
+	}
+	
+	pToAccept[userid] = playerid;
+	prToAccept[userid] = price;
+	tToAccept[userid] = OFFER_TYPE_VSELL;
+	
+	new query[256];
+	format(query, sizeof(query), "%s has offered to sell you their ~y~%s~n~~w~for ~g~$%d~n~~p~press ~g~Y~p~ to accept or ~r~N ~p~to deny.", ReturnName(playerid, 0), g_arrVehicleNames[CarData[carid][carModel] - 400], FormatNumber(price));
+	ShowPlayerFooter(userid, query, -1);
+	
+	SendClientMessageEx(playerid, COLOR_GREEN, "You have offered to sell your %s to %s for $%s.", ReturnVehicleModelName(CarData[carid][carModel]), ReturnName(userid, 0), FormatNumber(price));
+	return 1;
+}
+
+Dialog:PlayerVehScrapConfirm(playerid, response, listitem, inputtext[])
+{
+	if(!response) return ShowPlayerVehMainDialog(playerid);
+	
+	new vehicleid = GetPlayerVehicleID(playerid);
+	new carkey = GetVehicleKeyID(playerid, vehicleid);
+	if(vehicleid == 0 || carkey == -1)
+	{
+		SendErrorMessage(playerid, "You must be inside your vehicle.");
+		return ShowPlayerVehMainDialog(playerid);
+	}
+	
+	new carid = PlayerData[playerid][pCarKeys][carkey];
+	new scrap_price = VehicleData[GetVehicleModel(vehicleid) - 400][c_scrap];
+	if(!scrap_price)
+	{
+		SendErrorMessage(playerid, "Incorrect vehicle price, contact an administrator.");
+		return ShowPlayerVehMainDialog(playerid);
+	}
+	
+	new query[128];
+	mysql_format(dbCon, query, sizeof(query), "DELETE FROM `cars` WHERE `carID` = '%d' LIMIT 1", CarData[carid][carID]);
+	mysql_tquery(dbCon, query, "OnPlayerVehicleScrap", "ddd", playerid, carid, scrap_price);
+	return 1;
+}
+
+// ----------------------------------------------------------------------------
+// COMMAND: /health [playerid] (Medical & Body Status Inspector)
+// ----------------------------------------------------------------------------
+
+CMD:health(playerid, params[])
+{
+	new targetid = playerid;
+	if(!isnull(params))
+	{
+		if(sscanf(params, "u", targetid))
+			return SendSyntaxMessage(playerid, "/health [playerid/PartOfName]");
+
+		if(targetid == INVALID_PLAYER_ID)
+			return SendErrorMessage(playerid, "Invalid player specified.");
+
+		if(targetid != playerid)
+		{
+			new Float:x, Float:y, Float:z;
+			GetPlayerPos(targetid, x, y, z);
+			if(GetPlayerDistanceFromPoint(playerid, x, y, z) > 5.0)
+				return SendErrorMessage(playerid, "You are too far away from that player.");
+		}
+	}
+
+	new bool:isPrivileged = (playerid == targetid || PlayerData[playerid][pAdmin] > 0 || PlayerData[playerid][pFaction] != -1);
+
+	new Float:hp = PlayerData[targetid][pHealth];
+	new Float:arm = PlayerData[targetid][pArmour];
+
+	new body[1024];
+	format(body, sizeof(body), "{FFFFFF}=== PHYSICAL & MEDICAL STATUS (%s) ===\n\n", ReturnName(targetid, 0));
+
+	format(body, sizeof(body), "%s{00FF88}Health (HP):{FFFFFF} %.1f / 150.0 HP\n", body, hp);
+	format(body, sizeof(body), "%s{00FF88}Armor (Vest):{FFFFFF} %.1f / 150.0%%\n", body, arm);
+
+	if(BrokenLeg{targetid})
+		format(body, sizeof(body), "%s{FF4444}Leg Condition:{FFFFFF} Fractured / Injured (Pincang)\n", body);
+	else
+		format(body, sizeof(body), "%s{00FF88}Leg Condition:{FFFFFF} Healthy / Normal\n", body);
+
+	// Detailed Medical Info (Privileged: Self, Admin, or LSFD/Faction)
+	if(isPrivileged)
+	{
+		format(body, sizeof(body), "%s\n{FFFF00}=== CONFIDENTIAL MEDICAL & TOXICOLOGY LOGS ==={FFFFFF}\n", body);
+
+		// Active Drug Effect
+		new drugID = PlayerData[targetid][pDrugEffects];
+		if(drugID >= 0 && drugID < sizeof(d_DATA))
+		{
+			format(body, sizeof(body), "%s{FFAA00}Active Substance:{FFFFFF} %s (Remaining Duration: ~%d sec)\n", 
+				body, d_DATA[drugID][dName], PlayerData[targetid][pDrugDuration]);
+		}
+		else
+		{
+			format(body, sizeof(body), "%s{AAAAAA}Active Substance:{FFFFFF} None\n", body);
+		}
+
+		// Overdose Status
+		if(PlayerData[targetid][pOverdosing])
+			format(body, sizeof(body), "%s{FF0000}Overdose Status:{FFFFFF} CRITICAL - Fentanyl Overdose (Unconscious / Need Narcan)\n", body);
+		else
+			format(body, sizeof(body), "%s{00FF88}Overdose Status:{FFFFFF} Normal / Clear\n", body);
+
+		// Tolerance Levels Summary
+		new maxTol = 0;
+		for(new d = 0; d < 10; d++)
+		{
+			if(PlayerData[targetid][pDrugTolerance][d] > maxTol)
+				maxTol = PlayerData[targetid][pDrugTolerance][d];
+		}
+		format(body, sizeof(body), "%s{AABBFF}Overall Drug Tolerance:{FFFFFF} %d%%\n", body, maxTol);
+
+		if(maxTol >= 80)
+			format(body, sizeof(body), "%s{FF4444}Withdrawal Alert:{FFFFFF} High Addiction Risk (Severe Tolerance)\n", body);
+	}
+	else
+	{
+		format(body, sizeof(body), "%s\n{AAAAAA}[Note] Detailed toxicology, active drug effects, and overdose logs can only be inspected by Admin or Medical Paramedics.", body);
+	}
+
+	new title[64];
+	format(title, sizeof(title), "Health Inspection: %s", ReturnName(targetid, 0));
+	Dialog_Show(playerid, Health_Inspection, DIALOG_STYLE_MSGBOX, title, body, "Close", "");
+	return 1;
+}
+
+Dialog:Health_Inspection(playerid, response, listitem, inputtext[])
+{
+	return 1;
+}
+
+// =============================================================================
+// ILLEGAL WEAPON SYSTEM COMMANDS
+// =============================================================================
+
+CMD:illegaljob(playerid, params[])
+{
+    new sub[16];
+    if(sscanf(params, "s[16]", sub))
+    {
+        if(PlayerData[playerid][pAdmin] >= 2)
+            return SendSyntaxMessage(playerid, "/illegaljob [join/create/delete/list]");
+        else
+            return SendSyntaxMessage(playerid, "/illegaljob [join]");
+    }
+
+    if(!strcmp(sub, "join", true))
+    {
+        // Must be near any join pickup
+        new near = -1;
+        new Float:px, Float:py, Float:pz;
+        GetPlayerPos(playerid, px, py, pz);
+
+        for(new i = 0; i < IWSPickupCount && near == -1; ++i)
+        {
+            if(IWSPickup[i][iws_Type] != IWS_PICKUP_JOIN) continue;
+            if(IsPlayerInRangeOfPoint(playerid, 3.0, IWSPickup[i][iws_X], IWSPickup[i][iws_Y], IWSPickup[i][iws_Z])) near = i;
+        }
+
+        if(near == -1)
+            return SendErrorMessage(playerid, "You are not near any Illegal Job join point.");
+
+        // Automatically detect job based on pickup type / setup
+        // In the future, we could store job ID in pickup. For now, the only job is Weapon Supplier (1).
+        if(pIllegalJob[playerid] == 1)
+            return SendErrorMessage(playerid, "You are already a Weapon Supplier.");
+
+        pIllegalJob[playerid] = 1;
+        IWS_SavePlayer(playerid);
+        SendNoticeMessage(playerid, "You have joined the Weapon Supplier illegal job. Type /buymaterial and /buyschematic to begin.");
+        SQL_LogAction(playerid, "Joined Illegal Job: Weapon Supplier");
+        return 1;
+    }
+
+    // Admin subcommands
+    if(PlayerData[playerid][pAdmin] < 2)
+        return SendUnauthMessage(playerid, "Only Game Admin+ can use this.");
+
+    if(!strcmp(sub, "create", true))
+    {
+        Dialog_Show(playerid, IWS_CreateJobDialog, DIALOG_STYLE_LIST,
+            "Illegal Job - Select Type",
+            "Weapon Supplier (Join Point)",
+            "Select", "Cancel");
+        return 1;
+    }
+
+    if(!strcmp(sub, "delete", true))
+    {
+        if(!IWSPickupCount)
+            return SendErrorMessage(playerid, "No illegal job pickups exist.");
+
+        new dstr[512];
+        for(new i = 0; i < IWSPickupCount; ++i)
+        {
+            new tname[24];
+            switch(IWSPickup[i][iws_Type])
+            {
+                case IWS_PICKUP_JOIN:      format(tname, sizeof(tname), "Join Point");
+                case IWS_PICKUP_MATERIAL:  format(tname, sizeof(tname), "Material");
+                case IWS_PICKUP_SCHEMATIC: format(tname, sizeof(tname), "Schematic");
+            }
+            format(dstr, sizeof(dstr), "%sSlot %d - %s\n", dstr, i, tname);
+        }
+
+        Dialog_Show(playerid, IWS_DeleteDialog, DIALOG_STYLE_LIST,
+            "Delete Pickup", dstr, "Delete", "Cancel");
+        return 1;
+    }
+
+    if(!strcmp(sub, "list", true))
+    {
+        if(!IWSPickupCount)
+            return SendErrorMessage(playerid, "No illegal job pickups exist.");
+
+        new dstr[512];
+        for(new i = 0; i < IWSPickupCount; ++i)
+        {
+            new tname[24];
+            switch(IWSPickup[i][iws_Type])
+            {
+                case IWS_PICKUP_JOIN:      format(tname, sizeof(tname), "Join Point");
+                case IWS_PICKUP_MATERIAL:  format(tname, sizeof(tname), "Material (Stock: %d)", IWSPickup[i][iws_MatStock]);
+                case IWS_PICKUP_SCHEMATIC: format(tname, sizeof(tname), "Schematic");
+            }
+            format(dstr, sizeof(dstr), "%sSlot %d: %s | MatPrice: $%d | SchPrice: $%d\n",
+                dstr, i, tname, IWSPickup[i][iws_MatPrice], IWSPickup[i][iws_SchPrice]);
+        }
+
+        Dialog_Show(playerid, None, DIALOG_STYLE_MSGBOX, "Illegal Job Pickups", dstr, "Close", "");
+        return 1;
+    }
+
+    return SendSyntaxMessage(playerid, "/illegaljob [join/create/delete/list]");
+}
+
+CMD:weaponsupplier(playerid, params[])
+{
+    new sub[16], arg[16];
+    sub[0] = '\0';
+    arg[0] = '\0';
+    sscanf(params, "s[16]s[16]", sub, arg);
+
+    printf("[WEAPONSUPPLIER DEBUG] params='%s', sub='%s', arg='%s', admin=%d", params, sub, arg, PlayerData[playerid][pAdmin]);
+
+    if(isnull(sub))
+        return SendSyntaxMessage(playerid, "/weaponsupplier [join/create/edit]");
+
+    if(!strcmp(sub, "join", true))
+    {
+        return Command_ReProcess(playerid, "illegaljob join", 0);
+    }
+
+    // Admin subcommands
+    if(PlayerData[playerid][pAdmin] < 2)
+        return SendUnauthMessage(playerid, "Only Game Admin+ can use this.");
+
+    if(!strcmp(sub, "create", true))
+    {
+        if(isnull(arg))
+            return SendSyntaxMessage(playerid, "/weaponsupplier create [material/schematic]");
+
+        if(!strcmp(arg, "material", true))
+            IWS_CreatePickup(playerid, IWS_PICKUP_MATERIAL);
+        else if(!strcmp(arg, "schematic", true))
+            IWS_CreatePickup(playerid, IWS_PICKUP_SCHEMATIC);
+        else
+            return SendSyntaxMessage(playerid, "/weaponsupplier create [material/schematic]");
+
+        return 1;
+    }
+
+    if(!strcmp(sub, "edit", true))
+    {
+        new prop[16], val;
+        if(sscanf(params, "{s}s[16]d", prop, val))
+            return SendSyntaxMessage(playerid, "/weaponsupplier edit [price/stock] [value]");
+
+        new near = -1;
+        new Float:px, Float:py, Float:pz;
+        GetPlayerPos(playerid, px, py, pz);
+        for(new i = 0; i < IWSPickupCount && near == -1; ++i)
+        {
+            if(IsPlayerInRangeOfPoint(playerid, 5.0, IWSPickup[i][iws_X], IWSPickup[i][iws_Y], IWSPickup[i][iws_Z])) near = i;
+        }
+
+        if(near == -1)
+            return SendErrorMessage(playerid, "You are not near any Weapon Supplier pickup.");
+
+        if(isnull(prop)) return SendSyntaxMessage(playerid, "/weaponsupplier edit [price/stock] [value]");
+
+        if(!strcmp(prop, "price", true))
+        {
+            if(IWSPickup[near][iws_Type] == IWS_PICKUP_MATERIAL)
+            {
+                IWSPickup[near][iws_MatPrice] = val;
+                SendClientMessageEx(playerid, COLOR_LIGHTRED, "[ ! ]{FFFFFF} Material price set to $%d.", val);
+            }
+            else if(IWSPickup[near][iws_Type] == IWS_PICKUP_SCHEMATIC)
+            {
+                IWSPickup[near][iws_SchPrice] = val;
+                SendClientMessageEx(playerid, COLOR_LIGHTRED, "[ ! ]{FFFFFF} Schematic price set to $%d.", val);
+            }
+        }
+        else if(!strcmp(prop, "stock", true))
+        {
+            IWSPickup[near][iws_MatStock] = val;
+            SendClientMessageEx(playerid, COLOR_LIGHTRED, "[ ! ]{FFFFFF} Material stock set to %d.", val);
+        }
+        else
+            return SendSyntaxMessage(playerid, "/weaponsupplier edit [price/stock] [value]");
+
+        IWS_UpdatePickupLabel(near);
+        IWS_SavePickups();
+        return 1;
+    }
+
+    return SendSyntaxMessage(playerid, "/weaponsupplier [join/create/edit]");
+}
+
+CMD:buymaterial(playerid, params[])
+{
+    if(!IWS_IsSupplier(playerid))
+        return SendErrorMessage(playerid, "You are not a Weapon Supplier.");
+
+    new amount;
+    if(sscanf(params, "d", amount))
+        return SendSyntaxMessage(playerid, "/buymaterial [amount]");
+
+    if(amount < 1 || amount > 500)
+        return SendErrorMessage(playerid, "Amount must be between 1 and 500.");
+
+    new near = -1;
+    new Float:px, Float:py, Float:pz;
+    GetPlayerPos(playerid, px, py, pz);
+    for(new i = 0; i < IWSPickupCount && near == -1; ++i)
+    {
+        if(IWSPickup[i][iws_Type] != IWS_PICKUP_MATERIAL) continue;
+        if(IsPlayerInRangeOfPoint(playerid, 3.0, IWSPickup[i][iws_X], IWSPickup[i][iws_Y], IWSPickup[i][iws_Z])) near = i;
+    }
+
+    if(near == -1)
+        return SendErrorMessage(playerid, "You are not near a Material supply point.");
+
+    if(IWSPickup[near][iws_MatStock] < amount)
+        return SendErrorMessage(playerid, "Not enough stock. Available: %d", IWSPickup[near][iws_MatStock]);
+
+    new price = amount * IWSPickup[near][iws_MatPrice];
+    if(PlayerData[playerid][pCash] < price)
+        return SendErrorMessage(playerid, "You need $%d but only have $%d.", price, PlayerData[playerid][pCash]);
+
+    TakePlayerMoney(playerid, price);
+    pMaterials[playerid] += amount;
+    IWSPickup[near][iws_MatStock] -= amount;
+
+    IWS_UpdatePickupLabel(near);
+    IWS_SavePickups();
+    IWS_SavePlayer(playerid);
+
+    SendClientMessageEx(playerid, COLOR_LIGHTRED, "[ ! ]{FFFFFF} Bought %d material(s) for $%d. You now have %d material(s).", amount, price, pMaterials[playerid]);
+    SQL_LogAction(playerid, "Bought %d materials for $%d", amount, price);
     return 1;
 }
 
-DCMD:cmdrp(user, channel, params[])
+CMD:buyschematic(playerid, params[])
 {
-    new DCC_Embed:embed = DCC_CreateEmbed(
-        "List CMD Admin & Player | LJ-RP 6.6.6", 
-        "List CMD LJRP\n\nLink:\nhttps://tinyurl.com/ljrpcmd", 
-        "https://ucp.ljrp.my.id",
-        "", 
-        0xCDD400,
-        "",
-        "",
-        "https://www.upload.ee/image/16836591/logo.png",
-        ""
-    );
+    if(!IWS_IsSupplier(playerid))
+        return SendErrorMessage(playerid, "You are not a Weapon Supplier.");
 
-    if(channel != createacc) return DCC_SendChannelEmbedMessage(channel, embed);
-    if(sscanf(params, "ss", params[0]))
-        return DCC_SendChannelEmbedMessage(channel, embed);
+    new near = -1;
+    new Float:px, Float:py, Float:pz;
+    GetPlayerPos(playerid, px, py, pz);
+    for(new i = 0; i < IWSPickupCount && near == -1; ++i)
+    {
+        if(IWSPickup[i][iws_Type] != IWS_PICKUP_SCHEMATIC) continue;
+        if(IsPlayerInRangeOfPoint(playerid, 3.0, IWSPickup[i][iws_X], IWSPickup[i][iws_Y], IWSPickup[i][iws_Z])) near = i;
+    }
 
+    if(near == -1)
+        return SendErrorMessage(playerid, "You are not near a Schematic shop.");
+
+    SetPVarInt(playerid, "IWS_SchShop", near);
+
+    new dstr[512];
+    new price = IWSPickup[near][iws_SchPrice];
+    new bool:isMafia = IWS_IsMafia(playerid);
+
+    for(new i = 0; i < MAX_CRAFT_WEAPONS; ++i)
+    {
+        new idx = craft_sch_idx[i];
+        new owned = pSchematics[playerid][idx];
+        new mafia_only = craft_mafia_only[i];
+
+        if(mafia_only && !isMafia)
+            continue;
+
+        new line[96];
+        if(owned)
+            format(line, sizeof(line), "{00FF00}%s - OWNED\n", schematic_names[idx]);
+        else
+            format(line, sizeof(line), "%s - $%d\n", schematic_names[idx], price);
+
+        strcat(dstr, line);
+    }
+
+    if(!strlen(dstr))
+        return SendErrorMessage(playerid, "No schematics available for your rank.");
+
+    Dialog_Show(playerid, IWS_SchematicDialog, DIALOG_STYLE_LIST,
+        "Schematic Shop", dstr, "Buy", "Cancel");
     return 1;
 }
 
-DCMD:ip(user, channel, params[])
+CMD:gun(playerid, params[])
 {
-    new DCC_Embed:embed = DCC_CreateEmbed(
-        "IP Server | LJ-RP 6.6.6", 
-        "91.134.166.74:7778", 
-        "https://ucp.ljrp.my.id",
-        "", 
-        0xCDD400,
-        "",
-        "",
-        "https://www.upload.ee/image/16836591/logo.png",
-        ""
-    );
+    new sub[16], weapon_name[32], ammo;
+    sub[0] = '\0';
+    weapon_name[0] = '\0';
+    ammo = 0;
 
-    if(channel != createacc) return DCC_SendChannelEmbedMessage(channel, embed);
-    if(sscanf(params, "ss", params[0]))
-        return DCC_SendChannelEmbedMessage(channel, embed);
+    sscanf(params, "s[16]s[32]d", sub, weapon_name, ammo);
 
-    return 1;
+    printf("[GUN DEBUG] params='%s', sub='%s', weapon='%s', ammo=%d", params, sub, weapon_name, ammo);
+
+    if(isnull(sub))
+        return SendSyntaxMessage(playerid, "/gun [create]");
+
+    if(!strcmp(sub, "create", true))
+    {
+        if(isnull(weapon_name) || ammo <= 0)
+            return SendSyntaxMessage(playerid, "/gun create [weapon name] [ammo]");
+
+        return IWS_GunCreateParsed(playerid, weapon_name, ammo);
+    }
+
+    return SendSyntaxMessage(playerid, "/gun [create]");
 }
 
-DCMD:jawa(user, channel, params[])
+CMD:delays(playerid, params[])
 {
-    new DCC_Embed:embed = DCC_CreateEmbed(
-        "Los Jawa Roleplay Bot System", 
-        "Kunjungi Website UCP Los Jawa Roleplay\n\nLink:\nhttps://ucp.ljrp.my.id\n\nLakukan pembuatan UCP, karakter dan ganti skin di sana\nIP: 91.134.166.74:7778", 
-        "https://ucp.ljrp.my.id",
-        "", 
-        0xCDD400,
-        "",
-        "",
-        "https://www.upload.ee/image/16836591/logo.png",
-        ""
-    );
+    new str[512];
+    format(str, sizeof(str), "Delay List:\n\n");
 
-    if(channel != createacc) return DCC_SendChannelEmbedMessage(channel, embed);
-    if(sscanf(params, "ss", params[0]))
-        return DCC_SendChannelEmbedMessage(channel, embed);
+    new bus_delay = PlayerData[playerid][pBusJobDelay] - gettime();
+    if(bus_delay > 0)
+    {
+        new temp[128];
+        format(temp, sizeof(temp), "{FFFFFF}Bus Driver Job: {FF0000}%d min %d sec left\n", bus_delay / 60, bus_delay % 60);
+        strcat(str, temp);
+    }
+    else
+    {
+        strcat(str, "{FFFFFF}Bus Driver Job: {00FF00}Available\n");
+    }
 
+    new sweeper_delay = PlayerData[playerid][pSweeperJobDelay] - gettime();
+    if(sweeper_delay > 0)
+    {
+        new temp[128];
+        format(temp, sizeof(temp), "{FFFFFF}Sweeper Job: {FF0000}%d min %d sec left\n", sweeper_delay / 60, sweeper_delay % 60);
+        strcat(str, temp);
+    }
+    else
+    {
+        strcat(str, "{FFFFFF}Sweeper Job: {00FF00}Available\n");
+    }
+
+    new train_delay = PlayerTrainJobDelay[playerid] - gettime();
+    if(train_delay > 0)
+    {
+        new temp[128];
+        format(temp, sizeof(temp), "{FFFFFF}Train Driver Job: {FF0000}%d min %d sec left\n", train_delay / 60, train_delay % 60);
+        strcat(str, temp);
+    }
+    else
+    {
+        strcat(str, "{FFFFFF}Train Driver Job: {00FF00}Available\n");
+    }
+
+    new iws_line[128];
+    IWS_GetDelayLine(playerid, iws_line, sizeof(iws_line));
+    strcat(str, iws_line);
+
+    Dialog_Show(playerid, None, DIALOG_STYLE_MSGBOX, "My Cooldowns & Delays", str, "Close", "");
     return 1;
 }

@@ -31,9 +31,80 @@ SQL_Connect()
 	if(mysql_errno(dbCon))
 		printf("[SQL] Connection to \"%s\" failed! Please check the connection settings...\a", SQL_HOSTNAME);
 	else
+	{
 		printf("[SQL] Connection to \"%s\" passed!", SQL_HOSTNAME);
 
+		// Ensure Hunger & Thirst columns exist in characters table
+		mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `Hunger` INT(11) NOT NULL DEFAULT '100';");
+		mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `Thirst` INT(11) NOT NULL DEFAULT '100';");
+
+		// Ensure server_settings table exists
+		mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `server_settings` (" \
+			"`id` INT(11) NOT NULL PRIMARY KEY DEFAULT '1'," \
+			"`web_url` VARCHAR(128) NOT NULL DEFAULT 'https://ucp.rusdi-bot.site'," \
+			"`server_mode` VARCHAR(64) NOT NULL DEFAULT 'LJ:RP 0.1.0'" \
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;", "OnServerSettingsTableInit", "");
+
+		// Ensure server_changelogs table exists
+		mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `server_changelogs` (" \
+			"`id` INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY," \
+			"`entry` VARCHAR(256) NOT NULL," \
+			"`added_by` VARCHAR(32) NOT NULL DEFAULT 'Admin'," \
+			"`added_date` VARCHAR(64) NOT NULL DEFAULT 'Current'" \
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+		// Ensure AI NPC table exists
+		mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `npc_ai` (" \
+			"`id` INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY," \
+			"`name` VARCHAR(32) NOT NULL," \
+			"`age` INT(11) NOT NULL DEFAULT '25'," \
+			"`gender` VARCHAR(12) NOT NULL DEFAULT 'Male'," \
+			"`skin` INT(11) NOT NULL DEFAULT '299'," \
+			"`ethnicity` VARCHAR(24) NOT NULL DEFAULT 'Indonesian'," \
+			"`traits` VARCHAR(256) NOT NULL," \
+			"`context` VARCHAR(512) NOT NULL," \
+			"`pos_x` FLOAT NOT NULL," \
+			"`pos_y` FLOAT NOT NULL," \
+			"`pos_z` FLOAT NOT NULL," \
+			"`pos_a` FLOAT NOT NULL," \
+			"`virtual_world` INT(11) NOT NULL DEFAULT '0'," \
+			"`interior` INT(11) NOT NULL DEFAULT '0'" \
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;", "OnAiNpcTableInit", "");
+	}
+
 	return true;
+}
+
+forward OnServerSettingsTableInit();
+public OnServerSettingsTableInit()
+{
+	mysql_tquery(dbCon, "INSERT IGNORE INTO `server_settings` (`id`, `web_url`, `server_mode`) VALUES (1, 'https://ucp.rusdi-bot.site', 'LJ:RP 0.1.0');");
+	mysql_tquery(dbCon, "SELECT * FROM `server_settings` WHERE `id` = 1 LIMIT 1", "LoadServerSettings", "");
+	return 1;
+}
+
+forward LoadServerSettings();
+public LoadServerSettings()
+{
+	if(cache_num_rows())
+	{
+		cache_get_value_name(0, "web_url", gServerSite, sizeof(gServerSite));
+		cache_get_value_name(0, "server_mode", gServerMode, sizeof(gServerMode));
+
+		new rconCmd[200];
+		format(rconCmd, sizeof(rconCmd), "weburl %s", gServerSite);
+		SendRconCommand(rconCmd);
+		SetGameModeText(gServerMode);
+		printf("[SERVER CONFIG]: Loaded Web URL: '%s' | Mode: '%s'", gServerSite, gServerMode);
+	}
+	return 1;
+}
+
+forward OnAiNpcTableInit();
+public OnAiNpcTableInit()
+{
+	mysql_tquery(dbCon, "SELECT * FROM `npc_ai`", "OnLoadAiNpcs");
+	return 1;
 }
 
 SQL_CheckAccount(playerid)
@@ -54,7 +125,8 @@ SQL_CheckBanAccount(playerid)
 
 SQL_LoadCharacters(playerid)
 {
-	mysql_format(dbCon, gquery, sizeof(gquery), "SELECT `ID`, `char_name`, `Level`, `Model` FROM `characters` WHERE `master` = '%d' LIMIT 6", AccountData[playerid][aUserid]);
+	DestroyLoginTDs(playerid);
+	mysql_format(dbCon, gquery, sizeof(gquery), "SELECT `ID`, `char_name`, `Level`, `Model`, `LastLogin` FROM `characters` WHERE `master` = '%d' LIMIT 6", AccountData[playerid][aUserid]);
 	mysql_tquery(dbCon, gquery, "OnQueryFinished", "dd", playerid, THREAD_CHECK_CHARACTER);
 }
 
@@ -68,11 +140,10 @@ SQL_CreateCharacter(playerid, const character[])
 
 SQL_AttemptLogin(playerid, const password[])
 {
-	new query[300], buffer[129];
-	WP_Hash(buffer, sizeof(buffer), password);
-
-	mysql_format(dbCon, query, sizeof(query), "SELECT Null FROM `accounts` WHERE `Username` = '%e' AND `Password` = '%e'", ReturnName(playerid), buffer);
-    mysql_tquery(dbCon, query, "OnQueryFinished", "dd", playerid, THREAD_LOGIN);
+	new query[300];
+	mysql_format(dbCon, query, sizeof(query), "SELECT `Password` FROM `accounts` WHERE `Username` = '%e' LIMIT 1", ReturnName(playerid));
+	SetPVarString(playerid, "temp_login_pass", password);
+	mysql_tquery(dbCon, query, "OnQueryFinished", "dd", playerid, THREAD_LOGIN);
 }
 
 SQL_SecretLogin(playerid, password[])
@@ -200,6 +271,64 @@ public Faction_Load()
 			    format(rank, sizeof(rank), "factionRank%d", j + 1);
 			    cache_get_value_name(i, rank, str);
 			    format(FactionRanks[i][j], 32, str);
+
+			    format(rank, sizeof(rank), "emsRank%d", j + 1);
+			    str[0] = EOS;
+			    cache_get_value_name(i, rank, str);
+			    if(strlen(str) > 0)
+			    {
+			    	format(EMSRanks[i][j], 32, str);
+			    }
+			    else
+			    {
+			    	switch(j)
+			    	{
+			    		case 0: format(EMSRanks[i][j], 32, "Medical Director");
+			    		case 1: format(EMSRanks[i][j], 32, "Chief Medical Officer");
+			    		case 2: format(EMSRanks[i][j], 32, "Chief of Surgery");
+			    		case 3: format(EMSRanks[i][j], 32, "Attending Physician");
+			    		case 4: format(EMSRanks[i][j], 32, "Senior Resident Doctor");
+			    		case 5: format(EMSRanks[i][j], 32, "Resident Doctor");
+			    		case 6: format(EMSRanks[i][j], 32, "Medical Intern");
+			    		case 7: format(EMSRanks[i][j], 32, "Chief Paramedic");
+			    		case 8: format(EMSRanks[i][j], 32, "Senior Paramedic");
+			    		case 9: format(EMSRanks[i][j], 32, "Paramedic II");
+			    		case 10: format(EMSRanks[i][j], 32, "Paramedic I");
+			    		case 11: format(EMSRanks[i][j], 32, "Advanced EMT");
+			    		case 12: format(EMSRanks[i][j], 32, "EMT-Basic");
+			    		case 13: format(EMSRanks[i][j], 32, "Student EMT");
+			    		default: format(EMSRanks[i][j], 32, "EMS Trainee");
+			    	}
+			    }
+
+			    format(rank, sizeof(rank), "fireRank%d", j + 1);
+			    str[0] = EOS;
+			    cache_get_value_name(i, rank, str);
+			    if(strlen(str) > 0)
+			    {
+			    	format(FireRanks[i][j], 32, str);
+			    }
+			    else
+			    {
+			    	switch(j)
+			    	{
+			    		case 0: format(FireRanks[i][j], 32, "Fire Chief");
+			    		case 1: format(FireRanks[i][j], 32, "Assistant Fire Chief");
+			    		case 2: format(FireRanks[i][j], 32, "Deputy Fire Chief");
+			    		case 3: format(FireRanks[i][j], 32, "Battalion Chief");
+			    		case 4: format(FireRanks[i][j], 32, "Fire Captain II");
+			    		case 5: format(FireRanks[i][j], 32, "Fire Captain I");
+			    		case 6: format(FireRanks[i][j], 32, "Fire Lieutenant II");
+			    		case 7: format(FireRanks[i][j], 32, "Fire Lieutenant I");
+			    		case 8: format(FireRanks[i][j], 32, "Senior Engineer");
+			    		case 9: format(FireRanks[i][j], 32, "Firefighter III");
+			    		case 10: format(FireRanks[i][j], 32, "Firefighter II");
+			    		case 11: format(FireRanks[i][j], 32, "Firefighter I");
+			    		case 12: format(FireRanks[i][j], 32, "Probationary Firefighter");
+			    		case 13: format(FireRanks[i][j], 32, "Fire Recruit");
+			    		default: format(FireRanks[i][j], 32, "Fire Trainee");
+			    	}
+			    }
 			}
 		}
 	}
@@ -254,6 +383,8 @@ FUNX::FactionSpawn_Load()
 		//cache_get_value_name_int(i, "Local", FactionSpawns[faction][ count[faction] ][spawnLocal]);
 
 		cache_get_value_name(i, "Name", FactionSpawns[faction][ count[faction] ][spawnName], 64);
+
+		UpdateFactionSpawnPickup(faction, count[faction]);
 
 		count[faction] ++;
 	}
@@ -315,6 +446,7 @@ public Bizz_Load()
 		cache_get_value_name_float(i, "biz_airY", BusinessData[i][bBuyingAirY]);
 		cache_get_value_name_float(i, "biz_airZ", BusinessData[i][bBuyingAirZ]);
 		cache_get_value_name_float(i, "biz_airA", BusinessData[i][bBuyingAirA]);
+		cache_get_value_name_int(i, "biz_pickup", BusinessData[i][bPickupModel]);
 
 		Business_Refresh(i);
 
@@ -386,6 +518,14 @@ public Vehicle_Load()
 			cache_get_value_name(i, "vehiclePlate", vehicleVariables[i][vVehiclePlate]);
 			cache_get_value_name(i, "vehicleSign", vehicleVariables[i][vVehicleCarsign]);
 
+			cache_get_value_name_int(i, "vehiclePaintjob", vehicleVariables[i][vVehiclePaintjob]);
+			cache_get_value_name_int(i, "vehicleModWheels", vehicleVariables[i][vVehicleModWheels]);
+			cache_get_value_name_int(i, "vehicleModNitro", vehicleVariables[i][vVehicleModNitro]);
+			cache_get_value_name_float(i, "vehicleHealth", vehicleVariables[i][vVehicleHealth]);
+			cache_get_value_name_int(i, "vehicleStaticSpawn", vehicleVariables[i][vVehicleStaticSpawn]);
+			cache_get_value_name_int(i, "vehicleSideJob", vehicleVariables[i][vVehicleSideJob]);
+			cache_get_value_name_int(i, "vehicleSideJobSpawn", vehicleVariables[i][vVehicleSideJobSpawn]);
+
 			Iter_Add(sv_servercar, i);
 
 			if(vehicleVariables[i][vVehicleColour][0] < 0)
@@ -398,42 +538,35 @@ public Vehicle_Load()
 				vehicleVariables[i][vVehicleColour][1] = random(126);
 			}
 
-			vehicleVariables[i][vVehicleScriptID] = CreateVehicle(vehicleVariables[i][vVehicleModelID], vehicleVariables[i][vVehiclePosition][0], vehicleVariables[i][vVehiclePosition][1], vehicleVariables[i][vVehiclePosition][2], vehicleVariables[i][vVehicleRotation], vehicleVariables[i][vVehicleColour][0], vehicleVariables[i][vVehicleColour][1], 60000, vehicleVariables[i][vVehicleSiren]);
-			ResetVehicle(vehicleVariables[i][vVehicleScriptID]);
-
-			if(!isnull(vehicleVariables[i][vVehicleCarsign]))
+			if(vehicleVariables[i][vVehicleFaction] != -1 || vehicleVariables[i][vVehicleSideJob] > 0)
 			{
-			    new vehicleid = vehicleVariables[i][vVehicleScriptID];
-
-				CoreVehicles[vehicleid][vehSignText] = Create3DTextLabel(vehicleVariables[i][vVehicleCarsign], COLOR_WHITE, 0.0, 0.0, 0.0, 25.0, 0, 0);
-				Attach3DTextLabelToVehicle(CoreVehicles[vehicleid][vehSignText], vehicleid, -0.7, -1.9, -0.3);
-
-				CoreVehicles[vehicleid][vehSign] = 1;
-			}
-
-			if(vehicleVariables[i][vVehicleFaction] != -1)
-			{
-			    if(isnull(vehicleVariables[i][vVehiclePlate]))
-			    {
-					SetVehicleNumberPlate(vehicleVariables[i][vVehicleScriptID], GetInitials(FactionData[vehicleVariables[i][vVehicleFaction]][factionName]));
-				}
-				else
-				{
-					SetVehicleNumberPlate(vehicleVariables[i][vVehicleScriptID], vehicleVariables[i][vVehiclePlate]);
-				}
+				vehicleVariables[i][vVehicleScriptID] = INVALID_VEHICLE_ID;
 			}
 			else
 			{
+				vehicleVariables[i][vVehicleScriptID] = CreateVehicle(vehicleVariables[i][vVehicleModelID], vehicleVariables[i][vVehiclePosition][0], vehicleVariables[i][vVehiclePosition][1], vehicleVariables[i][vVehiclePosition][2], vehicleVariables[i][vVehicleRotation], vehicleVariables[i][vVehicleColour][0], vehicleVariables[i][vVehicleColour][1], 60000, vehicleVariables[i][vVehicleSiren]);
+				ResetVehicle(vehicleVariables[i][vVehicleScriptID]);
+
+				if(!isnull(vehicleVariables[i][vVehicleCarsign]))
+				{
+					new vehicleid = vehicleVariables[i][vVehicleScriptID];
+
+					CoreVehicles[vehicleid][vehSignText] = Create3DTextLabel(vehicleVariables[i][vVehicleCarsign], COLOR_WHITE, 0.0, 0.0, 0.0, 25.0, 0, 0);
+					Attach3DTextLabelToVehicle(CoreVehicles[vehicleid][vehSignText], vehicleid, -0.7, -1.9, -0.3);
+
+					CoreVehicles[vehicleid][vehSign] = 1;
+				}
+
 				new plate[8];
 				format(plate, 8, "%s", RandomVehiclePlate());
 				SetVehicleNumberPlate(vehicleVariables[i][vVehicleScriptID], plate);
+
+				Iter_Add(sv_vehicles, vehicleVariables[i][vVehicleScriptID]);
+
+				SetVehicleHealth(vehicleVariables[i][vVehicleScriptID], GetVehicleDataHealth(vehicleVariables[i][vVehicleModelID]));
+
+				systemVariables[vehicleCounts][0]++;
 			}
-
-    		Iter_Add(sv_vehicles, vehicleVariables[i][vVehicleScriptID]);
-
-			SetVehicleHealth(vehicleVariables[i][vVehicleScriptID], GetVehicleDataHealth(vehicleVariables[i][vVehicleModelID]));
-
-			systemVariables[vehicleCounts][0]++;
 		}
 		else
 		{
@@ -610,10 +743,16 @@ public Movedoor_Load()
         cache_get_value_index_float(i, 16, Doors[i][doorMoveRX]);
         cache_get_value_index_float(i, 17, Doors[i][doorMoveRY]);
         cache_get_value_index_float(i, 18, Doors[i][doorMoveRZ]);
+        cache_get_value_index_float(i, 19, Doors[i][doorCPX]);
+        cache_get_value_index_float(i, 20, Doors[i][doorCPY]);
+        cache_get_value_index_float(i, 21, Doors[i][doorCPZ]);
 
 		Doors[i][doorObject] = CreateDynamicObject(Doors[i][doorModel], Doors[i][doorPosX], Doors[i][doorPosY], Doors[i][doorPosZ], Doors[i][doorPosRX], Doors[i][doorPosRY], Doors[i][doorPosRZ], -1, -1, -1, 200.0);
+		Doors[i][doorCheckpoint] = INVALID_STREAMER_ID;
+		Doors[i][doorCheckpointMove] = INVALID_STREAMER_ID;
 
 		Iter_Add(Movedoors, i);
+		Door_Refresh(i);
 
 		total++;
 	}
@@ -708,9 +847,15 @@ public Points_Load()
 
 			cache_get_value_name_int(i, "pointLocked", EntranceData[i][pointLocked]);
 			cache_get_value_name_int(i, "pointFaction", EntranceData[i][pointFaction]);
+			cache_get_value_name_int(i, "outsideWorld", EntranceData[i][outsideWorld]);
+			cache_get_value_name_int(i, "insideWorld", EntranceData[i][insideWorld]);
 
 			EntranceData[i][outsideApartmentID] = -1;
 			EntranceData[i][insideApartmentID] = -1;
+			EntranceData[i][pointPickup] = INVALID_STREAMER_ID;
+			EntranceData[i][pointPickupInside] = INVALID_STREAMER_ID;
+			EntranceData[i][pointLabel] = Text3D:INVALID_STREAMER_ID;
+			EntranceData[i][pointLabelInside] = Text3D:INVALID_STREAMER_ID;
 			
 			if(EntranceData[i][outsideApartmentSQL] != -1 || EntranceData[i][insideApartmentSQL] != -1)
 			{
@@ -729,6 +874,7 @@ public Points_Load()
 			}
 
 			Iter_Add(Entrance, i);
+			Point_Refresh(i);
 
 			totals++;
 	    }
@@ -804,6 +950,7 @@ public House_Load()
             cache_get_value_name_int(i, "complex", PropertyData[i][hComplexSQL]);
 
             PropertyData[i][hComplexID] = -1;
+            PropertyData[i][hPickup] = INVALID_STREAMER_ID;
 
             PropertyData[i][hInterior] = i + 1;
 

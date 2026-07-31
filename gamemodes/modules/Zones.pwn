@@ -5,7 +5,7 @@
 
 // Variables
 
-enum E_POINT_INFO
+/*enum E_POINT_INFO
 {
 	poiName[28],
 	Float:pointArea[3]
@@ -30,7 +30,7 @@ new const PointsOfInterest[][E_POINT_INFO] =
 	{"SMB Pier", {148.104843, -1843.054443, 4.50}},
 	{"All Saint General Hospital", {1179.006835, -1324.070922, 14.00}},
 	{"Fire Station 69", {1244.638793, -1273.375854, 13.00}}
-};
+};*/
 
 enum E_STREET_INFO
 {
