@@ -46,7 +46,7 @@
 
 // Discord Connector & CMD features removed
 
-#define MAX_COMMANDS 800
+#define MAX_COMMANDS 1500
 #define YSI_NO_HEAP_MALLOC
 
 new DisabledCommands[MAX_COMMANDS];
@@ -2068,6 +2068,7 @@ new ParticleOffset[MAX_PLAYERS];
 new LastAnnotation[MAX_PLAYERS];
 new UpdatingMOTD[MAX_PLAYERS];
 new UnpackageTimer[MAX_PLAYERS];
+new CraftTimer[MAX_PLAYERS];
 
 // Modules
 
@@ -2125,6 +2126,7 @@ new PlayerSweeperVehicle[MAX_PLAYERS] = {INVALID_VEHICLE_ID, ...};
 new PlayerSweeperVehicleIndex[MAX_PLAYERS] = {-1, ...};
 new PlayerSweeperCheckpointStep[MAX_PLAYERS] = {0, ...};
 new PlayerSweeperRouteIndex[MAX_PLAYERS] = {-1, ...};
+#include "modules/system/IllegalWeapon.pwn"
 #include "modules/PlayerCommands.pwn"
 #include "modules/AdminCommands.pwn"
 #include "modules/TesterCommands.pwn"
@@ -2153,6 +2155,11 @@ public OnGameModeInit()
 	DrugStore_Init();
 
 	mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `MarriedTo` VARCHAR(24) NOT NULL DEFAULT 'None';");
+	mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `IllegalJob` INT(11) NOT NULL DEFAULT '0';");
+	mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `Materials` INT(11) NOT NULL DEFAULT '0';");
+	mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `GunCraftDelay` INT(11) NOT NULL DEFAULT '0';");
+	mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `Schematics` VARCHAR(10) NOT NULL DEFAULT '00000000';");
+	IWS_Init();
 	mysql_tquery(dbCon, "ALTER TABLE `propose_points` ADD COLUMN `name` VARCHAR(64) NOT NULL DEFAULT 'Propose Point';");
 	mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `propose_points` (`id` INT AUTO_INCREMENT PRIMARY KEY, `name` VARCHAR(64) NOT NULL DEFAULT 'Propose Point', `posX` FLOAT, `posY` FLOAT, `posZ` FLOAT, `interior` INT, `world` INT);");
 	mysql_tquery(dbCon, "SELECT * FROM `propose_points`", "LoadProposePoints", "");
@@ -2207,7 +2214,7 @@ public OnGameModeInit()
     #include "modules/mapping/Ship.pwn"
     #include "modules/mapping/Pickups.pwn"
 
-    SendRconCommand("hostname [Los Jawa RP is restarting, please wait...]");
+    SendRconCommand("hostname [Los Jawa RP is initializing, please wait...]");
     SendRconCommand("password restartlock123");
     SetTimer("OnServerRestartLockFinish", 120000, false);
 
@@ -3055,6 +3062,7 @@ public SetPlayerToUnfreeze(playerid, Float:x, Float:y, Float:z)
 
 public e_COMMAND_ERRORS:OnPlayerCommandReceived(playerid, cmdtext[], e_COMMAND_ERRORS:success)
 {
+    printf("[CMD DEBUG] Player %d typed '%s', success = %d", playerid, cmdtext, _:success);
 	if(success != COMMAND_OK)
 	{
 	    SendClientMessage(playerid, COLOR_WHITE, "{ADC3E7}Error: {FFFFFF}Sorry, that command does not exist. {ADC3E7}/help{FFFFFF} or {ADC3E7}/helpme{FFFFFF} if you're in need of assistance.");
@@ -4753,6 +4761,8 @@ ResetStatistics(playerid) // Clear player Stats
     FactionEars{playerid} = false;
     PrivateMessageEars{playerid} = false;
     Unpackaging{playerid} = false;
+    if(pCrafting[playerid]) KillTimer(CraftTimer[playerid]);
+    IWS_ResetPlayer(playerid);
     UsingMDC{playerid} = false;
     MDC_Created{playerid} = false;
     TesterColor{playerid} = false;
@@ -6776,7 +6786,7 @@ ShowStatistics(playerid, targetid)
 	format(string, sizeof(string),
 		"{FFC700}IC Information:\n\
 		{FFFFFF}Gender: [{33AA33}%s{FFFFFF}] Money: [{33AA33}%s{FFFFFF}] Bank: [{33AA33}%s{FFFFFF}] Phone number: [{33AA33}%s{FFFFFF}]\n\
-		{FFFFFF}Jobs: [{33AA33}%s{FFFFFF}] Faction: [{33AA33}%s{FFFFFF}]\n\
+		{FFFFFF}Jobs: [{33AA33}%s{FFFFFF}] Faction: [{33AA33}%s{FFFFFF}] Illegal Job: [{FF4747}%s{FFFFFF}]\n\
 		{FFFFFF}Married with: [{33AA33}%s{FFFFFF}] Wealth rating: [{33AA33}%s{FFFFFF}] Bank Account: [{33AA33}%s{FFFFFF}]\n\
 		{FFFFFF}Primary: [{33AA33}%s{FFFFFF}] (Ammo: [{33AA33}%d{FFFFFF}]) Secondary: [{33AA33}%s{FFFFFF}] (Ammo: [{33AA33}%d{FFFFFF}])\n\n\
 		{FFC700}OOC Information:\n\
@@ -6790,6 +6800,7 @@ ShowStatistics(playerid, targetid)
 		phoneNum,
 		ReturnJobName(targetid, PlayerData[targetid][pJob]),
 		factionText,
+		(pIllegalJob[targetid] == 1) ? ("Weapon Supplier") : ("None"),
 		PlayerData[targetid][pMarriedTo],
 		wealthRating,
 		bankAcc,

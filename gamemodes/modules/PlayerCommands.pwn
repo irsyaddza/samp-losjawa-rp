@@ -1763,7 +1763,8 @@ ShowHelpCategories(playerid)
 	strcat(gstr, "12\tApartment / Flat Commands\n");
 	strcat(gstr, "13\tBusiness & Enterprise Commands\n");
 	strcat(gstr, "14\tGarage Commands\n");
-	strcat(gstr, "15\tVIP & Donator Commands");
+	strcat(gstr, "15\tVIP & Donator Commands\n");
+	strcat(gstr, "16\tIllegal Weapon System");
 
 	Dialog_Show(playerid, Help_Main, DIALOG_STYLE_TABLIST, "Help Categories", gstr, "Select", "Close");
 	return 1;
@@ -2182,6 +2183,19 @@ Dialog:Help_FactionList(playerid, response, listitem, inputtext[])
 			strcat(gstr, "{A9C4E4}Coming Soon\n");
 
 			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Donator Commands", gstr, "<< Back", "Close");
+		}
+		case 15: // Illegal Weapon System
+		{
+			gstr[0] = EOS;
+			strcat(gstr, "{FFFFFF}=== ILLEGAL WEAPON SYSTEM (IWS) ===\n\n");
+			strcat(gstr, "{A9C4E4}/illegaljob join / /weaponsupplier join{FFFFFF} - Join the Weapon Supplier illegal job\n");
+			strcat(gstr, "{A9C4E4}/buymaterial [amount]{FFFFFF} - Buy materials at material supply points\n");
+			strcat(gstr, "{A9C4E4}/buyschematic{FFFFFF} - Buy weapon schematics at schematic shops\n");
+			strcat(gstr, "{A9C4E4}/gun create [weapon name] [ammo]{FFFFFF} - Craft weapons from schematics & materials\n");
+			strcat(gstr, "{A9C4E4}/delays{FFFFFF} - Check remaining crafting and job cooldowns\n");
+			strcat(gstr, "{A9C4E4}/items{FFFFFF} - View your materials, schematics, and weapon packages");
+
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Illegal Weapon System", gstr, "<< Back", "Close");
 		}
 	}
 	return 1;
@@ -5110,6 +5124,41 @@ stock ShowPlayerInventoryDialog(playerid, targetid)
 	if(PlayerData[targetid][pFishes] > 0)
 	{
 		format(line, sizeof(line), "{44CCFF}[FISHER] Caught Fish\t{FFFFFF}%d Lbs\n", PlayerData[targetid][pFishes]);
+		strcat(body, line);
+		count++;
+	}
+
+	// Materials (IWS)
+	if(pMaterials[targetid] > 0)
+	{
+		format(line, sizeof(line), "{88FF88}[IWS] Materials\t{FFFFFF}%d Units\n", pMaterials[targetid]);
+		strcat(body, line);
+		count++;
+	}
+
+	// Schematics (IWS)
+	new sch_count = 0;
+	for(new i = 0; i < MAX_SCHEMATICS; i++)
+	{
+		if(pSchematics[targetid][i] > 0)
+		{
+			sch_count++;
+		}
+	}
+	if(sch_count > 0)
+	{
+		new sch_str[128];
+		sch_str[0] = '\0';
+		for(new i = 0; i < MAX_SCHEMATICS; i++)
+		{
+			if(pSchematics[targetid][i] > 0)
+			{
+				if(strlen(sch_str) > 0)
+					strcat(sch_str, ", ");
+				strcat(sch_str, schematic_names[i]);
+			}
+		}
+		format(line, sizeof(line), "{88FF88}[IWS] Schematics\t{FFFFFF}%s\n", sch_str);
 		strcat(body, line);
 		count++;
 	}
@@ -19665,4 +19714,360 @@ CMD:health(playerid, params[])
 Dialog:Health_Inspection(playerid, response, listitem, inputtext[])
 {
 	return 1;
+}
+
+// =============================================================================
+// ILLEGAL WEAPON SYSTEM COMMANDS
+// =============================================================================
+
+CMD:illegaljob(playerid, params[])
+{
+    new sub[16];
+    if(sscanf(params, "s[16]", sub))
+    {
+        if(PlayerData[playerid][pAdmin] >= 2)
+            return SendSyntaxMessage(playerid, "/illegaljob [join/create/delete/list]");
+        else
+            return SendSyntaxMessage(playerid, "/illegaljob [join]");
+    }
+
+    if(!strcmp(sub, "join", true))
+    {
+        // Must be near any join pickup
+        new near = -1;
+        new Float:px, Float:py, Float:pz;
+        GetPlayerPos(playerid, px, py, pz);
+
+        for(new i = 0; i < IWSPickupCount && near == -1; ++i)
+        {
+            if(IWSPickup[i][iws_Type] != IWS_PICKUP_JOIN) continue;
+            if(IsPlayerInRangeOfPoint(playerid, 3.0, IWSPickup[i][iws_X], IWSPickup[i][iws_Y], IWSPickup[i][iws_Z])) near = i;
+        }
+
+        if(near == -1)
+            return SendErrorMessage(playerid, "You are not near any Illegal Job join point.");
+
+        // Automatically detect job based on pickup type / setup
+        // In the future, we could store job ID in pickup. For now, the only job is Weapon Supplier (1).
+        if(pIllegalJob[playerid] == 1)
+            return SendErrorMessage(playerid, "You are already a Weapon Supplier.");
+
+        pIllegalJob[playerid] = 1;
+        IWS_SavePlayer(playerid);
+        SendNoticeMessage(playerid, "You have joined the Weapon Supplier illegal job. Type /buymaterial and /buyschematic to begin.");
+        SQL_LogAction(playerid, "Joined Illegal Job: Weapon Supplier");
+        return 1;
+    }
+
+    // Admin subcommands
+    if(PlayerData[playerid][pAdmin] < 2)
+        return SendUnauthMessage(playerid, "Only Game Admin+ can use this.");
+
+    if(!strcmp(sub, "create", true))
+    {
+        Dialog_Show(playerid, IWS_CreateJobDialog, DIALOG_STYLE_LIST,
+            "Illegal Job - Select Type",
+            "Weapon Supplier (Join Point)",
+            "Select", "Cancel");
+        return 1;
+    }
+
+    if(!strcmp(sub, "delete", true))
+    {
+        if(!IWSPickupCount)
+            return SendErrorMessage(playerid, "No illegal job pickups exist.");
+
+        new dstr[512];
+        for(new i = 0; i < IWSPickupCount; ++i)
+        {
+            new tname[24];
+            switch(IWSPickup[i][iws_Type])
+            {
+                case IWS_PICKUP_JOIN:      format(tname, sizeof(tname), "Join Point");
+                case IWS_PICKUP_MATERIAL:  format(tname, sizeof(tname), "Material");
+                case IWS_PICKUP_SCHEMATIC: format(tname, sizeof(tname), "Schematic");
+            }
+            format(dstr, sizeof(dstr), "%sSlot %d - %s\n", dstr, i, tname);
+        }
+
+        Dialog_Show(playerid, IWS_DeleteDialog, DIALOG_STYLE_LIST,
+            "Delete Pickup", dstr, "Delete", "Cancel");
+        return 1;
+    }
+
+    if(!strcmp(sub, "list", true))
+    {
+        if(!IWSPickupCount)
+            return SendErrorMessage(playerid, "No illegal job pickups exist.");
+
+        new dstr[512];
+        for(new i = 0; i < IWSPickupCount; ++i)
+        {
+            new tname[24];
+            switch(IWSPickup[i][iws_Type])
+            {
+                case IWS_PICKUP_JOIN:      format(tname, sizeof(tname), "Join Point");
+                case IWS_PICKUP_MATERIAL:  format(tname, sizeof(tname), "Material (Stock: %d)", IWSPickup[i][iws_MatStock]);
+                case IWS_PICKUP_SCHEMATIC: format(tname, sizeof(tname), "Schematic");
+            }
+            format(dstr, sizeof(dstr), "%sSlot %d: %s | MatPrice: $%d | SchPrice: $%d\n",
+                dstr, i, tname, IWSPickup[i][iws_MatPrice], IWSPickup[i][iws_SchPrice]);
+        }
+
+        Dialog_Show(playerid, None, DIALOG_STYLE_MSGBOX, "Illegal Job Pickups", dstr, "Close", "");
+        return 1;
+    }
+
+    return SendSyntaxMessage(playerid, "/illegaljob [join/create/delete/list]");
+}
+
+CMD:weaponsupplier(playerid, params[])
+{
+    new sub[16], arg[16];
+    sub[0] = '\0';
+    arg[0] = '\0';
+    sscanf(params, "s[16]s[16]", sub, arg);
+
+    printf("[WEAPONSUPPLIER DEBUG] params='%s', sub='%s', arg='%s', admin=%d", params, sub, arg, PlayerData[playerid][pAdmin]);
+
+    if(isnull(sub))
+        return SendSyntaxMessage(playerid, "/weaponsupplier [join/create/edit]");
+
+    if(!strcmp(sub, "join", true))
+    {
+        return Command_ReProcess(playerid, "illegaljob join", 0);
+    }
+
+    // Admin subcommands
+    if(PlayerData[playerid][pAdmin] < 2)
+        return SendUnauthMessage(playerid, "Only Game Admin+ can use this.");
+
+    if(!strcmp(sub, "create", true))
+    {
+        if(isnull(arg))
+            return SendSyntaxMessage(playerid, "/weaponsupplier create [material/schematic]");
+
+        if(!strcmp(arg, "material", true))
+            IWS_CreatePickup(playerid, IWS_PICKUP_MATERIAL);
+        else if(!strcmp(arg, "schematic", true))
+            IWS_CreatePickup(playerid, IWS_PICKUP_SCHEMATIC);
+        else
+            return SendSyntaxMessage(playerid, "/weaponsupplier create [material/schematic]");
+
+        return 1;
+    }
+
+    if(!strcmp(sub, "edit", true))
+    {
+        new prop[16], val;
+        if(sscanf(params, "{s}s[16]d", prop, val))
+            return SendSyntaxMessage(playerid, "/weaponsupplier edit [price/stock] [value]");
+
+        new near = -1;
+        new Float:px, Float:py, Float:pz;
+        GetPlayerPos(playerid, px, py, pz);
+        for(new i = 0; i < IWSPickupCount && near == -1; ++i)
+        {
+            if(IsPlayerInRangeOfPoint(playerid, 5.0, IWSPickup[i][iws_X], IWSPickup[i][iws_Y], IWSPickup[i][iws_Z])) near = i;
+        }
+
+        if(near == -1)
+            return SendErrorMessage(playerid, "You are not near any Weapon Supplier pickup.");
+
+        if(isnull(prop)) return SendSyntaxMessage(playerid, "/weaponsupplier edit [price/stock] [value]");
+
+        if(!strcmp(prop, "price", true))
+        {
+            if(IWSPickup[near][iws_Type] == IWS_PICKUP_MATERIAL)
+            {
+                IWSPickup[near][iws_MatPrice] = val;
+                SendClientMessageEx(playerid, COLOR_LIGHTRED, "[ ! ]{FFFFFF} Material price set to $%d.", val);
+            }
+            else if(IWSPickup[near][iws_Type] == IWS_PICKUP_SCHEMATIC)
+            {
+                IWSPickup[near][iws_SchPrice] = val;
+                SendClientMessageEx(playerid, COLOR_LIGHTRED, "[ ! ]{FFFFFF} Schematic price set to $%d.", val);
+            }
+        }
+        else if(!strcmp(prop, "stock", true))
+        {
+            IWSPickup[near][iws_MatStock] = val;
+            SendClientMessageEx(playerid, COLOR_LIGHTRED, "[ ! ]{FFFFFF} Material stock set to %d.", val);
+        }
+        else
+            return SendSyntaxMessage(playerid, "/weaponsupplier edit [price/stock] [value]");
+
+        IWS_UpdatePickupLabel(near);
+        IWS_SavePickups();
+        return 1;
+    }
+
+    return SendSyntaxMessage(playerid, "/weaponsupplier [join/create/edit]");
+}
+
+CMD:buymaterial(playerid, params[])
+{
+    if(!IWS_IsSupplier(playerid))
+        return SendErrorMessage(playerid, "You are not a Weapon Supplier.");
+
+    new amount;
+    if(sscanf(params, "d", amount))
+        return SendSyntaxMessage(playerid, "/buymaterial [amount]");
+
+    if(amount < 1 || amount > 500)
+        return SendErrorMessage(playerid, "Amount must be between 1 and 500.");
+
+    new near = -1;
+    new Float:px, Float:py, Float:pz;
+    GetPlayerPos(playerid, px, py, pz);
+    for(new i = 0; i < IWSPickupCount && near == -1; ++i)
+    {
+        if(IWSPickup[i][iws_Type] != IWS_PICKUP_MATERIAL) continue;
+        if(IsPlayerInRangeOfPoint(playerid, 3.0, IWSPickup[i][iws_X], IWSPickup[i][iws_Y], IWSPickup[i][iws_Z])) near = i;
+    }
+
+    if(near == -1)
+        return SendErrorMessage(playerid, "You are not near a Material supply point.");
+
+    if(IWSPickup[near][iws_MatStock] < amount)
+        return SendErrorMessage(playerid, "Not enough stock. Available: %d", IWSPickup[near][iws_MatStock]);
+
+    new price = amount * IWSPickup[near][iws_MatPrice];
+    if(PlayerData[playerid][pCash] < price)
+        return SendErrorMessage(playerid, "You need $%d but only have $%d.", price, PlayerData[playerid][pCash]);
+
+    TakePlayerMoney(playerid, price);
+    pMaterials[playerid] += amount;
+    IWSPickup[near][iws_MatStock] -= amount;
+
+    IWS_UpdatePickupLabel(near);
+    IWS_SavePickups();
+    IWS_SavePlayer(playerid);
+
+    SendClientMessageEx(playerid, COLOR_LIGHTRED, "[ ! ]{FFFFFF} Bought %d material(s) for $%d. You now have %d material(s).", amount, price, pMaterials[playerid]);
+    SQL_LogAction(playerid, "Bought %d materials for $%d", amount, price);
+    return 1;
+}
+
+CMD:buyschematic(playerid, params[])
+{
+    if(!IWS_IsSupplier(playerid))
+        return SendErrorMessage(playerid, "You are not a Weapon Supplier.");
+
+    new near = -1;
+    new Float:px, Float:py, Float:pz;
+    GetPlayerPos(playerid, px, py, pz);
+    for(new i = 0; i < IWSPickupCount && near == -1; ++i)
+    {
+        if(IWSPickup[i][iws_Type] != IWS_PICKUP_SCHEMATIC) continue;
+        if(IsPlayerInRangeOfPoint(playerid, 3.0, IWSPickup[i][iws_X], IWSPickup[i][iws_Y], IWSPickup[i][iws_Z])) near = i;
+    }
+
+    if(near == -1)
+        return SendErrorMessage(playerid, "You are not near a Schematic shop.");
+
+    SetPVarInt(playerid, "IWS_SchShop", near);
+
+    new dstr[512];
+    new price = IWSPickup[near][iws_SchPrice];
+    new bool:isMafia = IWS_IsMafia(playerid);
+
+    for(new i = 0; i < MAX_CRAFT_WEAPONS; ++i)
+    {
+        new idx = craft_sch_idx[i];
+        new owned = pSchematics[playerid][idx];
+        new mafia_only = craft_mafia_only[i];
+
+        if(mafia_only && !isMafia)
+            continue;
+
+        new line[96];
+        if(owned)
+            format(line, sizeof(line), "{00FF00}%s - OWNED\n", schematic_names[idx]);
+        else
+            format(line, sizeof(line), "%s - $%d\n", schematic_names[idx], price);
+
+        strcat(dstr, line);
+    }
+
+    if(!strlen(dstr))
+        return SendErrorMessage(playerid, "No schematics available for your rank.");
+
+    Dialog_Show(playerid, IWS_SchematicDialog, DIALOG_STYLE_LIST,
+        "Schematic Shop", dstr, "Buy", "Cancel");
+    return 1;
+}
+
+CMD:gun(playerid, params[])
+{
+    new sub[16], weapon_name[32], ammo;
+    sub[0] = '\0';
+    weapon_name[0] = '\0';
+    ammo = 0;
+
+    sscanf(params, "s[16]s[32]d", sub, weapon_name, ammo);
+
+    printf("[GUN DEBUG] params='%s', sub='%s', weapon='%s', ammo=%d", params, sub, weapon_name, ammo);
+
+    if(isnull(sub))
+        return SendSyntaxMessage(playerid, "/gun [create]");
+
+    if(!strcmp(sub, "create", true))
+    {
+        if(isnull(weapon_name) || ammo <= 0)
+            return SendSyntaxMessage(playerid, "/gun create [weapon name] [ammo]");
+
+        return IWS_GunCreateParsed(playerid, weapon_name, ammo);
+    }
+
+    return SendSyntaxMessage(playerid, "/gun [create]");
+}
+
+CMD:delays(playerid, params[])
+{
+    new str[512];
+    format(str, sizeof(str), "Delay List:\n\n");
+
+    new bus_delay = PlayerData[playerid][pBusJobDelay] - gettime();
+    if(bus_delay > 0)
+    {
+        new temp[128];
+        format(temp, sizeof(temp), "{FFFFFF}Bus Driver Job: {FF0000}%d min %d sec left\n", bus_delay / 60, bus_delay % 60);
+        strcat(str, temp);
+    }
+    else
+    {
+        strcat(str, "{FFFFFF}Bus Driver Job: {00FF00}Available\n");
+    }
+
+    new sweeper_delay = PlayerData[playerid][pSweeperJobDelay] - gettime();
+    if(sweeper_delay > 0)
+    {
+        new temp[128];
+        format(temp, sizeof(temp), "{FFFFFF}Sweeper Job: {FF0000}%d min %d sec left\n", sweeper_delay / 60, sweeper_delay % 60);
+        strcat(str, temp);
+    }
+    else
+    {
+        strcat(str, "{FFFFFF}Sweeper Job: {00FF00}Available\n");
+    }
+
+    new train_delay = PlayerTrainJobDelay[playerid] - gettime();
+    if(train_delay > 0)
+    {
+        new temp[128];
+        format(temp, sizeof(temp), "{FFFFFF}Train Driver Job: {FF0000}%d min %d sec left\n", train_delay / 60, train_delay % 60);
+        strcat(str, temp);
+    }
+    else
+    {
+        strcat(str, "{FFFFFF}Train Driver Job: {00FF00}Available\n");
+    }
+
+    new iws_line[128];
+    IWS_GetDelayLine(playerid, iws_line, sizeof(iws_line));
+    strcat(str, iws_line);
+
+    Dialog_Show(playerid, None, DIALOG_STYLE_MSGBOX, "My Cooldowns & Delays", str, "Close", "");
+    return 1;
 }

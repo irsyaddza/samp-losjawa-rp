@@ -336,8 +336,7 @@ CMD:npc(playerid, params[])
 	new option[24], extra[64];
 	if(sscanf(params, "s[24]S()[64]", option, extra))
 	{
-		SendClientMessage(playerid, COLOR_WHITE, "USAGE: /npc [option]");
-		SendClientMessage(playerid, COLOR_GRAD4, "Options: create, list, delete");
+		SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /npc [create/list/delete]");
 		return 1;
 	}
 

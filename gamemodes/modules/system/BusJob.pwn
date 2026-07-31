@@ -1048,47 +1048,5 @@ CMD:spawn(playerid, params[])
     return 1;
 }
 
-CMD:delays(playerid, params[])
-{
-    new str[512];
-    format(str, sizeof(str), "Delay List:\n\n");
 
-    new bus_delay = PlayerData[playerid][pBusJobDelay] - gettime();
-    if(bus_delay > 0)
-    {
-        new temp[128];
-        format(temp, sizeof(temp), "{FFFFFF}Bus Driver Job: {FF0000}%d min %d sec left\n", bus_delay / 60, bus_delay % 60);
-        strcat(str, temp);
-    }
-    else
-    {
-        strcat(str, "{FFFFFF}Bus Driver Job: {00FF00}Available\n");
-    }
 
-    new sweeper_delay = PlayerData[playerid][pSweeperJobDelay] - gettime();
-    if(sweeper_delay > 0)
-    {
-        new temp[128];
-        format(temp, sizeof(temp), "{FFFFFF}Sweeper Job: {FF0000}%d min %d sec left\n", sweeper_delay / 60, sweeper_delay % 60);
-        strcat(str, temp);
-    }
-    else
-    {
-        strcat(str, "{FFFFFF}Sweeper Job: {00FF00}Available\n");
-    }
-
-    new train_delay = PlayerTrainJobDelay[playerid] - gettime();
-    if(train_delay > 0)
-    {
-        new temp[128];
-        format(temp, sizeof(temp), "{FFFFFF}Train Driver Job: {FF0000}%d min %d sec left\n", train_delay / 60, train_delay % 60);
-        strcat(str, temp);
-    }
-    else
-    {
-        strcat(str, "{FFFFFF}Train Driver Job: {00FF00}Available\n");
-    }
-
-    Dialog_Show(playerid, None, DIALOG_STYLE_MSGBOX, "My Cooldowns & Delays", str, "Close", "");
-    return 1;
-}

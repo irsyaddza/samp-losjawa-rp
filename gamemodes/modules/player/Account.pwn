@@ -498,6 +498,8 @@ public OnQueryFinished(extraid, threadid)
 
 				SetPlayerFaction(extraid);
 
+				IWS_LoadPlayer(extraid); // Load illegal job data
+
 				LoggedIn{extraid} = true;
 
 				if(PlayerData[extraid][pAdmin] > 0)
