@@ -14491,8 +14491,6 @@ ReturnJobName(playerid, jobid)
 	    }
 	    case JOB_MECHANIC: format(name, 32, "Car Mechanic");
 	    case JOB_TAXI: format(name, 32, "Taxi Driver");
-	    case JOB_WPDEALER: format(name, 32, "Weapon Dealer");
-	    case JOB_SUPPLIER: format(name, 32, "Weapon Supplier");
 	    case JOB_TRAIN_DRIVER: format(name, 32, "Train Driver");
 
 	    default: format(name, 32, "Unemployed");

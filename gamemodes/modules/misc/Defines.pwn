@@ -98,8 +98,6 @@
 #define JOB_MECHANIC        3
 #define JOB_TAXI        	4
 #define JOB_GUIDE        	5
-#define JOB_WPDEALER		6
-#define JOB_SUPPLIER  	    7
 #define JOB_TRAIN_DRIVER	8
 
 new bool:PlayerOnTrainJob[MAX_PLAYERS];

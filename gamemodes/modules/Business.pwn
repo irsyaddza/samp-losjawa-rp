@@ -100,8 +100,6 @@ Business_Refresh(bizid)
 		    BusinessData[bizid][bTextLabel] = Text3D:INVALID_3DTEXT_ID;
 		}
 
-		if(BusinessData[bizid][bType] == 13) return true; // Black Market
-
 		new model = BusinessData[bizid][bPickupModel];
 		if(!model)
 		{

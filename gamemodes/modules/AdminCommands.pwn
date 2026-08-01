@@ -2813,7 +2813,7 @@ CMD:biztypes(playerid, params[])
     	return SendErrorMessage(playerid, "You're not authorized to use this command.");
 
 	SendClientMessage(playerid, COLOR_GRAD2, "1: Gas Station | 2: Ammunation | 3: 24/7 4: Vehicle Dealership | 5: Car Modding Shop | 6: Pay & Spray | 7: Clothing Shop");
-	SendClientMessage(playerid, COLOR_GRAD2, "8: Bars | 9: Restaurant | 10: Furniture Shop | 11: Disabled (/advertisement) | 12: Bank | 13: Weapon Factory");
+	SendClientMessage(playerid, COLOR_GRAD2, "8: Bars | 9: Restaurant | 10: Furniture Shop | 11: Disabled (/advertisement) | 12: Bank");
 	return true;
 }
 
@@ -2865,13 +2865,13 @@ CMD:makebusiness(playerid, params[])
 	if(sscanf(params, "ddd", level, price, type))
 	{
 		Dialog_Show(playerid, MbizCreateType, DIALOG_STYLE_LIST, "Create Business (Wizard) - Step 1: Type", 
-			"1: Gas Station\n2: Ammunation\n3: 24-7\n4: Vehicle Dealership\n5: Car Modding Shop\n6: Pay & Spray\n7: Clothing Shop\n8: Bar\n9: Restaurant\n10: Furniture Shop\n11: Disabled (Use /advertisement)\n12: Bank\n13: Weapon Factory", 
+			"1: Gas Station\n2: Ammunation\n3: 24-7\n4: Vehicle Dealership\n5: Car Modding Shop\n6: Pay & Spray\n7: Clothing Shop\n8: Bar\n9: Restaurant\n10: Furniture Shop\n11: Disabled (Use /advertisement)\n12: Bank", 
 			"Next", "Cancel");
 		return true;
 	}
 
-	if(type < 1 || type > 13)
-		return SendClientMessage(playerid, COLOR_GRAD2, "Invalid business type (1-13).");
+	if(type < 1 || type > 12)
+		return SendClientMessage(playerid, COLOR_GRAD2, "Invalid business type (1-12).");
 
 	CreateNewBusiness(playerid, level, price, type);
 	return true;
@@ -8075,10 +8075,7 @@ stock CreateNewBusiness(playerid, level, price, type)
 			format(BusinessData[bizid][bInfo], 80, "Bank");
 			BusinessData[bizid][bMaxProducts] = 10000;
 		}
-		case 13: { // Weapon Factory
-			format(BusinessData[bizid][bInfo], 80, "Weapon Factory");
-			BusinessData[bizid][bMaxProducts] = 300;
-		}
+
 	}
 
 	BusinessData[bizid][bsubType] = 0;
@@ -8241,7 +8238,7 @@ Dialog:MbizCreatePrice(playerid, response, listitem, inputtext[])
 	if(!response)
 	{
 		Dialog_Show(playerid, MbizCreateType, DIALOG_STYLE_LIST, "Create Business (Wizard) - Step 1: Type", 
-			"1: Gas Station\n2: Ammunation\n3: 24-7\n4: Vehicle Dealership\n5: Car Modding Shop\n6: Pay & Spray\n7: Clothing Shop\n8: Bar\n9: Restaurant\n10: Furniture Shop\n11: Disabled (Use /advertisement)\n12: Bank\n13: Weapon Factory", 
+			"1: Gas Station\n2: Ammunation\n3: 24-7\n4: Vehicle Dealership\n5: Car Modding Shop\n6: Pay & Spray\n7: Clothing Shop\n8: Bar\n9: Restaurant\n10: Furniture Shop\n11: Disabled (Use /advertisement)\n12: Bank", 
 			"Next", "Cancel");
 		return 1;
 	}

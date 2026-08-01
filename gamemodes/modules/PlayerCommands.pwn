@@ -1764,7 +1764,7 @@ ShowHelpCategories(playerid)
 	strcat(gstr, "13\tBusiness & Enterprise Commands\n");
 	strcat(gstr, "14\tGarage Commands\n");
 	strcat(gstr, "15\tVIP & Donator Commands\n");
-	strcat(gstr, "16\tIllegal Weapon System");
+	strcat(gstr, "16\tIllegal Weapon System\n");
 
 	Dialog_Show(playerid, Help_Main, DIALOG_STYLE_TABLIST, "Help Categories", gstr, "Select", "Close");
 	return 1;
@@ -2523,24 +2523,14 @@ CMD:jobhelp(playerid, params[])
 		SendClientMessage(playerid, COLOR_WHITE, "/taxi [accept / duty / fare / start / stop]");
 	}
 
-	if(PlayerData[playerid][pJob] == JOB_WPDEALER)
-	{
-	    SendClientMessage(playerid, COLOR_GRAD1, "Commands:");
-		SendClientMessage(playerid, COLOR_GRAD1, "/sellweapon (/sw)");
-		SendClientMessage(playerid, COLOR_GRAD1, "/putweapon (/pw)");
-		SendClientMessage(playerid, COLOR_GRAD1, "/takeweapon (/tw)");
-		SendClientMessage(playerid, COLOR_GRAD1, "/putallweapons (/paw)");
-		SendClientMessage(playerid, COLOR_GRAD1, "/takeallweapons (/taw)");
-		SendClientMessage(playerid, COLOR_GRAD1, "/dealinghelp");
-		SendClientMessage(playerid, COLOR_GRAD1, "/mypackage");
-		SendClientMessage(playerid, COLOR_GRAD1, "/vehpackage");
 
-	}
-
-	if(PlayerData[playerid][pJob] == JOB_SUPPLIER)
+	if(pIllegalJob[playerid] == 1)
 	{
-		SendClientMessage(playerid, COLOR_WHITE, "/buyweapon - /sellpackage (/sp) - /putweapon (/pw) - /takeweapon (/tw)");
-		SendClientMessage(playerid, COLOR_WHITE, "/putallweapons (/paw) - /takeallweapons (/taw) - /mypackage - /vehpackage");
+		SendClientMessage(playerid, COLOR_LIGHTRED, "Weapon Supplier Commands:");
+		SendClientMessage(playerid, COLOR_WHITE, "/buymaterial [amount] - Buy materials at material supply points");
+		SendClientMessage(playerid, COLOR_WHITE, "/buyschematic - Buy weapon schematics at schematic shops");
+		SendClientMessage(playerid, COLOR_WHITE, "/gun create [weapon name] [ammo] - Craft a weapon from materials & schematics");
+		SendClientMessage(playerid, COLOR_WHITE, "/sellpackage, /putweapon, /takeweapon, /putallweapons, /takeallweapons, /mypackage, /vehpackage");
 	}
 
 	if(PlayerData[playerid][pJob] == JOB_FARMER)
@@ -4393,89 +4383,6 @@ stock GetWeaponIDFromName(const name[])
 	return -1;
 }
 
-CMD:buyweapon(playerid, params[])
-{
-	if(PlayerData[playerid][pJob] != JOB_SUPPLIER)
-	    return SendClientMessage(playerid, COLOR_LIGHTRED, "You are not a weapon supplier.");
-
-	new id = InBusiness[playerid];
-
-	if(id == -1 || BusinessData[id][bType] != 13)
-	    return SendClientMessage(playerid, COLOR_LIGHTRED, "You are not in any weapon factory.");
-
-	if(!BusinessData[id][bProducts])
-	    return SendClientMessage(playerid, COLOR_LIGHTRED, "This factory is out of stock.");
-
-	new weapon[32], ammo, slot;
-
-	if(sscanf(params, "s[32]dD(-1)", weapon, ammo, slot))
-	{
-		SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /buyweapon [weapon] [ammo] ([slot])");
-		SendClientMessage(playerid, COLOR_CYAN, "[ knuckles: $200; ammo: $200 ]  [ golfclub: $200; ammo: $200 ]  [ nightstick: $200; ammo: $200 ]");
-		SendClientMessage(playerid, COLOR_CYAN, "[ knife: $300; ammo: $300 ]  [ bat: $300; ammo: $300 ]  [ shovel: $200; ammo: $200 ]");
-		SendClientMessage(playerid, COLOR_CYAN, "[ poolcue: $200; ammo: $200 ]  [ katana: $400; ammo: $400 ]  [ dildo1: $100; ammo: $100 ]");
-		SendClientMessage(playerid, COLOR_CYAN, "[ dildo2: $100; ammo: $100 ]  [ dildo3: $100; ammo: $100 ]  [ dildo4: $100; ammo: $100 ]");
-		SendClientMessage(playerid, COLOR_CYAN, "[ flowers: $100; ammo: $100 ]  [ cane: $300; ammo: $300 ]  [ grenade: $8000; ammo: $2000 ]");
-		SendClientMessage(playerid, COLOR_CYAN, "[ molotov: $6000; ammo: $2000 ]  [ colt: $5000; ammo: $10 ]  [ sdpistol: $8000; ammo: $10 ]");
-		SendClientMessage(playerid, COLOR_CYAN, "[ deagle: $7000; ammo: $15 ]  [ shotgun: $7000; ammo: $15 ]  [ mac10: $9500; ammo: $30 ]");
-		SendClientMessage(playerid, COLOR_CYAN, "[ mp5: $13500; ammo: $30 ]  [ ak47: $15000; ammo: $30 ]  [ m4: $17500; ammo: $30 ]");
-		SendClientMessage(playerid, COLOR_CYAN, "[ tec9: $8600; ammo: $30 ]  [ rifle: $10000; ammo: $40 ]  [ sprifle: $50000; ammo: $2500 ]");
-		SendClientMessage(playerid, COLOR_CYAN, "[ fireex: $2000; ammo: $20 ]  [ camera: $500; ammo: $5 ]  [ parachute: $500; ammo: $500 ]");
-		return true;
-	}
-
-	new free_slot = -1;
-
-	if(slot == -1)
-	{
-		free_slot = FindFreePackageSlot(playerid);
-
-		if(free_slot == -1)
-			return SendClientMessage(playerid, COLOR_LIGHTRED, "Your package is full.");
-	}
-	else
-	{
-		if(slot < 1 || slot > MAX_PLAYER_WEAPON_PACKAGE)
-		    return SendClientMessageEx(playerid, COLOR_LIGHTRED, "Invalid package slot. Must be 1-%d.", MAX_PLAYER_WEAPON_PACKAGE);
-
-		slot--;
-
-	    if(PlayerData[playerid][pPackageWP][slot])
-	    	return SendErrorMessage(playerid, "That package slot is occupied.");
-
-	    free_slot = slot;
-	}
-
-	new weapon_price = ReturnWeaponPrice(weapon), ammo_price, price, weaponid;
-
-	weaponid = GetWeaponIDFromName(weapon);
-
-	if(!weapon_price || !weaponid)
-	    return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /buyweapon [weapon] [ammo] ([slot])");
-
-	new max_ammo = GetWeaponPackage(g_aWeaponSlots[weaponid]);
-
-	if(ammo < 1 || ammo > max_ammo)
-		return SendClientMessageEx(playerid, COLOR_LIGHTRED, "Ammo cannot be lower than 1 or more than %d.", max_ammo);
-
-	ammo_price = ReturnAmmoPrice(weapon);
-	price = weapon_price + (ammo * ammo_price);
-
-	if(PlayerData[playerid][pCash] < price)
-	    return SendClientMessage(playerid, COLOR_LIGHTRED, "You don't have enough money.");
-
-	TakePlayerMoney(playerid, price);
-
-	BusinessData[id][bProducts] -= 1;
-
-	PlayerData[playerid][pPackageWP][free_slot] = weaponid;
-	PlayerData[playerid][pPackageAmmo][free_slot] = ammo;
-
-	SendClientMessageEx(playerid, COLOR_GREEN, "[Package] You've bought %s and %d ammo and paid $%d", GetWeaponPackageName(weaponid), ammo, price);
-
-	SQL_LogAction(playerid, "Bought a %s with %d ammo from bizid %d price $%d", GetWeaponPackageName(weaponid), ammo, BusinessData[id][bID], price);
-	return true;
-}
 
 CMD:buygun(playerid, params[])
 {
@@ -12374,50 +12281,7 @@ CMD:farmerjob(playerid, params[])
 	else return SendClientMessage(playerid, COLOR_GRAD1, "You are not at the job site.");
 }
 
-/*CMD:dealerjob(playerid, params[])
-{
-	if(PlayerData[playerid][pJob] != 0)
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "   You already have a job. Type /leavejob to leave.");
 
-	if(GetFactionType(playerid) != 0)
-	    return SendClientMessage(playerid, COLOR_WHITE, "Only civilians can have this job");
-
-	if(IsAtBlackMarket(playerid))
-	{
-        PlayerData[playerid][pJob] = JOB_WPDEALER;
-
-        ShowPlayerFooter(playerid, "~r~Congratulations,~n~~w~You are now a ~y~WEAPONS DEALER.~n~~w~/jobhelp.", 8000);
-		return true;
-	}
-	else
-	{
-	    SendClientMessage(playerid, COLOR_GRAD1, "You are not on the dark side.");
-	}
-	return true;
-}
-
-CMD:supplierjob(playerid, params[])
-{
-	if(PlayerData[playerid][pJob] != 0)
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "   You already have a job. Type /leavejob to leave.");
-
-	if(GetFactionType(playerid) != 0 && GetFactionType(playerid) == FACTION_GANG)
-	{
-		if(IsAtBlackMarket(playerid))
-		{
-	        PlayerData[playerid][pJob] = JOB_SUPPLIER;
-
-	        ShowPlayerFooter(playerid, "~r~Congratulations,~n~~w~You are now a ~y~WEAPONS SUPPLIER.~n~~w~/jobhelp.", 8000);
-			return true;
-		}
-		else
-		{
-		    SendClientMessage(playerid, COLOR_GRAD1, "You are not on the dark side.");
-		}
-	}
-	else SendClientMessage(playerid, COLOR_WHITE, "This job is for gang members or official organizations only.");
-	return true;
-}*/
 
 CMD:truckerjob(playerid, params[])
 {
