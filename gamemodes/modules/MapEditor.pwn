@@ -498,7 +498,7 @@ CMD:obj(playerid, params[])
                 return ObjCmd(playerid, "/obj create [model id]"), 1;
 
             new model = strval(subparam);
-            if(model <= 0)
+            if(model == 0)
                 return ObjErr(playerid, "Invalid model ID."), 1;
 
             new Float:pos[3];
