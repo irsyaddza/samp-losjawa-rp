@@ -12288,9 +12288,6 @@ CMD:truckerjob(playerid, params[])
 	if(PlayerData[playerid][pJob] != 0)
 		return SendClientMessage(playerid, COLOR_LIGHTRED, "   You already have a job. Type /leavejob to leave.");
 
-	if(GetFactionType(playerid) != 0)
-	    return SendClientMessage(playerid, COLOR_WHITE, "Only civilians can have this job");
-
 	if(IsPlayerInRangeOfPoint(playerid, 3.0, -78.0338,-1136.1221,1.0781))
 	{
         PlayerData[playerid][pJob] = JOB_TRUCKER;

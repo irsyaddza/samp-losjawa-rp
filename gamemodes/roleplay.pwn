@@ -1546,6 +1546,7 @@ new adTick[MAX_PLAYERS];
 new DollaPickup[2];
 new FarmerPickup;
 new MechanicPickup;
+new TruckerPickup;
 //new Menu:Guide, Menu:GuideJob1, Menu:GuideJob2;
 new CarRent[17];
 new CarDMV[4];
@@ -6781,6 +6782,24 @@ ShowStatistics(playerid, targetid)
 	new playerIP[32];
 	GetPlayerIp(targetid, playerIP, sizeof(playerIP));
 
+	// Job & Rank Info
+	new jobText[64];
+	if(PlayerData[targetid][pJob] != JOB_NONE)
+	{
+		if(PlayerData[targetid][pJob] == JOB_TRUCKER)
+		{
+			format(jobText, sizeof(jobText), "Trucker (Rank %d - %s)", PlayerData[targetid][pJobRank], ReturnJobName(targetid, JOB_TRUCKER));
+		}
+		else
+		{
+			format(jobText, sizeof(jobText), "%s", ReturnJobName(targetid, PlayerData[targetid][pJob]));
+		}
+	}
+	else
+	{
+		format(jobText, sizeof(jobText), "None");
+	}
+
 	// Build dialog string
 	new string[2048];
 	format(string, sizeof(string),
@@ -6798,7 +6817,7 @@ ShowStatistics(playerid, targetid)
 		FormatNumber(PlayerData[targetid][pCash]),
 		FormatNumber(PlayerData[targetid][pAccount]),
 		phoneNum,
-		ReturnJobName(targetid, PlayerData[targetid][pJob]),
+		jobText,
 		factionText,
 		(pIllegalJob[targetid] == 1) ? ("Weapon Supplier") : ("None"),
 		PlayerData[targetid][pMarriedTo],
@@ -7417,6 +7436,7 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
 
 			if(GetVehicleCargoLoad((!trailerid) ? vehicleid : trailerid) != -1 && !IsVehicleCargoSkill(model, PlayerData[playerid][pJobRank]))
 			{
+				SendErrorMessage(playerid, "Your trucker level/skill is not high enough to drive this vehicle while carrying cargo.");
 				RemovePlayerFromVehicle(playerid);
 			}
 		}
@@ -11394,6 +11414,12 @@ public OnPlayerPickUpDynamicPickup(playerid, pickupid)
 		return true;
 	}
 
+	if(pickupid == TruckerPickup)
+	{
+		GameTextForPlayer(playerid, "~w~Type /truckerjob to be ~n~a trucker", 5000, 3);
+		return true;
+	}
+
 	new str[256];
 
     foreach (new i : Business)
@@ -14230,17 +14256,9 @@ GetVehicleCargoLoad(vehicleid)
 
 IsVehicleCargoSkill(modelid, skill)
 {
-	switch(modelid)
-	{
-	    case 600, 605, 543, 422, 478, 554: return true;
-	    case 413, 459, 482: if(skill > 0) return true;
-	    case 440, 498: if(skill > 1) return true;
-	    case 499, 414, 578, 443, 428: if(skill > 2) return true;
-	    case 456, 455: if(skill > 3) return true;
-	    case 403: if(skill > 4) return true;
-	}
-
-	return false;
+	new req = GetRequiredTruckerRank(modelid);
+	if(req == -1) return false;
+	return (skill >= req);
 }
 
 IsAtBlackMarket(playerid)

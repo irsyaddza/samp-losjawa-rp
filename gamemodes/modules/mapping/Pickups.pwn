@@ -5,3 +5,4 @@
 
 	FarmerPickup = CreateDynamicPickup(1239, 2, -382.5893, -1426.3422, 26.2217);
 	MechanicPickup = CreateDynamicPickup(1239, 2, 88.4620, -165.0116, 2.5938);
+	TruckerPickup = CreateDynamicPickup(1239, 2, -78.0338,-1136.1221,1.0781);

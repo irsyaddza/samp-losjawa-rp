@@ -1070,10 +1070,17 @@ PutPlayerSettingVehicle(playerid, model, price)
 			if(PlayerData[playerid][pJob] != JOB_TAXI && PlayerData[playerid][pSideJob] != JOB_TAXI)
 				return SendErrorMessage(playerid, "You must be a Taxi Driver to purchase this vehicle.");
 		}
-		else if(model == 499 || model == 414 || model == 456 || model == 455 || model == 443 || model == 403 || model == 515 || model == 514) // Benson, Mule, Yankee, Flatbed, Packer, Linerunner, Roadtrain, Petrol
+		else
 		{
-			if(PlayerData[playerid][pJob] != JOB_TRUCKER && PlayerData[playerid][pSideJob] != JOB_TRUCKER)
-				return SendErrorMessage(playerid, "You must be a Trucker to purchase this vehicle.");
+			new reqRank = GetRequiredTruckerRank(model);
+			if(reqRank != -1)
+			{
+				if(PlayerData[playerid][pJob] != JOB_TRUCKER && PlayerData[playerid][pSideJob] != JOB_TRUCKER)
+					return SendErrorMessage(playerid, "You must be a Trucker to purchase this vehicle.");
+
+				if(PlayerData[playerid][pJobRank] < reqRank)
+					return SendErrorMessage(playerid, "Your Trucker rank is not high enough for this vehicle (Required: Rank %d, Yours: Rank %d).", reqRank, PlayerData[playerid][pJobRank]);
+			}
 		}
 	}
 
@@ -1430,12 +1437,21 @@ Dialog:DealercarConfirm(playerid, response, listitem, inputtext[])
 						return SendErrorMessage(playerid, "You must be a Taxi Driver to purchase this vehicle.");
 					}
 				}
-				else if(model == 499 || model == 414 || model == 456 || model == 455 || model == 443 || model == 403 || model == 515 || model == 514) // Benson, Mule, Yankee, Flatbed, Packer, Linerunner, Roadtrain, Petrol
+				else
 				{
-					if(PlayerData[playerid][pJob] != JOB_TRUCKER && PlayerData[playerid][pSideJob] != JOB_TRUCKER)
+					new reqRank = GetRequiredTruckerRank(model);
+					if(reqRank != -1)
 					{
-						ExitSettingVehicle(playerid);
-						return SendErrorMessage(playerid, "You must be a Trucker to purchase this vehicle.");
+						if(PlayerData[playerid][pJob] != JOB_TRUCKER && PlayerData[playerid][pSideJob] != JOB_TRUCKER)
+						{
+							ExitSettingVehicle(playerid);
+							return SendErrorMessage(playerid, "You must be a Trucker to purchase this vehicle.");
+						}
+						if(PlayerData[playerid][pJobRank] < reqRank)
+						{
+							ExitSettingVehicle(playerid);
+							return SendErrorMessage(playerid, "Your Trucker rank is not high enough for this vehicle (Required: Rank %d, Yours: Rank %d).", reqRank, PlayerData[playerid][pJobRank]);
+						}
 					}
 				}
 			}

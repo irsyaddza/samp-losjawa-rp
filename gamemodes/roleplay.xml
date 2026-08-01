@@ -3949,7 +3949,7 @@
 			<referrer name="Script_GetCompilerVersion"/>
 			<referrer name="Script_GetCompilerString"/>
 		</member>
-		<member name="C:__line" value="18081">
+		<member name="C:__line" value="18079">
 			<referrer name="DateToTimestamp"/>
 			<referrer name="dialog_Drug_Amount"/>
 			<referrer name="dialog_Drug_RefundAmount"/>
@@ -4002,7 +4002,6 @@
 			<referrer name="@_yCexamine"/>
 			<referrer name="@_yCcharity"/>
 			<referrer name="@_yCpay"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="@_yCbuy"/>
 			<referrer name="@_yCclothing"/>
@@ -5614,7 +5613,6 @@
 			<referrer name="ReturnAmmoPrice"/>
 			<referrer name="ReturnWeaponPrice"/>
 			<referrer name="GetWeaponIDFromName"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="@_yCbuygun"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="OnPlayerPruchaseWeapon"/>
@@ -6684,7 +6682,6 @@
 			<referrer name="@yC_examine"/>
 			<referrer name="@yC_charity"/>
 			<referrer name="@yC_pay"/>
-			<referrer name="@yC_buyweapon"/>
 			<referrer name="@yC_buygun"/>
 			<referrer name="@yC_buy"/>
 			<referrer name="@yC_clothing"/>
@@ -8007,7 +8004,6 @@
 			<referrer name="OnPlayerPurchaseItem"/>
 			<referrer name="Vehicles"/>
 			<referrer name="@_yCknock"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="@_yCbuy"/>
 			<referrer name="@_yCmyproperty"/>
@@ -9914,7 +9910,6 @@
 			<referrer name="OnPlayerRenameFurniture"/>
 			<referrer name="OnPlayerPurchaseItem"/>
 			<referrer name="@_yCknock"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="@_yCbuy"/>
 			<referrer name="@_yCdoor"/>
@@ -11905,7 +11900,6 @@
 			<referrer name="@_yCattributes"/>
 			<referrer name="@_yCexamine"/>
 			<referrer name="@_yCpay"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="@_yCbuy"/>
 			<referrer name="@_yCclothing"/>
@@ -15467,7 +15461,6 @@
 			<referrer name="@_yCexamine"/>
 			<referrer name="@_yCcharity"/>
 			<referrer name="@_yCpay"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="@_yCbuy"/>
 			<referrer name="@_yCclothing"/>
@@ -17175,7 +17168,6 @@
 			<referrer name="GetVehicleInfo"/>
 			<referrer name="RestorePlayerWeapons"/>
 			<referrer name="ShowPlayerWeapons"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="@_yCgivegun"/>
 			<referrer name="@_yCsetwpackage"/>
@@ -17664,6 +17656,7 @@
 			<referrer name="IWS_SavePlayer"/>
 			<referrer name="IWS_OnPlayerLoaded"/>
 			<referrer name="IWS_ResetPlayer"/>
+			<referrer name="@_yCjobhelp"/>
 			<referrer name="@_yCillegaljob"/>
 			<referrer name="ShowStatistics"/>
 		</member>
@@ -23252,46 +23245,6 @@
 			<dependency name="tsX"/>
 			<dependency name="tsY"/>
 			<dependency name="tsZ"/>
-			<param name="playerid">
-			</param>
-			<param name="params">
-				<paraminfo> [] </paraminfo>
-			</param>
-			<param name="__help">
-			</param>
-		</member>
-		<member name="M:@_yCbuyweapon" syntax="@_yCbuyweapon(playerid, params[], __help)">
-			<attribute name="public"/>
-			<stacksize value="74"/>
-			<referrer name="@yC_buyweapon"/>
-			<dependency name="BusinessData"/>
-			<dependency name="BusinessData"/>
-			<dependency name="FindFreePackageSlot"/>
-			<dependency name="GetWeaponIDFromName"/>
-			<dependency name="GetWeaponPackage"/>
-			<dependency name="GetWeaponPackageName"/>
-			<dependency name="GetWeaponPackageName"/>
-			<dependency name="InBusiness"/>
-			<dependency name="PlayerData"/>
-			<dependency name="PlayerData"/>
-			<dependency name="ReturnAmmoPrice"/>
-			<dependency name="ReturnWeaponPrice"/>
-			<dependency name="SQL_LogAction"/>
-			<dependency name="SSCANF__"/>
-			<dependency name="SendClientMessage"/>
-			<dependency name="SendClientMessageEx"/>
-			<dependency name="TakePlayerMoney"/>
-			<dependency name="__file"/>
-			<dependency name="__line"/>
-			<dependency name="bID"/>
-			<dependency name="bProducts"/>
-			<dependency name="bType"/>
-			<dependency name="g_aWeaponSlots"/>
-			<dependency name="pCash"/>
-			<dependency name="pJob"/>
-			<dependency name="pPackageAmmo"/>
-			<dependency name="pPackageWP"/>
-			<dependency name="true"/>
 			<param name="playerid">
 			</param>
 			<param name="params">
@@ -31272,6 +31225,7 @@
 			<dependency name="ReturnJobName"/>
 			<dependency name="SendClientMessage"/>
 			<dependency name="SendClientMessageEx"/>
+			<dependency name="pIllegalJob"/>
 			<dependency name="pJob"/>
 			<dependency name="pSideJob"/>
 			<dependency name="true"/>
@@ -40845,7 +40799,6 @@
 			<attribute name="public"/>
 			<stacksize value="9"/>
 			<referrer name="@yC_truckerjob"/>
-			<dependency name="GetFactionType"/>
 			<dependency name="IsPlayerInRangeOfPoint"/>
 			<dependency name="PlayerData"/>
 			<dependency name="PlayerData"/>
@@ -44653,23 +44606,6 @@
 			<stacksize value="8"/>
 			<dependency name="@_"/>
 			<dependency name="@_yCbuyticket"/>
-			<dependency name="U@"/>
-			<param name="a">
-			</param>
-			<param name="b">
-				<paraminfo> [] </paraminfo>
-			</param>
-			<param name="c">
-			</param>
-			<param name="i">
-			</param>
-		</member>
-		<member name="M:@yC_buyweapon" syntax="@yC_buyweapon(a, b[], c, i)">
-			<tagname value="_YCMD_4"/>
-			<attribute name="public"/>
-			<stacksize value="8"/>
-			<dependency name="@_"/>
-			<dependency name="@_yCbuyweapon"/>
 			<dependency name="U@"/>
 			<param name="a">
 			</param>
@@ -71375,7 +71311,6 @@
 			<referrer name="@_yCtakeallweapons"/>
 			<referrer name="OnPlayerGiveWeaponPackages"/>
 			<referrer name="@_yCsellpackage"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="@_yCsetwpackage"/>
 			<dependency name="PlayerData"/>
 			<dependency name="pPackageWP"/>
@@ -72680,7 +72615,6 @@
 			<referrer name="@_yCsetstation"/>
 			<referrer name="@_yClock"/>
 			<referrer name="@_yCfarmerjob"/>
-			<referrer name="@_yCtruckerjob"/>
 			<referrer name="@_yCm"/>
 			<referrer name="@_yCdep"/>
 			<referrer name="@_yCsetdep"/>
@@ -76396,7 +76330,6 @@
 		</member>
 		<member name="M:GetWeaponIDFromName" syntax="GetWeaponIDFromName(name[])">
 			<stacksize value="7"/>
-			<referrer name="@_yCbuyweapon"/>
 			<dependency name="WeaponName"/>
 			<dependency name="WeaponName"/>
 			<dependency name="strfind"/>
@@ -76421,7 +76354,6 @@
 			<stacksize value="2"/>
 			<referrer name="GetVehicleInfo"/>
 			<referrer name="ShowPlayerWeapons"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="@_yCgivegun"/>
 			<referrer name="@_yCsetwpackage"/>
@@ -76439,7 +76371,6 @@
 			<referrer name="@_yCtakeweapon"/>
 			<referrer name="OnPlayerGiveWeaponPackages"/>
 			<referrer name="@_yCsellpackage"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="ShowPlayerInventoryDialog"/>
 			<referrer name="@_yCsetwpackage"/>
@@ -95198,7 +95129,6 @@
 		</member>
 		<member name="M:ReturnAmmoPrice" syntax="ReturnAmmoPrice(weapon[])">
 			<stacksize value="6"/>
-			<referrer name="@_yCbuyweapon"/>
 			<dependency name="strcmp"/>
 			<dependency name="true"/>
 			<param name="weapon">
@@ -96145,7 +96075,6 @@
 		</member>
 		<member name="M:ReturnWeaponPrice" syntax="ReturnWeaponPrice(weapon[])">
 			<stacksize value="6"/>
-			<referrer name="@_yCbuyweapon"/>
 			<dependency name="strcmp"/>
 			<dependency name="true"/>
 			<param name="weapon">
@@ -96399,7 +96328,6 @@
 			<referrer name="@_yCusedrug"/>
 			<referrer name="@_yCgivedrug"/>
 			<referrer name="@_yCpay"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="@_yCenter"/>
 			<referrer name="@_yCexit"/>
@@ -97052,7 +96980,6 @@
 			<referrer name="@_yCexamine"/>
 			<referrer name="@_yCcharity"/>
 			<referrer name="@_yCpay"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="@_yCbuy"/>
 			<referrer name="@_yCclothing"/>
@@ -98272,7 +98199,6 @@
 			<referrer name="@_yCp"/>
 			<referrer name="@_yCh"/>
 			<referrer name="@_yCattributes"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="@_yCbuy"/>
 			<referrer name="@_yCclothing"/>
@@ -99007,7 +98933,6 @@
 			<referrer name="@_yCexamine"/>
 			<referrer name="@_yCcharity"/>
 			<referrer name="@_yCpay"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="@_yCbuy"/>
 			<referrer name="@_yCclothing"/>
@@ -106196,7 +106121,6 @@
 			<referrer name="@_yCbuycell"/>
 			<referrer name="@_yCcharity"/>
 			<referrer name="@_yCpay"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="@_yCbuy"/>
 			<referrer name="@_yCenter"/>
@@ -107463,7 +107387,6 @@
 			<referrer name="@yC_examine"/>
 			<referrer name="@yC_charity"/>
 			<referrer name="@yC_pay"/>
-			<referrer name="@yC_buyweapon"/>
 			<referrer name="@yC_buygun"/>
 			<referrer name="@yC_buy"/>
 			<referrer name="@yC_clothing"/>

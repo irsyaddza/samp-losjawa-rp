@@ -118,14 +118,23 @@ CountVehiclePlayers(vehicleid)
 	return count;
 }
 
+GetRequiredTruckerRank(modelid)
+{
+	switch(modelid)
+	{
+	    case 600, 605, 543, 422, 478, 554: return 0;
+	    case 413, 459, 482: return 1;
+	    case 440, 498: return 2;
+	    case 499, 414, 578, 443, 428: return 3;
+	    case 456, 455: return 4;
+	    case 403, 514, 515: return 5;
+	}
+	return -1;
+}
+
 IsTrucker(vehicleid)
 {
-	switch(GetVehicleModel(vehicleid))
-	{
-		case 600, 605, 543, 422, 478, 554, 413, 459, 482, 440, 498, 499, 414, 578, 443, 428, 456, 455, 403:
-			return true;
-	}
-	return false;
+	return (GetRequiredTruckerRank(GetVehicleModel(vehicleid)) != -1);
 }
 
 IsABoatModel(model)
