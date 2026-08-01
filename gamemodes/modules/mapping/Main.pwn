@@ -5100,10 +5100,10 @@
 	idlewood = CreateDynamicObject(19911, 1896.836060, -1704.531006, 12.496000, 0.000000, 270.000000, 90.000000, -1, -1, -1, 300.0, 300.0);
 	SetDynamicObjectMaterial(idlewood, 0, 16640, "a51", "concretemanky");
 	idlewood = CreateDynamicObject(8674, 1863.629028, -1691.038940, 13.147999, 0.000000, 0.000000, 0.000000, -1, -1, -1, 300.0, 300.0);
-	idlewood = CreateDynamicObject(-1006, 1907.243042, -1686.375000, 12.621000, 0.000000, 0.000000, 270.000000, -1, -1, -1, 300.0, 300.0);
+	idlewood = CreateDynamicObject(-1412, 1907.243042, -1686.375000, 12.621000, 0.000000, 0.000000, 270.000000, -1, -1, -1, 300.0, 300.0);
 	SetDynamicObjectMaterial(idlewood, 1, 4820, "ground4_las", "hedge");
 	SetDynamicObjectMaterial(idlewood, 0, 4820, "ground4_las", "hedge");
-	idlewood = CreateDynamicObject(-1006, 1907.243042, -1685.557007, 13.661000, 0.000000, 0.000000, 270.000000, -1, -1, -1, 300.0, 300.0);
+	idlewood = CreateDynamicObject(-1412, 1907.243042, -1685.557007, 13.661000, 0.000000, 0.000000, 270.000000, -1, -1, -1, 300.0, 300.0);
 	SetDynamicObjectMaterial(idlewood, 1, 3922, "bistro", "ahoodfence2");
 	SetDynamicObjectMaterial(idlewood, 0, 3922, "bistro", "ahoodfence2");
 	idlewood = CreateDynamicObject(3555, 1865.543945, -1699.625977, 15.220000, 0.000000, 0.000000, 270.000000, -1, -1, -1, 300.0, 300.0);
@@ -5114,10 +5114,10 @@
 	idlewood = CreateDynamicObject(1468, 1872.008057, -1707.344971, 13.779999, 0.000000, 0.000000, 630.000000, -1, -1, -1, 300.0, 300.0);
 	idlewood = CreateDynamicObject(8674, 1897.198975, -1707.961060, 13.508000, 0.000000, 0.000000, 0.000000, -1, -1, -1, 300.0, 300.0);
 	SetDynamicObjectMaterial(idlewood, 0, 65535, "none", "none", 0xffffffff);
-	idlewood = CreateDynamicObject(-1006, 1907.243042, -1678.666992, 13.661000, 0.000000, 0.000000, 270.000000, -1, -1, -1, 300.0, 300.0);
+	idlewood = CreateDynamicObject(-1412, 1907.243042, -1678.666992, 13.661000, 0.000000, 0.000000, 270.000000, -1, -1, -1, 300.0, 300.0);
 	SetDynamicObjectMaterial(idlewood, 1, 3922, "bistro", "ahoodfence2");
 	SetDynamicObjectMaterial(idlewood, 0, 3922, "bistro", "ahoodfence2");
-	idlewood = CreateDynamicObject(-1006, 1907.243042, -1677.885010, 12.621000, 0.000000, 0.000000, 270.000000, -1, -1, -1, 300.0, 300.0);
+	idlewood = CreateDynamicObject(-1412, 1907.243042, -1677.885010, 12.621000, 0.000000, 0.000000, 270.000000, -1, -1, -1, 300.0, 300.0);
 	SetDynamicObjectMaterial(idlewood, 1, 4820, "ground4_las", "hedge");
 	SetDynamicObjectMaterial(idlewood, 0, 4820, "ground4_las", "hedge");
 	idlewood = CreateDynamicObject(1468, 1892.078979, -1711.005005, 13.779999, 0.000000, 0.000000, 630.000000, -1, -1, -1, 300.0, 300.0);
@@ -5131,7 +5131,7 @@
 	idlewood = CreateDynamicObject(3648, 1901.288940, -1666.689941, 15.227000, 0.000000, 0.000000, 1080.000000, -1, -1, -1, 300.0, 300.0);
 	SetDynamicObjectMaterial(idlewood, 1, 6282, "beafron2_law2", "examwall2_LAe");
 	
-	idlewood = CreateDynamicObject(-1006, 1858.072021, -1686.306030, 13.510999, 0.000000, 0.000000, 360.000000, -1, -1, -1, 300.0, 300.0);
+	idlewood = CreateDynamicObject(-1412, 1858.072021, -1686.306030, 13.510999, 0.000000, 0.000000, 360.000000, -1, -1, -1, 300.0, 300.0);
 	SetDynamicObjectMaterial(idlewood, 1, 3922, "bistro", "ahoodfence2");
 	SetDynamicObjectMaterial(idlewood, 0, 3922, "bistro", "ahoodfence2");
 	
@@ -5144,7 +5144,7 @@
 	idlewood = CreateDynamicObject(620, 1913.777954, -1692.204956, 9.319000, 0.000000, 0.000000, 0.000000, -1, -1, -1, 300.0, 300.0);
 	idlewood = CreateDynamicObject(1448, 1868.995972, -1712.324951, 14.937000, 90.000000, 360.000000, 90.000000, -1, -1, -1, 300.0, 300.0);
 	idlewood = CreateDynamicObject(8674, 1906.380005, -1707.961060, 13.508000, 0.000000, 0.000000, 0.000000, -1, -1, -1, 300.0, 300.0);
-	idlewood = CreateDynamicObject(-1006, 1907.243042, -1707.965942, 12.621000, 0.000000, 0.000000, 270.000000, -1, -1, -1, 300.0, 300.0);
+	idlewood = CreateDynamicObject(-1412, 1907.243042, -1707.965942, 12.621000, 0.000000, 0.000000, 270.000000, -1, -1, -1, 300.0, 300.0);
 	SetDynamicObjectMaterial(idlewood, 1, 4820, "ground4_las", "hedge");
 	SetDynamicObjectMaterial(idlewood, 0, 4820, "ground4_las", "hedge");
 	idlewood = CreateDynamicObject(8674, 1863.629028, -1709.869995, 13.147999, 0.000000, 0.000000, 0.000000, -1, -1, -1, 300.0, 300.0);
@@ -5176,10 +5176,10 @@
 	idlewood = CreateDynamicObject(1442, 1863.824951, -1715.088989, 13.159999, 0.000000, 0.000000, 0.000000, -1, -1, -1, 300.0, 300.0);
 	idlewood = CreateDynamicObject(1761, 1866.698975, -1717.207031, 12.411999, 0.000000, 0.000000, -163.899002, -1, -1, -1, 300.0, 300.0);
 	SetDynamicObjectMaterial(idlewood, 0, 65535, "none", "none", 0xffffffff);
-	idlewood = CreateDynamicObject(-1006, 1911.874023, -1709.614990, 13.659000, 0.000000, 0.000000, 720.000000, -1, -1, -1, 300.0, 300.0);
+	idlewood = CreateDynamicObject(-1412, 1911.874023, -1709.614990, 13.659000, 0.000000, 0.000000, 720.000000, -1, -1, -1, 300.0, 300.0);
 	SetDynamicObjectMaterial(idlewood, 1, 3922, "bistro", "ahoodfence2");
 	SetDynamicObjectMaterial(idlewood, 0, 3922, "bistro", "ahoodfence2");
-	idlewood = CreateDynamicObject(-1006, 1911.874023, -1663.817017, 13.659000, 0.000000, 0.000000, 720.000000, -1, -1, -1, 300.0, 300.0);
+	idlewood = CreateDynamicObject(-1412, 1911.874023, -1663.817017, 13.659000, 0.000000, 0.000000, 720.000000, -1, -1, -1, 300.0, 300.0);
 	SetDynamicObjectMaterial(idlewood, 1, 3922, "bistro", "ahoodfence2");
 	SetDynamicObjectMaterial(idlewood, 0, 3922, "bistro", "ahoodfence2");
 	idlewood = CreateDynamicObject(8674, 1863.647949, -1657.526978, 13.147999, 0.000000, 0.000000, 0.000000, -1, -1, -1, 300.0, 300.0);
@@ -5202,7 +5202,7 @@
 	idlewood = CreateDynamicObject(8319, 1910.810059, -1715.618042, 13.168000, 0.000000, 0.000000, 100.499001, -1, -1, -1, 300.0, 300.0);
 	SetDynamicObjectMaterial(idlewood, 1, 4992, "airportdetail", "sm_Agave_1");
 	SetDynamicObjectMaterial(idlewood, 0, 4830, "airport2", "sm_Agave_2");
-	idlewood = CreateDynamicObject(-1006, 1907.243042, -1656.765991, 12.621000, 0.000000, 0.000000, 270.000000, -1, -1, -1, 300.0, 300.0);
+	idlewood = CreateDynamicObject(-1412, 1907.243042, -1656.765991, 12.621000, 0.000000, 0.000000, 270.000000, -1, -1, -1, 300.0, 300.0);
 	SetDynamicObjectMaterial(idlewood, 1, 4820, "ground4_las", "hedge");
 	SetDynamicObjectMaterial(idlewood, 0, 4820, "ground4_las", "hedge", 0xffffffff);
 	idlewood = CreateDynamicObject(8674, 1917.409058, -1707.942017, 13.508000, 0.000000, 0.000000, 0.000000, -1, -1, -1, 300.0, 300.0);
@@ -5229,7 +5229,7 @@
 	idlewood = CreateDynamicObject(19911, 1867.244995, -1726.640015, 12.496000, 0.000000, 270.000000, 90.000000, -1, -1, -1, 300.0, 300.0);
 	SetDynamicObjectMaterial(idlewood, 0, 16640, "a51", "concretemanky");
 	idlewood = CreateDynamicObject(1372, 1848.011963, -1666.037964, 12.685000, 0.000000, 0.000000, 180.000000, -1, -1, -1, 300.0, 300.0);
-	idlewood = CreateDynamicObject(-1006, 1907.243042, -1724.436035, 12.621000, 0.000000, 0.000000, 270.000000, -1, -1, -1, 300.0, 300.0);
+	idlewood = CreateDynamicObject(-1412, 1907.243042, -1724.436035, 12.621000, 0.000000, 0.000000, 270.000000, -1, -1, -1, 300.0, 300.0);
 	SetDynamicObjectMaterial(idlewood, 1, 4820, "ground4_las", "hedge");
 	SetDynamicObjectMaterial(idlewood, 0, 4820, "ground4_las", "hedge");
 	idlewood = CreateDynamicObject(3556, 1867.062012, -1648.305054, 15.116000, 0.000000, 0.000000, 270.000000, -1, -1, -1, 300.0, 300.0);
@@ -5253,7 +5253,7 @@
 	idlewood = CreateDynamicObject(3558, 1925.390991, -1664.535034, 15.505000, 0.000000, 0.000000, 990.000000, -1, -1, -1, 300.0, 300.0);
 	SetDynamicObjectMaterial(idlewood, 7, 5444, "chicano10_lae", "comptwall15");
 	idlewood = CreateDynamicObject(3035, 1844.427979, -1664.530029, 13.305999, 0.000000, 0.000000, 90.000000, -1, -1, -1, 300.0, 300.0);
-	idlewood = CreateDynamicObject(-1006, 1858.072021, -1725.935059, 13.510999, 0.000000, 0.000000, 360.000000, -1, -1, -1, 300.0, 300.0);
+	idlewood = CreateDynamicObject(-1412, 1858.072021, -1725.935059, 13.510999, 0.000000, 0.000000, 360.000000, -1, -1, -1, 300.0, 300.0);
 	SetDynamicObjectMaterial(idlewood, 1, 3922, "bistro", "ahoodfence2");
 	SetDynamicObjectMaterial(idlewood, 0, 3922, "bistro", "ahoodfence2", 0xffffffff);
 	idlewood = CreateDynamicObject(8674, 1911.979004, -1726.253052, 13.298000, 0.000000, 0.000000, 90.000000, -1, -1, -1, 300.0, 300.0);
@@ -5273,7 +5273,7 @@
 	SetDynamicObjectMaterial(idlewood, 6, 1256, "benchm", "TaxiCo1_64");
 	SetDynamicObjectMaterial(idlewood, 0, 6282, "beafron2_law2", "examwall2_LAe");
 	idlewood = CreateDynamicObject(8674, 1917.409058, -1724.422974, 13.508000, 0.000000, 0.000000, 0.000000, -1, -1, -1, 300.0, 300.0);
-	idlewood = CreateDynamicObject(-1006, 1858.072021, -1646.696045, 13.510999, 0.000000, 0.000000, 360.000000, -1, -1, -1, 300.0, 300.0);
+	idlewood = CreateDynamicObject(-1412, 1858.072021, -1646.696045, 13.510999, 0.000000, 0.000000, 360.000000, -1, -1, -1, 300.0, 300.0);
 	SetDynamicObjectMaterial(idlewood, 1, 3922, "bistro", "ahoodfence2");
 	SetDynamicObjectMaterial(idlewood, 0, 3922, "bistro", "ahoodfence2");
 	idlewood = CreateDynamicObject(8674, 1897.269043, -1639.790039, 13.508000, 0.000000, 0.000000, 0.000000, -1, -1, -1, 300.0, 300.0);
@@ -5296,7 +5296,7 @@
 	idlewood = CreateDynamicObject(8674, 1863.628052, -1639.796021, 13.157999, 0.000000, 0.000000, 0.000000, -1, -1, -1, 300.0, 300.0);
 	idlewood = CreateDynamicObject(8674, 1906.329956, -1639.790039, 13.508000, 0.000000, 0.000000, 0.000000, -1, -1, -1, 300.0, 300.0);
 	idlewood = CreateDynamicObject(4022, 1836.584961, -1708.104004, 15.470999, 0.000000, 0.000000, 270.000000, -1, -1, -1, 300.0, 300.0);
-	idlewood = CreateDynamicObject(-1006, 1907.243042, -1639.806030, 12.621000, 0.000000, 0.000000, 270.000000, -1, -1, -1, 300.0, 300.0);
+	idlewood = CreateDynamicObject(-1412, 1907.243042, -1639.806030, 12.621000, 0.000000, 0.000000, 270.000000, -1, -1, -1, 300.0, 300.0);
 	SetDynamicObjectMaterial(idlewood, 1, 4820, "ground4_las", "hedge");
 	SetDynamicObjectMaterial(idlewood, 0, 4820, "ground4_las", "hedge");
 	idlewood = CreateDynamicObject(620, 1910.817017, -1640.785034, 9.319000, 0.000000, 0.000000, 0.000000, -1, -1, -1, 300.0, 300.0);
@@ -5323,7 +5323,7 @@
 	idlewood = CreateDynamicObject(8674, 1917.409058, -1639.790039, 13.508000, 0.000000, 0.000000, 0.000000, -1, -1, -1, 300.0, 300.0);
 	idlewood = CreateDynamicObject(19911, 1926.876953, -1728.020020, 12.496000, 0.000000, 270.000000, 90.000000, -1, -1, -1, 300.0, 300.0);
 	SetDynamicObjectMaterial(idlewood, 0, 16640, "a51", "concretemanky");
-	idlewood = CreateDynamicObject(-1006, 1907.243042, -1741.906006, 13.661000, 0.000000, 0.000000, 270.000000, -1, -1, -1, 300.0, 300.0);
+	idlewood = CreateDynamicObject(-1412, 1907.243042, -1741.906006, 13.661000, 0.000000, 0.000000, 270.000000, -1, -1, -1, 300.0, 300.0);
 	SetDynamicObjectMaterial(idlewood, 1, 3922, "bistro", "ahoodfence2");
 	SetDynamicObjectMaterial(idlewood, 0, 3922, "bistro", "ahoodfence2");
 	idlewood = CreateDynamicObject(3558, 1898.301025, -1630.385986, 15.505000, 0.000000, 0.000000, 1170.000000, -1, -1, -1, 300.0, 300.0);
@@ -5360,7 +5360,7 @@
 	SetDynamicObjectMaterial(idlewood, 0, 5142, "lashops1b_las2", "mural03_LA");
 	idlewood = CreateDynamicObject(3648, 1922.767944, -1630.968994, 15.227000, 0.000000, 0.000000, 540.000000, -1, -1, -1, 300.0, 300.0);
 	SetDynamicObjectMaterial(idlewood, 1, 5444, "chicano10_lae", "comptwall15");
-	idlewood = CreateDynamicObject(-1006, 1907.243042, -1622.706055, 13.661000, 0.000000, 0.000000, 270.000000, -1, -1, -1, 300.0, 300.0);
+	idlewood = CreateDynamicObject(-1412, 1907.243042, -1622.706055, 13.661000, 0.000000, 0.000000, 270.000000, -1, -1, -1, 300.0, 300.0);
 	SetDynamicObjectMaterial(idlewood, 1, 3922, "bistro", "ahoodfence2");
 	SetDynamicObjectMaterial(idlewood, 0, 3922, "bistro", "ahoodfence2");
 	idlewood = CreateDynamicObject(8674, 1863.628052, -1622.305054, 13.137999, 0.000000, 0.000000, 0.000000, -1, -1, -1, 300.0, 300.0);
@@ -5508,7 +5508,7 @@
 	SetDynamicObjectMaterial(idlewood, 0, 65535, "none", "none", 0xffffffff);
 	idlewood = CreateDynamicObject(19831, 1841.325684, -1584.252075, 12.549382, 0.000000, 0.000000, 54.999989, -1, -1, -1, 300.0, 300.0);
 	SetDynamicObjectMaterial(idlewood, 0, 65535, "none", "none", 0xffffffff);
-	idlewood = CreateDynamicObject(-1006, 1832.022949, -1786.717041, 13.220999, 0.000000, 0.000000, 360.000000, -1, -1, -1, 300.0, 300.0);
+	idlewood = CreateDynamicObject(-1412, 1832.022949, -1786.717041, 13.220999, 0.000000, 0.000000, 360.000000, -1, -1, -1, 300.0, 300.0);
 	SetDynamicObjectMaterial(idlewood, 1, 16093, "a51_ext", "stormdrain2_nt");
 	SetDynamicObjectMaterial(idlewood, 0, 16640, "a51", "stormdrain7");
 	idlewood = CreateDynamicObject(19573, 1841.695679, -1583.809204, 12.637319, 0.000000, 0.000000, 145.300003, -1, -1, -1, 300.0, 300.0);
