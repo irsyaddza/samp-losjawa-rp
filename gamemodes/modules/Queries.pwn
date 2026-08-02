@@ -849,6 +849,8 @@ public Points_Load()
 			cache_get_value_name_int(i, "pointFaction", EntranceData[i][pointFaction]);
 			cache_get_value_name_int(i, "outsideWorld", EntranceData[i][outsideWorld]);
 			cache_get_value_name_int(i, "insideWorld", EntranceData[i][insideWorld]);
+			cache_get_value_name_int(i, "outsideInterior", EntranceData[i][outsideInterior]);
+			cache_get_value_name_int(i, "insideInterior", EntranceData[i][insideInterior]);
 
 			EntranceData[i][outsideApartmentID] = -1;
 			EntranceData[i][insideApartmentID] = -1;

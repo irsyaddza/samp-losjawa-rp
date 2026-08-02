@@ -983,13 +983,15 @@ CMD:createpoint(playerid, params[])
 	EntranceData[point][insideApartmentSQL] = -1;
 	EntranceData[point][insideApartmentID] = -1;
 	EntranceData[point][outsideWorld] = GetPlayerVirtualWorld(playerid);
+	EntranceData[point][outsideInterior] = GetPlayerInterior(playerid);
 	EntranceData[point][insideWorld] = 0;
+	EntranceData[point][insideInterior] = 0;
 	EntranceData[point][pointPickup] = INVALID_STREAMER_ID;
 	EntranceData[point][pointPickupInside] = INVALID_STREAMER_ID;
 	EntranceData[point][pointLabel] = Text3D:INVALID_STREAMER_ID;
 	EntranceData[point][pointLabelInside] = Text3D:INVALID_STREAMER_ID;
 
-	AddPointToFile(point, name, playerPos[0], playerPos[1], playerPos[2], playerPos[3], EntranceData[point][outsideApartmentSQL], EntranceData[point][insideApartmentSQL], EntranceData[point][outsideWorld], EntranceData[point][insideWorld]);
+	AddPointToFile(point, name, playerPos[0], playerPos[1], playerPos[2], playerPos[3], EntranceData[point][outsideApartmentSQL], EntranceData[point][insideApartmentSQL], EntranceData[point][outsideWorld], EntranceData[point][insideWorld], EntranceData[point][outsideInterior], EntranceData[point][insideInterior]);
 
 	Iter_Add(Entrance, point);
 	Point_Refresh(point);
@@ -998,10 +1000,10 @@ CMD:createpoint(playerid, params[])
 	return true;
 }
 
-stock AddPointToFile(point, name[], Float:x, Float:y, Float:z, Float:a, outsideApt, insideApt, outsideW, insideW)
+stock AddPointToFile(point, name[], Float:x, Float:y, Float:z, Float:a, outsideApt, insideApt, outsideW, insideW, outsideInt, insideInt)
 {
 	new biggestQuery[500];
-	mysql_format(dbCon, biggestQuery, sizeof(biggestQuery), "INSERT INTO `points` (outsideX, outsideY, outsideZ, outsideA, outsideApartment, insideApartment, pointName, outsideWorld, insideWorld) VALUES (%f, %f, %f, %f, %d, %d, '%e', %d, %d)", x, y, z, a, outsideApt, insideApt, name, outsideW, insideW);
+	mysql_format(dbCon, biggestQuery, sizeof(biggestQuery), "INSERT INTO `points` (outsideX, outsideY, outsideZ, outsideA, outsideApartment, insideApartment, pointName, outsideWorld, insideWorld, outsideInterior, insideInterior) VALUES (%f, %f, %f, %f, %d, %d, '%e', %d, %d, %d, %d)", x, y, z, a, outsideApt, insideApt, name, outsideW, insideW, outsideInt, insideInt);
 	mysql_tquery(dbCon, biggestQuery, "OnPointInsert", "d", point);
 	return true;
 }

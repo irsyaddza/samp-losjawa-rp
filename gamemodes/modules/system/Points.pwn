@@ -30,6 +30,8 @@ enum E_ENTRANCE_DATA
 	pointPickupInside,
 	outsideWorld,
 	insideWorld,
+	outsideInterior,
+	insideInterior,
 	Text3D:pointLabel,
 	Text3D:pointLabelInside
 };
@@ -199,6 +201,7 @@ Dialog:EditPoint(playerid, response, listitem, inputtext[])
 			EntranceData[point][outsidePos][2] = playerPos[2];
 			EntranceData[point][outsidePos][3] = playerPos[3];
 			EntranceData[point][outsideWorld] = GetPlayerVirtualWorld(playerid);
+			EntranceData[point][outsideInterior] = GetPlayerInterior(playerid);
 
 			if(apt == -1)
 			{
@@ -211,7 +214,7 @@ Dialog:EditPoint(playerid, response, listitem, inputtext[])
 				EntranceData[point][outsideApartmentID] = apt;
 			}
 
-			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `points` SET `outsideX` = '%f', `outsideY` = '%f', `outsideZ` = '%f', `outsideA` = '%f', `outsideApartment` = '%d', `outsideWorld` = '%d' WHERE `ID` = '%d' LIMIT 1", playerPos[0], playerPos[1], playerPos[2], playerPos[3], EntranceData[point][outsideApartmentSQL], EntranceData[point][outsideWorld], EntranceData[point][pointID]);
+			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `points` SET `outsideX` = '%f', `outsideY` = '%f', `outsideZ` = '%f', `outsideA` = '%f', `outsideApartment` = '%d', `outsideWorld` = '%d', `outsideInterior` = '%d' WHERE `ID` = '%d' LIMIT 1", playerPos[0], playerPos[1], playerPos[2], playerPos[3], EntranceData[point][outsideApartmentSQL], EntranceData[point][outsideWorld], EntranceData[point][outsideInterior], EntranceData[point][pointID]);
 			mysql_pquery(dbCon, gquery);
 
 			Point_Refresh(point);
@@ -237,6 +240,7 @@ Dialog:EditPoint(playerid, response, listitem, inputtext[])
 			EntranceData[point][insidePos][2] = playerPos[2];
 			EntranceData[point][insidePos][3] = playerPos[3];
 			EntranceData[point][insideWorld] = GetPlayerVirtualWorld(playerid);
+			EntranceData[point][insideInterior] = GetPlayerInterior(playerid);
 
 			if(apt == -1)
 			{
@@ -249,7 +253,7 @@ Dialog:EditPoint(playerid, response, listitem, inputtext[])
 				EntranceData[point][insideApartmentID] = apt;
 			}
 
-			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `points` SET `insideX` = '%f', `insideY` = '%f', `insideZ` = '%f', `insideA` = '%f', `insideApartment` = '%d', `insideWorld` = '%d' WHERE `ID` = '%d' LIMIT 1", playerPos[0], playerPos[1], playerPos[2], playerPos[3], EntranceData[point][insideApartmentSQL], EntranceData[point][insideWorld], EntranceData[point][pointID]);
+			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `points` SET `insideX` = '%f', `insideY` = '%f', `insideZ` = '%f', `insideA` = '%f', `insideApartment` = '%d', `insideWorld` = '%d', `insideInterior` = '%d' WHERE `ID` = '%d' LIMIT 1", playerPos[0], playerPos[1], playerPos[2], playerPos[3], EntranceData[point][insideApartmentSQL], EntranceData[point][insideWorld], EntranceData[point][insideInterior], EntranceData[point][pointID]);
 			mysql_pquery(dbCon, gquery);
 
 	        SendClientMessageEx(playerid, COLOR_YELLOW, "-> Successfully edited Point %d's exit coordinates: %f, %f, %f", EntranceData[point][pointID], playerPos[0], playerPos[1], playerPos[2]);
@@ -342,7 +346,7 @@ stock Point_Refresh(i)
     if(EntranceData[i][outsideApartmentID] == -1)
     {
         outWorld = EntranceData[i][outsideWorld];
-        outInterior = -1;
+        outInterior = EntranceData[i][outsideInterior];
     }
     else
     {
@@ -365,7 +369,7 @@ stock Point_Refresh(i)
         if(EntranceData[i][insideApartmentID] == -1)
         {
             inWorld = EntranceData[i][insideWorld];
-            inInterior = -1;
+            inInterior = EntranceData[i][insideInterior];
         }
         else
         {
@@ -416,7 +420,7 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
                         }
                         else
                         {
-                            LinkVehicleToInterior(vehicleid, 0);
+                            LinkVehicleToInterior(vehicleid, EntranceData[i][insideInterior]);
                             SetVehicleVirtualWorld(vehicleid, EntranceData[i][insideWorld]);
                         }
 
@@ -430,7 +434,7 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
                             }
                             else
                             {
-                                SetPlayerInterior(playerid, 0);
+                                SetPlayerInteriorEx(playerid, EntranceData[i][insideInterior]);
                                 SetPlayerVirtualWorldEx(playerid, EntranceData[i][insideWorld]);
                                 DesyncPlayerInterior(playerid);
                             }
@@ -468,7 +472,7 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
                             }
                             else
                             {
-                                LinkVehicleToInterior(vehicleid, 0);
+                                LinkVehicleToInterior(vehicleid, EntranceData[i][outsideInterior]);
                                 SetVehicleVirtualWorld(vehicleid, EntranceData[i][outsideWorld]);
                             }
 
@@ -482,7 +486,7 @@ hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
                                 }
                                 else
                                 {
-                                    SetPlayerInterior(playerid, 0);
+                                    SetPlayerInteriorEx(playerid, EntranceData[i][outsideInterior]);
                                     SetPlayerVirtualWorldEx(playerid, EntranceData[i][outsideWorld]);
                                     DesyncPlayerInterior(playerid);
                                 }

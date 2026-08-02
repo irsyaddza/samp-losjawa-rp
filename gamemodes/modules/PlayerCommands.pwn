@@ -6205,7 +6205,7 @@ CMD:elevator(playerid, params[])
 	        }
 	        else
 			{
-				SetPlayerInterior(playerid, 0);
+				SetPlayerInteriorEx(playerid, EntranceData[i][insideInterior]);
 				SetPlayerVirtualWorldEx(playerid, EntranceData[i][insideWorld]);
 
 				DesyncPlayerInterior(playerid);
@@ -6228,7 +6228,7 @@ CMD:elevator(playerid, params[])
 	        }
 	        else
 			{
-				SetPlayerInterior(playerid, 0);
+				SetPlayerInteriorEx(playerid, EntranceData[i][outsideInterior]);
 				SetPlayerVirtualWorldEx(playerid, EntranceData[i][outsideWorld]);
 
 				DesyncPlayerInterior(playerid);
@@ -6511,7 +6511,7 @@ CMD:enter(playerid, params[])
 			        }
 			        else
 			        {
-			            LinkVehicleToInterior(vehicleid, 0);
+			            LinkVehicleToInterior(vehicleid, EntranceData[i][insideInterior]);
 			            SetVehicleVirtualWorld(vehicleid, EntranceData[i][insideWorld]);
 			        }
 				}
@@ -6531,7 +6531,7 @@ CMD:enter(playerid, params[])
 				        }
 				        else
 				        {
-				            LinkVehicleToInterior(vehicleid, 0);
+				            LinkVehicleToInterior(vehicleid, EntranceData[i][insideInterior]);
 				            SetVehicleVirtualWorld(vehicleid, EntranceData[i][insideWorld]);
 				        }
 				    }
@@ -6556,7 +6556,7 @@ CMD:enter(playerid, params[])
 	        }
 	        else
 			{
-				SetPlayerInterior(playerid, 0);
+				SetPlayerInteriorEx(playerid, EntranceData[i][insideInterior]);
 				SetPlayerVirtualWorldEx(playerid, EntranceData[i][insideWorld]);
 
 				DesyncPlayerInterior(playerid);
@@ -7058,7 +7058,7 @@ CMD:exit(playerid, params[])
 			        }
 			        else
 			        {
-			            LinkVehicleToInterior(vehicleid, 0);
+			            LinkVehicleToInterior(vehicleid, EntranceData[i][outsideInterior]);
 			            SetVehicleVirtualWorld(vehicleid, EntranceData[i][outsideWorld]);
 			        }
 				}
@@ -7078,7 +7078,7 @@ CMD:exit(playerid, params[])
 				        }
 				        else
 				        {
-				            LinkVehicleToInterior(vehicleid, 0);
+				            LinkVehicleToInterior(vehicleid, EntranceData[i][outsideInterior]);
 				            SetVehicleVirtualWorld(vehicleid, EntranceData[i][outsideWorld]);
 				        }
 				    }
@@ -7103,7 +7103,7 @@ CMD:exit(playerid, params[])
 	        }
 	        else
 			{
-				SetPlayerInterior(playerid, 0);
+				SetPlayerInteriorEx(playerid, EntranceData[i][outsideInterior]);
 				SetPlayerVirtualWorldEx(playerid, EntranceData[i][outsideWorld]);
 
 				DesyncPlayerInterior(playerid);

@@ -65,6 +65,33 @@ stock DetectMappingLocation(prop_type, prop_id, const code[], &world, &interior)
 {
     if(prop_type == 4)
     {
+        // Try parsing world and interior from the first CreateDynamicObject line
+        new pos = 0;
+        static line[256];
+        if ((pos = strfind(code, "CreateDynamicObject", true, pos)) != -1)
+        {
+            new start_param = strfind(code, "(", true, pos);
+            if (start_param != -1)
+            {
+                start_param += 1;
+                new end_param = strfind(code, ")", true, start_param);
+                if (end_param != -1)
+                {
+                    new len = end_param - start_param;
+                    if (len > 0 && len < sizeof(line))
+                    {
+                        strmid(line, code, start_param, end_param, sizeof(line));
+                        new modelid, Float:ox, Float:oy, Float:oz, Float:rx, Float:ry, Float:rz, w, i;
+                        if (!sscanf(line, "p<,>dffffffdd", modelid, ox, oy, oz, rx, ry, rz, w, i))
+                        {
+                            world = w;
+                            interior = i;
+                            return;
+                        }
+                    }
+                }
+            }
+        }
         world = 0;
         interior = 0;
         return;
@@ -483,8 +510,23 @@ stock SpawnMappingObjects(const code[], worldid, interiorid, mapping_db_id = 0)
                 new modelid;
                 new Float:x, Float:y, Float:z;
                 new Float:rx, Float:ry, Float:rz;
+                new obj_w = worldid, obj_i = interiorid;
                 
-                if (!sscanf(line, "p<,>dffffff", modelid, x, y, z, rx, ry, rz))
+                if (!sscanf(line, "p<,>dffffffdd", modelid, x, y, z, rx, ry, rz, obj_w, obj_i))
+                {
+                    new obj = CreateDynamicObject(modelid, x, y, z, rx, ry, rz, obj_w, obj_i);
+                    if (obj != INVALID_OBJECT_ID)
+                    {
+                        if (mapping_db_id > 0)
+                        {
+                            // Approved mapping: tag with DB ID offset
+                            Streamer_SetIntData(STREAMER_TYPE_OBJECT, obj, E_STREAMER_EXTRA_ID, MAPPING_OFFSET_APPROVED + mapping_db_id);
+                        }
+                        last_obj = obj;
+                        count++;
+                    }
+                }
+                else if (!sscanf(line, "p<,>dffffff", modelid, x, y, z, rx, ry, rz))
                 {
                     new obj = CreateDynamicObject(modelid, x, y, z, rx, ry, rz, worldid, interiorid);
                     if (obj != INVALID_OBJECT_ID)
@@ -626,8 +668,20 @@ stock SpawnPreviewObjects(playerid, const code[], worldid, interiorid)
                 new modelid;
                 new Float:x, Float:y, Float:z;
                 new Float:rx, Float:ry, Float:rz;
+                new obj_w = worldid, obj_i = interiorid;
                 
-                if (!sscanf(line, "p<,>dffffff", modelid, x, y, z, rx, ry, rz))
+                if (!sscanf(line, "p<,>dffffffdd", modelid, x, y, z, rx, ry, rz, obj_w, obj_i))
+                {
+                    new obj = CreateDynamicObject(modelid, x, y, z, rx, ry, rz, obj_w, obj_i);
+                    if (obj != INVALID_OBJECT_ID)
+                    {
+                        Streamer_SetIntData(STREAMER_TYPE_OBJECT, obj, E_STREAMER_EXTRA_ID, MAPPING_OFFSET_PREVIEW);
+                        PlayerPreviewObjects[playerid][count] = obj;
+                        last_obj = obj;
+                        count++;
+                    }
+                }
+                else if (!sscanf(line, "p<,>dffffff", modelid, x, y, z, rx, ry, rz))
                 {
                     new obj = CreateDynamicObject(modelid, x, y, z, rx, ry, rz, worldid, interiorid);
                     if (obj != INVALID_OBJECT_ID)
