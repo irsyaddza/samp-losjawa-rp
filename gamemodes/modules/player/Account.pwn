@@ -338,7 +338,6 @@ public OnQueryFinished(extraid, threadid)
 				cache_get_value_name_int(0, "Savings", PlayerData[extraid][pSavings]);
 				cache_get_value_name_int(0, "SavingsCollect", PlayerData[extraid][pSavingsCollect]);
 				cache_get_value_name_int(0, "playerJob", PlayerData[extraid][pJob]);
-	            cache_get_value_name_int(0, "playerSideJob", PlayerData[extraid][pSideJob]);
 				cache_get_value_name_int(0, "playerJobRank", PlayerData[extraid][pJobRank]);
 	            cache_get_value_name_int(0, "playerCareer", PlayerData[extraid][pCareer]);
 	            cache_get_value_name_int(0, "playerHouseKey", PlayerData[extraid][pHouseKey]);

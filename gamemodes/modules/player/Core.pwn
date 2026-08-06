@@ -54,7 +54,6 @@ enum E_PLAYER_DATA
 	pFireRank,
 	pFactionSpawn,
 	pJob,
-    pSideJob,
 	pFishes,
 	pCarLic,
 	pWepLic,

@@ -1067,7 +1067,7 @@ PutPlayerSettingVehicle(playerid, model, price)
 	{
 		if(model == 420 || model == 438) // Taxi & Cabbie
 		{
-			if(PlayerData[playerid][pJob] != JOB_TAXI && PlayerData[playerid][pSideJob] != JOB_TAXI)
+			if(PlayerData[playerid][pJob] != JOB_TAXI)
 				return SendErrorMessage(playerid, "You must be a Taxi Driver to purchase this vehicle.");
 		}
 		else
@@ -1075,7 +1075,7 @@ PutPlayerSettingVehicle(playerid, model, price)
 			new reqRank = GetRequiredTruckerRank(model);
 			if(reqRank != -1)
 			{
-				if(PlayerData[playerid][pJob] != JOB_TRUCKER && PlayerData[playerid][pSideJob] != JOB_TRUCKER)
+				if(PlayerData[playerid][pJob] != JOB_TRUCKER)
 					return SendErrorMessage(playerid, "You must be a Trucker to purchase this vehicle.");
 
 				if(PlayerData[playerid][pJobRank] < reqRank)
@@ -1431,7 +1431,7 @@ Dialog:DealercarConfirm(playerid, response, listitem, inputtext[])
 			{
 				if(model == 420 || model == 438) // Taxi & Cabbie
 				{
-					if(PlayerData[playerid][pJob] != JOB_TAXI && PlayerData[playerid][pSideJob] != JOB_TAXI)
+					if(PlayerData[playerid][pJob] != JOB_TAXI)
 					{
 						ExitSettingVehicle(playerid);
 						return SendErrorMessage(playerid, "You must be a Taxi Driver to purchase this vehicle.");
@@ -1442,7 +1442,7 @@ Dialog:DealercarConfirm(playerid, response, listitem, inputtext[])
 					new reqRank = GetRequiredTruckerRank(model);
 					if(reqRank != -1)
 					{
-						if(PlayerData[playerid][pJob] != JOB_TRUCKER && PlayerData[playerid][pSideJob] != JOB_TRUCKER)
+						if(PlayerData[playerid][pJob] != JOB_TRUCKER)
 						{
 							ExitSettingVehicle(playerid);
 							return SendErrorMessage(playerid, "You must be a Trucker to purchase this vehicle.");

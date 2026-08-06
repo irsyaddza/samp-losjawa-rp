@@ -172,7 +172,7 @@ SendJobMessage(jobid, color, const fmat[], va_args<>)
 
 	foreach (new i : Player)
 	{
-		if(PlayerData[i][pJob] == jobid || PlayerData[i][pSideJob] == jobid)
+		if(PlayerData[i][pJob] == jobid)
 		{
 	 		if(jobid == JOB_TAXI)
 			{

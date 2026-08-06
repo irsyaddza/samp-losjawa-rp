@@ -2487,30 +2487,19 @@ CMD:licensehelp(playerid, params[])
 CMD:jobhelp(playerid, params[])
 {
     SendClientMessage(playerid, COLOR_GREEN, "_______________________________________");
-	SendClientMessage(playerid, COLOR_GRAD3, "Your current job is:");
-	SendClientMessageEx(playerid,COLOR_GRAD3, "%s", ReturnJobName(playerid, PlayerData[playerid][pJob]));
+	SendClientMessage(playerid, COLOR_GRAD3, "Your legal job:");
+	SendClientMessageEx(playerid, COLOR_GRAD3, "%s", ReturnJobName(playerid, PlayerData[playerid][pJob]));
 
-	if(PlayerData[playerid][pSideJob])
+	if(PlayerData[playerid][pJob] == JOB_MECHANIC)
 	{
-		SendClientMessage(playerid, COLOR_GREEN, "_______________________________________");
-		SendClientMessage(playerid, COLOR_GRAD3, "Your side job is:");
-		SendClientMessageEx(playerid,COLOR_GRAD3, "%s", ReturnJobName(playerid, PlayerData[playerid][pSideJob]));
-	}
-
-	if(PlayerData[playerid][pJob] == JOB_MECHANIC || PlayerData[playerid][pSideJob] == JOB_MECHANIC)
-	{
-		if(PlayerData[playerid][pSideJob] == JOB_MECHANIC) SendClientMessage(playerid,COLOR_LIGHTRED, "Car Mechanic Commands [SIDE JOB]");
-		else SendClientMessage(playerid, COLOR_LIGHTRED, "Car Mechanic Commands:");
-
+		SendClientMessage(playerid, COLOR_LIGHTRED, "Car Mechanic Commands:");
 		SendClientMessage(playerid, COLOR_WHITE, "/buycomp - /checkcomponents - /service - /paintcar");
 		SendClientMessage(playerid, COLOR_WHITE, "/colorlist - /attach - /detach");
 	}
 
-	if(PlayerData[playerid][pJob] == JOB_TAXI || PlayerData[playerid][pSideJob] == JOB_TAXI)
+	if(PlayerData[playerid][pJob] == JOB_TAXI)
 	{
-	    if(PlayerData[playerid][pSideJob] == JOB_TAXI) SendClientMessage(playerid, COLOR_LIGHTRED, "Taxi Driver Commands [SIDE JOB]");
-		else SendClientMessage(playerid, COLOR_LIGHTRED, "Taxi Driver Commands:");
-
+		SendClientMessage(playerid, COLOR_LIGHTRED, "Taxi Driver Commands:");
 		SendClientMessage(playerid, COLOR_WHITE, "/taxi [accept / duty / fare / start / stop]");
 	}
 
@@ -2547,7 +2536,7 @@ CMD:jobhelp(playerid, params[])
 		SendClientMessage(playerid, COLOR_GREEN, "_______________________________________");
 	}
 
-	if(PlayerData[playerid][pJob] == JOB_TRAIN_DRIVER || PlayerData[playerid][pSideJob] == JOB_TRAIN_DRIVER)
+	if(PlayerData[playerid][pJob] == JOB_TRAIN_DRIVER)
 	{
 		SendClientMessage(playerid, COLOR_LIGHTRED, "Train Driver Commands:");
 		SendClientMessage(playerid, COLOR_WHITE, "/trainjob [join / queue / leavequeue / leave / status / start]");
@@ -8208,7 +8197,7 @@ CMD:cc(playerid, params[])
 
 CMD:tpda(playerid, params[])
 {
-	if(PlayerData[playerid][pJob] != JOB_TRUCKER && PlayerData[playerid][pSideJob] != JOB_TRUCKER)
+	if(PlayerData[playerid][pJob] != JOB_TRUCKER)
 	    return SendClientMessage(playerid, COLOR_GRAD1, "You're not a Trucker.");
 
 	Dialog_Show(playerid, TruckerPDA, DIALOG_STYLE_LIST, "Trucker PDA", "{B4B5B7}Show{FFFFFF} All Industries\n{B4B5B7}Show{FFFFFF} Businesses Accepting Cargo\n{B4B5B7}Show{FFFFFF} Ship Information", "Select", "Exit");
@@ -8228,7 +8217,7 @@ CMD:industry(playerid, params[])
 
 CMD:cargo(playerid, params[])
 {
-	if(PlayerData[playerid][pJob] != JOB_TRUCKER && PlayerData[playerid][pSideJob] != JOB_TRUCKER)
+	if(PlayerData[playerid][pJob] != JOB_TRUCKER)
 	    return SendClientMessage(playerid, COLOR_GRAD1, "You're not a Trucker.");
 
 	new option[16], amount, id = -1;
@@ -11659,7 +11648,7 @@ CMD:buycomp(playerid, params[])
 {
 	new compid = 60;
 
-	if(PlayerData[playerid][pJob] != JOB_MECHANIC && PlayerData[playerid][pSideJob] != JOB_MECHANIC)
+	if(PlayerData[playerid][pJob] != JOB_MECHANIC)
 	    return SendClientMessage(playerid, COLOR_GRAD2, "You are not a Car Mechanic");
 
 	if(!IsPlayerInRangeOfPoint(playerid, 5.0, StorageData[compid][in_posx], StorageData[compid][in_posy], StorageData[compid][in_posz]))
@@ -11732,7 +11721,7 @@ CMD:buycomp(playerid, params[])
 
 CMD:paintcar(playerid, params[])
 {
-	if(PlayerData[playerid][pJob] != JOB_MECHANIC && PlayerData[playerid][pSideJob] != JOB_MECHANIC)
+	if(PlayerData[playerid][pJob] != JOB_MECHANIC)
 	    return SendClientMessage(playerid, COLOR_GRAD2, "You are not a Car Mechanic");
 
 	new carid = -1, pcarid = -1;
@@ -11806,7 +11795,7 @@ CMD:paintcar(playerid, params[])
 
 CMD:service(playerid, params[])
 {
-	if(PlayerData[playerid][pJob] != JOB_MECHANIC && PlayerData[playerid][pSideJob] != JOB_MECHANIC)
+	if(PlayerData[playerid][pJob] != JOB_MECHANIC)
 	    return SendClientMessage(playerid, COLOR_GRAD2, "You're not a Car Mechanic");
 
 	new
@@ -11925,7 +11914,7 @@ CMD:service(playerid, params[])
 
 CMD:checkcomponents(playerid, params[])
 {
-	if(PlayerData[playerid][pJob] != JOB_MECHANIC && PlayerData[playerid][pSideJob] != JOB_MECHANIC)
+	if(PlayerData[playerid][pJob] != JOB_MECHANIC)
 	    return SendClientMessage(playerid, COLOR_GRAD2, "You are not a Car Mechanic");
 
 	new slot = -1, vehicleid = GetPlayerVehicleID(playerid);
@@ -11949,7 +11938,7 @@ CMD:colorlist(playerid, params[])
 {
 	new id = -1;
 
-	if((PlayerData[playerid][pJob] == JOB_MECHANIC || PlayerData[playerid][pSideJob] == JOB_MECHANIC) || ((id = Business_Nearest(playerid)) != -1 && BusinessData[id][bType] == 4))
+	if((PlayerData[playerid][pJob] == JOB_MECHANIC) || ((id = Business_Nearest(playerid)) != -1 && BusinessData[id][bType] == 4))
 	{
 	    new
 			string[3344];
@@ -12028,24 +12017,7 @@ CMD:detach(playerid, params[])
 
 CMD:leavesidejob(playerid, params[])
 {
-	if(PlayerData[playerid][pSideJob] != 0)
-	{
-		if(PlayerData[playerid][pSideJob] == JOB_TAXI)
-		{
-			if(TaxiDuty{playerid})
-			{
-				TaxiDuty{playerid} = false;
-				TaxiMade[playerid] = 0;
-
-				SetPlayerToTeamColor(playerid);
-			}
-		}
-
-	    PlayerData[playerid][pSideJob] = 0;
-
-	    return SendClientMessage(playerid, COLOR_GRAD1, "You have left your sidejob.");
-	}
-	else return SendClientMessage(playerid, COLOR_LIGHTRED, "You don't have a sidejob.");
+	return SendClientMessage(playerid, COLOR_LIGHTRED, "Command /leavesidejob is deprecated. Use /leavejob to quit your main job.");
 }
 
 CMD:leavejob(playerid, params[])
@@ -12103,28 +12075,7 @@ CMD:leavejob(playerid, params[])
 
 CMD:jobswitch(playerid, params[])
 {
-    if(IsJobSide(PlayerData[playerid][pJob]))
-	{
-        if(PlayerData[playerid][pJob] != JOB_NONE || PlayerData[playerid][pSideJob] != JOB_NONE)
-        {
-            new sidejob = PlayerData[playerid][pSideJob];
-
-            PlayerData[playerid][pSideJob] = PlayerData[playerid][pJob];
-            PlayerData[playerid][pJob] = sidejob;
-
-            if(PlayerData[playerid][pSideJob] == JOB_NONE)
-				SendClientMessage(playerid, COLOR_LIGHTRED, "Your side job was set as your main job.");
-			else if(PlayerData[playerid][pJob] == JOB_NONE)
-				SendClientMessage(playerid, COLOR_LIGHTRED, "Your main job was set as your side job.");
-		}
-        else
-        {
-            SendClientMessage(playerid, COLOR_LIGHTRED, "You have to leave the job first (/leavejob or /leavesidejob)");
-        }
-    }
-    else SendClientMessage(playerid, COLOR_LIGHTRED, "You can only switch jobs as Taxi Driver or Car Mechanic.");
-
-	return true;
+	return SendClientMessage(playerid, COLOR_LIGHTRED, "Command /jobswitch is no longer used. You can hold 1 Legal Job (/job) and 1 Illegal Job (/illegaljob).");
 }
 
 CMD:mechanicjob(playerid, params[])
@@ -12136,25 +12087,13 @@ CMD:mechanicjob(playerid, params[])
 	        PlayerData[playerid][pJob] = JOB_MECHANIC;
 
 	        ShowPlayerFooter(playerid, "~r~Congratulations,~n~~w~You are now a ~y~Car Mechanic.~n~~w~/jobhelp.", 8000);
-
-			if(PlayerData[playerid][pSideJob] == JOB_NONE) SendClientMessage(playerid, COLOR_GRAD6, "/jobswitch to make it a sidejob.");
 		}
 		else
 		{
-		    if(PlayerData[playerid][pSideJob] == JOB_NONE)
-		    {
-		        PlayerData[playerid][pSideJob] = JOB_MECHANIC;
-
-		        ShowPlayerFooter(playerid, "~r~Congratulations,~n~~w~You are now a ~y~Car Mechanic.~n~~w~/jobhelp.", 8000);
-		    }
-		    else
-		    {
-		        SendClientMessage(playerid, COLOR_LIGHTRED, "    You already have a job and a side-job. Type /leavejob and or /leavesidejob to leave them.");
-		    }
+			SendClientMessage(playerid, COLOR_LIGHTRED, "You already have a job. Type /leavejob to leave your job first.");
 		}
-		return true;
 	}
-	else return SendClientMessage(playerid, COLOR_GRAD1, "You are not at the job site.");
+	return true;
 }
 
 CMD:farmerjob(playerid, params[])
@@ -16770,7 +16709,7 @@ CMD:taxi(playerid, params[])
 
 	if(!strcmp(option, "duty", true))
 	{
-	    if(PlayerData[playerid][pSideJob] != JOB_TAXI && PlayerData[playerid][pJob] != JOB_TAXI)
+	    if(PlayerData[playerid][pJob] != JOB_TAXI)
 			return SendClientMessage(playerid, COLOR_WHITE, "You are not a Taxi Driver.");
 
 		if(GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
@@ -16798,7 +16737,7 @@ CMD:taxi(playerid, params[])
 	}
 	else if(!strcmp(option, "start", true))
 	{
-	    if(PlayerData[playerid][pSideJob] != JOB_TAXI && PlayerData[playerid][pJob] != JOB_TAXI)
+	    if(PlayerData[playerid][pJob] != JOB_TAXI)
 			return SendClientMessage(playerid, COLOR_WHITE, "You are not a Taxi Driver.");
 
 		if(GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
@@ -16822,7 +16761,7 @@ CMD:taxi(playerid, params[])
 	}
 	else if(!strcmp(option, "fare", true))
 	{
-	    if(PlayerData[playerid][pSideJob] != JOB_TAXI && PlayerData[playerid][pJob] != JOB_TAXI)
+	    if(PlayerData[playerid][pJob] != JOB_TAXI)
 			return SendClientMessage(playerid, COLOR_WHITE, "You are not a Taxi Driver.");
 
 		new fare;
@@ -16851,7 +16790,7 @@ CMD:taxi(playerid, params[])
 	}
 	else if(!strcmp(option, "accept", true))
 	{
-	    if(PlayerData[playerid][pSideJob] != JOB_TAXI && PlayerData[playerid][pJob] != JOB_TAXI)
+	    if(PlayerData[playerid][pJob] != JOB_TAXI)
 			return SendClientMessage(playerid, COLOR_WHITE, "You are not a Taxi Driver.");
 
 		new id = INVALID_PLAYER_ID, phid;
@@ -16905,7 +16844,7 @@ CMD:taxi(playerid, params[])
 	}
 	else if(!strcmp(option, "stop", true))
 	{
-	    if(PlayerData[playerid][pSideJob] != JOB_TAXI && PlayerData[playerid][pJob] != JOB_TAXI)
+	    if(PlayerData[playerid][pJob] != JOB_TAXI)
 			return SendClientMessage(playerid, COLOR_WHITE, "You are not a Taxi Driver.");
 
 		if(GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
@@ -16943,7 +16882,7 @@ CMD:taxi(playerid, params[])
 			}
 		}
 
-		if(PlayerData[id][pSideJob] != JOB_TAXI && PlayerData[id][pJob] != JOB_TAXI)
+		if(PlayerData[id][pJob] != JOB_TAXI)
 			return SendClientMessage(playerid, COLOR_WHITE, "The player is not Taxi Driver.");
 
 		if(id == playerid)
@@ -16975,11 +16914,16 @@ CMD:licenseexam(playerid, params[])
 	}
 	else if(model == 438)
 	{
- 		if(PlayerData[playerid][pJob] == JOB_TAXI || PlayerData[playerid][pSideJob] == JOB_TAXI)
-			return SendClientMessage(playerid, COLOR_LIGHTRED, "You are already a Taxi Driver!");
-
-        if(PlayerData[playerid][pJob] != JOB_NONE && PlayerData[playerid][pSideJob] != JOB_NONE)
-			return SendClientMessage(playerid, COLOR_LIGHTRED, "You have to leave the job first (/leavejob or /leavesidejob)");
+ 		if(PlayerData[playerid][pJob] == JOB_TAXI)
+		{
+			SendClientMessage(playerid, COLOR_WHITE, "You are already a Taxi Driver.");
+			return true;
+		}
+        if(PlayerData[playerid][pJob] != JOB_NONE)
+        {
+            SendClientMessage(playerid, COLOR_LIGHTRED, "You have to leave your job first (/leavejob)");
+            return true;
+        }
 
 		SetPVarInt(playerid, "InDriveTest", 2);
 	}

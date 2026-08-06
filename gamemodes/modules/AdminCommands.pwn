@@ -4863,11 +4863,11 @@ CMD:setstat(playerid, params[])
 		}
 		case 19:
 		{
-			PlayerData[pid][pSideJob] = amount;
+			pIllegalJob[pid] = amount;
 
-			SendClientMessageEx(pid, COLOR_YELLOW, "%s set %s's side job to %d", ReturnName(playerid), ReturnName(pid), amount);
+			SendClientMessageEx(pid, COLOR_YELLOW, "%s set %s's illegal job to %d", ReturnName(playerid), ReturnName(pid), amount);
 
-			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(3) %s has set %s's Side Job to %d.", ReturnName(playerid), ReturnName(pid), amount);
+			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(3) %s has set %s's Illegal Job to %d.", ReturnName(playerid), ReturnName(pid), amount);
 		}
 		case 20:
 		{

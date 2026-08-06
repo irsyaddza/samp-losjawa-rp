@@ -1204,7 +1204,7 @@ PayDay()
 				}
 			}
 
-			if(PlayerData[i][pJob] == JOB_MECHANIC || PlayerData[i][pSideJob] == JOB_MECHANIC)
+			if(PlayerData[i][pJob] == JOB_MECHANIC)
 			{
 			    PlayerData[i][pPayCheck] += 1250;
 

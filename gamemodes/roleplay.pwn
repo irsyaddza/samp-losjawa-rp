@@ -2106,6 +2106,7 @@ forward RefreshTutorial(playerid);
 #include "modules/Interface.pwn"
 #include "modules/Prison.pwn"
 new LastEngineToggle[MAX_PLAYERS];
+new LastCargoPickupMsg[MAX_PLAYERS];
 new PlayerBusVehicle[MAX_PLAYERS] = {INVALID_VEHICLE_ID, ...};
 new PlayerBusVehicleIndex[MAX_PLAYERS] = {-1, ...};
 new PlayerBusCheckpointStep[MAX_PLAYERS] = {0, ...};
@@ -2115,6 +2116,7 @@ new PlayerSweeperVehicleIndex[MAX_PLAYERS] = {-1, ...};
 new PlayerSweeperCheckpointStep[MAX_PLAYERS] = {0, ...};
 new PlayerSweeperRouteIndex[MAX_PLAYERS] = {-1, ...};
 #include "modules/system/IllegalWeapon.pwn"
+#include "modules/system/JobPoints.pwn"
 #include "modules/PlayerCommands.pwn"
 #include "modules/AdminCommands.pwn"
 #include "modules/TesterCommands.pwn"
@@ -2148,6 +2150,7 @@ public OnGameModeInit()
 	mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `GunCraftDelay` INT(11) NOT NULL DEFAULT '0';");
 	mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `Schematics` VARCHAR(10) NOT NULL DEFAULT '00000000';");
 	IWS_Init();
+	JobPoint_LoadAll();
 	mysql_tquery(dbCon, "ALTER TABLE `propose_points` ADD COLUMN `name` VARCHAR(64) NOT NULL DEFAULT 'Propose Point';");
 	mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `propose_points` (`id` INT AUTO_INCREMENT PRIMARY KEY, `name` VARCHAR(64) NOT NULL DEFAULT 'Propose Point', `posX` FLOAT, `posY` FLOAT, `posZ` FLOAT, `interior` INT, `world` INT);");
 	mysql_tquery(dbCon, "SELECT * FROM `propose_points`", "LoadProposePoints", "");
@@ -2274,6 +2277,7 @@ public OnGameModeExit()
 public OnPlayerConnect(playerid)
 {
 	LastEngineToggle[playerid] = 0;
+	LastCargoPickupMsg[playerid] = 0;
 	HasSeenPassengerMessage[playerid] = false;
 
 	for(new i = 0; i < 6; i++)
@@ -5124,7 +5128,6 @@ ResetStatistics(playerid) // Clear player Stats
 	PlayerData[playerid][pComplexKey] = -1;
 	PlayerData[playerid][pAdmin] = 0;
     PlayerData[playerid][pJob] = 0;
-    PlayerData[playerid][pSideJob] = 0;
     PlayerData[playerid][pJobRank] = 0;
     PlayerData[playerid][pADPoint] = 0;
     PlayerData[playerid][pCareer] = 0;
@@ -5668,13 +5671,12 @@ SQL_SaveCharacter(playerid, bool:quit = true)
 		PlayerData[playerid][pCarLic]
 	);
 
-	format(query, sizeof(query), "%s, `Radio` = '%d', `RadioChannel` = '%d', `RadioSlot` = '%d', `playerJob` = '%d', `playerSideJob` = '%d', `playerJobRank` = '%d', `playerCareer` = '%d', `playerHouseKey` = '%d', `playerComplexKey` = '%d', `PlayerBusinessKey` = '%d', `PlayerCarkey` = '%d', `Checkpoint_Type` = '%d', `Checkpoint_X` = '%f', `Checkpoint_Y` = '%f', `Checkpoint_Z` = '%f', `Fishes` = '%d', `SavingsCollect` = '%d', `Online` = '0', `PlayingSeconds` = '%d', `ADPoint` = '%d', `WepLic` = '%d'",
+	format(query, sizeof(query), "%s, `Radio` = '%d', `RadioChannel` = '%d', `RadioSlot` = '%d', `playerJob` = '%d', `playerJobRank` = '%d', `playerCareer` = '%d', `playerHouseKey` = '%d', `playerComplexKey` = '%d', `PlayerBusinessKey` = '%d', `PlayerCarkey` = '%d', `Checkpoint_Type` = '%d', `Checkpoint_X` = '%f', `Checkpoint_Y` = '%f', `Checkpoint_Z` = '%f', `Fishes` = '%d', `SavingsCollect` = '%d', `Online` = '0', `PlayingSeconds` = '%d', `ADPoint` = '%d', `WepLic` = '%d'",
 	    query,
 	    PlayerData[playerid][pRadio],
 	    PlayerData[playerid][pRChannel],
 	    PlayerData[playerid][pRSlot],
 	    PlayerData[playerid][pJob],
-	    PlayerData[playerid][pSideJob],
 	    PlayerData[playerid][pJobRank],
 	    PlayerData[playerid][pCareer],
 	    PlayerData[playerid][pHouseKey],
@@ -7877,19 +7879,10 @@ public OnPlayerEnterCheckpoint(playerid)
 						if(PlayerData[playerid][pJob] == JOB_NONE)
 						{
 						    PlayerData[playerid][pJob] = JOB_TAXI;
-
-							if(PlayerData[playerid][pSideJob] == JOB_NONE) SendClientMessage(playerid, COLOR_GRAD6, "/jobswitch to make it a sidejob.");
 						}
 						else
 						{
-							if(PlayerData[playerid][pSideJob] == JOB_NONE)
-							{
-							    PlayerData[playerid][pSideJob] = JOB_TAXI;
-							}
-							else
-							{
-                                SendClientMessage(playerid, COLOR_LIGHTRED, "You have to leave the job first (/leavejob or /leavesidejob)");
-							}
+                            SendClientMessage(playerid, COLOR_LIGHTRED, "You have to leave your main job first (/leavejob)");
 						}
 
     					GameTextForPlayer(playerid, "~w~Congratulations! you are now a taxi driver!", 5000, 1);
@@ -11276,15 +11269,20 @@ public OnPlayerPickUpDynamicPickup(playerid, pickupid)
 		{
 			if(PlayerData[playerid][pJob] == JOB_TRUCKER && GetProductCargo(BusinessData[i][bType]) != -1)
 			{
-				if(BusinessData[i][bPriceProd] && GetBusinessCargoCanBuy(i))
+				if(gettime() - LastCargoPickupMsg[playerid] > 10)
 				{
-			  		SendClientMessage(playerid, COLOR_WHITE, "This business is{A4D247} looking for cargo{FFFFFF} to buy now.");
-					SendClientMessageEx(playerid, COLOR_GRAD1, "(Wanted: {FFFFFF}%d {B4B5B7}crates of {FFFFFF} %s {B4B5B7}, paying {FFFFFF}%s {B4B5B7}per each one.)", GetBusinessCargoCanBuy(i), GetBusinessCargoDesc(GetProductCargo(BusinessData[i][bType])), FormatNumber(BusinessData[i][bPriceProd]));
-				}
-				else
-				{
-					SendClientMessage(playerid, COLOR_WHITE, "This business is {DB5A2B}not buying any cargo{FFFFFF} now.");
-					SendClientMessage(playerid, COLOR_GRAD1, "(It's either full or the business owner doesn't want to buy any cargo.)");
+					LastCargoPickupMsg[playerid] = gettime();
+
+					if(BusinessData[i][bPriceProd] && GetBusinessCargoCanBuy(i))
+					{
+				  		SendClientMessage(playerid, COLOR_WHITE, "This business is{A4D247} looking for cargo{FFFFFF} to buy now.");
+						SendClientMessageEx(playerid, COLOR_GRAD1, "(Wanted: {FFFFFF}%d {B4B5B7}crates of {FFFFFF} %s {B4B5B7}, paying {FFFFFF}%s {B4B5B7}per each one.)", GetBusinessCargoCanBuy(i), GetBusinessCargoDesc(GetProductCargo(BusinessData[i][bType])), FormatNumber(BusinessData[i][bPriceProd]));
+					}
+					else
+					{
+						SendClientMessage(playerid, COLOR_WHITE, "This business is {DB5A2B}not buying any cargo{FFFFFF} now.");
+						SendClientMessage(playerid, COLOR_GRAD1, "(It's either full or the business owner doesn't want to buy any cargo.)");
+					}
 				}
 			}
 
