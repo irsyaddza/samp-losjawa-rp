@@ -102,15 +102,6 @@ CMD:me(playerid, params[])
 	return true;
 }
 
-stock AnnounceMeAction(playerid, const text[])
-{
-	if(strlen(text) > 80)
-	{
-		SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s %.80s ...", ReturnName(playerid, 0), text);
-		SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* ... %s (( %s ))", text[80], ReturnName(playerid, 0));
-	}
-	else SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s %s", ReturnName(playerid, 0), text);
-}
 
 CMD:lme(playerid, params[])
 {
@@ -3975,19 +3966,7 @@ CMD:loudspeaker(playerid, params[])
 	return true;
 }
 
-/*CMD:passcall(playerid, params[])
-{
-    if(DeathMode{playerid} || PlayerData[playerid][pInjured] || GetPlayerSpecialAction(playerid) > 0)
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "You cannot use the phone at this time.");
 
-	if(ph_menuid[playerid] == 7 && ph_sub_menuid[playerid] == 2)
-	{		
-		if(PlayerData[playerid][pCallLine] != INVALID_PLAYER_ID && !PlayerData[playerid][pIncomingCall])
-	}
-	else SendErrorMessage(playerid, "You're not on a call.");
-
-	return true;
-}*/
 
 YCMD:pickup(playerid, params[], help) = p;
 
@@ -5270,27 +5249,7 @@ CMD:damages(playerid, params[])
 	return true;
 }
 
-/*CMD:corpse(playerid, params[])
-{
-	new Float:playerPos[3];
 
-	for(new i = 0; i < MAX_PLAYERS; ++i)
-	{
-	    if(CORPSES[i][corpseSpawned])
-	    {
-	    	GetActorPos(CORPSES[i][corpseActor], playerPos[0], playerPos[1], playerPos[2]);
-
-	    	if(IsPlayerInRangeOfPoint(playerid, 5.0, playerPos[0], playerPos[1], playerPos[2]))
-	    	{
-	    	    SendClientMessageEx(playerid, COLOR_ORANGE, "Here lies %s...", CORPSES[i][corpseName]);
-	    	    return true;
-	    	}
-		}
-	}
-
-	SendErrorMessage(playerid, "You're not near any corpse.");
-	return true;
-}*/
 
 CMD:respawnme(playerid, params[])
 {
@@ -9073,38 +9032,7 @@ CMD:seb(playerid, params[])
 	return true;
 }
 
-/*CMD:trace(playerid, params[])
-{
-	new
-		id,
-		//String[1024],
-		Float:FindFloats[3];
 
-	if(sscanf(params, "u", id)) return SendSyntaxMessage(playerid, "/trace [playerid]");
-		if(IsPolice(playerid))
-		{
-			 	if(id == playerid) return SendClientMessage(playerid, COLOR_GREY, "You aren't able to trace yourself.");
-				//else if(PhoneOnline[id] > 0) return SendClientMessageEx(playerid, COLOR_GREY, "kamu tidak dapat melacaknya karena Handphone tersangka dalam keadaan mati.");
-				else if(adTick[playerid] > 1) return SendClientMessage(playerid, COLOR_GREY, "Anda harus menunggu untuk melacak kembali");
-				else if(GetPlayerInterior(id) >= 1 || GetPlayerVirtualWorld(id) >= 1)
-					SendClientMessage(playerid, COLOR_GREY, "Player ini berada pada interior alternatif atau di dalam Virtual World.");
-				else if(AdminDuty{playerid})
-					SendClientMessage(playerid, COLOR_GREY, "You aren't able to trace.");
-				else
-				{
-				    new location[MAX_ZONE_NAME];
-					GetPlayerPos(id, FindFloats[0], FindFloats[1], FindFloats[2]);
-                    GetPlayer2DZone(id, location, MAX_ZONE_NAME);
-					//format(String, sizeof(String), "[SATELIT TRACKER]: ** Lokasi %s terlacak sedang berada di daerah %s **", GetPlayerName(id),location);
-					adTick[playerid] = 60;
-					//SendRadioMessage(1, DEPTRADIO, String);
-					//SendRadioMessage(6, DEPTRADIO, String);
-	            }
-	        
-			else SendClientMessage(playerid, COLOR_GREY, "Player yang di maksud tidak terhubung ke server atau tidak terdaftar.");
-	    }
-		return 1;
-}*/
 
 CMD:trace(playerid, params[])
 {
@@ -9764,25 +9692,7 @@ CMD:unhandcuff(playerid, params[])
     return true;
 }
 
-/*CMD:tolls(playerid, params[])
-{
-	if(!IsPolice(playerid))
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
 
-	gstr[0] = EOS;
-
-	strcat(gstr, "{FFFFFF}Welcome to the toll booth management menu!\n\n");
-	strcat(gstr, "{FFFFFF}From this menu you can toggle the locked status of tolls\n");
-	strcat(gstr, "{FFFFFF}and view some information on a specific toll around San Andreas\n\n");
-	strcat(gstr, "{FFFFFF}This front screen will also display financial and statistical data \nof all tholl booth's including visits, taxatinns and payments made\n\for the past 60 minutes\n\n");
-	strcat(gstr, "{DDFF3F}Statistical Information:\n");
-
-	format(sgstr, sizeof(sgstr), "{FFFFFF}Booths Opened: %d        Payments: $%d        Taxed: $%d       Times Locked: %d", TollsOpenCount, TollsPayed, TollsTaxed, TollsLocked);
-	strcat(gstr, sgstr);
-
-	ShowPlayerDialog(playerid, TOLLS_DIALOG, DIALOG_STYLE_MSGBOX, "{FFFFFF}Toolbooth Management", gstr, "Proceed", "Exit");
-    return true;
-}*/
 
 CMD:graffiti(playerid, params[]) return ShowGraffitiDialog(playerid);
 
@@ -11706,19 +11616,7 @@ CMD:lock(playerid, params[])
 	return true;
 }
 
-/*CMD:newspaper(playerid, params[])
-{
-	if(IsPlayerInRangeOfPoint(playerid, 2.0, 1663.4677, -2332.1433, -2.6797))
-	{
-	  	TogglePlayerControllable(playerid, false);
 
-  		ShowMenuForPlayer(Guide, playerid);
-		return true;
-	}
-	else SendClientMessage(playerid, COLOR_GREY, "** You are not near the newspaper.");
-
-	return true;
-}*/
 
 CMD:setbuycomp(playerid, params[])
 {
@@ -18384,7 +18282,12 @@ CMD:fine(playerid, params[])
 		return SendErrorMessage(playerid, "You are too far away.");
 
 	format(sgstr, sizeof(sgstr), "writes a fine of $%d to %s for '%s'.", amount, ReturnName(userid, 0), reason);
-	AnnounceMeAction(playerid, sgstr);
+	if(strlen(sgstr) > 80)
+	{
+		SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s %.80s ...", ReturnName(playerid, 0), sgstr);
+		SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* ... %s (( %s ))", sgstr[80], ReturnName(playerid, 0));
+	}
+	else SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s %s", ReturnName(playerid, 0), sgstr);
 
     SendClientMessageEx(userid, COLOR_LIGHTRED, "[ ! ] You were fined by %s for '%s'. See /fines", ReturnName(playerid, 0), reason);
 
@@ -18433,73 +18336,7 @@ CMD:fines(playerid, params[])
 	return true;
 }
 
-/*CMD:vehiclefine(playerid, params[])
-{
-	if(!IsPolice(playerid))
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "For police officers only.");
 
-	if(!PlayerData[playerid][pOnDuty])
-		return SendErrorMessage(playerid, "You're not on duty.");
-
-	new vehicleid, amount, reason[64];
-
-	if(sscanf(params, "s[64]ds[64]", vehicleid, amount, reason))
-		return SendSyntaxMessage(playerid, "/vehiclefine [vehicleid] [amount] [reason]");
-
-	if(!IsValidVehicle(vehicleid))
-	    return SendClientMessage(playerid, COLOR_LIGHTRED, "Invalid vehicle specified.");
-
-	new carid = -1;
-
-	if((carid = Car_GetID(vehicleid)) == -1)
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "Personal cars only.");
-
-	if(amount <= 0)
-		return SendClientMessage(playerid, COLOR_GRAD1, "Fine must be greater than 0.");
-
-	SendNearbyMessage(playerid, 15.0, COLOR_PURPLE, "* %s tears a fine and puts it on the %s's windshield.", ReturnName(playerid, 0), g_arrVehicleNames[CarData[carid][carModel] - 400]);
-
-	PlaceVehicleFine(carid, playerid, amount, reason);
-	return true;
-}
-
-CMD:vehiclefines(playerid, params[])
-{
-	if(!IsPolice(playerid))
-	{
-		ViewVehicleFine(playerid, playerid);
-	}
-	else
-	{
-		new userid;
-
-		if(sscanf(params, "u", userid))
-			return SendSyntaxMessage(playerid, "/vehiclefines [vehicleid]");
-
-        if(userid == playerid)
-		{
-			ViewVehicleFine(playerid, playerid);
-        }
-        else
-		{
-            if(!PlayerData[playerid][pOnDuty])
-				return SendClientMessage(playerid, COLOR_GRAD1,"   You have not started to perform duties");
-
-			if(userid == INVALID_PLAYER_ID)
-			{
-				new maskid[MAX_PLAYER_NAME];
-				sscanf(params, "s[24]", maskid);
-				if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-				{
-					return SendErrorMessage(playerid, "The player you specified isn't connected.");
-				}
-			}
-
-			ViewVehicleFine(playerid, userid);
-		}
-	}
-	return true;
-}*/
 
 stock ReturnAdminRankName(level)
 {

@@ -820,8 +820,6 @@ stock SaveReport(id, by, player, text[])
 	format(Reports[id][reportReason], 128, text);
 }
 
-/*if(!IsValidReport(report))
-	return SendClientMessage(playerid, COLOR_GREY, "Invalid report specified.");*/
 
 CMD:ar(playerid, params[])
 {
@@ -1784,11 +1782,7 @@ CMD:editsignal(playerid, params[])
 	{
 	    GetPlayerPos(playerid, SignalData[id][signalX], SignalData[id][signalY], SignalData[id][signalZ]);
 
-      	/*if(IsValidDynamicObject(SignalData[id][signalObject]))
-			DestroyDynamicObject(SignalData[id][signalObject]);
 
-     	SignalData[id][signalObject] = CreateDynamicObject(13758, SignalData[id][signalX], SignalData[id][signalY], SignalData[id][signalZ], 0.00, 0.00, 0.00);
-*/
 		Signal_Save(id);
 
 		SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn: %s has adjusted the position of Radio Tower ID %d", ReturnName(playerid), id);
@@ -2103,26 +2097,7 @@ CMD:gotofs(playerid, params[])
 
 	if(sscanf(params, "dd", faction, spawn))
 	{
-		/*new str[MAX_PLAYER_NAME + (64 * 5)], count;
 
-		for(new i = 0; i < 5; ++i)
-		{
-		    if(FactionSpawns[faction][i][spawnID] != 0)
-			{
-				format(str, sizeof(str), "%s[%d: %s]", str, i, FactionSpawns[faction][i][spawnName]);
-
-				count++;
-			}
-		}
-
-		if(!count) return SendErrorMessages(playerid, "This faction doesn't have any spawns.");
-
-		if(strlen(str) > 128)
-		{
-		    SendClientMessageEx(playerid, COLOR_GREY, "%.128s", str);
-		    SendClientMessageEx(playerid, COLOR_GREY, "%s", str[128]);
-		}
-		else SendClientMessage(playerid, COLOR_GREY, str);*/
 
 	    return SendSyntaxMessage(playerid, "/gotofs [factionid] [spawn-id]");
 	}
@@ -2801,13 +2776,7 @@ CMD:ismasked(playerid, params[])
 	return true;
 }
 
-/*CMD:fly(playerid, params[])
-{
-	if(PlayerData[playerid][pAdmin] < 1337) return false;
-	if(PfSpec[playerid][FlySpec] == 0) StartFlyEditor(playerid);
-	else if(PfSpec[playerid][FlySpec] == 1) EndFlyEditor(playerid);
-	return true;
-}*/
+
 
 CMD:biztypes(playerid, params[])
 {
@@ -4525,25 +4494,7 @@ CMD:setskin(playerid, params[])
 	return true;
 }
 
-/*CMD:togdiscord(playerid, params[])
-{
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
 
-    if(systemVariables[DiscordStatus] == 1)
-    {
-		systemVariables[DiscordStatus] = 0;
-
-		SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(4): %s enabled discord logging.", ReturnName(playerid), playerid);
-	}
-	else
-	{
-		systemVariables[DiscordStatus] = 1;
-
-		SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(4): %s disabled discord logging.", ReturnName(playerid), playerid);
-	}
-	return true;
-}*/
 
 CMD:createaccount(playerid, params[])
 {
@@ -4859,11 +4810,6 @@ CMD:setstat(playerid, params[])
 		}
 		case 9:
 		{
-			/*PlayerData[pid][pPUpgrade] = amount;
-
-			SendClientMessageEx(pid, COLOR_YELLOW, "%s set %s's upgrade points to %d", ReturnName(playerid), ReturnName(pid), amount);
-
-			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(3) %s has set %s's Upgrade Points to %d.", ReturnName(playerid), ReturnName(pid), amount);*/
 		}
 		case 10:
 		{
@@ -4897,14 +4843,7 @@ CMD:setstat(playerid, params[])
 
 			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(3) %s has set %s's Radio to %d.", ReturnName(playerid), ReturnName(pid), amount);
 		}
-		/*case 14:
-		{
-			PlayerData[pid][pRChannel] = amount;
 
-			SendClientMessageEx(pid, COLOR_YELLOW, "%s set %s's radio channel to %d", ReturnName(playerid), ReturnName(pid), amount);
-
-			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(3) %s has set %s's radio channel to %d.", ReturnName(playerid), ReturnName(pid), amount);
-		}*/
 		case 15:
 		{
 			PlayerData[pid][pPbiskey] = amount;
@@ -4913,40 +4852,7 @@ CMD:setstat(playerid, params[])
 
 			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(3) %s has set %s's Business Key to %d.", ReturnName(playerid), ReturnName(pid), amount);
 		}
-		/*case 16:
-		{
-		    if((amount < 0 || amount >= MAX_FACTIONS) || (amount != -1 && !FactionData[amount][factionExists]))
-			    return SendErrorMessage(playerid, "Invalid faction ID.");
 
-			if(amount == -1)
-			{
-			    ResetFaction(pid);
-			}
-			else
-			{
-				SetFaction(pid, amount);
-			}
-
-			SendClientMessageEx(pid, COLOR_YELLOW, "%s set %s's faction to %d", ReturnName(playerid), ReturnName(pid), amount);
-
-			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(3) %s has set %s's Faction to %d.", ReturnName(playerid), ReturnName(pid), amount);
-		}
-		case 17:
-		{
-		    new factionid;
-
-			if((factionid = PlayerData[pid][pFaction]) == -1)
-			    return SendErrorMessage(playerid, "Player is not in a faction.");
-
-		    if(amount < 1 || amount > FactionData[factionid][factionRanks])
-		        return SendErrorMessage(playerid, "Invalid rank specified 1-%d.", FactionData[factionid][factionRanks]);
-
-			PlayerData[pid][pFactionRank] = amount;
-
-			SendClientMessageEx(pid, COLOR_YELLOW, "%s set %s's faction rank to %d", ReturnName(playerid), ReturnName(pid), amount);
-
-			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(3) %s has set %s's Rank to %d.", ReturnName(playerid), ReturnName(pid), amount);
-		}*/
 		case 18:
 		{
 			PlayerData[pid][pJob] = amount;
@@ -6060,11 +5966,7 @@ CMD:admin(playerid, params[])
 		}
 	}
 
-    /*if(!systemVariables[DiscordStatus])
-    {
-		format(sgstr, sizeof(sgstr), "*Admin[%d] %s: %s", PlayerData[playerid][pAdmin], AccountName(playerid), params);
-		DCC_SendChannelMessage(adminChatChannel, sgstr);
-	}*/
+
 	return true;
 }
 
@@ -7091,31 +6993,7 @@ stock ShowPlayerLogs(playerid)
 		query[256]
 	;
 
-	/*if(strlen(PlayerLogs[playerid][searchingFilter]) >= 3)
-	{
-	    new str[5];
 
-	    format(str, 5, "%.1s", query);
-
-	    if(!strcmp(str, "s", true))
-	    {
-	        format(query, sizeof(query), "%s", query[1]);
-	    }
-
-	    if(strfind(query, "s", true) == 0)
-	    {
-		    PlayerLogs[playerid][searchingPlayer] = INVALID_PLAYER_ID;
-		    PlayerLogs[playerid][searchingSQLID] = -1;
-		    PlayerLogs[playerid][searchingName][0] = EOS;
-		    PlayerLogs[playerid][searchingFilter][0] = EOS;
-		    PlayerLogs[playerid][searchingOffset] = 0;
-
-			return SendErrorMessage(playerid, "No logs found.");
-	    }
-
-		mysql_format(dbCon, query, sizeof(query), "SELECT `Log`, `Timestamp` FROM `logs_all` WHERE `User` = '%d' AND `Log` LIKE '%e%%' OR `User` = '%d' AND `Log` LIKE '%%%e%%' ORDER BY `ID` DESC LIMIT 22 OFFSET %i", PlayerLogs[playerid][searchingSQLID], PlayerLogs[playerid][searchingFilter], PlayerLogs[playerid][searchingSQLID], PlayerLogs[playerid][searchingFilter], PlayerLogs[playerid][searchingOffset] * 21);
-		mysql_tquery(dbCon, query, "SearchLogsResult", "d", playerid);
-	}*/
 
 	if(strlen(PlayerLogs[playerid][searchingFilter]) >= 3)
 	{
@@ -7474,30 +7352,7 @@ CMD:streamer(playerid, params[])
 	return true;
 }
 
-/*CMD:ecmd(playerid, params[])
-{
-	if(PlayerData[playerid][pAdmin] < 1337)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
 
-	new userid, command[64];
-
-	if(sscanf(params, "us[64]", userid, command))
-		return SendSyntaxMessage(playerid, "/(e)mulatecommand [playerid/PartOfName] [command]");
-
-	if(!IsPlayerConnected(userid))
-		return SendErrorMessage(playerid, "The player you specified isn't connected.");
-
-	if(!SQL_IsLogged(userid))
-		return SendErrorMessage(playerid, "The player you specified isn't logged in.");
-
-	if(!DoesCommandExist(command))
-	    return SendErrorMessage(playerid, "Command doesn't exist.");
-
-    EmulateCommand(userid, command);
-
-    SendClientMessageEx(playerid, COLOR_ORANGE, "\"%s\" called for player %s (%d).", command, ReturnName(userid), userid);
-	return true;
-}*/
 
 CMD:as(playerid, params[])
 {
@@ -7757,14 +7612,7 @@ CMD:serverstats(playerid, params[])
 	return true;
 }
 
-/*CMD:asd(playerid, params[])
-{
-	foreach (new i : Command())
-	{
-		SendClientMessageEx(playerid, -1, "%s", Command_GetName(i));
-	}
-	return true;
-}*/
+
 
 CMD:tickrate(playerid, params[])
 {

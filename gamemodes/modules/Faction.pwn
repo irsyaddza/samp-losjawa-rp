@@ -127,20 +127,6 @@ new SkinsLSPD[][e_FACTION_SKIN_DATA] =
 	{20133, "BMYSWAT1", "African American", "Male", true},
 	{20134, "BMYSWAT2", "African American", "Male", true},
 	{20135, "HMYSWAT1", "Hispanic", "Male", true}
-	/*{296, "UNDERCOVER1", "African American", "Male", true},
-	{311, "UNDERCOVER2", "African American", "Male", true},
-	{79, "UNDERCOVER3", "African American", "Male", true},
-	{307, "UNDERCOVER4", "Hispanic", "Male", true},
-	{184, "UNDERCOVER5", "Hispanic", "Male", true},
-	{114, "UNDERCOVER6", "Hispanic", "Male", true},
-	{29, "UNDERCOVER7", "Caucasian", "Male", true},
-	{242, "UNDERCOVER8", "Caucasian", "Male", true},
-	{308, "UNDERCOVER9", "Caucasian", "Male", true},
-	{308, "UNDERCOVER10", "Asian", "Male", true},
-	{170, "UNDERCOVER11", "Asian", "Male", true},
-	{215, "UNDERCOVER12", "African American", "Female", true},
-	{93, "UNDERCOVER13", "Caucasian", "Female", true},
-	{193, "UNDERCOVER14", "Asian", "Female", true}*/
 };
 
 new SkinsLSSD[][e_FACTION_SKIN_DATA] =

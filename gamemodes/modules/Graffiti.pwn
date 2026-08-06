@@ -392,28 +392,7 @@ FUNX::SprayTimer(playerid, id)
 				}
 				else
 				{
-				    /*new tempstr[256], tempstr2[256], chars;
 
-				    format(tempstr2, 256, "%s", ReturnGraffitiText(GraffitiName[playerid]));
-
-				    chars = strfind(tempstr2, "{", false, SprayIndex[playerid]);
-
-				    if(chars == -1)
-					{
-						SprayIndex[playerid] += 1;
-					}
-					else
-					{
-						if((chars - SprayIndex[playerid]) > 0 && SprayIndex[playerid] != 0)
-						{
-							SprayIndex[playerid] = chars + 8;
-						}
-						else SprayIndex[playerid] += 1;
-					}
-
-					strmid(tempstr, tempstr2, 0, SprayIndex[playerid], 256);
-
-					SendClientMessage(playerid, COLOR_CYAN, tempstr);*/
 
 				    new tempstr[256], tempstr2[256];
 
@@ -561,11 +540,6 @@ ResyncGraffiti(playerid)
 	    if(i == playerid) continue;
 
 		Streamer_Update(i, STREAMER_TYPE_OBJECT);
-
-	    /*if(IsPlayerInRangeOfPoint(i, 30.0, Spray_Data[id][Xpos], Spray_Data[id][Ypos], Spray_Data[id][Zpos]))
-	    {
-	    	Streamer_Update(i, STREAMER_TYPE_OBJECT);
-        }*/
 	}
 }
 

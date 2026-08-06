@@ -1787,20 +1787,7 @@ enum FLY_SPEC_DATA
 
 new PfSpec[MAX_PLAYERS][FLY_SPEC_DATA];
 
-/*enum TEMP_DATA
-{
-	tSkin,
-	Float:tHealth,
-	tInt,
-	tVW,
-	tVehID,
-	tSeatID,
-	Float:tmX,
-	Float:tmY,
-	Float:tmZ
-};
 
-new TempInfo[MAX_PLAYERS][TEMP_DATA];*/
 
 new Float:HouseInteriorss[][] =
 {
@@ -4011,30 +3998,6 @@ FormatNumber(number, const prefix[] = "$")
 	return value;
 }
 
-FormatNumberEx(number, const prefix[] = "{33AA33}${FFFF00}")
-{
-	new
-		value[32],
-		length;
-
-	format(value, sizeof(value), "%d", (number < 0) ? (-number) : (number));
-
-	if((length = strlen(value)) > 3)
-	{
-		for(new i = length, l = 0; --i >= 0; ++l)
-		{
-		    if((l > 0) && (l % 3 == 0)) strins(value, ",", i + 1);
-		}
-	}
-
-	if(prefix[0] != 0)
-	    strins(value, prefix, 0);
-
-	if(number < 0)
-		strins(value, "-", 0);
-
-	return value;
-}
 
 SetPlayerToFacePlayer(playerid, targetid)
 {
@@ -6552,122 +6515,7 @@ ReturnPlayingHours(playerid)
 	return floatround(PlayerData[playerid][pPlayingSeconds] / 3600, floatround_floor);
 }
 
-/*ShowStatistics(playerid, targetid) //STATS OLD VERSION 
-{
-	new factionText[32], rankText[32], factionid = PlayerData[targetid][pFaction];
 
-	if(factionid != -1)
-	{
-	    factionid = FactionData[factionid][factionID];
-
-		format(factionText, 32, "%s", Faction_GetName(targetid)), format(rankText, 32, "%s", Faction_GetRank(targetid));
-	}
-	else factionid = 0, factionText = "Civilian", rankText = "No Rank";
-
-	new houses[64], hcount, keys[64], kcount;
-
-	for(new i = 0; i < MAX_VEHICLE_KEYS; ++i)
-	{
-		if(PlayerData[targetid][pCarKeys][i] != 9999)
-		{
-			if(!kcount)
-				format(keys, sizeof(keys), "%d", CarData[ PlayerData[targetid][pCarKeys][i] ][carVehicle]);
-			else
-				format(keys, sizeof(keys), "%s|%d", keys, CarData[ PlayerData[targetid][pCarKeys][i] ][carVehicle]);
-
-			kcount++;
-		}
-	}
-
-	if(!kcount) format(keys, 64, "None");
-
-	new string[180], primary_weapon[30], secondary_weapon[30], ammo[2];
-
-	if(PlayerData[targetid][pWeapon][1])
-	{
-	    format(primary_weapon, 30, ReturnWeaponName(PlayerData[targetid][pWeapon][1]));
-
-	    ammo[0] = PlayerData[targetid][pAmmunation][1];
-
-	    if(PlayerData[targetid][pWeapon][2])
-	    {
-	        format(secondary_weapon, 30, ReturnWeaponName(PlayerData[targetid][pWeapon][2]));
-
-	        ammo[1] = PlayerData[targetid][pAmmunation][2];
-	    }
-	}
-	else
-	{
-	    if(PlayerData[targetid][pWeapon][2])
-	    {
-	        format(primary_weapon, 30, ReturnWeaponName(PlayerData[targetid][pWeapon][2]));
-
-	        ammo[0] = PlayerData[targetid][pAmmunation][2];
-	    }
-	}
-
-	new playerName[MAX_PLAYER_NAME], currentTime[64];
-	GetPlayerName(targetid, playerName, MAX_PLAYER_NAME);
-
-	format(currentTime, 64, ReturnDateTime());
-
-	format(string, sizeof(string),"|____________________%s [%s]____________________|", playerName, currentTime);
-	SendClientMessage(playerid, COLOR_GREEN, string);
-
-	format(string, sizeof(string), "| Character | Faction:[%d][%s] Rank:[%s] Job:[%s] Ph:[%d]", factionid, factionText, rankText, ReturnJobName(targetid, PlayerData[targetid][pJob]), PlayerData[targetid][pPnumber]);
-	SendClientMessage(playerid, COLOR_STAT1, string);
-
-	SendClientMessage(playerid, COLOR_STAT2, "| Character | Company:[0][Null] Rank:[Unknown]");
-
-	format(string, sizeof(string), "| Inventory | CarParts:[0] Radio:[%s] Melee:[%s]", (PlayerData[targetid][pRadio]) ? ("Yes") : ("No"), ReturnWeaponName(PlayerData[targetid][pWeapon][0]));
-	SendClientMessage(playerid, COLOR_STAT1, string);
-
-	format(string, sizeof(string), "| Weapons | Primary weapon:[%s] Ammo:[%d] Secondary weapon:[%s] Ammo:[%d]", (strlen(primary_weapon)) ? primary_weapon : ("None"), ammo[0], (strlen(secondary_weapon)) ? secondary_weapon : ("None"), ammo[1]);
-	SendClientMessage(playerid, COLOR_STAT2, string);
-
-	format(string, sizeof(string), "| Level | Level:[%d] Experience:[%d/%d] DonatorLevel:[%s]", PlayerData[targetid][pLevel], PlayerData[targetid][pExp], ((PlayerData[targetid][pLevel]) * 4 + 4), ReturnDonateRank(PlayerData[targetid][pDonateRank]));
-	SendClientMessage(playerid, COLOR_STAT1, string);
-
-	format(string, sizeof(string), "| Skill | Health:[%.1f/150.0] Time played:[%d hours]", PlayerData[targetid][pHealth], floatround(PlayerData[targetid][pPlayingSeconds] / 3600, floatround_floor));
-	SendClientMessage(playerid, COLOR_STAT2, string);
-
-	format(string, sizeof(string), "| Money | Cash:[%s] Bank:[%s] Savings:[%s] PayCheck:[%s]", FormatNumber(PlayerData[targetid][pCash]), FormatNumber(PlayerData[targetid][pAccount]), FormatNumber(PlayerData[targetid][pSavingsCollect]), FormatNumber(PlayerData[targetid][pPayCheck]));
-	SendClientMessage(playerid, COLOR_STAT1, string);
-
-	format(string, sizeof(string), "| Other | VehicleKey(s):[%s] SideJob:[%s] RentingCar:[%d]", keys, ReturnJobName(playerid, PlayerData[targetid][pSideJob]), RentCarKey[targetid]);
-	SendClientMessage(playerid, COLOR_STAT2, string);
-
-	format(string, sizeof(string), "| Work | Own Businesses:[%s] Hired Businesses:[None]", PlayerData[playerid][pPbiskey] == -1 ? "None" : ClearGameTextColor(BusinessData[ PlayerData[playerid][pPbiskey] ][bInfo]));
-	SendClientMessage(playerid, COLOR_STAT2, string);
-
-	if(AdminDuty{playerid})
-	{
-		format(string, sizeof(string), "| For Admin | BusinessKey:[%d] Interior:[%d] World:[%d] Local:[%d]", PlayerData[targetid][pPbiskey], PlayerData[targetid][pInterior], PlayerData[targetid][pWorld], PlayerData[targetid][pLocal]);
-		SendClientMessage(playerid, COLOR_STAT1, string);
-
-		foreach (new i : Property)
-		{
-		    if(!PropertyData[i][hOwned]) continue;
-
-			if(PropertyData[i][hOwnerSQLID] == PlayerData[targetid][pID])
-			{
-				if(!hcount)
-					format(houses, sizeof(houses), "%d", i);
-				else
-					format(houses, sizeof(houses), "%s, %d", houses, i);
-
-				hcount++;
-			}
-		}
-
-		format(string, sizeof(string), " Houses owned: %s", houses);
-		SendClientMessage(playerid, COLOR_STAT2, string);
-	}
-
-	format(string, sizeof(string), "|____________________%s [%s]____________________|", playerName, currentTime);
-	SendClientMessage(playerid, COLOR_GREEN, string);
-	return true;
-}*/
 
 ShowStatistics(playerid, targetid)
 {
