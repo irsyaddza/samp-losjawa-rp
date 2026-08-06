@@ -70,7 +70,7 @@ task Server[60000]()
 
 	if(!gShipDeparture)
 	{
-		if((gettime() - gShipTime) > 7200000)
+		if((gettime() - gShipTime) > 7200)
 		{
 			RampsClosed();
 		}
