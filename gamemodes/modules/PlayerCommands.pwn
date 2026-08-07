@@ -8206,14 +8206,109 @@ CMD:tpda(playerid, params[])
 
 CMD:industry(playerid, params[])
 {
-	new i;
+    new subcmd[16], param1;
+    if(sscanf(params, "s[16]D(0)", subcmd, param1))
+    {
+        new i;
+        if((i = Industry_Nearest(playerid)) != -1)
+        {
+            ShowIndustry(playerid, StorageData[i][in_industryid]);
+            return 1;
+        }
 
-	if((i = Industry_Nearest(playerid)) != -1)
-	{
-		ShowIndustry(playerid, StorageData[i][in_industryid]);
-	}
-	return true;
+        if(PlayerData[playerid][pAdmin] >= 3)
+        {
+            SendClientMessage(playerid, COLOR_LIGHTRED, "Usage: /industry [create / list / edit / remove]");
+            SendClientMessage(playerid, COLOR_GRAD2, "Admin Subcommands: create (at pos), list (teleport), edit [id], remove [id]");
+            return 1;
+        }
+
+        return SendClientMessage(playerid, COLOR_LIGHTRED, "You are not near any industry.");
+    }
+
+    if(!strcmp(subcmd, "create", true) || !strcmp(subcmd, "add", true))
+    {
+        if(PlayerData[playerid][pAdmin] < 3)
+            return SendClientMessage(playerid, COLOR_LIGHTRED, "You are not authorized to use this command.");
+
+        new listStr[2048];
+        listStr[0] = EOS;
+        for(new idx = 0; idx < 31; idx++)
+        {
+            format(listStr, sizeof(listStr), "%s[%d] %s\n", listStr, idx, g_arrIndustryNames[idx]);
+        }
+        Dialog_Show(playerid, IndWizardStep1, DIALOG_STYLE_LIST, "Create Industry - Step 1: Select Complex", listStr, "Select", "Cancel");
+        return 1;
+    }
+    else if(!strcmp(subcmd, "list", true))
+    {
+        if(PlayerData[playerid][pAdmin] < 3)
+            return SendClientMessage(playerid, COLOR_LIGHTRED, "You are not authorized to use this command.");
+
+        new count = 0, listStr[2048];
+        listStr[0] = EOS;
+
+        foreach (new slot : Industry)
+        {
+            format(listStr, sizeof(listStr), "%s[IndID: %d] %s - %s (%s) - Stock: %d/%d\n",
+                listStr,
+                StorageData[slot][in_id],
+                g_arrIndustryNames[StorageData[slot][in_industryid]],
+                g_arrIndItemProperNames[StorageData[slot][in_item]],
+                (StorageData[slot][in_trading_type] == 0) ? ("For Sale") : ("Wanted"),
+                StorageData[slot][in_stock], StorageData[slot][in_maximum]
+            );
+            count++;
+        }
+
+        if(count == 0)
+            return SendClientMessage(playerid, COLOR_LIGHTRED, "No industry points currently exist.");
+
+        Dialog_Show(playerid, IndustryListDialog, DIALOG_STYLE_LIST, "Industry Points List (Click to Teleport)", listStr, "Teleport", "Close");
+        return 1;
+    }
+    else if(!strcmp(subcmd, "edit", true))
+    {
+        if(PlayerData[playerid][pAdmin] < 3)
+            return SendClientMessage(playerid, COLOR_LIGHTRED, "You are not authorized to use this command.");
+
+        if(param1 <= 0)
+            return SendClientMessage(playerid, COLOR_LIGHTRED, "Usage: /industry edit [industry point id]");
+
+        new slot = Storage_FindByDBID(param1);
+        if(slot == -1) return SendClientMessageEx(playerid, COLOR_LIGHTRED, "Industry point ID %d not found.", param1);
+
+        SetPVarInt(playerid, "IndEdit_DBID", param1);
+        Dialog_Show(playerid, IndustryEditMenu, DIALOG_STYLE_LIST, "Edit Industry Point", "1. Change Position to My Location\n2. Change Price ($)\n3. Change Stock & Maximum Capacity", "Select", "Cancel");
+        return 1;
+    }
+    else if(!strcmp(subcmd, "remove", true) || !strcmp(subcmd, "delete", true))
+    {
+        if(PlayerData[playerid][pAdmin] < 3)
+            return SendClientMessage(playerid, COLOR_LIGHTRED, "You are not authorized to use this command.");
+
+        if(param1 <= 0)
+            return SendClientMessage(playerid, COLOR_LIGHTRED, "Usage: /industry remove [industry point id]");
+
+        if(Storage_Remove(param1))
+        {
+            SendAdminAlert(COLOR_YELLOW, 3, "AdmWarn(3) %s has removed Industry Point ID %d.", ReturnName(playerid), param1);
+            SendClientMessageEx(playerid, COLOR_WHITE, "Industry Point ID %d successfully removed.", param1);
+        }
+        else
+        {
+            SendClientMessageEx(playerid, COLOR_LIGHTRED, "Industry Point ID %d not found.", param1);
+        }
+        return 1;
+    }
+    else
+    {
+        SendClientMessage(playerid, COLOR_LIGHTRED, "Usage: /industry [create / list / edit / remove]");
+    }
+    return 1;
 }
+
+
 
 CMD:cargo(playerid, params[])
 {

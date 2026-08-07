@@ -1,4 +1,5 @@
 	new obj_mat;
+	new tmpobjid;
 	
 	// LSPD HQ Interior
 	obj_mat = CreateDynamicObject(19377, 2131.360595, -2165.274902, 929.458740, 0.000000, 0.000000, 0.000000, 0, 2, -1, 300.00, 300.00);
@@ -7131,90 +7132,426 @@
 	CreateDynamicObject(7019, 255.92146, 2018.68555, 20.20536,   0.00000, 0.00000, 90.12001);
 	CreateDynamicObject(10183, 316.14630, 1995.41406, 16.68111,   0.00000, 0.00000, -43.79998);
 
-	// Cargo Ship Ocean Docks
- 	CreateDynamicObject(3574, 2766.07422, -2343.62280, 15.32000,   0.00000, 0.00000, 180.00000);
-	CreateDynamicObject(3574, 2784.20313, -2339.03198, 15.32000,   0.00000, 0.00000, 180.00000);
-	CreateDynamicObject(3574, 2777.94604, -2353.44263, 15.32000,   0.00000, 0.00000, -90.00000);
-	CreateDynamicObject(3620, 2811.82642, -2337.77661, 25.60000,   0.00000, 0.00000, 90.00000);
-	CreateDynamicObject(3573, 2767.30200, -2361.99194, 15.32000,   0.00000, 0.00000, 180.00000);
-	CreateDynamicObject(8168, 2778.80908, -2365.26611, 14.47350,   0.00000, 0.00000, 16.60000);
-
-	CreateDynamicObject(997, 2810.6557, -2333.0559, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2336.4272, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2339.8183, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2343.2580, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2346.5666, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2349.9460, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2353.2963, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2356.7460, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2360.1179, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2363.5085, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2366.9194, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2370.2993, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2373.6801, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2377.1003, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2380.5322, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2383.9028, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2393.7619, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2397.1435, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2400.4636, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2403.7536, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2407.0339, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2410.3041, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2413.6250, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2416.9355, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2420.2348, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2423.5439, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2426.8264, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2430.1384, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2433.5578, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2443.5703, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2446.9309, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2450.2619, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2453.5625, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2456.8833, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2460.2421, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2463.6833, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2467.0842, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2470.5249, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2477.3752, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2473.9455, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2480.8051, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2484.5053, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2488.1062, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2491.5168, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2495.0566, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2498.5961, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2502.1064, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2505.7080, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2509.2277, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2512.8386, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2516.4602, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2519.9389, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2523.4487, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2526.9499, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2530.5593, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2534.0993, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2537.7204, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2541.3017, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2544.9025, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2548.4328, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2551.8347, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2555.3164, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2558.6860, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2562.0368, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-	CreateDynamicObject(997, 2810.6557, -2565.3854, 12.6369, 0.0000, 0.0000, 90.0000); //lhouse_barrier3
-
-	CreateDynamicObject(1215, 2810.5329, -2384.1938, 13.1770, 0.0000, 0.0000, 0.0000); //BollardLight3
-	CreateDynamicObject(1215, 2810.5329, -2386.2158, 13.1770, 0.0000, 0.0000, 0.0000); //BollardLight3
-	CreateDynamicObject(1215, 2810.5329, -2388.1938, 13.1770, 0.0000, 0.0000, 0.0000); //BollardLight3
-	CreateDynamicObject(1215, 2810.5329, -2390.2158, 13.1770, 0.0000, 0.0000, 0.0000); //BollardLight3
-
-	CreateDynamicObject(1215, 2810.5329, -2433.9448, 13.1770, 0.0000, 0.0000, 0.0000); //BollardLight3
-	CreateDynamicObject(1215, 2810.5329, -2435.9565, 13.1770, 0.0000, 0.0000, 0.0000); //BollardLight3
-	CreateDynamicObject(1215, 2810.5329, -2437.9448, 13.1770, 0.0000, 0.0000, 0.0000); //BollardLight3
-	CreateDynamicObject(1215, 2810.5329, -2439.9565, 13.1770, 0.0000, 0.0000, 0.0000); //BollardLight3
-	CreateDynamicObject(19279, 2808.5371, -2392.8281, 12.8371, 0.0000, 0.0000, -90.0000); //LCSmallLight1
+	// Cargo Ship Ocean Docks 
+	tmpobjid = CreateObject(18762, 2758.723632, -2367.413574, 14.772814, 0.000000, 0.000007, 0.000000, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2758.723632, -2372.406982, 14.772814, 0.000000, 0.000007, 0.000000, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2758.723632, -2373.565917, 14.772814, 0.000000, 0.000000, 0.000000, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2758.723632, -2378.559326, 14.772814, 0.000000, 0.000000, 0.000000, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(10149, 2758.371582, -2376.067138, 15.012811, 0.000000, 0.000000, 90.000000, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 4829, "airport_las", "Bow_Loadingbay_Door", 0x00000000);
+	tmpobjid = CreateObject(18762, 2759.199218, -2378.559326, 12.808052, 0.000000, 105.199928, 0.000000, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2759.199218, -2373.568847, 12.808052, 0.000000, 105.199928, 0.000000, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2758.733642, -2376.037109, 16.772817, 90.000000, 0.000000, 0.000000, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(19475, 2759.242187, -2378.451660, 14.452814, 90.000000, 0.000000, 0.000000, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2759.242187, -2378.451660, 15.452814, 90.000000, 0.000000, 0.000000, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2759.242187, -2378.451660, 16.452814, 90.000000, 0.000000, 0.000000, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2759.242187, -2373.431640, 14.452814, 90.000000, 0.000000, 0.000000, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2759.242187, -2373.431640, 15.452814, 90.000000, 0.000000, 0.000000, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2759.242187, -2373.431640, 16.452814, 90.000000, 0.000000, 0.000000, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2759.244873, -2376.070556, 16.452798, 0.000000, 0.000000, 0.000000, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}01", 0, 100, "Engravers MT", 199, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(10149, 2758.371582, -2369.914794, 15.012811, 0.000007, 0.000000, 89.999977, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 4829, "airport_las", "Bow_Loadingbay_Door", 0x00000000);
+	tmpobjid = CreateObject(18762, 2759.199218, -2372.406982, 12.808052, 0.000000, 105.199935, 0.000000, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2759.199218, -2367.416503, 12.808052, 0.000000, 105.199935, 0.000000, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2758.733642, -2369.884765, 16.772817, 89.999992, 89.999992, -89.999992, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(19475, 2759.242187, -2372.299316, 14.452814, 89.999992, 89.999992, -89.999992, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2759.242187, -2372.299316, 15.452814, 89.999992, 89.999992, -89.999992, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2759.242187, -2372.299316, 16.452814, 89.999992, 89.999992, -89.999992, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2759.242187, -2367.279296, 14.452814, 89.999992, 89.999992, -89.999992, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2759.242187, -2367.279296, 15.452814, 89.999992, 89.999992, -89.999992, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2759.242187, -2367.279296, 16.452814, 89.999992, 89.999992, -89.999992, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2759.244873, -2369.918212, 16.452798, 0.000000, 0.000007, 0.000000, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}02", 0, 100, "Engravers MT", 199, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(18762, 2758.723632, -2361.281494, 14.772814, 0.000000, 0.000022, 0.000000, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2758.723632, -2366.274902, 14.772814, 0.000000, 0.000022, 0.000000, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(10149, 2758.371582, -2363.782714, 15.012811, 0.000022, 0.000000, 89.999931, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 4829, "airport_las", "Bow_Loadingbay_Door", 0x00000000);
+	tmpobjid = CreateObject(18762, 2759.199218, -2366.274902, 12.808052, 0.000000, 105.199951, 0.000000, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2759.199218, -2361.284423, 12.808052, 0.000000, 105.199951, 0.000000, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2758.733642, -2363.752685, 16.772817, 89.999992, 90.000000, -89.999969, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(19475, 2759.242187, -2366.167236, 14.452814, 89.999992, 90.000000, -89.999969, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2759.242187, -2366.167236, 15.452814, 89.999992, 90.000000, -89.999969, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2759.242187, -2366.167236, 16.452814, 89.999992, 90.000000, -89.999969, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2759.242187, -2361.147216, 14.452814, 89.999992, 90.000000, -89.999969, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2759.242187, -2361.147216, 15.452814, 89.999992, 90.000000, -89.999969, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2759.242187, -2361.147216, 16.452814, 89.999992, 90.000000, -89.999969, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2759.244873, -2363.786132, 16.452798, 0.000000, 0.000022, 0.000000, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}03", 0, 100, "Engravers MT", 199, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(18762, 2758.723632, -2355.150146, 14.772814, 0.000000, 0.000029, 0.000000, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2758.723632, -2360.143554, 14.772814, 0.000000, 0.000029, 0.000000, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(10149, 2758.371582, -2357.651367, 15.012811, 0.000029, 0.000000, 89.999908, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 4829, "airport_las", "Bow_Loadingbay_Door", 0x00000000);
+	tmpobjid = CreateObject(18762, 2759.199218, -2360.143554, 12.808052, 0.000000, 105.199958, 0.000000, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2759.199218, -2355.153076, 12.808052, 0.000000, 105.199958, 0.000000, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2758.733642, -2357.621337, 16.772817, 89.999992, 90.000015, -89.999961, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(19475, 2759.242187, -2360.035888, 14.452814, 89.999992, 90.000015, -89.999961, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2759.242187, -2360.035888, 15.452814, 89.999992, 90.000015, -89.999961, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2759.242187, -2360.035888, 16.452814, 89.999992, 90.000015, -89.999961, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2759.242187, -2355.015869, 14.452814, 89.999992, 90.000015, -89.999961, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2759.242187, -2355.015869, 15.452814, 89.999992, 90.000015, -89.999961, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2759.242187, -2355.015869, 16.452814, 89.999992, 90.000015, -89.999961, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2759.244873, -2357.654785, 16.452798, 0.000000, 0.000029, 0.000000, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}04", 0, 100, "Engravers MT", 199, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(18762, 2791.904785, -2346.723876, 14.772814, -0.000007, 0.000045, -89.999946, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2792.745605, -2346.723876, 14.772814, -0.000007, 0.000045, -89.999946, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2765.893554, -2346.723876, 14.772814, -0.000007, 0.000014, -89.999946, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2766.494140, -2346.723876, 14.772814, -0.000007, 0.000014, -89.999946, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2778.640869, -2346.723876, 14.772814, -0.000007, 0.000022, -89.999946, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2773.647460, -2346.723876, 14.772814, -0.000007, 0.000022, -89.999946, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2772.488525, -2346.723876, 14.772814, -0.000007, 0.000014, -89.999946, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2767.495117, -2346.723876, 14.772814, -0.000007, 0.000014, -89.999946, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(10149, 2769.987304, -2346.371826, 15.012811, 0.000014, 0.000007, -0.000014, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 4829, "airport_las", "Bow_Loadingbay_Door", 0x00000000);
+	tmpobjid = CreateObject(18762, 2767.495117, -2347.199462, 12.808052, -0.000007, 105.199943, -89.999946, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2772.485595, -2347.199462, 12.808052, -0.000007, 105.199943, -89.999946, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2770.017333, -2346.733886, 16.772817, 89.999992, 44.999996, -134.999923, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(19475, 2767.602783, -2347.242431, 14.452814, 89.999992, 44.999996, -134.999923, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2767.602783, -2347.242431, 15.452814, 89.999992, 44.999996, -134.999923, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2767.602783, -2347.242431, 16.452814, 89.999992, 44.999996, -134.999923, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2772.622802, -2347.242431, 14.452814, 89.999992, 44.999996, -134.999923, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2772.622802, -2347.242431, 15.452814, 89.999992, 44.999996, -134.999923, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2772.622802, -2347.242431, 16.452814, 89.999992, 44.999996, -134.999923, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2769.983886, -2347.245117, 16.452798, -0.000007, 0.000014, -89.999946, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}05", 0, 100, "Engravers MT", 199, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(10149, 2776.139648, -2346.371826, 15.012811, 0.000022, 0.000007, -0.000037, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 4829, "airport_las", "Bow_Loadingbay_Door", 0x00000000);
+	tmpobjid = CreateObject(18762, 2773.647460, -2347.199462, 12.808052, -0.000007, 105.199951, -89.999946, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2778.637939, -2347.199462, 12.808052, -0.000007, 105.199951, -89.999946, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2776.169677, -2346.733886, 16.772817, 89.999992, 45.000003, -134.999908, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(19475, 2773.755126, -2347.242431, 14.452814, 89.999992, 45.000003, -134.999908, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2773.755126, -2347.242431, 15.452814, 89.999992, 45.000003, -134.999908, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2773.755126, -2347.242431, 16.452814, 89.999992, 45.000003, -134.999908, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2778.775146, -2347.242431, 14.452814, 89.999992, 45.000003, -134.999908, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2778.775146, -2347.242431, 15.452814, 89.999992, 45.000003, -134.999908, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2778.775146, -2347.242431, 16.452814, 89.999992, 45.000003, -134.999908, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2776.136230, -2347.245117, 16.452798, -0.000007, 0.000022, -89.999946, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}06", 0, 100, "Engravers MT", 199, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(18762, 2784.772949, -2346.723876, 14.772814, -0.000007, 0.000037, -89.999946, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2779.779541, -2346.723876, 14.772814, -0.000007, 0.000037, -89.999946, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(10149, 2782.271728, -2346.371826, 15.012811, 0.000037, 0.000007, -0.000082, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 4829, "airport_las", "Bow_Loadingbay_Door", 0x00000000);
+	tmpobjid = CreateObject(18762, 2779.779541, -2347.199462, 12.808052, -0.000007, 105.199966, -89.999946, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2784.770019, -2347.199462, 12.808052, -0.000007, 105.199966, -89.999946, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2782.301757, -2346.733886, 16.772817, 89.999992, 45.000034, -134.999908, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(19475, 2779.887207, -2347.242431, 14.452814, 89.999992, 45.000034, -134.999908, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2779.887207, -2347.242431, 15.452814, 89.999992, 45.000034, -134.999908, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2779.887207, -2347.242431, 16.452814, 89.999992, 45.000034, -134.999908, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2784.907226, -2347.242431, 14.452814, 89.999992, 45.000034, -134.999908, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2784.907226, -2347.242431, 15.452814, 89.999992, 45.000034, -134.999908, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2784.907226, -2347.242431, 16.452814, 89.999992, 45.000034, -134.999908, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2782.268310, -2347.245117, 16.452798, -0.000007, 0.000037, -89.999946, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}07", 0, 100, "Engravers MT", 199, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(18762, 2790.904296, -2346.723876, 14.772814, -0.000007, 0.000045, -89.999946, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2785.910888, -2346.723876, 14.772814, -0.000007, 0.000045, -89.999946, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(10149, 2788.403076, -2346.371826, 15.012811, 0.000045, 0.000007, -0.000105, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 4829, "airport_las", "Bow_Loadingbay_Door", 0x00000000);
+	tmpobjid = CreateObject(18762, 2785.910888, -2347.199462, 12.808052, -0.000007, 105.199974, -89.999946, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2790.901367, -2347.199462, 12.808052, -0.000007, 105.199974, -89.999946, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2788.433105, -2346.733886, 16.772817, 89.999992, 45.000049, -134.999908, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(19475, 2786.018554, -2347.242431, 14.452814, 89.999992, 45.000049, -134.999908, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2786.018554, -2347.242431, 15.452814, 89.999992, 45.000049, -134.999908, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2786.018554, -2347.242431, 16.452814, 89.999992, 45.000049, -134.999908, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2791.038574, -2347.242431, 14.452814, 89.999992, 45.000049, -134.999908, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2791.038574, -2347.242431, 15.452814, 89.999992, 45.000049, -134.999908, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2791.038574, -2347.242431, 16.452814, 89.999992, 45.000049, -134.999908, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}ggggg", 0, 140, "Webdings", 180, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(19475, 2788.399658, -2347.245117, 16.452798, -0.000007, 0.000045, -89.999946, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}08", 0, 100, "Engravers MT", 199, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(18764, 2789.268066, -2492.668701, 14.773584, 0.000000, 0.000000, 45.000000, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 16640, "a51", "metpat64", 0x00000000);
+	tmpobjid = CreateObject(19475, 2791.442138, -2490.373535, 16.572799, 0.000000, 0.000000, 45.000000, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}201", 0, 130, "Quartz MS", 199, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(18762, 2792.558837, -2492.204833, 14.766531, 0.000000, 0.000000, 45.000000, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18764, 2789.268066, -2485.632812, 14.773584, 0.000010, 0.000010, 44.999984, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 16640, "a51", "metpat64", 0x00000000);
+	tmpobjid = CreateObject(18762, 2790.444824, -2490.090820, 16.766542, 90.000000, 0.000000, 45.000000, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2789.749511, -2489.395507, 13.786529, 0.000000, 0.000000, 45.000000, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(19475, 2791.442138, -2483.337646, 16.572799, 0.000010, 0.000010, 44.999984, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}202", 0, 130, "Quartz MS", 199, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(18762, 2792.558837, -2485.168945, 14.766531, 0.000010, 0.000010, 44.999984, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2790.444824, -2483.054931, 16.766542, 89.999992, 139.902694, -94.902671, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2789.749511, -2482.359619, 13.786529, 0.000010, 0.000010, 44.999984, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18764, 2789.268066, -2478.612548, 14.773584, 0.000016, 0.000016, 44.999984, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 16640, "a51", "metpat64", 0x00000000);
+	tmpobjid = CreateObject(19475, 2791.442138, -2476.317382, 16.572799, 0.000016, 0.000016, 44.999984, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}203", 0, 130, "Quartz MS", 199, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(18762, 2792.558837, -2478.148681, 14.766531, 0.000016, 0.000016, 44.999984, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2790.444824, -2476.034667, 16.766542, 89.999992, 137.455841, -92.455795, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2789.749511, -2475.339355, 13.786529, 0.000016, 0.000016, 44.999984, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18764, 2789.268066, -2471.599609, 14.773584, 0.000021, 0.000021, 44.999984, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 16640, "a51", "metpat64", 0x00000000);
+	tmpobjid = CreateObject(19475, 2791.442138, -2469.304443, 16.572799, 0.000021, 0.000021, 44.999984, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}204", 0, 130, "Quartz MS", 199, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(18762, 2792.558837, -2471.135742, 14.766531, 0.000021, 0.000021, 44.999984, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2790.444824, -2469.021728, 16.766542, 89.999992, 136.228500, -91.228439, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2789.749511, -2468.326416, 13.786529, 0.000021, 0.000021, 44.999984, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18764, 2789.268066, -2457.603515, 14.773584, 0.000032, 0.000032, 44.999984, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 16640, "a51", "metpat64", 0x00000000);
+	tmpobjid = CreateObject(18764, 2789.268066, -2464.645751, 14.773584, 0.000026, 0.000026, 44.999984, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 16640, "a51", "metpat64", 0x00000000);
+	tmpobjid = CreateObject(19475, 2791.442138, -2462.350585, 16.572799, 0.000026, 0.000026, 44.999984, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}205", 0, 130, "Quartz MS", 199, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(18762, 2792.558837, -2464.181884, 14.766531, 0.000026, 0.000026, 44.999984, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2790.444824, -2462.067871, 16.766542, 89.999992, 135.614349, -90.614273, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2789.749511, -2461.372558, 13.786529, 0.000026, 0.000026, 44.999984, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(19475, 2791.442138, -2455.308349, 16.572799, 0.000032, 0.000032, 44.999984, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}206", 0, 130, "Quartz MS", 199, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(18762, 2792.558837, -2457.139648, 14.766531, 0.000032, 0.000032, 44.999984, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2790.444824, -2455.025634, 16.766542, 89.999992, 135.307220, -90.307128, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2789.749511, -2454.330322, 13.786529, 0.000032, 0.000032, 44.999984, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18764, 2789.268066, -2450.582275, 14.773584, 0.000048, 0.000048, 44.999984, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 16640, "a51", "metpat64", 0x00000000);
+	tmpobjid = CreateObject(19475, 2791.442138, -2448.287109, 16.572799, 0.000048, 0.000048, 44.999984, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}207", 0, 130, "Quartz MS", 199, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(18762, 2792.558837, -2450.118408, 14.766531, 0.000048, 0.000048, 44.999984, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2790.444824, -2448.004394, 16.766542, 89.999992, 135.038513, -90.038352, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2789.749511, -2447.309082, 13.786529, 0.000048, 0.000048, 44.999984, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18764, 2789.268066, -2443.589599, 14.773584, 0.000053, 0.000053, 44.999984, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 16640, "a51", "metpat64", 0x00000000);
+	tmpobjid = CreateObject(19475, 2791.442138, -2441.294433, 16.572799, 0.000053, 0.000053, 44.999984, 1000.00); 
+	SetObjectMaterialText(tmpobjid, "{FFFF00}208", 0, 130, "Quartz MS", 199, 1, 0x00000000, 0x00000000, 0);
+	tmpobjid = CreateObject(18762, 2792.558837, -2443.125732, 14.766531, 0.000053, 0.000053, 44.999984, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2790.444824, -2441.011718, 16.766542, 89.999992, 135.019332, -90.019157, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2789.749511, -2440.316406, 13.786529, 0.000053, 0.000053, 44.999984, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	tmpobjid = CreateObject(18762, 2789.076904, -2439.643798, 13.786529, 0.000053, 0.000053, 44.999984, 1000.00); 
+	SetObjectMaterial(tmpobjid, 0, 18641, "flashlight1", "metalblack1-2", 0x00000000);
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	tmpobjid = CreateObject(3623, 2750.764648, -2365.787353, 16.992803, 0.000000, 0.000000, 0.000000, 1000.00); 
+	tmpobjid = CreateObject(3620, 2811.826416, -2337.776611, 25.600000, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(2974, 2756.285156, -2380.540283, 12.622812, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2333.055908, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2336.427246, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2339.818359, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2343.258056, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2346.566650, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2349.946044, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2353.296386, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2356.746093, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2360.117919, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2363.508544, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2366.919433, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2370.299316, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2373.680175, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2377.100341, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2380.532226, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2383.902832, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2393.761962, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2397.143554, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2400.463623, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2403.753662, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2407.033935, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2410.304199, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2413.625000, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2416.935546, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2420.234863, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2423.543945, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2426.826416, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2430.138427, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2433.557861, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2443.570312, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2446.930908, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2450.261962, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2453.562500, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2456.883300, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2460.242187, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2463.683349, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2467.084228, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2470.524902, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2477.375244, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2473.945556, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2480.805175, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2484.505371, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2488.106201, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2491.516845, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2495.056640, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2498.596191, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2502.106445, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2505.708007, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2509.227783, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2512.838623, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2516.460205, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2519.938964, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2523.448730, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2526.949951, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2530.559326, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2534.099365, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2537.720458, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2541.301757, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2544.902587, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2548.432861, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2551.834716, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2555.316406, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2558.686035, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2562.036865, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(997, 2810.655761, -2565.385498, 12.636898, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(1215, 2810.532958, -2384.193847, 13.177000, 0.000000, 0.000000, 0.000000, 1000.00); 
+	tmpobjid = CreateObject(1215, 2810.532958, -2386.215820, 13.177000, 0.000000, 0.000000, 0.000000, 1000.00); 
+	tmpobjid = CreateObject(1215, 2810.532958, -2388.193847, 13.177000, 0.000000, 0.000000, 0.000000, 1000.00); 
+	tmpobjid = CreateObject(1215, 2810.532958, -2390.215820, 13.177000, 0.000000, 0.000000, 0.000000, 1000.00); 
+	tmpobjid = CreateObject(1215, 2810.532958, -2433.944824, 13.177000, 0.000000, 0.000000, 0.000000, 1000.00); 
+	tmpobjid = CreateObject(1215, 2810.532958, -2435.956542, 13.177000, 0.000000, 0.000000, 0.000000, 1000.00); 
+	tmpobjid = CreateObject(1215, 2810.532958, -2437.944824, 13.177000, 0.000000, 0.000000, 0.000000, 1000.00); 
+	tmpobjid = CreateObject(1215, 2810.532958, -2439.956542, 13.177000, 0.000000, 0.000000, 0.000000, 1000.00); 
+	tmpobjid = CreateObject(19279, 2808.537109, -2392.828125, 12.837100, 0.000000, 0.000000, -90.000000, 1000.00); 
+	tmpobjid = CreateObject(2939, 2761.831542, -2376.076904, 12.616042, -8.299999, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(2939, 2761.831542, -2369.924560, 12.616042, -8.299990, 0.000000, 89.999977, 1000.00); 
+	tmpobjid = CreateObject(2939, 2761.831542, -2363.792480, 12.616042, -8.299974, 0.000000, 89.999931, 1000.00); 
+	tmpobjid = CreateObject(2939, 2761.831542, -2357.661132, 12.616042, -8.299964, 0.000000, 89.999908, 1000.00); 
+	tmpobjid = CreateObject(2973, 2759.501220, -2353.185791, 12.632811, 0.000000, 0.000000, 0.000000, 1000.00); 
+	tmpobjid = CreateObject(3623, 2779.326171, -2338.744140, 16.992803, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(2939, 2769.977539, -2349.831787, 12.616042, -8.299983, 0.000007, -0.000014, 1000.00); 
+	tmpobjid = CreateObject(2939, 2776.129882, -2349.831787, 12.616042, -8.299972, 0.000007, -0.000037, 1000.00); 
+	tmpobjid = CreateObject(2939, 2782.261962, -2349.831787, 12.616042, -8.299956, 0.000007, -0.000081, 1000.00); 
+	tmpobjid = CreateObject(2939, 2788.393310, -2349.831787, 12.616042, -8.299946, 0.000007, -0.000104, 1000.00); 
+	tmpobjid = CreateObject(3623, 2781.765869, -2482.277832, 16.992803, 0.000000, 0.000000, 0.000000, 1000.00); 
+	tmpobjid = CreateObject(3623, 2781.765869, -2452.697021, 16.992803, 0.000000, 0.000000, 0.000000, 1000.00); 
+	tmpobjid = CreateObject(5422, 2791.031738, -2490.922851, 15.149588, 0.000000, 0.000000, 45.000000, 1000.00); 
+	tmpobjid = CreateObject(5422, 2791.031738, -2483.886962, 15.149588, 0.000010, 0.000010, 44.999984, 1000.00); 
+	tmpobjid = CreateObject(5422, 2791.031738, -2476.866699, 15.149588, 0.000016, 0.000016, 44.999984, 1000.00); 
+	tmpobjid = CreateObject(5422, 2791.031738, -2469.853759, 15.149588, 0.000021, 0.000021, 44.999984, 1000.00); 
+	tmpobjid = CreateObject(5422, 2791.031738, -2462.899902, 15.149588, 0.000026, 0.000026, 44.999984, 1000.00); 
+	tmpobjid = CreateObject(5422, 2791.031738, -2455.857666, 15.149588, 0.000032, 0.000032, 44.999984, 1000.00); 
+	tmpobjid = CreateObject(5422, 2791.031738, -2448.836425, 15.149588, 0.000048, 0.000048, 44.999984, 1000.00); 
+	tmpobjid = CreateObject(5422, 2791.031738, -2441.843750, 15.149588, 0.000053, 0.000053, 44.999984, 1000.00); 
+	tmpobjid = CreateObject(3627, 2784.276611, -2415.441162, 16.334444, 0.000000, 0.000000, 0.000000, 1000.00); 
+	tmpobjid = CreateObject(13025, 2781.591552, -2405.221435, 15.607556, 0.000000, 0.000000, 0.000000, 1000.00); 
+	tmpobjid = CreateObject(13025, 2781.591552, -2425.753417, 15.607556, 0.000000, 0.000000, 0.000000, 1000.00); 
+	tmpobjid = CreateObject(3465, 2783.501708, -2420.625244, 13.985000, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(3465, 2779.528808, -2420.625244, 13.985000, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(3465, 2781.488525, -2420.625244, 13.985000, 0.000000, 0.000000, 90.000000, 1000.00); 
+	tmpobjid = CreateObject(3465, 2783.501708, -2410.212158, 13.985000, 0.000007, 0.000000, 89.999977, 1000.00); 
+	tmpobjid = CreateObject(3465, 2779.528808, -2410.212158, 13.985000, 0.000007, 0.000000, 89.999977, 1000.00); 
+	tmpobjid = CreateObject(3465, 2781.488525, -2410.212158, 13.985000, 0.000007, 0.000000, 89.999977, 1000.00); 
+	tmpobjid = CreateObject(3465, 2783.501708, -2430.892089, 13.985000, 0.000015, 0.000000, 89.999954, 1000.00); 
+	tmpobjid = CreateObject(3465, 2779.528808, -2430.892089, 13.985000, 0.000015, 0.000000, 89.999954, 1000.00); 
+	tmpobjid = CreateObject(3465, 2781.488525, -2430.892089, 13.985000, 0.000015, 0.000000, 89.999954, 1000.00); 
+	tmpobjid = CreateObject(3465, 2783.501708, -2400.040039, 13.985000, 0.000022, 0.000000, 89.999931, 1000.00); 
+	tmpobjid = CreateObject(3465, 2779.528808, -2400.040039, 13.985000, 0.000022, 0.000000, 89.999931, 1000.00); 
+	tmpobjid = CreateObject(3465, 2781.488525, -2400.040039, 13.985000, 0.000022, 0.000000, 89.999931, 1000.00); 
+	tmpobjid = CreateObject(8843, 2777.270996, -2396.930664, 12.657554, 0.000000, 0.000000, -90.000000, 1000.00); 
+	tmpobjid = CreateObject(8843, 2778.372070, -2415.263671, 12.667554, 0.000000, 0.000000, -90.000000, 1000.00); 
+	tmpobjid = CreateObject(8843, 2780.143310, -2433.711181, 12.667554, 0.000000, 0.000000, -90.000000, 1000.00); 
+	tmpobjid = CreateObject(3627, 2747.224121, -2452.414306, 16.334444, 0.000000, 0.000000, 0.000000, 1000.00); 
+	tmpobjid = CreateObject(1290, 2753.853759, -2475.832275, 17.936553, 0.000000, 0.000000, 0.000000, 1000.00); 
+	tmpobjid = CreateObject(1290, 2753.853759, -2429.588867, 17.936553, 0.000000, 0.000000, 0.000000, 1000.00);
 
 	// Bone Country
 	CreateDynamicObject(1432, -181.94054, 1084.08777, 18.84509,   0.00000, 0.00000, -21.48000);
