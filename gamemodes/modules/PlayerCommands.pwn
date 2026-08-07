@@ -11726,9 +11726,17 @@ CMD:setbuycomp(playerid, params[])
 	{
 		StorageData[compid][in_pickup] = CreateDynamicPickup(1318, 23, x, y, z, 0, 0);
 
-		new msg[128];
-		format(msg, sizeof(msg), "[{E5FF00}%s{FFFFFF}]\nStorage: %d / %d\nPrice: %s / unit", GetBusinessCargoDesc(StorageData[compid][in_item]), StorageData[compid][in_stock], StorageData[compid][in_maximum], FormatNumber(StorageData[compid][in_price]));
-		StorageData[compid][in_label] = CreateDynamic3DTextLabel(msg, -1, x, y, z, 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, -1, -1, -1, 100.0);
+		new msg[256];
+		format(msg, sizeof(msg),
+			"[{A4D247}%s{FFFFFF}] - %s\nCommodity: {E5FF00}%s{FFFFFF}\nPrice: %s / unit\nStock: %d / %d\n{AAAAAA}[IndID: %d | StorageID: %d]",
+			g_arrIndustryNames[StorageData[compid][in_industryid]],
+			(StorageData[compid][in_trading_type] == 0) ? ("{A4D247}For Sale{FFFFFF}") : ("{CD324D}Wanted{FFFFFF}"),
+			g_arrIndItemProperNames[StorageData[compid][in_item]],
+			FormatNumber(StorageData[compid][in_price]),
+			StorageData[compid][in_stock], StorageData[compid][in_maximum],
+			StorageData[compid][in_industryid], StorageData[compid][in_id]
+		);
+		StorageData[compid][in_label] = CreateDynamic3DTextLabel(msg, COLOR_WHITE, x, y, z + 0.8, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
 	}
 
 	new query[256];

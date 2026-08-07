@@ -644,8 +644,16 @@ public Industry_Load()
 			{
 				StorageData[i][in_pickup] = CreateDynamicPickup(1318, 23, StorageData[i][in_posx], StorageData[i][in_posy], StorageData[i][in_posz], 0, 0);
 
-				format(msg, 128, "[{E5FF00}%s{FFFFFF}]\nStorage: %d / %d\nPrice: %s / unit", GetBusinessCargoDesc(StorageData[i][in_item]), StorageData[i][in_stock], StorageData[i][in_maximum], FormatNumber(StorageData[i][in_price]));
-				StorageData[i][in_label] = CreateDynamic3DTextLabel(msg, -1, StorageData[i][in_posx], StorageData[i][in_posy], StorageData[i][in_posz], 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, -1, -1, -1, 100.0);
+				format(msg, sizeof(msg),
+					"[{A4D247}%s{FFFFFF}] - %s\nCommodity: {E5FF00}%s{FFFFFF}\nPrice: %s / unit\nStock: %d / %d\n{AAAAAA}[IndID: %d | StorageID: %d]",
+					g_arrIndustryNames[StorageData[i][in_industryid]],
+					(StorageData[i][in_trading_type] == 0) ? ("{A4D247}For Sale{FFFFFF}") : ("{CD324D}Wanted{FFFFFF}"),
+					g_arrIndItemProperNames[StorageData[i][in_item]],
+					FormatNumber(StorageData[i][in_price]),
+					StorageData[i][in_stock], StorageData[i][in_maximum],
+					StorageData[i][in_industryid], StorageData[i][in_id]
+				);
+				StorageData[i][in_label] = CreateDynamic3DTextLabel(msg, COLOR_WHITE, StorageData[i][in_posx], StorageData[i][in_posy], StorageData[i][in_posz] + 0.8, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
 			}
             total++;
 

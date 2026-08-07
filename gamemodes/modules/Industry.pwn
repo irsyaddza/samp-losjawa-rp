@@ -780,16 +780,23 @@ UpdateStorage(cargoid)
 	{
 		if(!IsValidDynamicPickup(StorageData[cargoid][in_pickup])) StorageData[cargoid][in_pickup] = CreateDynamicPickup(1318, 23, StorageData[cargoid][in_posx], StorageData[cargoid][in_posy], StorageData[cargoid][in_posz] + 0.3, 0, 0);
 
+		format(sgstr, sizeof(sgstr),
+			"[{A4D247}%s{FFFFFF}] - %s\nCommodity: {E5FF00}%s{FFFFFF}\nPrice: %s / unit\nStock: %d / %d\n{AAAAAA}[IndID: %d | StorageID: %d]",
+			g_arrIndustryNames[StorageData[cargoid][in_industryid]],
+			(StorageData[cargoid][in_trading_type] == 0) ? ("{A4D247}For Sale{FFFFFF}") : ("{CD324D}Wanted{FFFFFF}"),
+			g_arrIndItemProperNames[StorageData[cargoid][in_item]],
+			FormatNumber(StorageData[cargoid][in_price]),
+			StorageData[cargoid][in_stock], StorageData[cargoid][in_maximum],
+			StorageData[cargoid][in_industryid], StorageData[cargoid][in_id]
+		);
+
 		if(!IsValidDynamic3DTextLabel(StorageData[cargoid][in_label]))
 		{
-			format(sgstr, 128, "[{E5FF00}%s{FFFFFF}]\nStorage: %d / %d\nPrice: %s / unit", g_arrIndItemNames[StorageData[cargoid][in_item]], StorageData[cargoid][in_stock], StorageData[cargoid][in_maximum], FormatNumber(StorageData[cargoid][in_price]));
-			StorageData[cargoid][in_label] = CreateDynamic3DTextLabel(sgstr, -1, StorageData[cargoid][in_posx], StorageData[cargoid][in_posy], StorageData[cargoid][in_posz] + 0.3, 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, -1, -1, -1, 100.0);
-            return 1;
+			StorageData[cargoid][in_label] = CreateDynamic3DTextLabel(sgstr, COLOR_WHITE, StorageData[cargoid][in_posx], StorageData[cargoid][in_posy], StorageData[cargoid][in_posz] + 0.8, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+			return 1;
 		}
 
-		format(sgstr, 128, "[{E5FF00}%s{FFFFFF}]\nStorage: %d / %d\nPrice: %s / unit", g_arrIndItemNames[StorageData[cargoid][in_item]], StorageData[cargoid][in_stock], StorageData[cargoid][in_maximum], FormatNumber(StorageData[cargoid][in_price]));
-        UpdateDynamic3DTextLabelText(StorageData[cargoid][in_label], -1, sgstr);
-
+		UpdateDynamic3DTextLabelText(StorageData[cargoid][in_label], COLOR_WHITE, sgstr);
 	}
 	else
 	{
