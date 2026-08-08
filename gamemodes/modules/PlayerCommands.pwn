@@ -15620,9 +15620,10 @@ public ShowPlayerVehicleList(playerid)
 		return SendServerMessage(playerid, "You don't have any vehicles.");
 	
 	static dialog_text[2048];
-	new model, color1, model_name[64], ui_tag[15];
+	new model, color1, model_name[64], ui_tag[15], plate[30], car_sql_id;
+	new Float:fuel;
 	
-	dialog_text[0] = EOS;
+	format(dialog_text, sizeof(dialog_text), "Slot\tModel Name\tLicense Plate\tStatus\tFuel\n");
 	PCarPage[playerid] = 1;
 	PCarType[playerid] = 0;
 
@@ -15633,20 +15634,46 @@ public ShowPlayerVehicleList(playerid)
 
 	for(new i = 0; i < rows && i < 50; ++i)
 	{
-		cache_get_value_name_int(i, "carID", VehicleCache[playerid][i]);
+		cache_get_value_name_int(i, "carID", car_sql_id);
+		VehicleCache[playerid][i] = car_sql_id;
 		cache_get_value_name_int(i, "carModel", model);
 		cache_get_value_name_int(i, "carColor1", color1);
 		cache_get_value_name(i, "carName", ui_tag, 15);
+		cache_get_value_name(i, "carPlate", plate, 30);
+		cache_get_value_name_float(i, "carFuel", fuel);
 		
 		if(strlen(ui_tag) >= 3)
 			format(model_name, sizeof(model_name), "%s", ui_tag);
 		else
 			format(model_name, sizeof(model_name), "%s", ReturnVehicleModelNameEx(model));
 		
-		format(dialog_text, sizeof(dialog_text), "%s%s\n", dialog_text, model_name);
+		new bool:isSpawned = false;
+		new Float:curFuel = fuel;
+		new Float:maxFuel = GetVehicleDataFuel(model);
+		foreach(new v : sv_playercar)
+		{
+			if(CarData[v][carID] == car_sql_id && IsValidVehicle(CarData[v][carVehicle]))
+			{
+				isSpawned = true;
+				curFuel = CoreVehicles[CarData[v][carVehicle]][vehFuel];
+				break;
+			}
+		}
+		new fuelPercent = (maxFuel > 0.0) ? floatround((curFuel / maxFuel) * 100.0) : 0;
+		if(fuelPercent < 0) fuelPercent = 0;
+		else if(fuelPercent > 100) fuelPercent = 100;
+		
+		format(dialog_text, sizeof(dialog_text), "%sSlot %d\t%s\t%s\t%s\t%d%%\n", 
+			dialog_text, 
+			i + 1, 
+			model_name, 
+			strlen(plate) > 0 ? plate : "None",
+			isSpawned ? "{00FF00}Spawned{FFFFFF}" : "{FF0000}Stored{FFFFFF}",
+			fuelPercent
+		);
 	}
 	
-	Dialog_Show(playerid, PlayerVehicles, DIALOG_STYLE_LIST, "My Vehicles", dialog_text, "Select", "Close");
+	Dialog_Show(playerid, PlayerVehicles, DIALOG_STYLE_TABLIST_HEADERS, "My Vehicles Garage", dialog_text, "Select", "Back");
 	return true;
 }
 
@@ -18678,60 +18705,50 @@ stock ShowPlayerVehMainDialog(playerid)
 	if(IsBrutallyWounded(playerid))
 		return SendClientMessage(playerid, COLOR_LIGHTRED, "You're brutally wounded, or dead. No /vehicle right now.");
 
-	new string[1024], line[256];
+	new string[1024], title[128], line[256];
 	
-	// Option 0
-	strcat(string, "1. Manage Spawned Vehicles (Graphic GUI)\n");
-	
-	// Option 1
-	new nearest_veh = IsPlayerInAnyVehicle(playerid) ? GetPlayerVehicleID(playerid) : Car_Nearest(playerid);
-	new nearest_carid = (nearest_veh != -1 && nearest_veh != 0) ? Car_GetID(nearest_veh) : -1;
-		
-	if(nearest_carid != -1 && HasVehicleKey(playerid, nearest_carid, true))
-	{
-		format(line, sizeof(line), "2. Lock/Unlock: %s [State: %s]\n", ReturnVehicleModelName(CarData[nearest_carid][carModel]), CarData[nearest_carid][carLocked] ? "{FF0000}Locked{FFFFFF}" : "{00FF00}Unlocked{FFFFFF}");
-		strcat(string, line);
-	}
-	else
-	{
-		strcat(string, "2. Lock/Unlock nearest/current vehicle\n");
-	}
-	
-	// Option 2
+	// Live Current Vehicle Context Status Header in Dialog Title (if inside a vehicle)
 	new current_veh = GetPlayerVehicleID(playerid);
 	new current_carkey = GetVehicleKeyID(playerid, current_veh);
 	if(current_veh != 0 && current_carkey != -1)
 	{
-		strcat(string, "3. View Current Vehicle Stats\n");
+		new carid = PlayerData[playerid][pCarKeys][current_carkey];
+		new Float:vehHealth;
+		GetVehicleHealth(current_veh, vehHealth);
+		
+		format(title, sizeof(title), "Vehicle Menu - %s [Lock: %s | Fuel: %.0f gal | HP: %.0f]",
+			ReturnVehicleModelName(CarData[carid][carModel]),
+			CarData[carid][carLocked] ? "Locked" : "Unlocked",
+			CarData[carid][carFuel],
+			vehHealth
+		);
 	}
 	else
 	{
-		strcat(string, "{C0C0C0}3. View Current Vehicle Stats (Must be inside){FFFFFF}\n");
+		format(title, sizeof(title), "Vehicle System Dashboard");
 	}
+
+	// 6 Organized Categories (No Emojis, Perfect 1:1 Listitem Indexing)
+	strcat(string, "1. My Vehicles Garage\n");
 	
-	// Option 3
-	if(current_veh != 0 && current_carkey != -1)
+	new nearest_veh = IsPlayerInAnyVehicle(playerid) ? GetPlayerVehicleID(playerid) : Car_Nearest(playerid);
+	new nearest_carid = (nearest_veh != -1 && nearest_veh != 0) ? Car_GetID(nearest_veh) : -1;
+	if(nearest_carid != -1 && HasVehicleKey(playerid, nearest_carid, true))
 	{
-		strcat(string, "4. Park Current Vehicle\n");
+		format(line, sizeof(line), "2. Lock / Unlock Vehicle [%s]\n", CarData[nearest_carid][carLocked] ? "{FF0000}Locked{FFFFFF}" : "{00FF00}Unlocked{FFFFFF}");
+		strcat(string, line);
 	}
 	else
 	{
-		strcat(string, "{C0C0C0}4. Park Current Vehicle (Must be inside){FFFFFF}\n");
+		strcat(string, "2. Lock / Unlock Nearest Vehicle\n");
 	}
 	
-	// Option 4
-	strcat(string, "5. Locate Spawned Vehicles (GPS/Find)\n");
-	
-	// Option 5
-	strcat(string, "6. Vehicle Keys Administration\n");
-	
-	// Option 6
-	strcat(string, "7. Vehicle Settings (Lights, Name Tag)\n");
-	
-	// Option 7
-	strcat(string, "8. Sell or Scrap Vehicle");
-	
-	Dialog_Show(playerid, PlayerVehMain, DIALOG_STYLE_LIST, "Vehicle Menu", string, "Select", "Cancel");
+	strcat(string, "3. Key & Access Management\n");
+	strcat(string, "4. Parking, Towing & GPS\n");
+	strcat(string, "5. Upgrades, Tuning & Settings\n");
+	strcat(string, "6. Vehicle Commerce & Trading");
+
+	Dialog_Show(playerid, PlayerVehMain, DIALOG_STYLE_LIST, title, string, "Select", "Cancel");
 	return 1;
 }
 
@@ -18741,7 +18758,7 @@ Dialog:PlayerVehMain(playerid, response, listitem, inputtext[])
 	
 	switch(listitem)
 	{
-		case 0: // Manage Spawned Vehicles (Graphic GUI -> Dialog List)
+		case 0: // 1. My Vehicles Garage (/v list)
 		{
 			if(UsingMDC{playerid})
 				return SendServerMessage(playerid, "You can't do this right now.");
@@ -18750,10 +18767,10 @@ Dialog:PlayerVehMain(playerid, response, listitem, inputtext[])
 				return SendServerMessage(playerid, "You do not own any vehicles.");
 
 			new query[256];
-			mysql_format(dbCon, query, sizeof(query), "SELECT `carID`, `carModel`, `carColor1`, `carColor2`, `carName`, `carUItag` FROM `cars` WHERE `carOwner` = '%d' ORDER BY `carDate` ASC LIMIT 50", PlayerData[playerid][pID]);
+			mysql_format(dbCon, query, sizeof(query), "SELECT `carID`, `carModel`, `carColor1`, `carColor2`, `carName`, `carUItag`, `carPlate`, `carFuel`, `carHealth` FROM `cars` WHERE `carOwner` = '%d' ORDER BY `carDate` ASC LIMIT 50", PlayerData[playerid][pID]);
 			mysql_tquery(dbCon, query, "ShowPlayerVehicleList", "d", playerid);
 		}
-		case 1: // Lock/Unlock
+		case 1: // 2. Lock/Unlock
 		{
 			new vehicleid = IsPlayerInAnyVehicle(playerid) ? GetPlayerVehicleID(playerid) : Car_Nearest(playerid);
 			if(vehicleid != 0 && vehicleid != -1)
@@ -18790,7 +18807,6 @@ Dialog:PlayerVehMain(playerid, response, listitem, inputtext[])
 				}
 				else
 				{
-					// Temp/Non-player vehicle locking
 					new engine, lights, alarm, doors, bonnet, boot, objective;
 					GetVehicleParamsEx(vehicleid, engine, lights, alarm, doors, bonnet, boot, objective);
 					if(doors != 1)
@@ -18811,81 +18827,28 @@ Dialog:PlayerVehMain(playerid, response, listitem, inputtext[])
 			}
 			ShowPlayerVehMainDialog(playerid);
 		}
-		case 2: // View Current Vehicle Stats
+		case 2: // 3. Key & Access Management
+		{
+			Dialog_Show(playerid, PlayerVehKeysAdmin, DIALOG_STYLE_LIST, "Key & Access Management", 
+				"1. View My Spare Keys (/v keys)\n\
+				2. Give Spare Key Copy (/v dup)\n\
+				3. Drop Spare Key (/v dropkey)", 
+				"Select", "Back");
+		}
+		case 3: // 4. Parking, Towing & GPS
+		{
+			Dialog_Show(playerid, PlayerVehParkingMenu, DIALOG_STYLE_LIST, "Parking, Towing & GPS", 
+				"1. Locate Vehicle on GPS Checkpoint (/v find)\n\
+				2. Buy Current Location as Spawn Spot ($2,500 / Free) (/v buypark)\n\
+				3. Request Towing Service ($2,000) (/v tow)\n\
+				4. View All Vehicle Spawn Locations (/v location)", 
+				"Select", "Back");
+		}
+		case 4: // 5. Upgrades, Tuning & Settings
 		{
 			new vehicleid = GetPlayerVehicleID(playerid);
 			new carkey = GetVehicleKeyID(playerid, vehicleid);
-			if(vehicleid != 0 && carkey != -1)
-			{
-				new carid = PlayerData[playerid][pCarKeys][carkey];
-				Car_PrintStats(playerid, carid);
-			}
-			else
-			{
-				SendErrorMessage(playerid, "You must be inside your vehicle.");
-				ShowPlayerVehMainDialog(playerid);
-			}
-		}
-		case 3: // Park Current Vehicle
-		{
-			new vehicleid = GetPlayerVehicleID(playerid);
-			new carkey = GetVehicleKeyID(playerid, vehicleid);
-			if(vehicleid != 0 && carkey != -1)
-			{
-				new carid = PlayerData[playerid][pCarKeys][carkey];
-				if(IsPlayerInRangeOfPoint(playerid, 4.0, CarData[carid][carPos][0], CarData[carid][carPos][1], CarData[carid][carPos][2]))
-				{
-					SendClientMessage(playerid, COLOR_GREEN, "Vehicle parked.");
-					RemoveVehicleKey(playerid, carid);
-					SaveVehicleDamageID(carid);
-					Car_SaveID(carid);
-					Car_DespawnEx(carid);
-				}
-				else
-				{
-					SendClientMessage(playerid, COLOR_LIGHTRED, "You have to be at vehicle's parking place.");
-					SendClientMessage(playerid, 0xFF00FFFF, "Follow the marker.");
-					SetPlayerCheckpoint(playerid, CarData[carid][carPos][0], CarData[carid][carPos][1], CarData[carid][carPos][2], 4.0);
-					gPlayerCheckpointStatus[playerid] = CHECKPOINT_VEH;
-				}
-			}
-			else
-			{
-				SendErrorMessage(playerid, "You must be inside your vehicle.");
-				ShowPlayerVehMainDialog(playerid);
-			}
-		}
-		case 4: // Locate Spawned Vehicles (GPS/Find)
-		{
-			new string[512], count = 0;
-			new key[32];
-			for(new i = 0; i < MAX_VEHICLE_KEYS; ++i)
-			{
-				if(PlayerData[playerid][pCarKeys][i] != 9999)
-				{
-					new carid = PlayerData[playerid][pCarKeys][i];
-					format(string, sizeof(string), "%sSlot %d: %s (VehID: %d)\n", string, i + 1, ReturnVehicleModelName(CarData[carid][carModel]), CarData[carid][carVehicle]);
-					format(key, sizeof(key), "Vfind_KeyIdx_%d", count);
-					SetPVarInt(playerid, key, i);
-					count++;
-				}
-			}
-			if(!count)
-			{
-				SendErrorMessage(playerid, "You do not have any spawned vehicles.");
-				return ShowPlayerVehMainDialog(playerid);
-			}
-			Dialog_Show(playerid, PlayerVehGPS, DIALOG_STYLE_LIST, "Locate Spawned Vehicles", string, "Locate", "Back");
-		}
-		case 5: // Vehicle Keys Administration
-		{
-			Dialog_Show(playerid, PlayerVehKeysAdmin, DIALOG_STYLE_LIST, "Keys Administration", "1. View my spare keys\n2. Duplicate key (Give copy)\n3. Drop spare key", "Select", "Back");
-		}
-		case 6: // Vehicle Settings (Lights, Name Tag)
-		{
-			new vehicleid = GetPlayerVehicleID(playerid);
-			new carkey = GetVehicleKeyID(playerid, vehicleid);
-			new string[256];
+			new string[512];
 			
 			if(vehicleid != 0)
 			{
@@ -18901,21 +18864,27 @@ Dialog:PlayerVehMain(playerid, response, listitem, inputtext[])
 				new carid = PlayerData[playerid][pCarKeys][carkey];
 				if(strlen(CarData[carid][carUItag]) >= 3)
 				{
-					format(string, sizeof(string), "%s2. Remove Name Tag: '%s'\n", string, CarData[carid][carUItag]);
+					format(string, sizeof(string), "%s2. Remove Custom Name Tag: '%s'\n", string, CarData[carid][carUItag]);
 				}
 				else
 				{
-					strcat(string, "2. Set Custom Name Tag\n");
+					strcat(string, "2. Set Custom Name Tag (/v UItag)\n");
 				}
+				strcat(string, "3. Vehicle Upgrades & Mechanical Specs (/v upgrade)\n");
+				strcat(string, "4. Register License Plate ($100) (/v register)\n");
+				strcat(string, "5. Unregister Plate (Black Market) (/v unregister)");
 			}
 			else
 			{
 				strcat(string, "{C0C0C0}2. Set Custom Name Tag (Must be inside your vehicle){FFFFFF}\n");
+				strcat(string, "3. Vehicle Upgrades Info & Pricing (/v upgrade)\n");
+				strcat(string, "4. Register License Plate ($100) (/v register)\n");
+				strcat(string, "5. Unregister Plate (Black Market) (/v unregister)");
 			}
 			
-			Dialog_Show(playerid, PlayerVehSettings, DIALOG_STYLE_LIST, "Vehicle Settings", string, "Select", "Back");
+			Dialog_Show(playerid, PlayerVehSettings, DIALOG_STYLE_LIST, "Upgrades, Tuning & Settings", string, "Select", "Back");
 		}
-		case 7: // Sell or Scrap
+		case 5: // 6. Vehicle Commerce & Trading
 		{
 			new vehicleid = GetPlayerVehicleID(playerid);
 			new carkey = GetVehicleKeyID(playerid, vehicleid);
@@ -18930,16 +18899,17 @@ Dialog:PlayerVehMain(playerid, response, listitem, inputtext[])
 				}
 				else
 				{
-					strcat(string, "1. Sell to Player\n");
+					strcat(string, "1. Sell to Player (/v sell)\n");
 				}
-				strcat(string, "2. Scrap Vehicle (Sell to State)");
+				strcat(string, "2. Scrap Vehicle to Debris (/v scrap)");
 			}
 			else
 			{
-				strcat(string, "{C0C0C0}1. Sell to Player (Must be inside){FFFFFF}\n");
-				strcat(string, "{C0C0C0}2. Scrap Vehicle (Must be inside){FFFFFF}");
+				strcat(string, "{C0C0C0}1. Sell to Player (Must be inside vehicle){FFFFFF}\n");
+				strcat(string, "{C0C0C0}2. Scrap Vehicle to Debris (Must be inside vehicle){FFFFFF}");
 			}
-			Dialog_Show(playerid, PlayerVehSellScrap, DIALOG_STYLE_LIST, "Sell or Scrap Vehicle", string, "Select", "Back");
+			
+			Dialog_Show(playerid, PlayerVehSellScrap, DIALOG_STYLE_LIST, "Vehicle Commerce & Trading", string, "Select", "Back");
 		}
 	}
 	return 1;
@@ -19185,48 +19155,87 @@ Dialog:PlayerVehKeysDropList(playerid, response, listitem, inputtext[])
 	return 1;
 }
 
+Dialog:PlayerVehParkingMenu(playerid, response, listitem, inputtext[])
+{
+	if(!response) return ShowPlayerVehMainDialog(playerid);
+	switch(listitem)
+	{
+		case 0: // 1. Locate Vehicle on GPS Checkpoint (/v find)
+		{
+			Command_ReProcess(playerid, "v find", 0);
+		}
+		case 1: // 2. Buy Current Location as Spawn Spot ($2,500 / Free) (/v buypark)
+		{
+			Command_ReProcess(playerid, "v buypark yes", 0);
+		}
+		case 2: // 3. Request Towing Service ($2,000) (/v tow)
+		{
+			Command_ReProcess(playerid, "v tow", 0);
+		}
+		case 3: // 4. View All Vehicle Spawn Locations (/v location)
+		{
+			Command_ReProcess(playerid, "v location", 0);
+		}
+	}
+	return 1;
+}
+
 Dialog:PlayerVehSettings(playerid, response, listitem, inputtext[])
 {
 	if(!response) return ShowPlayerVehMainDialog(playerid);
 	
-	if(listitem == 0) // Toggle Lights
+	switch(listitem)
 	{
-		new vehicleid = GetPlayerVehicleID(playerid);
-		if(vehicleid == 0)
+		case 0: // Toggle Lights
 		{
-			SendErrorMessage(playerid, "You must be inside your vehicle.");
-			return ShowPlayerVehMainDialog(playerid);
-		}
-		if(!IsEngineVehicle(vehicleid))
-		{
-			SendErrorMessage(playerid, "This vehicle doesn't have lights.");
-			return ShowPlayerVehMainDialog(playerid);
-		}
-		SetLightStatus(vehicleid, !GetLightStatus(vehicleid));
-		SendClientMessage(playerid, COLOR_GREEN, "Vehicle lights toggled.");
-		ShowPlayerVehMainDialog(playerid);
-	}
-	else if(listitem == 1) // Name Tag
-	{
-		new vehicleid = GetPlayerVehicleID(playerid);
-		new carkey = GetVehicleKeyID(playerid, vehicleid);
-		if(vehicleid == 0 || carkey == -1)
-		{
-			SendErrorMessage(playerid, "You must be inside your vehicle.");
-			return ShowPlayerVehMainDialog(playerid);
-		}
-		
-		new carid = PlayerData[playerid][pCarKeys][carkey];
-		if(strlen(CarData[carid][carUItag]) >= 3)
-		{
-			SendClientMessageEx(playerid, COLOR_YELLOW3, "SERVER: Removed the tag '%s' from your %s.", CarData[carid][carUItag], ReturnVehicleName(vehicleid));
-			CarData[carid][carUItag][0] = EOS;
-			Car_SaveID(carid);
+			Command_ReProcess(playerid, "v lights", 0);
 			ShowPlayerVehMainDialog(playerid);
 		}
-		else
+		case 1: // Custom Name Tag
 		{
-			Dialog_Show(playerid, PlayerVehSetTag, DIALOG_STYLE_INPUT, "Set Custom Name Tag", "Enter a name tag for your vehicle (3-15 characters):\nThis tag will display on the vehicle menu GUI.", "Set", "Back");
+			new vehicleid = GetPlayerVehicleID(playerid);
+			new carkey = GetVehicleKeyID(playerid, vehicleid);
+			if(vehicleid == 0 || carkey == -1)
+			{
+				SendErrorMessage(playerid, "You must be inside your vehicle.");
+				return ShowPlayerVehMainDialog(playerid);
+			}
+			
+			new carid = PlayerData[playerid][pCarKeys][carkey];
+			if(strlen(CarData[carid][carUItag]) >= 3 || strlen(CarData[carid][carName]) >= 3)
+			{
+				SendClientMessageEx(playerid, COLOR_YELLOW3, "SERVER: Removed custom name '%s' from your %s.", strlen(CarData[carid][carUItag]) >= 3 ? CarData[carid][carUItag] : CarData[carid][carName], ReturnVehicleName(vehicleid));
+				CarData[carid][carUItag][0] = EOS;
+				CarData[carid][carName][0] = EOS;
+				Car_SaveID(carid);
+				ShowPlayerVehMainDialog(playerid);
+			}
+			else
+			{
+				Dialog_Show(playerid, PlayerVehSetTag, DIALOG_STYLE_INPUT, "Set Custom Name Tag", "Enter a custom name tag for your vehicle (3-15 characters):", "Set", "Back");
+			}
+		}
+		case 2: // Vehicle Upgrades & Mechanical Specs
+		{
+			new vehicleid = GetPlayerVehicleID(playerid);
+			new carkey = GetVehicleKeyID(playerid, vehicleid);
+			if(vehicleid != 0 && carkey != -1)
+			{
+				new carid = PlayerData[playerid][pCarKeys][carkey];
+				Car_PrintStats(playerid, carid);
+			}
+			else
+			{
+				Command_ReProcess(playerid, "v stats", 0);
+			}
+		}
+		case 3: // Register License Plate
+		{
+			Command_ReProcess(playerid, "v register", 0);
+		}
+		case 4: // Unregister Plate
+		{
+			Command_ReProcess(playerid, "v unregister", 0);
 		}
 	}
 	return 1;
@@ -19247,12 +19256,13 @@ Dialog:PlayerVehSetTag(playerid, response, listitem, inputtext[])
 	new carid = PlayerData[playerid][pCarKeys][carkey];
 	if(strlen(inputtext) < 3 || strlen(inputtext) > 15)
 	{
-		return Dialog_Show(playerid, PlayerVehSetTag, DIALOG_STYLE_INPUT, "Set Custom Name Tag", "{FF0000}Tag must be between 3 and 15 characters!{FFFFFF}\nEnter a name tag for your vehicle:", "Set", "Back");
+		return Dialog_Show(playerid, PlayerVehSetTag, DIALOG_STYLE_INPUT, "Set Custom Name Tag", "{FF0000}Tag must be between 3 and 15 characters!{FFFFFF}\nEnter a custom name tag for your vehicle:", "Set", "Back");
 	}
 	
 	format(CarData[carid][carUItag], 15, "%s", inputtext);
+	format(CarData[carid][carName], 15, "%s", inputtext);
 	Car_SaveID(carid);
-	SendClientMessageEx(playerid, COLOR_YELLOW3, "SERVER: Added tag '%s' to your %s. It'll appear in the /v get UI.", inputtext, ReturnVehicleName(vehicleid));
+	SendClientMessageEx(playerid, COLOR_YELLOW3, "SERVER: Vehicle custom name updated to '%s'.", inputtext);
 	ShowPlayerVehMainDialog(playerid);
 	return 1;
 }
@@ -19281,16 +19291,7 @@ Dialog:PlayerVehSellScrap(playerid, response, listitem, inputtext[])
 	}
 	else if(listitem == 1) // Scrap Vehicle
 	{
-		new scrap_price = VehicleData[GetVehicleModel(vehicleid) - 400][c_scrap];
-		if(!scrap_price)
-		{
-			SendErrorMessage(playerid, "Incorrect vehicle price, contact an administrator.");
-			return ShowPlayerVehMainDialog(playerid);
-		}
-		
-		new prompt[256];
-		format(prompt, sizeof(prompt), "Are you sure you want to scrap this vehicle?\nYou will receive %s from the debris.", FormatNumber(scrap_price));
-		Dialog_Show(playerid, PlayerVehScrapConfirm, DIALOG_STYLE_MSGBOX, "Scrap Vehicle", prompt, "Scrap", "Back");
+		Command_ReProcess(playerid, "v scrap yes", 0);
 	}
 	return 1;
 }

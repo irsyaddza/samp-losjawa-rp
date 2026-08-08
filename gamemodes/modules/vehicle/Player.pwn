@@ -591,6 +591,7 @@ Car_DespawnEx(carid)
 {
     if(Iter_Contains(sv_playercar, carid))
 	{
+		Car_SaveID(carid);
 	    CoreVehicles[CarData[carid][carVehicle]][vehicleCarID] = -1;
 
 		for(new x = 0; x != MAX_CAR_WEAPONS; ++x)
@@ -928,7 +929,10 @@ Car_SaveID(carid)
 
 	if(carid != -1)
 	{
-        CarData[carid][carFuel] = CoreVehicles[CarData[carid][carVehicle]][vehFuel];
+		if(CarData[carid][carVehicle] != 0)
+		{
+			CarData[carid][carFuel] = CoreVehicles[CarData[carid][carVehicle]][vehFuel];
+		}
 
 		SaveSlotVehicleDamage(carid);
 

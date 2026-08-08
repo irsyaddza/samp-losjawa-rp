@@ -453,23 +453,34 @@ ShowHudV2Vehicle(playerid, vehicleid)
     if(HV2_Speed[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_Speed[playerid]);
     if(HV2_Mph[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_Mph[playerid]);
     if(HV2_Miles[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_Miles[playerid]);
-    if(HV2_FuelPercent[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_FuelPercent[playerid]);
 
-    // Fuel State
+    // Fuel State (matching /fuel gallons)
     new Float:maxFuel = GetVehicleDataFuel(GetVehicleModel(vehicleid));
-    new fuelPercent = (maxFuel > 0.0) ? floatround((CoreVehicles[vehicleid][vehFuel] / maxFuel) * 100.0) : 0;
-    if(fuelPercent < 0) fuelPercent = 0;
-    else if(fuelPercent > 100) fuelPercent = 100;
+    new Float:curFuel = CoreVehicles[vehicleid][vehFuel];
+    new fuelVal = floatround(curFuel);
+    if(fuelVal < 0) fuelVal = 0;
 
-    if(fuelPercent <= 20)
+    new Float:fuelPercent = (maxFuel > 0.0) ? (curFuel / maxFuel) * 100.0 : 0.0;
+
+    // Show background icon sprite FIRST so text draws on top
+    if(fuelPercent <= 20.0)
     {
         if(HV2_FuelRed[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_FuelRed[playerid]);
         if(HV2_FuelNorm[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_FuelNorm[playerid]);
     }
     else
     {
-        if(HV2_FuelNorm[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_FuelRed[playerid]);
+        if(HV2_FuelRed[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_FuelRed[playerid]);
         if(HV2_FuelNorm[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_FuelNorm[playerid]);
+    }
+
+    // Show text string SECOND (on top of sprite, matching /fuel without percent)
+    new fuelStr[16];
+    format(fuelStr, sizeof(fuelStr), "%d", fuelVal);
+    if(HV2_FuelPercent[playerid] != PlayerText:INVALID_TEXT_DRAW)
+    {
+        PlayerTextDrawSetString(playerid, HV2_FuelPercent[playerid], fuelStr);
+        PlayerTextDrawShow(playerid, HV2_FuelPercent[playerid]);
     }
 
     // Lights state
@@ -679,26 +690,31 @@ UpdateHudV2Player(playerid, vehicleid)
             PlayerTextDrawSetString(playerid, HV2_Miles[playerid], milesStr);
             PlayerTextDrawShow(playerid, HV2_Miles[playerid]);
 
-            // Fuel
+            // Fuel (matching /fuel gallons)
             new Float:maxFuel = GetVehicleDataFuel(vehModel);
-            new fuelPercent = (maxFuel > 0.0) ? floatround((CoreVehicles[vehicleid][vehFuel] / maxFuel) * 100.0) : 0;
-            if(fuelPercent < 0) fuelPercent = 0;
-            else if(fuelPercent > 100) fuelPercent = 100;
+            new Float:curFuel = CoreVehicles[vehicleid][vehFuel];
+            new fuelVal = floatround(curFuel);
+            if(fuelVal < 0) fuelVal = 0;
 
-            new fuelStr[16];
-            format(fuelStr, sizeof(fuelStr), "%d", fuelPercent);
-            PlayerTextDrawSetString(playerid, HV2_FuelPercent[playerid], fuelStr);
-            PlayerTextDrawShow(playerid, HV2_FuelPercent[playerid]);
+            new Float:fuelPercent = (maxFuel > 0.0) ? (curFuel / maxFuel) * 100.0 : 0.0;
 
-            if(fuelPercent <= 20)
+            if(fuelPercent <= 20.0)
             {
-                PlayerTextDrawShow(playerid, HV2_FuelRed[playerid]);
-                PlayerTextDrawHide(playerid, HV2_FuelNorm[playerid]);
+                if(HV2_FuelRed[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_FuelRed[playerid]);
+                if(HV2_FuelNorm[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_FuelNorm[playerid]);
             }
             else
             {
-                PlayerTextDrawHide(playerid, HV2_FuelRed[playerid]);
-                PlayerTextDrawShow(playerid, HV2_FuelNorm[playerid]);
+                if(HV2_FuelRed[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawHide(playerid, HV2_FuelRed[playerid]);
+                if(HV2_FuelNorm[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawShow(playerid, HV2_FuelNorm[playerid]);
+            }
+
+            new fuelStr[16];
+            format(fuelStr, sizeof(fuelStr), "%d", fuelVal);
+            if(HV2_FuelPercent[playerid] != PlayerText:INVALID_TEXT_DRAW)
+            {
+                PlayerTextDrawSetString(playerid, HV2_FuelPercent[playerid], fuelStr);
+                PlayerTextDrawShow(playerid, HV2_FuelPercent[playerid]);
             }
 
             // Lights

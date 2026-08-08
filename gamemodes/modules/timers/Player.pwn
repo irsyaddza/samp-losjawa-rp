@@ -592,6 +592,7 @@ ptask Players[1000](i)
 
 				if(carid != -1)
 				{
+					CarData[carid][carFuel] = CoreVehicles[vehicleid][vehFuel];
 					CarData[carid][carMileage] += vehicleSpeed * 0.621371192 / 3600.0;
 					CarData[carid][carEngineL] -= 0.000016;
 					CarData[carid][carBatteryL] -= 0.000016;

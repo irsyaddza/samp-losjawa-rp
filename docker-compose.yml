@@ -48,6 +48,8 @@ services:
     volumes:
       - samp_logs:/samp/logs
       - samp_scriptfiles:/samp/scriptfiles
+      - ./gamemodes:/samp/gamemodes
+      - ./roleplay.amx:/samp/roleplay.amx
     environment:
       MYSQL_HOST: mysql
       MYSQL_USER: ${MYSQL_USER:-samp}
