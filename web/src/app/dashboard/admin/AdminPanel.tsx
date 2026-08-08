@@ -200,6 +200,12 @@ export default function AdminPanel({ initialApps, currentAdminLevel }: AdminPane
         >
           Review Property Mappings
         </Link>
+        <Link
+          href="/dashboard/admin/radio"
+          className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-zinc-400 hover:text-white transition flex items-center gap-1.5"
+        >
+          Radio Manager
+        </Link>
         {currentAdminLevel && currentAdminLevel >= 4 && (
           <Link
             href="/dashboard/admin/roster"
