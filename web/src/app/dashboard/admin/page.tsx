@@ -71,22 +71,22 @@ export default async function AdminPortalPage() {
             Dashboard
           </Link>
           <span className="text-zinc-650 text-xs">/</span>
-          <span className="text-xs text-zinc-500 font-medium">Portal Admin</span>
+          <span className="text-xs text-zinc-500 font-medium font-bold">Admin Portal</span>
         </div>
 
         {/* Heading */}
         <div className="mb-8">
           <h2 className="text-2xl font-black text-white flex items-center gap-2">
             <Shield className="h-6 w-6 text-amber-500" />
-            Portal Administrator
+            Administrator Portal
           </h2>
           <p className="text-xs text-zinc-400 mt-1">
-            Tinjau pengajuan karakter baru dan kelola status donatur pengguna secara langsung.
+            Review new character applications and manage player donator statuses.
           </p>
         </div>
 
         {/* Admin Applications Review List */}
-        <AdminPanel initialApps={pendingApps as any[]} />
+        <AdminPanel initialApps={pendingApps as any[]} currentAdminLevel={session.adminLevel} />
       </main>
     </div>
   );

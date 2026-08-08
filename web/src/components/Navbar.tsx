@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { LogOut, LayoutDashboard, Mail, User, ChevronDown, Bell, Menu, X } from 'lucide-react';
+import { LogOut, LayoutDashboard, Mail, User, Users, ChevronDown, Bell, Menu, X } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
 interface NavbarProps {
@@ -138,6 +138,14 @@ export default function Navbar({ session }: NavbarProps) {
                     >
                       <LayoutDashboard className="h-4 w-4 text-amber-400" />
                       Dashboard
+                    </Link>
+                    <Link
+                      href="/dashboard/friends"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-400 transition hover:bg-white/10 hover:text-white"
+                    >
+                      <Users className="h-4 w-4 text-amber-400" />
+                      Friends
                     </Link>
                     <Link
                       href="/dashboard/inbox"

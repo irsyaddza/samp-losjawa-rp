@@ -37,7 +37,7 @@ async function getUserEmail(username: string) {
 export default async function AdminMappingPortalPage() {
   const session = await getSession();
 
-  if (!session || (session.adminLevel !== 1336 && session.adminLevel !== 1337)) {
+  if (!session || session.adminLevel <= 0) {
     redirect('/dashboard');
   }
 
@@ -63,7 +63,7 @@ export default async function AdminMappingPortalPage() {
             href="/dashboard/admin"
             className="text-xs text-zinc-400 hover:text-white transition"
           >
-            Portal Admin
+            Admin Portal
           </Link>
           <span className="text-zinc-700 text-xs">/</span>
           <span className="text-xs text-zinc-500 font-medium">Review Mapping</span>
@@ -73,10 +73,10 @@ export default async function AdminMappingPortalPage() {
         <div className="mb-8 font-sans">
           <h2 className="text-2xl font-black text-white flex items-center gap-2">
             <Shield className="h-6 w-6 text-amber-500" />
-            Review Mapping Properti
+            Property Mapping Review
           </h2>
           <p className="text-xs text-zinc-400 mt-1">
-            Tinjau kode mappingan player yang masuk, lakukan approve atau reject dengan komentar penolakan.
+            Review submitted player property mapping codes, approve valid submissions, or reject with notes.
           </p>
         </div>
 

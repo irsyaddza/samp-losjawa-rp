@@ -47,17 +47,17 @@ export default async function SettingsPage() {
             Dashboard
           </Link>
           <span className="text-zinc-650 text-xs">/</span>
-          <span className="text-xs text-zinc-500 font-medium">Pengaturan Akun</span>
+          <span className="text-xs text-zinc-500 font-medium">Account Settings</span>
         </div>
 
         {/* Heading */}
         <div className="mb-8">
           <h2 className="text-2xl font-black text-white flex items-center gap-2">
             <Settings className="h-6 w-6 text-amber-500" />
-            Pengaturan Akun UCP
+            UCP Account Settings
           </h2>
           <p className="text-xs text-zinc-400 mt-1">
-            Ubah kata sandi, email pemulihan, dan kunci keamanan akun Anda.
+            Manage your password, recovery email, and account security credentials.
           </p>
         </div>
 
