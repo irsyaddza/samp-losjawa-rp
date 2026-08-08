@@ -2096,3 +2096,125 @@ CMD:chat(playerid, params[])
 
     return true;
 }
+
+// -----------------------------------------------------------------------------
+// Animation Catalog Dialog & Command (/anims & /animlist)
+// -----------------------------------------------------------------------------
+
+YCMD:anims(playerid, params[], help)
+{
+	Dialog_Show(playerid, AnimCategoriesDialog, DIALOG_STYLE_LIST, 
+		"Animation Catalog - Select Category", 
+		"1. Animation Controls (/stopanim, /sa, /carry)\n\
+		2. Dances, Music & Entertainment (/dance, /dj, /strip, /rap, /gsign)\n\
+		3. Sitting, Laying & Resting (/sit, /lay, /sleep, /lean, /crack...)\n\
+		4. Social, Gestures & Emotions (/wave, /salute, /laugh, /agree...)\n\
+		5. Combat, Martial Arts & Action (/aim, /fightstance, /kungfu...)\n\
+		6. Jobs, Items & Activities (/cpr, /crawl, /fixcar, /camera...)", 
+		"Select", "Close");
+	return true;
+}
+
+YCMD:animlist(playerid, params[], help) = anims;
+
+Dialog:AnimCategoriesDialog(playerid, response, listitem, inputtext[])
+{
+	if(!response) return true;
+
+	switch(listitem)
+	{
+		case 0: // Controls
+		{
+			Dialog_Show(playerid, AnimSubDialog, DIALOG_STYLE_MSGBOX,
+				"Animation Controls",
+				"{FFC107}/stopanim (or /sa){FFFFFF} - Stop current active animation\n\
+				{FFC107}/carry{FFFFFF} - Start carrying stance\n\
+				{FFC107}/uncarry{FFFFFF} - Stop carrying stance",
+				"Back", "");
+		}
+		case 1: // Dances & Entertainment
+		{
+			Dialog_Show(playerid, AnimSubDialog, DIALOG_STYLE_MSGBOX,
+				"Dances & Entertainment Animations",
+				"{FFC107}/dance [1-13]{FFFFFF} - Perform 13 different dance styles\n\
+				{FFC107}/dj{FFFFFF} - DJing on turntables\n\
+				{FFC107}/strip [1-7]{FFFFFF} - Exotic dance styles\n\
+				{FFC107}/rap1, /rap2, /rap3{FFFFFF} - Rapping & freestyle gestures\n\
+				{FFC107}/gsign [1-10]{FFFFFF} - 10 gang hand sign variations",
+				"Back", "");
+		}
+		case 2: // Sitting & Resting
+		{
+			Dialog_Show(playerid, AnimSubDialog, DIALOG_STYLE_MSGBOX,
+				"Sitting & Resting Animations",
+				"{FFC107}/sit, /sit2, /sit3, /seat, /desksit{FFFFFF} - Various sitting poses\n\
+				{FFC107}/lay, /sleep{FFFFFF} - Lay down or sleep on the ground\n\
+				{FFC107}/crack [1-4]{FFFFFF} - Injured or passed out poses\n\
+				{FFC107}/lean, /lean2, /smokelean{FFFFFF} - Lean against wall\n\
+				{FFC107}/stand, /baridle, /dealerstance [1-4]{FFFFFF} - Standing & dealer idle poses\n\
+				{FFC107}/crossarm, /crossarm2, /crossarm3, /crosswin{FFFFFF} - Crossed arms\n\
+				{FFC107}/stretch, /stretch2{FFFFFF} - Body stretching\n\
+				{FFC107}/exhausted, /tired{FFFFFF} - Exhausted & panting pose\n\
+				{FFC107}/deskbored{FFFFFF} - Bored at desk pose",
+				"Back", "");
+		}
+		case 3: // Social & Gestures
+		{
+			Dialog_Show(playerid, AnimSubDialog, DIALOG_STYLE_MSGBOX,
+				"Social & Gesture Animations",
+				"{FFC107}/wave [1-3]{FFFFFF} - Wave hands\n\
+				{FFC107}/handsup{FFFFFF} - Raise hands in the air\n\
+				{FFC107}/salute{FFFFFF} - Military / Officer salute\n\
+				{FFC107}/laugh{FFFFFF} - Laughing out loud\n\
+				{FFC107}/agree{FFFFFF} - Nodding & agreeing\n\
+				{FFC107}/reject{FFFFFF} - Rejecting gesture\n\
+				{FFC107}/deal{FFFFFF} - Handshake / deal gesture\n\
+				{FFC107}/shoutat, /shout2, /upshout, /shouts{FFFFFF} - Shouting\n\
+				{FFC107}/fuckyou, /fuckyou2{FFFFFF} - Offensive middle finger\n\
+				{FFC107}/provoke, /what{FFFFFF} - Provoking / questioning gesture\n\
+				{FFC107}/seduce, /comeon{FFFFFF} - Seductive pose\n\
+				{FFC107}/cry{FFFFFF} - Crying\n\
+				{FFC107}/mourn{FFFFFF} - Grieving / mourning pose",
+				"Back", "");
+		}
+		case 4: // Combat & Action
+		{
+			Dialog_Show(playerid, AnimSubDialog, DIALOG_STYLE_MSGBOX,
+				"Combat & Action Animations",
+				"{FFC107}/aim, /aimfast, /aimshoot, /aimshoot2{FFFFFF} - Weapon aiming stances\n\
+				{FFC107}/rifflewalkstance, /rifflerunstance, /rifflestance{FFFFFF} - Rifle carrying\n\
+				{FFC107}/crouchshoot, /crouchreload, /shotgun, /shottyreload{FFFFFF} - Combat & reload\n\
+				{FFC107}/fightstance, /box1, /box2{FFFFFF} - Boxing & fight stance\n\
+				{FFC107}/kungfu1-3, /kungfublock, /kungfustomp{FFFFFF} - Martial arts moves\n\
+				{FFC107}/flykick, /fallkick, /bitchslap, /choke, /punch, /kickhim{FFFFFF} - Attacks\n\
+				{FFC107}/dodge, /cover, /coverdive, /coverdive2, /blockshot, /defense{FFFFFF} - Defenses\n\
+				{FFC107}/injured, /gotshot, /getshot, /fallover, /fallhit, /frontfall{FFFFFF} - Getting hit",
+				"Back", "");
+		}
+		case 5: // Jobs & Activities
+		{
+			Dialog_Show(playerid, AnimSubDialog, DIALOG_STYLE_MSGBOX,
+				"Jobs & Activities Animations",
+				"{FFC107}/cpr{FFFFFF} - Medical CPR resuscitation\n\
+				{FFC107}/crawl{FFFFFF} - Crawling on ground\n\
+				{FFC107}/fixcar, /fixcarout{FFFFFF} - Vehicle engine repairing\n\
+				{FFC107}/camera1, /camera2, /camera3, /camshot1{FFFFFF} - Photographer poses\n\
+				{FFC107}/bat, /bat2, /batstance{FFFFFF} - Holding baseball bat\n\
+				{FFC107}/eatanim, /sipdrink{FFFFFF} - Eating & drinking\n\
+				{FFC107}/barorder, /servebottle, /serveglass{FFFFFF} - Bartender serving\n\
+				{FFC107}/spray{FFFFFF} - Spraying graffiti / paint\n\
+				{FFC107}/washhands, /dishes{FFFFFF} - Washing hands / dishes\n\
+				{FFC107}/smoke{FFFFFF} - Smoking cigarette\n\
+				{FFC107}/dribble [1-3], /throw, /dunk [1-2], /fakeshot, /jumpshot, /pickupball{FFFFFF} - Basketball\n\
+				{FFC107}/taxil, /taxir{FFFFFF} - Hailing a taxi (left/right)\n\
+				{FFC107}/dropflag, /roadcross, /payshop, /openleft, /openright{FFFFFF} - Environment",
+				"Back", "");
+		}
+	}
+	return true;
+}
+
+Dialog:AnimSubDialog(playerid, response, listitem, inputtext[])
+{
+	return Command_ReProcess(playerid, "anims", 0);
+}
