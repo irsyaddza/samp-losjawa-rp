@@ -2121,6 +2121,7 @@ new PlayerSweeperCheckpointStep[MAX_PLAYERS] = {0, ...};
 new PlayerSweeperRouteIndex[MAX_PLAYERS] = {-1, ...};
 #include "modules/system/IllegalWeapon.pwn"
 #include "modules/system/JobPoints.pwn"
+#include "modules/system/Farmer.pwn"
 #include "modules/PlayerCommands.pwn"
 #include "modules/AdminCommands.pwn"
 #include "modules/TesterCommands.pwn"
@@ -2146,6 +2147,7 @@ public OnGameModeInit()
 	BusJob_SetupTable();
 	SweeperJob_SetupTable();
     SetupIndustry();
+	Farmer_SetupTable();
 	DrugStore_Init();
 
 	mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `MarriedTo` VARCHAR(24) NOT NULL DEFAULT 'None';");
@@ -5734,7 +5736,7 @@ SQL_SaveCharacter(playerid, bool:quit = true)
 	    PlayerData[playerid][pWepLic]
 	);
 
-	format(query, sizeof(query), "%s, `PrimaryLicense` = '%d', `SecondaryLicense` = '%d', `CCWLicense` = '%d', `HudToggle` = '%d', `LoginToggle` = '%d', `LoginSound` = '%d', `LoginNotify` = '%d', `SprayBanned` = '%d', `Cigarettes` = '%d', `Drinks` = '%d', `GasCan` = '%d', `TotalDamages` = '%d', `LastBlow` = '%d', `Knockout` = '%d', `DrugStamp` = '%d', `AdminDuty` = '%d', `TesterDuty` = '%d', `Masked` = '%d', `MaskID` = '%d', `MaskIDEx` = '%d', `timeoutProp` = '%d', `timeoutApp` = '%d', `timeoutBizz` = '%d', `busJobDelay` = '%d', `sweeperJobDelay` = '%d' WHERE `ID` = '%d'",
+	format(query, sizeof(query), "%s, `PrimaryLicense` = '%d', `SecondaryLicense` = '%d', `CCWLicense` = '%d', `HudToggle` = '%d', `LoginToggle` = '%d', `LoginSound` = '%d', `LoginNotify` = '%d', `SprayBanned` = '%d', `Cigarettes` = '%d', `Drinks` = '%d', `GasCan` = '%d', `TotalDamages` = '%d', `LastBlow` = '%d', `Knockout` = '%d', `DrugStamp` = '%d', `AdminDuty` = '%d', `TesterDuty` = '%d', `Masked` = '%d', `MaskID` = '%d', `MaskIDEx` = '%d', `timeoutProp` = '%d', `timeoutApp` = '%d', `timeoutBizz` = '%d', `busJobDelay` = '%d', `sweeperJobDelay` = '%d', `farmerRank` = '%d', `farmerExp` = '%d' WHERE `ID` = '%d'",
 	    query,
 	 	PlayerData[playerid][pPrimaryLicense],
 		PlayerData[playerid][pSecondaryLicense],
@@ -5761,6 +5763,8 @@ SQL_SaveCharacter(playerid, bool:quit = true)
 		InBusiness[playerid] == -1 ? -1 : BusinessData[ InBusiness[playerid] ][bID],
 		PlayerData[playerid][pBusJobDelay],
 		PlayerData[playerid][pSweeperJobDelay],
+		PlayerData[playerid][pFarmerRank],
+		PlayerData[playerid][pFarmerExp],
 		PlayerData[playerid][pID]
 	);
 
@@ -7948,49 +7952,9 @@ public OnPlayerEnterCheckpoint(playerid)
 			DisablePlayerCheckpoint(playerid);
 			gPlayerCheckpointStatus[playerid] = CHECKPOINT_NONE;
 		}
-		case CHECKPOINT_FARMER: // Harvest
+		case CHECKPOINT_FARMER, CHECKPOINT_FARMER2: // ponytail: retired — use /farm harvest & /farm sell
 		{
-		    new vehicleid = GetPlayerVehicleID(playerid);
-
-			if(far_start[playerid] && far_veh[playerid] == vehicleid)
-			{
-                if(far_place[playerid])
-                {
-				    if(gPlayerCheckpointValue[playerid] != -1 && IsPlayerInRangeOfPoint(playerid, 5.0, BlueFarm[gPlayerCheckpointValue[playerid]][0],BlueFarm[gPlayerCheckpointValue[playerid]][1],BlueFarm[gPlayerCheckpointValue[playerid]][2])) {
-
-						PlayerPlaySoundEx(playerid, 17803);
-						SetPlayerCheckpointEx(playerid, -53.5525,70.3079,4.0933, 5.0, CHECKPOINT_FARMER2);
-					}
-                }
-                else
-                {
-				    if(gPlayerCheckpointValue[playerid] != -1 && IsPlayerInRangeOfPoint(playerid, 5.0, FlintFarm[gPlayerCheckpointValue[playerid]][0],FlintFarm[gPlayerCheckpointValue[playerid]][1],FlintFarm[gPlayerCheckpointValue[playerid]][2])) {
-
-						PlayerPlaySoundEx(playerid, 17803);
-						SetPlayerCheckpointEx(playerid, -377.8374,-1433.8853,25.7266, 5.0, CHECKPOINT_FARMER2);
-					}
-				}
-			}
-		}
-		case CHECKPOINT_FARMER2: // Harvest
-		{
-			new vehicleid = GetPlayerVehicleID(playerid);
-
-			if(far_start[playerid] && far_veh[playerid] == vehicleid)
-			{
-	            new randmoney = 100 + random(50);
-
-	            format(sgstr, sizeof(sgstr), "~w~you got some wheat and sold it for~n~~y~%d$", randmoney);
-	            GameTextForPlayer(playerid, sgstr, 5000, 1);
-
-	            PlayerData[playerid][pPayCheck] += randmoney;
-
-	            PlayerPlaySoundEx(playerid, 17803);
-
-				//Next Harvesting
-
-				StartHarvesting(playerid);
-			}
+			// Old checkpoint-based payout removed; farmer now uses /farm harvest + /farm sell
 		}
 	}
 	return true;
@@ -11283,12 +11247,7 @@ public OnPlayerPickUpDynamicPickup(playerid, pickupid)
 		return true;
 	}*/
 
-	if(pickupid == FarmerPickup)
-	{
-		GameTextForPlayer(playerid, "~w~Type /farmerjob to be ~n~a farmer", 5000, 3);
-		return true;
-	}
-	
+
 	if(pickupid == MechanicPickup)
 	{
 		GameTextForPlayer(playerid, "~w~You can become a~n~Mechanic here~n~/mechanicjob", 5000, 3);

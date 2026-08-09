@@ -113,6 +113,8 @@ task Server[60000]()
 		    }
 	    }
 	}
+
+	Farmer_PlotTick();
 }
 
 IndustryTime()

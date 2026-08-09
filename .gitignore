@@ -28,3 +28,6 @@ mysql/data/
 
 # Secrets
 scriptfiles/ai_config.json
+
+#agents
+opencode.json

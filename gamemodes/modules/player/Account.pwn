@@ -344,6 +344,9 @@ public OnQueryFinished(extraid, threadid)
 				cache_get_value_name_int(0, "playerComplexKey", PlayerData[extraid][pComplexKey]);
 				cache_get_value_name_int(0, "busJobDelay", PlayerData[extraid][pBusJobDelay]);
 				cache_get_value_name_int(0, "sweeperJobDelay", PlayerData[extraid][pSweeperJobDelay]);
+				cache_get_value_name_int(0, "farmerRank", PlayerData[extraid][pFarmerRank]);
+				cache_get_value_name_int(0, "farmerExp",  PlayerData[extraid][pFarmerExp]);
+				if(PlayerData[extraid][pFarmerRank] < 1) PlayerData[extraid][pFarmerRank] = 1;
 	            cache_get_value_name(0, "Attribute", PlayerData[extraid][pAttribute]);
 	            if(cache_get_value_name(0, "MarriedTo", PlayerData[extraid][pMarriedTo]) == 0 || isnull(PlayerData[extraid][pMarriedTo]))
 	            {

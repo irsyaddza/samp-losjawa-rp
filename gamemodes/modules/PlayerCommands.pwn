@@ -1898,7 +1898,7 @@ Dialog:Help_Main(playerid, response, listitem, inputtext[])
 			strcat(gstr, "{A9C4E4}/jobswitch / /leavejob / /leavesidejob{FFFFFF} - Switch or leave jobs\n\n");
 			strcat(gstr, "{7E98B6}Specific Job Commands:{FFFFFF}\n");
 			strcat(gstr, "• {A9C4E4}Mechanic:{FFFFFF} /mechanicjob\n");
-			strcat(gstr, "• {A9C4E4}Farmer:{FFFFFF} /farmerjob /harvest /stopharvest\n");
+			strcat(gstr, "• {A9C4E4}Farmer:{FFFFFF} /farm (plant, water, harvest, sell, buyseeds, info)\n");
 			strcat(gstr, "• {A9C4E4}Trucker:{FFFFFF} /truckerjob /cargo /trailer\n");
 			strcat(gstr, "• {A9C4E4}Fisherman:{FFFFFF} /gofishing /fish /stopfishing /unloadfish /myfish /fishhelp\n");
 			strcat(gstr, "• {A9C4E4}Taxi Driver:{FFFFFF} /taxi\n");
@@ -2516,15 +2516,14 @@ CMD:jobhelp(playerid, params[])
 	if(PlayerData[playerid][pJob] == JOB_FARMER)
 	{
 	    SendClientMessage(playerid, COLOR_LIGHTRED, "Farmer Commands:");
-		SendClientMessage(playerid, COLOR_WHITE, "/harvest");
-		SendClientMessage(playerid, COLOR_WHITE, "/stopharvest");
+		SendClientMessage(playerid, COLOR_WHITE, "/farm [plant / harvest / sell / buyseeds]");
 	}
 
 	if(PlayerData[playerid][pJob] == JOB_TRUCKER)
 	{
 		SendClientMessage(playerid, COLOR_GRAD1, "Read documentation on forums:");
 		SendClientMessage(playerid, COLOR_GRAD1, "Server Information -> Feature Documentation -> Trucker Career");
-		SendClientMessage(playerid, COLOR_GRAD1, "(http://forum.losjawa-rp.net)");
+		SendClientMessage(playerid, COLOR_GRAD1, "(http://forum.losjawa-rp.fun)");
 		SendClientMessage(playerid, COLOR_GRAD2, "You need to own a pickup, a van or a truck to perform this job.");
 
 		SendClientMessage(playerid, COLOR_YELLOW, "Commands:{FFFFFF} Use{FFFF00} /cargo{FFFFFF} to see a list of available actions.");
@@ -4762,6 +4761,8 @@ CMD:clothing(playerid, params[])
 	return true;
 }
 
+forward FriskPlayer(playerid, userid);
+
 CMD:frisk(playerid, params[])
 {
 	new userid;
@@ -4882,6 +4883,11 @@ CMD:myproperty(playerid, params[])
 }
 
 Dialog:Player_Property_Dialog(playerid, response, listitem, inputtext[])
+{
+	return 1;
+}
+
+Dialog:Player_Inventory_Dialog(playerid, response, listitem, inputtext[])
 {
 	return 1;
 }
@@ -5038,6 +5044,23 @@ stock ShowPlayerInventoryDialog(playerid, targetid)
 		count++;
 	}
 
+	// Seeds & Produce (Farmer)
+	for(new c = 0; c < MAX_CROPS; c++)
+	{
+		if(pSeeds[targetid][c] > 0)
+		{
+			format(line, sizeof(line), "{A4D247}[SEEDS] %s Seeds\t{FFFFFF}%d Batch(es)\n", gCropName[c], pSeeds[targetid][c]);
+			strcat(body, line);
+			count++;
+		}
+		if(pProduce[targetid][c] > 0)
+		{
+			format(line, sizeof(line), "{A4D247}[PRODUCE] Harvested %s\t{FFFFFF}%d Units\n", gCropName[c], pProduce[targetid][c]);
+			strcat(body, line);
+			count++;
+		}
+	}
+
 	if(count == 0)
 	{
 		strcat(body, "{AAAAAA}(No items in inventory)\t{AAAAAA}Empty\n");
@@ -5046,11 +5069,6 @@ stock ShowPlayerInventoryDialog(playerid, targetid)
 	new title[64];
 	format(title, sizeof(title), "Inventory of %s (%d Items)", ReturnName(targetid, 0), count);
 	Dialog_Show(playerid, Player_Inventory_Dialog, DIALOG_STYLE_TABLIST_HEADERS, title, body, "Close", "");
-	return 1;
-}
-
-Dialog:Player_Inventory_Dialog(playerid, response, listitem, inputtext[])
-{
 	return 1;
 }
 
@@ -12201,24 +12219,8 @@ CMD:mechanicjob(playerid, params[])
 
 CMD:farmerjob(playerid, params[])
 {
-
-
-	if(GetFactionType(playerid) != 0)
-	    return SendClientMessage(playerid, COLOR_WHITE, "Only civilians can have this job");
-
-	if(IsPlayerInRangeOfPoint(playerid, 3.0, -382.5893,-1426.3422,26.2217))
-	{
-	    if(PlayerData[playerid][pJob] != 0)
-			return SendClientMessage(playerid, COLOR_LIGHTRED, "   You already have a job. Type /leavejob to leave.");
-
-        PlayerData[playerid][pJob] = JOB_FARMER;
-
-        ShowPlayerFooter(playerid, "~r~Congratulations,~n~~w~You are now a ~y~Farmer.~n~~w~/jobhelp.", 8000);
-
-        SendClientMessage(playerid, COLOR_WHITE, "You're now a Farmer.");
-		return true;
-	}
-	else return SendClientMessage(playerid, COLOR_GRAD1, "You are not at the job site.");
+	SendClientMessage(playerid, COLOR_YELLOW, "[FARMER] Farming is now open to everyone! Use /farm for all commands.");
+	return SendClientMessage(playerid, COLOR_WHITE, "Commands: /farm plant, /farm water, /farm harvest, /farm sell, /farm buyseeds, /farm info");
 }
 
 
@@ -12246,48 +12248,8 @@ CMD:truckerjob(playerid, params[])
 
 CMD:harvest(playerid, params[])
 {
-	if(PlayerData[playerid][pJob] != JOB_FARMER)
-	    return SendClientMessage(playerid, COLOR_GRAD2, "City boys can not do that!");
-
-
-
-	new vehicleid = GetPlayerVehicleID(playerid);
-
-	if(GetVehicleModel(vehicleid) != 532)
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "You are not sitting on Combine Harvester");
-
-	if(GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
-	 	return SendClientMessage(playerid, COLOR_LIGHTRED, "You do not sit at the driver's seat of the vehicle.");
-
-	if(IsPlayerInRangeOfPoint(playerid, 100.0, -377.8374,-1433.8853,25.7266))
-	{
-		if(far_start[playerid])
-			return SendClientMessage(playerid, COLOR_GRAD1, "   You have already begun to harvest.");
-
-		far_place[playerid] = 0;
-		far_start[playerid] = 1;
-		far_veh[playerid] = vehicleid;
-
-		SendClientMessage(playerid, COLOR_WHITE, "You have started to harvest the farmer.");
-
-		StartHarvesting(playerid);
-        return 1;
-	}
-	else if(IsPlayerInRangeOfPoint(playerid, 100.0, -53.5525,70.3079,4.0933))
-	{
-		if(far_start[playerid])
-			return SendClientMessage(playerid, COLOR_GRAD1, "   You have already begun to harvest.");
-
-		far_place[playerid] = 1;
-		far_start[playerid] = 1;
-		far_veh[playerid] = vehicleid;
-
-		SendClientMessage(playerid, COLOR_WHITE, "You have started to harvest the farmer.");
-
-		StartHarvesting(playerid);
-        return 1;
-	}
-	else return SendClientMessage(playerid, COLOR_GRAD1, "You are not at the farm");
+	// ponytail: redirected to /farm harvest (new full-cycle farmer system)
+	return Farmer_CmdHarvest(playerid);
 }
 
 CMD:stopharvest(playerid, params[])
