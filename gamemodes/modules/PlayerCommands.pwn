@@ -12223,29 +12223,6 @@ CMD:farmerjob(playerid, params[])
 	return SendClientMessage(playerid, COLOR_WHITE, "Commands: /farm plant, /farm water, /farm harvest, /farm sell, /farm buyseeds, /farm info");
 }
 
-
-
-CMD:truckerjob(playerid, params[])
-{
-	if(PlayerData[playerid][pJob] != 0)
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "   You already have a job. Type /leavejob to leave.");
-
-	if(IsPlayerInRangeOfPoint(playerid, 3.0, -78.0338,-1136.1221,1.0781))
-	{
-        PlayerData[playerid][pJob] = JOB_TRUCKER;
-
-        SendClientMessageEx(playerid, COLOR_WHITE, "You're now a %s.", ReturnJobName(playerid, JOB_TRUCKER));
-		return true;
-	}
-	else
-	{
-	    SetPlayerRaceCheckpointEx(playerid, 2, RCHECKPOINT_TRUCKERJOB, -78.0338,-1136.1221,1.0781);
-
-		SendClientMessage(playerid, COLOR_GREEN, "Trucker job location has been marked on map");
-	}
-	return true;
-}
-
 CMD:harvest(playerid, params[])
 {
 	// ponytail: redirected to /farm harvest (new full-cycle farmer system)

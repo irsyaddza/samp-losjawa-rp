@@ -4,4 +4,3 @@
 	DollaPickup[1] = CreateDynamicPickup(1274, 2, 362.8532, 173.7626, 1008.3828);
 
 	MechanicPickup = CreateDynamicPickup(1239, 2, 88.4620, -165.0116, 2.5938);
-	TruckerPickup = CreateDynamicPickup(1239, 2, -78.0338,-1136.1221,1.0781);
