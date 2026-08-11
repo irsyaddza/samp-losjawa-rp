@@ -4067,6 +4067,26 @@ GetCooldownLevel(playerid, type)
 
 RemoveBuilding(playerid)
 {
+	//Blueberry Industry 2026
+	RemoveBuildingForPlayer(playerid, 12805, 65.257, -303.984, 14.453, 0.250);
+	RemoveBuildingForPlayer(playerid, 13191, 65.257, -303.984, 14.453, 0.250);
+	RemoveBuildingForPlayer(playerid, 12956, 96.328, -261.195, 3.859, 0.250);
+	RemoveBuildingForPlayer(playerid, 12860, 164.710, -234.188, 0.476, 0.250);
+	RemoveBuildingForPlayer(playerid, 13192, 164.710, -234.188, 0.476, 0.250);
+	RemoveBuildingForPlayer(playerid, 1438, 33.601, -279.351, 1.117, 0.250);
+	RemoveBuildingForPlayer(playerid, 1438, 29.234, -286.054, 1.218, 0.250);
+	RemoveBuildingForPlayer(playerid, 1426, 24.593, -291.757, 1.406, 0.250);
+	RemoveBuildingForPlayer(playerid, 1426, 29.171, -292.273, 1.406, 0.250);
+	RemoveBuildingForPlayer(playerid, 1440, 32.406, -289.218, 1.648, 0.250);
+	RemoveBuildingForPlayer(playerid, 1431, 36.429, -291.062, 1.570, 0.250);
+	RemoveBuildingForPlayer(playerid, 1408, -54.375, -273.617, 5.968, 0.250);
+	RemoveBuildingForPlayer(playerid, 12861, 36.828, -256.226, 0.468, 0.250);
+	RemoveBuildingForPlayer(playerid, 13195, 36.828, -256.226, 0.468, 0.250);
+	RemoveBuildingForPlayer(playerid, 1449, 43.109, -254.960, 1.218, 0.250);
+	RemoveBuildingForPlayer(playerid, 1450, 43.484, -252.570, 1.203, 0.250);
+	RemoveBuildingForPlayer(playerid, 12859, 173.516, -323.820, 0.515, 0.250);
+	RemoveBuildingForPlayer(playerid, 13193, 173.516, -323.820, 0.515, 0.250);
+
 	//Pershing Square
 	RemoveBuildingForPlayer(playerid, 4057, 1479.5547, -1693.1406, 19.5781, 0.25);
 	RemoveBuildingForPlayer(playerid, 4210, 1479.5625, -1631.4531, 12.0781, 0.25);
