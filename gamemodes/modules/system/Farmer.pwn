@@ -157,7 +157,7 @@ stock Farmer_SpawnWorldBale(Float:x, Float:y, Float:z, initialAmount)
 
     new labelStr[160];
     format(labelStr, sizeof(labelStr), "{FFCC00}Produce Bale\n{FFFFFF}Model 1453 ({A4D247}%d Products{FFFFFF})\n{CCCCCC}Use /farm load (Sadler 543 / Bobcat 422 / Walton 478)", initialAmount);
-    WorldBale[slot][baleLabel] = CreateDynamic3DTextLabel(labelStr, 0xFFFFFFFF, x, y, z + 0.5, 15.0, 0, 0, 0);
+    WorldBale[slot][baleLabel] = CreateDynamic3DTextLabel(labelStr, 0xFFFFFFFF, x, y, z + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
 
     return slot;
 }
@@ -505,7 +505,7 @@ Farmer_SpawnObject(pIndex)
         PlotData[pIndex][plotPosX],
         PlotData[pIndex][plotPosY],
         PlotData[pIndex][plotPosZ] + 1.2,
-        15.0, 0, 0, 0);
+        15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
 }
 
 // Save plot to DB
