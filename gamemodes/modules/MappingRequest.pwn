@@ -61,6 +61,51 @@ stock Complex_GetSlotByID(db_id)
     return -1;
 }
 
+// Resolves the spawn world/interior for a mapping's property type.
+// Returns false when the property is not loaded in-game (world == -1).
+stock GetPropWorldInterior(prop_type, prop_id, &world, &interior)
+{
+    world = -1;
+    interior = -1;
+
+    switch(prop_type)
+    {
+        case 1: // House
+        {
+            new slot = Property_GetSlotByID(prop_id);
+            if(slot != -1)
+            {
+                world = PropertyData[slot][hWorld];
+                interior = PropertyData[slot][hInterior];
+            }
+        }
+        case 2: // Business
+        {
+            new slot = Business_GetSlotByID(prop_id);
+            if(slot != -1)
+            {
+                world = BusinessData[slot][bWorld];
+                interior = BusinessData[slot][bInterior];
+            }
+        }
+        case 3: // Apartment
+        {
+            new slot = Complex_GetSlotByID(prop_id);
+            if(slot != -1)
+            {
+                world = ComplexData[slot][aWorld];
+                interior = ComplexData[slot][aInterior];
+            }
+        }
+        case 4: // Custom / manual placement
+        {
+            world = 0;
+            interior = 0;
+        }
+    }
+    return (world != -1);
+}
+
 stock DetectMappingLocation(prop_type, prop_id, const code[], &world, &interior)
 {
     if(prop_type == 4)
@@ -424,8 +469,13 @@ stock ApplyMaterialTextFromLine(obj, const param_string[])
     return 1;
 }
 
-stock SpawnMappingObjects(const code[], worldid, interiorid, mapping_db_id = 0)
+// Single parser for mapping-code dumps. Spawns approved mappings
+// (tagged with their DB id) or a capped preview owned by one admin.
+stock SpawnMappingObjectsEx(const code[], worldid, interiorid, mapping_db_id = 0, previewer = INVALID_PLAYER_ID)
 {
+    new bool:preview = (previewer != INVALID_PLAYER_ID);
+    if(preview) ClearPreviewObjects(previewer);
+
     new pos = 0;
     static line[256];
     new count = 0;
@@ -433,6 +483,8 @@ stock SpawnMappingObjects(const code[], worldid, interiorid, mapping_db_id = 0)
 
     while (pos < strlen(code))
     {
+        if(preview && count >= MAX_PREVIEW_OBJECTS) break;
+
         new next_create = strfind(code, "Create", true, pos);
         new next_set = strfind(code, "Set", true, pos);
         
@@ -496,9 +548,13 @@ stock SpawnMappingObjects(const code[], worldid, interiorid, mapping_db_id = 0)
                     new obj = CreateDynamicObject(modelid, x, y, z, rx, ry, rz, obj_w, obj_i);
                     if (obj != INVALID_OBJECT_ID)
                     {
-                        if (mapping_db_id > 0)
+                        if (preview)
                         {
-                            // Approved mapping: tag with DB ID offset
+                            Streamer_SetIntData(STREAMER_TYPE_OBJECT, obj, E_STREAMER_EXTRA_ID, MAPPING_OFFSET_PREVIEW);
+                            PlayerPreviewObjects[previewer][count] = obj;
+                        }
+                        else if (mapping_db_id > 0)
+                        {
                             Streamer_SetIntData(STREAMER_TYPE_OBJECT, obj, E_STREAMER_EXTRA_ID, MAPPING_OFFSET_APPROVED + mapping_db_id);
                         }
                         last_obj = obj;
@@ -510,9 +566,13 @@ stock SpawnMappingObjects(const code[], worldid, interiorid, mapping_db_id = 0)
                     new obj = CreateDynamicObject(modelid, x, y, z, rx, ry, rz, worldid, interiorid);
                     if (obj != INVALID_OBJECT_ID)
                     {
-                        if (mapping_db_id > 0)
+                        if (preview)
                         {
-                            // Approved mapping: tag with DB ID offset
+                            Streamer_SetIntData(STREAMER_TYPE_OBJECT, obj, E_STREAMER_EXTRA_ID, MAPPING_OFFSET_PREVIEW);
+                            PlayerPreviewObjects[previewer][count] = obj;
+                        }
+                        else if (mapping_db_id > 0)
+                        {
                             Streamer_SetIntData(STREAMER_TYPE_OBJECT, obj, E_STREAMER_EXTRA_ID, MAPPING_OFFSET_APPROVED + mapping_db_id);
                         }
                         last_obj = obj;
@@ -575,161 +635,16 @@ stock SpawnMappingObjects(const code[], worldid, interiorid, mapping_db_id = 0)
             pos = end_param + 1;
         }
     }
+
+    if(preview) PlayerPreviewCount[previewer] = count;
     return count;
 }
+
+stock SpawnMappingObjects(const code[], worldid, interiorid, mapping_db_id = 0)
+    return SpawnMappingObjectsEx(code, worldid, interiorid, mapping_db_id, INVALID_PLAYER_ID);
 
 stock SpawnPreviewObjects(playerid, const code[], worldid, interiorid)
-{
-    ClearPreviewObjects(playerid);
-
-    new pos = 0;
-    static line[256];
-    new count = 0;
-    new last_obj = INVALID_OBJECT_ID;
-
-    while (pos < strlen(code))
-    {
-        if (count >= MAX_PREVIEW_OBJECTS) break;
-
-        new next_create = strfind(code, "Create", true, pos);
-        new next_set = strfind(code, "Set", true, pos);
-        
-        new type = 0; // 0 = none, 1 = Create, 2 = Set
-        new next_pos = -1;
-        
-        if (next_create != -1 && (next_set == -1 || next_create < next_set))
-        {
-            next_pos = next_create;
-            type = 1;
-        }
-        else if (next_set != -1)
-        {
-            next_pos = next_set;
-            type = 2;
-        }
-        
-        if (next_pos == -1) break;
-        
-        pos = next_pos;
-
-        if (type == 1) // Create
-        {
-            new bool:is_dynamic = false;
-            new bool:is_neutral = false;
-
-            if (strfind(code, "CreateDynamicObject", true, pos) == pos) is_dynamic = true;
-            else if (strfind(code, "CreateObject", true, pos) == pos) is_neutral = true;
-
-            if (!is_dynamic && !is_neutral)
-            {
-                pos += 6;
-                continue;
-            }
-
-            new start_param = strfind(code, "(", true, pos);
-            if (start_param == -1) {
-                pos += 6;
-                continue;
-            }
-            start_param += 1;
-
-            new end_param = strfind(code, ")", true, start_param);
-            if (end_param == -1) {
-                pos += 6;
-                continue;
-            }
-
-            new len = end_param - start_param;
-            if (len > 0 && len < sizeof(line))
-            {
-                strmid(line, code, start_param, end_param, sizeof(line));
-                
-                new modelid;
-                new Float:x, Float:y, Float:z;
-                new Float:rx, Float:ry, Float:rz;
-                new obj_w = worldid, obj_i = interiorid;
-                
-                if (!sscanf(line, "p<,>dffffffdd", modelid, x, y, z, rx, ry, rz, obj_w, obj_i))
-                {
-                    new obj = CreateDynamicObject(modelid, x, y, z, rx, ry, rz, obj_w, obj_i);
-                    if (obj != INVALID_OBJECT_ID)
-                    {
-                        Streamer_SetIntData(STREAMER_TYPE_OBJECT, obj, E_STREAMER_EXTRA_ID, MAPPING_OFFSET_PREVIEW);
-                        PlayerPreviewObjects[playerid][count] = obj;
-                        last_obj = obj;
-                        count++;
-                    }
-                }
-                else if (!sscanf(line, "p<,>dffffff", modelid, x, y, z, rx, ry, rz))
-                {
-                    new obj = CreateDynamicObject(modelid, x, y, z, rx, ry, rz, worldid, interiorid);
-                    if (obj != INVALID_OBJECT_ID)
-                    {
-                        Streamer_SetIntData(STREAMER_TYPE_OBJECT, obj, E_STREAMER_EXTRA_ID, MAPPING_OFFSET_PREVIEW);
-                        PlayerPreviewObjects[playerid][count] = obj;
-                        last_obj = obj;
-                        count++;
-                    }
-                }
-            }
-            pos = end_param + 1;
-        }
-        else if (type == 2) // Set (Material or Text)
-        {
-            new bool:is_text = false;
-            new bool:is_material = false;
-            
-            if (strfind(code, "SetDynamicObjectMaterialText", true, pos) == pos || strfind(code, "SetObjectMaterialText", true, pos) == pos)
-            {
-                is_text = true;
-            }
-            else if (strfind(code, "SetDynamicObjectMaterial", true, pos) == pos || strfind(code, "SetObjectMaterial", true, pos) == pos)
-            {
-                is_material = true;
-            }
-
-            if (!is_text && !is_material)
-            {
-                pos += 3;
-                continue;
-            }
-
-            new start_param = strfind(code, "(", true, pos);
-            if (start_param == -1) {
-                pos += 3;
-                continue;
-            }
-            start_param += 1;
-
-            new end_param = strfind(code, ")", true, start_param);
-            if (end_param == -1) {
-                pos += 3;
-                continue;
-            }
-
-            new len = end_param - start_param;
-            if (len > 0 && len < sizeof(line))
-            {
-                strmid(line, code, start_param, end_param, sizeof(line));
-                new first_comma = strfind(line, ",", true);
-                if (first_comma != -1)
-                {
-                    if (is_text)
-                    {
-                        ApplyMaterialTextFromLine(last_obj, line[first_comma + 1]);
-                    }
-                    else if (is_material)
-                    {
-                        ApplyMaterialFromLine(last_obj, line[first_comma + 1]);
-                    }
-                }
-            }
-            pos = end_param + 1;
-        }
-    }
-    PlayerPreviewCount[playerid] = count;
-    return count;
-}
+    return SpawnMappingObjectsEx(code, worldid, interiorid, 0, playerid);
 
 /* ── Commands ── */
 
@@ -738,7 +653,7 @@ CMD:loadmapping(playerid, params[])
     if(PlayerData[playerid][pAdmin] != 1336 && PlayerData[playerid][pAdmin] != 1337)
         return SendUnauthMessage(playerid, "You're not authorized to use this command.");
 
-    mysql_tquery(dbCon, "SELECT `id`, `ucp_name`, `property_type`, `property_id`, `custom_title` FROM `property_mappings` WHERE `status` = 0 ORDER BY `id` ASC LIMIT 128", "OnLoadPendingMappings", "d", playerid);
+    mysql_tquery(dbCon, "SELECT `id`, `ucp_name`, `property_type`, `property_id`, `custom_title` FROM `property_mappings` WHERE `status` = 0 ORDER BY `id` ASC LIMIT 128", "OnLoadMappingList", "disss", playerid, DIALOG_MAPPING_LOAD, "There are no pending mapping requests.", "Pending Mapping Requests", "Load");
     return true;
 }
 
@@ -747,7 +662,7 @@ CMD:removemapping(playerid, params[])
     if(PlayerData[playerid][pAdmin] != 1336 && PlayerData[playerid][pAdmin] != 1337)
         return SendUnauthMessage(playerid, "You're not authorized to use this command.");
 
-    mysql_tquery(dbCon, "SELECT `id`, `ucp_name`, `property_type`, `property_id`, `custom_title` FROM `property_mappings` WHERE `status` = 1 ORDER BY `id` ASC LIMIT 128", "OnLoadApprovedMappingsList", "d", playerid);
+    mysql_tquery(dbCon, "SELECT `id`, `ucp_name`, `property_type`, `property_id`, `custom_title` FROM `property_mappings` WHERE `status` = 1 ORDER BY `id` ASC LIMIT 128", "OnLoadMappingList", "disss", playerid, DIALOG_MAPPING_REMOVE, "There are no approved custom mappings.", "Remove Custom Mapping", "Remove");
     return true;
 }
 
@@ -777,7 +692,7 @@ CMD:savedmapping(playerid, params[])
     if(PlayerData[playerid][pAdmin] != 1336 && PlayerData[playerid][pAdmin] != 1337)
         return SendUnauthMessage(playerid, "You're not authorized to use this command.");
 
-    mysql_tquery(dbCon, "SELECT `id`, `ucp_name`, `property_type`, `property_id`, `custom_title` FROM `property_mappings` WHERE `status` = 2 ORDER BY `id` ASC LIMIT 128", "OnLoadSavedMappingsList", "d", playerid);
+    mysql_tquery(dbCon, "SELECT `id`, `ucp_name`, `property_type`, `property_id`, `custom_title` FROM `property_mappings` WHERE `status` = 2 ORDER BY `id` ASC LIMIT 128", "OnLoadMappingList", "disss", playerid, DIALOG_MAPPING_SAVED, "There are no saved/removed custom mappings.", "Saved/Removed Mappings", "Restore");
     return true;
 }
 
@@ -786,19 +701,19 @@ CMD:deletemapping(playerid, params[])
     if(PlayerData[playerid][pAdmin] != 1336 && PlayerData[playerid][pAdmin] != 1337)
         return SendUnauthMessage(playerid, "You're not authorized to use this command.");
 
-    mysql_tquery(dbCon, "SELECT `id`, `ucp_name`, `property_type`, `property_id`, `custom_title` FROM `property_mappings` WHERE `status` = 2 ORDER BY `id` ASC LIMIT 128", "OnLoadDeleteMappingsList", "d", playerid);
+    mysql_tquery(dbCon, "SELECT `id`, `ucp_name`, `property_type`, `property_id`, `custom_title` FROM `property_mappings` WHERE `status` = 2 ORDER BY `id` ASC LIMIT 128", "OnLoadMappingList", "disss", playerid, DIALOG_MAPPING_DELETE, "There are no saved/removed custom mappings to delete.", "Delete Custom Mapping", "Delete");
     return true;
 }
 
 /* ── Callbacks ── */
 
-forward OnLoadPendingMappings(playerid);
-public OnLoadPendingMappings(playerid)
+forward OnLoadMappingList(playerid, dialogid, const emptymsg[], const title[], const button[]);
+public OnLoadMappingList(playerid, dialogid, const emptymsg[], const title[], const button[])
 {
     new rows = cache_num_rows();
     if(rows == 0)
     {
-        return SendErrorMessage(playerid, "There are no pending mapping requests.");
+        return SendErrorMessage(playerid, "%s", emptymsg);
     }
 
     new headers[512], item[128], db_id, prop_type, prop_id, ucp_name[32], custom_title[64];
@@ -835,207 +750,7 @@ public OnLoadPendingMappings(playerid)
         strcat(headers, item);
     }
 
-    ShowPlayerDialog(playerid, DIALOG_MAPPING_LOAD, DIALOG_STYLE_TABLIST_HEADERS, "Pending Mapping Requests", headers, "Load", "Close");
-    return true;
-}
-
-forward OnLoadApprovedMappingsList(playerid);
-public OnLoadApprovedMappingsList(playerid)
-{
-    new rows = cache_num_rows();
-    if(rows == 0)
-    {
-        return SendErrorMessage(playerid, "There are no approved custom mappings.");
-    }
-
-    new headers[512], item[128], db_id, prop_type, prop_id, ucp_name[32], custom_title[64];
-    format(headers, sizeof(headers), "UCP Name\tProperty Type\tProperty ID / Name\n");
-    
-    AdminPendingCount[playerid] = 0;
-    
-    for(new i = 0; i < rows && i < MAX_PENDING_LIST; ++i)
-    {
-        cache_get_value_name_int(i, "id", db_id);
-        cache_get_value_name_int(i, "property_type", prop_type);
-        cache_get_value_name_int(i, "property_id", prop_id);
-        cache_get_value_name(i, "ucp_name", ucp_name);
-        cache_get_value_name(i, "custom_title", custom_title, sizeof(custom_title));
-
-        AdminPendingRequestID[playerid][i] = db_id;
-        AdminPendingCount[playerid]++;
-
-        new typeStr[16];
-        if(prop_type == 1) typeStr = "House";
-        else if(prop_type == 2) typeStr = "Business";
-        else if(prop_type == 3) typeStr = "Apartment";
-        else typeStr = "Custom";
-
-        if(prop_type == 4)
-        {
-            if(custom_title[0] == '\0') format(custom_title, sizeof(custom_title), "Kustom");
-            format(item, sizeof(item), "%s\t%s\t%s\n", ucp_name, typeStr, custom_title);
-        }
-        else
-        {
-            format(item, sizeof(item), "%s\t%s\t%d\n", ucp_name, typeStr, prop_id);
-        }
-        strcat(headers, item);
-    }
-
-    ShowPlayerDialog(playerid, DIALOG_MAPPING_REMOVE, DIALOG_STYLE_TABLIST_HEADERS, "Remove Custom Mapping", headers, "Remove", "Close");
-    return true;
-}
-
-forward OnLoadSavedMappingsList(playerid);
-public OnLoadSavedMappingsList(playerid)
-{
-    new rows = cache_num_rows();
-    if(rows == 0)
-    {
-        return SendErrorMessage(playerid, "There are no saved/removed custom mappings.");
-    }
-
-    new headers[512], item[128], db_id, prop_type, prop_id, ucp_name[32], custom_title[64];
-    format(headers, sizeof(headers), "UCP Name\tProperty Type\tProperty ID / Name\n");
-    
-    AdminPendingCount[playerid] = 0;
-    
-    for(new i = 0; i < rows && i < MAX_PENDING_LIST; ++i)
-    {
-        cache_get_value_name_int(i, "id", db_id);
-        cache_get_value_name_int(i, "property_type", prop_type);
-        cache_get_value_name_int(i, "property_id", prop_id);
-        cache_get_value_name(i, "ucp_name", ucp_name);
-        cache_get_value_name(i, "custom_title", custom_title, sizeof(custom_title));
-
-        AdminPendingRequestID[playerid][i] = db_id;
-        AdminPendingCount[playerid]++;
-
-        new typeStr[16];
-        if(prop_type == 1) typeStr = "House";
-        else if(prop_type == 2) typeStr = "Business";
-        else if(prop_type == 3) typeStr = "Apartment";
-        else typeStr = "Custom";
-
-        if(prop_type == 4)
-        {
-            if(custom_title[0] == '\0') format(custom_title, sizeof(custom_title), "Kustom");
-            format(item, sizeof(item), "%s\t%s\t%s\n", ucp_name, typeStr, custom_title);
-        }
-        else
-        {
-            format(item, sizeof(item), "%s\t%s\t%d\n", ucp_name, typeStr, prop_id);
-        }
-        strcat(headers, item);
-    }
-
-    ShowPlayerDialog(playerid, DIALOG_MAPPING_SAVED, DIALOG_STYLE_TABLIST_HEADERS, "Saved/Removed Mappings", headers, "Restore", "Close");
-    return true;
-}
-
-forward OnRestoreSelectedMapping(playerid, db_id);
-public OnRestoreSelectedMapping(playerid, db_id)
-{
-    new rows = cache_num_rows();
-    if(rows == 0) return SendErrorMessage(playerid, "Could not fetch mapping details for restoration.");
-
-    new prop_type, prop_id;
-    static code[300000];
-    cache_get_value_name_int(0, "property_type", prop_type);
-    cache_get_value_name_int(0, "property_id", prop_id);
-    cache_get_value_name(0, "mapping_code", code, sizeof(code));
-
-    new world = -1, interior = -1;
-    if(prop_type == 1) // House
-    {
-        new slot = Property_GetSlotByID(prop_id);
-        if(slot != -1)
-        {
-            world = PropertyData[slot][hWorld];
-            interior = PropertyData[slot][hInterior];
-        }
-    }
-    else if(prop_type == 2) // Business
-    {
-        new slot = Business_GetSlotByID(prop_id);
-        if(slot != -1)
-        {
-            world = BusinessData[slot][bWorld];
-            interior = BusinessData[slot][bInterior];
-        }
-    }
-    else if(prop_type == 3) // Apartment
-    {
-        new slot = Complex_GetSlotByID(prop_id);
-        if(slot != -1)
-        {
-            world = ComplexData[slot][aWorld];
-            interior = ComplexData[slot][aInterior];
-        }
-    }
-    else if(prop_type == 4) // Custom / Write manually
-    {
-        world = 0;
-        interior = 0;
-    }
-
-    if(world != -1)
-    {
-        DetectMappingLocation(prop_type, prop_id, code, world, interior);
-        new spawned = SpawnMappingObjects(code, world, interior, db_id);
-        SendNoticeMessage(playerid, "Restored mapping ID %d. Spawned %d objects.", db_id, spawned);
-    }
-    else
-    {
-        SendNoticeMessage(playerid, "Restored mapping ID %d in database, but the property is not loaded in-game.", db_id);
-    }
-    return true;
-}
-
-forward OnLoadDeleteMappingsList(playerid);
-public OnLoadDeleteMappingsList(playerid)
-{
-    new rows = cache_num_rows();
-    if(rows == 0)
-    {
-        return SendErrorMessage(playerid, "There are no saved/removed custom mappings to delete.");
-    }
-
-    new headers[512], item[128], db_id, prop_type, prop_id, ucp_name[32], custom_title[64];
-    format(headers, sizeof(headers), "UCP Name\tProperty Type\tProperty ID / Name\n");
-    
-    AdminPendingCount[playerid] = 0;
-    
-    for(new i = 0; i < rows && i < MAX_PENDING_LIST; ++i)
-    {
-        cache_get_value_name_int(i, "id", db_id);
-        cache_get_value_name_int(i, "property_type", prop_type);
-        cache_get_value_name_int(i, "property_id", prop_id);
-        cache_get_value_name(i, "ucp_name", ucp_name);
-        cache_get_value_name(i, "custom_title", custom_title, sizeof(custom_title));
-
-        AdminPendingRequestID[playerid][i] = db_id;
-        AdminPendingCount[playerid]++;
-
-        new typeStr[16];
-        if(prop_type == 1) typeStr = "House";
-        else if(prop_type == 2) typeStr = "Business";
-        else if(prop_type == 3) typeStr = "Apartment";
-        else typeStr = "Custom";
-
-        if(prop_type == 4)
-        {
-            if(custom_title[0] == '\0') format(custom_title, sizeof(custom_title), "Kustom");
-            format(item, sizeof(item), "%s\t%s\t%s\n", ucp_name, typeStr, custom_title);
-        }
-        else
-        {
-            format(item, sizeof(item), "%s\t%s\t%d\n", ucp_name, typeStr, prop_id);
-        }
-        strcat(headers, item);
-    }
-
-    ShowPlayerDialog(playerid, DIALOG_MAPPING_DELETE, DIALOG_STYLE_TABLIST_HEADERS, "Delete Custom Mapping", headers, "Delete", "Close");
+    ShowPlayerDialog(playerid, dialogid, DIALOG_STYLE_TABLIST_HEADERS, title, headers, button, "Close");
     return true;
 }
 
@@ -1051,39 +766,8 @@ public OnPreviewSelectedMapping(playerid, db_id)
     cache_get_value_name_int(0, "property_id", prop_id);
     cache_get_value_name(0, "mapping_code", code, sizeof(code));
 
-    new world = -1, interior = -1;
-    if(prop_type == 1) // House
-    {
-        new slot = Property_GetSlotByID(prop_id);
-        if(slot != -1)
-        {
-            world = PropertyData[slot][hWorld];
-            interior = PropertyData[slot][hInterior];
-        }
-    }
-    else if(prop_type == 2) // Business
-    {
-        new slot = Business_GetSlotByID(prop_id);
-        if(slot != -1)
-        {
-            world = BusinessData[slot][bWorld];
-            interior = BusinessData[slot][bInterior];
-        }
-    }
-    else if(prop_type == 3) // Apartment
-    {
-        new slot = Complex_GetSlotByID(prop_id);
-        if(slot != -1)
-        {
-            world = ComplexData[slot][aWorld];
-            interior = ComplexData[slot][aInterior];
-        }
-    }
-    else if(prop_type == 4) // Custom / Write manually
-    {
-        world = 0;
-        interior = 0;
-    }
+    new world, interior;
+    GetPropWorldInterior(prop_type, prop_id, world, interior);
 
     if(world == -1)
     {
@@ -1236,6 +920,34 @@ public LoadAllPropertyMappings()
 }
 
 forward OnLoadAllApprovedMappings();
+forward OnRestoreSelectedMapping(playerid, db_id);
+public OnRestoreSelectedMapping(playerid, db_id)
+{
+    new rows = cache_num_rows();
+    if(rows == 0) return SendErrorMessage(playerid, "Could not fetch mapping details for restoration.");
+
+    new prop_type, prop_id;
+    static code[300000];
+    cache_get_value_name_int(0, "property_type", prop_type);
+    cache_get_value_name_int(0, "property_id", prop_id);
+    cache_get_value_name(0, "mapping_code", code, sizeof(code));
+
+    new world, interior;
+    GetPropWorldInterior(prop_type, prop_id, world, interior);
+
+    if(world != -1)
+    {
+        DetectMappingLocation(prop_type, prop_id, code, world, interior);
+        new spawned = SpawnMappingObjects(code, world, interior, db_id);
+        SendNoticeMessage(playerid, "Restored mapping ID %d. Spawned %d objects.", db_id, spawned);
+    }
+    else
+    {
+        SendNoticeMessage(playerid, "Restored mapping ID %d in database, but the property is not loaded in-game.", db_id);
+    }
+    return true;
+}
+
 public OnLoadAllApprovedMappings()
 {
     new rows = cache_num_rows();
@@ -1255,39 +967,8 @@ public OnLoadAllApprovedMappings()
         cache_get_value_name_int(i, "property_id", prop_id);
         cache_get_value_name(i, "mapping_code", code, sizeof(code));
 
-        new world = -1, interior = -1;
-        if(prop_type == 1) // House
-        {
-            new slot = Property_GetSlotByID(prop_id);
-            if(slot != -1)
-            {
-                world = PropertyData[slot][hWorld];
-                interior = PropertyData[slot][hInterior];
-            }
-        }
-        else if(prop_type == 2) // Business
-        {
-            new slot = Business_GetSlotByID(prop_id);
-            if(slot != -1)
-            {
-                world = BusinessData[slot][bWorld];
-                interior = BusinessData[slot][bInterior];
-            }
-        }
-        else if(prop_type == 3) // Apartment
-        {
-            new slot = Complex_GetSlotByID(prop_id);
-            if(slot != -1)
-            {
-                world = ComplexData[slot][aWorld];
-                interior = ComplexData[slot][aInterior];
-            }
-        }
-        else if(prop_type == 4) // Custom / Write manually
-        {
-            world = 0;
-            interior = 0;
-        }
+        new world, interior;
+        GetPropWorldInterior(prop_type, prop_id, world, interior);
 
         if(world != -1)
         {
@@ -1308,22 +989,8 @@ stock OnPropertySold(prop_type, prop_id)
     mysql_format(dbCon, query, sizeof(query), "DELETE FROM `property_mappings` WHERE `property_type` = %d AND `property_id` = %d", prop_type, prop_id);
     mysql_tquery(dbCon, query);
 
-    new world = -1;
-    if(prop_type == 1)
-    {
-        new slot = Property_GetSlotByID(prop_id);
-        if(slot != -1) world = PropertyData[slot][hWorld];
-    }
-    else if(prop_type == 2)
-    {
-        new slot = Business_GetSlotByID(prop_id);
-        if(slot != -1) world = BusinessData[slot][bWorld];
-    }
-    else if(prop_type == 3)
-    {
-        new slot = Complex_GetSlotByID(prop_id);
-        if(slot != -1) world = ComplexData[slot][aWorld];
-    }
+    new world, interior;
+    GetPropWorldInterior(prop_type, prop_id, world, interior);
 
     if(world != -1)
     {
