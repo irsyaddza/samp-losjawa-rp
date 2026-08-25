@@ -1512,131 +1512,75 @@ CMD:blockpm(playerid, params[])
 //general commands
 YCMD:getid(playerid, params[], help) = id;
 
-CMD:id(playerid, params[]) // This command was a hefty test. Can be commented out if need be.
+CMD:id(playerid, params[])
 {
 	if(isnull(params))
-		return SendSyntaxMessage(playerid, "/id [playerid/PartOfName]");
+		return SendSyntaxMessage(playerid, "/id [playerid/PartOf_Name]");
 
-	new
-		bool:inputID = false,
-		userid
-	;
+	new len = strlen(params);
 
-	for(new ix = 0, j = strlen(params); ix < j; ++ix)
+	// All-digits input -> direct player ID lookup
+	new bool:numeric = true;
+	for(new i = 0; i < len; ++i)
 	{
-		if(params[ix] > '9' || params[ix] < '0')
+		if(params[i] < '0' || params[i] > '9')
 		{
-			inputID = false;
+			numeric = false;
+			break;
 		}
-		else inputID = true;
 	}
 
-	if(inputID)
+	if(numeric)
 	{
-		userid = strval(params);
+		new userid = strval(params);
 
 		if(!IsPlayerConnected(userid))
 			return SendErrorMessage(playerid, "Playerid isn't a valid player ID.");
 
 		SendClientMessageEx(playerid, COLOR_GREY, "(ID %i) %s | Level: %i", userid, ReturnName(userid), PlayerData[userid][pLevel]);
+		return true;
 	}
-	else
+
+	if(len < 3)
+		return SendClientMessage(playerid, COLOR_LIGHTRED, "ERROR: Input too short.");
+
+	// Admins may look masked players up by their mask name
+	if(PlayerData[playerid][pAdmin])
 	{
-		if(strlen(params) < 3)
-	    	return SendClientMessage(playerid, COLOR_LIGHTRED, "ERROR: Input too short.");
+		new maskname[MAX_PLAYER_NAME];
+		sscanf(params, "s[24]", maskname);
 
-	    if(PlayerData[playerid][pAdmin])
-	    {
-			new maskid[MAX_PLAYER_NAME];
-			sscanf(params, "s[24]", maskid);
-			if((userid = GetPlayerMaskID(maskid)) != INVALID_PLAYER_ID)
-			{
-				return SendClientMessageEx(playerid, COLOR_GREY, "(ID %i) %s | Level: %i", userid, ReturnName(userid), PlayerData[userid][pLevel]);
-			}
-		}
+		new maskid;
+		if((maskid = GetPlayerMaskID(maskname)) != INVALID_PLAYER_ID)
+			return SendClientMessageEx(playerid, COLOR_GREY, "(ID %i) %s | Level: %i", maskid, ReturnName(maskid), PlayerData[maskid][pLevel]);
+	}
 
-		new
-			bool:matchFound = false,
-			bool:fullName = false,
-			countMatches = 0,
-			matchesFound[6],
-			string[128]
-		;
+	// Substring match against both raw (RP_) and underscore-stripped names
+	new matchesFound[5], countMatches, string[128];
 
-		for(new cc = 0; cc < 5; ++cc) { matchesFound[cc] = INVALID_PLAYER_ID; }
+	foreach(new i : Player)
+	{
+		if(strfind(ReturnName(i), params, true) == -1 && strfind(ReturnName(i, 0), params, true) == -1)
+			continue;
 
-		for(new i = 0, j = strlen(params); i < j; ++i)
+		if(countMatches < 5) matchesFound[countMatches] = i;
+		countMatches++;
+	}
+
+	if(!countMatches)
+		return SendClientMessageEx(playerid, COLOR_LIGHTRED, "%s not found.", params);
+
+	if(countMatches == 1)
+		return SendClientMessageEx(playerid, COLOR_GREY, "(ID %i) %s | Level: %i", matchesFound[0], ReturnName(matchesFound[0]), PlayerData[matchesFound[0]][pLevel]);
+
+	for(new l = 0; l < 5 && l < countMatches; ++l)
+	{
+		format(string, sizeof(string), "%s(ID %i) %s, ", string, matchesFound[l], ReturnName(matchesFound[l]));
+
+		if(l % 3 == 0 && l != 0 || l == 4)
 		{
-			if(params[i] != '_')
-			{
-				fullName = false;
-			}
-			else
-			{
-				fullName = true;
-			}
-		}
-
-		if(fullName)
-		{
-			foreach (new b : Player)
-			{
-				if(strfind(ReturnName(b), params, true) != -1)
-				{
-					SendClientMessageEx(playerid, COLOR_GREY, "(ID %i) %s | Level: %i", b, ReturnName(b), PlayerData[b][pLevel]);
-				}
-				else return SendClientMessageEx(playerid, COLOR_LIGHTRED, "%s not found.", params);
-			}
-		}
-		else
-		{
-			foreach (new a: Player)
-			{
-				if(strfind(ReturnName(a, 0), params, true) != -1)
-				{
-					matchFound = true;
-					countMatches ++;
-				}
-			}
-
-			if(matchFound)
-			{
-				for(new f = 0, g = GetPlayerPoolSize(), t = 0; f <= g; ++f)
-				{
-				    if(!IsPlayerConnected(f)) continue;
-
-					if(strfind(ReturnName(f, 0), params, true) != -1)
-					{
-						matchesFound[t] = f;
-
-						t++;
-
-						if(t >= 5) break;
-					}
-				}
-
-				if(countMatches != 0 && countMatches > 1)
-				{
-					for(new l = 0; l < sizeof(matchesFound); ++l)
-					{
-						if(matchesFound[l] == INVALID_PLAYER_ID)
-							continue;
-
-						format(string, sizeof(string), "%s(ID %i) %s, ", string, matchesFound[l], ReturnName(matchesFound[l]));
-
-						if(l % 3 == 0 && l != 0 || l == 5-1)
-						{
-							SendClientMessage(playerid, COLOR_GREY, string);
-							string[0] = 0;
-						}
-					}
-				}
-				else if(countMatches == 1)
-				{
-					SendClientMessageEx(playerid, COLOR_GREY, "(ID %i) %s | Level: %i", matchesFound[0], ReturnName(matchesFound[0]), PlayerData[matchesFound[0]][pLevel]);
-				}
-			}
-			else return SendClientMessageEx(playerid, COLOR_LIGHTRED, "%s not found.", params);
+			SendClientMessage(playerid, COLOR_GREY, string);
+			string[0] = EOS;
 		}
 	}
 	return true;
@@ -2957,14 +2901,6 @@ stock ReturnVehicleName(vehicleid)
 	return name;
 }
 
-stock isSmokable(drug)
-{
-	if(drug == 1)
-		return true;
-
-	return false;
-}
-
 stock ResetDrugBoost(playerid)
 {
 	PlayerData[playerid][pDrugBoost] = 0;
@@ -3005,7 +2941,7 @@ CMD:usedrug(playerid, params[])
 	new string[128];
 	new drugType = Player_Drugs[playerid][package - 1][dType];
 
-	if(isSmokable(drugType))
+	if(drugType == 1)
 	{
 		SetPlayerSpecialAction(playerid, SPECIAL_ACTION_SMOKE_CIGGY);
 		SendNoticeMessage(playerid, "You can pass the joint to another player with /passjoint!");
@@ -18284,14 +18220,16 @@ CMD:fill(playerid, params[])
 		return SendClientMessage(playerid, COLOR_LIGHTRED, "You are not in a vehicle.");
 
 	new id, vehicleid = GetPlayerVehicleID(playerid);
+	new Float:px, Float:py, Float:pz;
+	GetPlayerPos(playerid, px, py, pz);
 
 	if((id = Car_GetID(vehicleid)) == -1)
 	    return SendClientMessage(playerid, COLOR_LIGHTRED, "You must be in a personal vehicle.");
 
-	if((id = Business_Nearest(playerid, 20.0)) != -1 && BusinessData[id][bType] == 1)
+	if((id = Business_NearestFill(px, py, pz)) != -1)
 	{
 		new string[256], Float:maxfuel = GetVehicleDataFuel(GetVehicleModel(vehicleid)), Float:fueladd = maxfuel - CoreVehicles[vehicleid][vehFuel];
-		format(string, sizeof(string), "{FFFFFF}Fuel Type:{FFFF00}%s\n\t{FFFFFF}Current Fuel:{FFFF00}%.6f{FFFFFF}/{FFFF00}%.6f{FFFFFF}( MAX )\n\tAmount Adding:{FFFF00}%.6f\n\t{FFFFFF}Price:{FFFF00}%s", (BusinessData[id][bsubType]) ? ("Diesel") : ("Petrol"), CoreVehicles[vehicleid][vehFuel], maxfuel, fueladd, FormatNumber(floatround(fueladd*float(BusinessData[id][bItems][0]), floatround_ceil)));
+		format(string, sizeof(string), "{FFFFFF}Fuel Type:{FFFF00}%s\n{FFFFFF}Current Fuel:{FFFF00}%.1f / %.1f gallons (max)\n{FFFFFF}Amount Adding:{FFFF00}%.1f gallons\n{FFFFFF}Price:{FFFF00}%s", (BusinessData[id][bsubType]) ? ("Diesel") : ("Petrol"), CoreVehicles[vehicleid][vehFuel], maxfuel, fueladd, FormatNumber(floatround(fueladd*float(BusinessData[id][bItems][0]), floatround_ceil)));
 		Dialog_Show(playerid, FuelRefill, DIALOG_STYLE_MSGBOX, "Fuel Purchase:", string, "Purchase", "Cancel");
 	}
 	else SendServerMessage(playerid, "You are not near a gas station.");
@@ -18307,7 +18245,10 @@ Dialog:FuelRefill(playerid, response, listitem, inputtext[])
 		{
 			new id = -1 , vehicleid = GetPlayerVehicleID(playerid);
 
-			if((id = Business_Nearest(playerid, 20.0)) != -1 && BusinessData[id][bType] == 1)
+			new Float:px, Float:py, Float:pz;
+			GetPlayerPos(playerid, px, py, pz);
+
+			if((id = Business_NearestFill(px, py, pz)) != -1)
 			{
 				if(!VehicleLabel[vehicleid][vLabelTime])
 				{
@@ -18326,7 +18267,7 @@ Dialog:FuelRefill(playerid, response, listitem, inputtext[])
 						SetVehicleLabel(vehicleid, VLT_TYPE_REFILL, time);
 						CoreVehicles[vehicleid][vOwnerID] = playerid;
 
-						SendClientMessageEx(playerid, COLOR_GREEN, "SERVER: This operation will require %d seconds. Amount:%.6f", time, fueladd);
+						SendClientMessageEx(playerid, COLOR_GREEN, "SERVER: This operation will require %d seconds. Amount: %.1f gallons", time, fueladd);
 					}
 					else SendClientMessage(playerid, COLOR_LIGHTRED, "You do not have this amount of money!");
 				}
@@ -18339,7 +18280,7 @@ Dialog:FuelRefill(playerid, response, listitem, inputtext[])
 	return true;
 }
 
-CMD:motd(playerid, params[]) return showServerMOTD(playerid);
+CMD:motd(playerid, params[]) return SendPlayerMOTD(playerid);
 
 forward OnLoadPlayerChangelog(playerid);
 public OnLoadPlayerChangelog(playerid)

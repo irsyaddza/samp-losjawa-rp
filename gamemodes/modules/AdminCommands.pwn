@@ -7988,6 +7988,14 @@ stock ShowMbizMainDialog(playerid, bizid)
 		EditingBizOption[playerid][idx++] = 10;
 	}
 	
+	if(BusinessData[bizid][bType] == 1)
+	{
+		new bool:fillSet = (BusinessData[bizid][bFillX] != 0.0 || BusinessData[bizid][bFillY] != 0.0 || BusinessData[bizid][bFillZ] != 0.0);
+		format(line, sizeof(line), "Fuel Fill Location: %s\n", fillSet ? ("{00FF00}Set{FFFFFF}") : ("{FF0000}Not set (uses entrance){FFFFFF}"));
+		strcat(string, line);
+		EditingBizOption[playerid][idx++] = 22;
+	}
+
 	format(line, sizeof(line), "Interior Template: %d\n", BusinessData[bizid][bInterior]);
 	strcat(string, line);
 	EditingBizOption[playerid][idx++] = 11;
@@ -8372,6 +8380,18 @@ Dialog:MbizMenu(playerid, response, listitem, inputtext[])
 			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_enX` = '%.4f', `biz_enY` = '%.4f', `biz_enZ` = '%.4f' WHERE `biz_id` = '%d'", x, y, z, BusinessData[bizid][bID]);
 			mysql_tquery(dbCon, gquery);
 			SendClientMessage(playerid, COLOR_GREEN, "Entrance location updated.");
+			ShowMbizMainDialog(playerid, bizid);
+		}
+		case 22: // Set Fuel Fill Location (gas stations)
+		{
+			new Float:x, Float:y, Float:z;
+			GetPlayerPos(playerid, x, y, z);
+			BusinessData[bizid][bFillX] = x;
+			BusinessData[bizid][bFillY] = y;
+			BusinessData[bizid][bFillZ] = z;
+			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_fillX` = '%.4f', `biz_fillY` = '%.4f', `biz_fillZ` = '%.4f' WHERE `biz_id` = '%d'", x, y, z, BusinessData[bizid][bID]);
+			mysql_tquery(dbCon, gquery);
+			SendClientMessage(playerid, COLOR_GREEN, "Fuel fill location updated. Players must stand within 20m of this point to use /fill.");
 			ShowMbizMainDialog(playerid, bizid);
 		}
 		case 16: // Set Exit Location

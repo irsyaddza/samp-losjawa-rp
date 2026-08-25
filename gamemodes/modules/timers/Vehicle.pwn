@@ -1,5 +1,33 @@
 static vehicleid, carid = -1;
 
+// Shared helpers for the per-tick vehicle label logic
+
+stock BuildLabelBar(vid, out[], size)
+{
+	new Float:percent = (float(VehicleLabel[vid][vLabelTime] - VehicleLabel[vid][vLabelCount]) / float(VehicleLabel[vid][vLabelTime])) * float(10);
+
+	for(new x = 10; x > 0; --x)
+	{
+	    if(x - floatround(percent) > 0)
+			format(out, size, "%s|", out);
+	    else
+			format(out, size, "%s-", out);
+	}
+}
+
+stock FindBizOfType(vid, type, Float:range)
+{
+	foreach (new x : Business)
+	{
+		if(BusinessData[x][bType] == type)
+		{
+			if(IsVehicleInRangeOfPoint(vid, range, BusinessData[x][bEntranceX], BusinessData[x][bEntranceY], BusinessData[x][bEntranceZ]))
+				return x;
+		}
+	}
+	return -1;
+}
+
 task Vehicles[1000]()
 {
     foreach (new i : sv_activevehicles) // faster, optimized timer that loops only through active vehicles, skipping hundreds of inactive ones in most cases.
@@ -168,15 +196,8 @@ task Vehicles[1000]()
 			{
 			    case VLT_TYPE_TOWING:
 				{
-				    new labelstring[32], first = VehicleLabel[vehicleid][vLabelCount], second = VehicleLabel[vehicleid][vLabelTime], Float:percent = (float(second-first)/float(second))*float(10);
-
-					for(new x = 10; x > 0; --x)
-					{
-					    if(x - floatround(percent) > 0)
-							format(labelstring, sizeof(labelstring), "%s|", labelstring);
-					    else
-							format(labelstring, sizeof(labelstring), "%s-", labelstring);
-     				}
+					new labelstring[32];
+					BuildLabelBar(vehicleid, labelstring, sizeof(labelstring));
 
 					format(vgstr, sizeof(vgstr), "(( %s ))\nTOWING VEHICLE", labelstring);
 		            UpdateDynamic3DTextLabelText(VehicleLabel[vehicleid][vLabel], COLOR_GREEN2, vgstr);
@@ -216,31 +237,16 @@ task Vehicles[1000]()
 				{
 				    new bool:dealership, id = -1;
 
-					foreach (new x : Business)
-					{
-						if(BusinessData[x][bType] == 1)
-						{
-							if(IsVehicleInRangeOfPoint(vehicleid, 20, BusinessData[x][bEntranceX], BusinessData[x][bEntranceY], BusinessData[x][bEntranceZ]))
-							{
-							    id = x;
+					new Float:vpx, Float:vpy, Float:vpz;
+					GetVehiclePos(vehicleid, vpx, vpy, vpz);
+					id = Business_NearestFill(vpx, vpy, vpz);
 
-								dealership = true;
-								break;
-							}
-						}
-					}
+					if(id != -1) dealership = true;
 
 					if(dealership)
 					{
-					    new labelstring[32], first = VehicleLabel[vehicleid][vLabelCount], second = VehicleLabel[vehicleid][vLabelTime], Float:percent = (float(second-first)/float(second))*float(10);
-
-						for(new x = 10; x > 0; x--)
-						{
-						    if(x - floatround(percent) > 0)
-								format(labelstring, sizeof(labelstring), "%s|", labelstring);
-						    else
-								format(labelstring, sizeof(labelstring), "%s-", labelstring);
-	     				}
+					new labelstring[32];
+					BuildLabelBar(vehicleid, labelstring, sizeof(labelstring));
 
 						format(vgstr, sizeof(vgstr), "(( %s ))\nREFUELING", labelstring);
 			            UpdateDynamic3DTextLabelText(VehicleLabel[vehicleid][vLabel], COLOR_GREEN2, vgstr);
@@ -281,29 +287,12 @@ task Vehicles[1000]()
 				{
 				    new bool:dealership;
 
-					foreach (new x : Business)
-					{
-						if(BusinessData[x][bType] == 4)
-						{
-							if(IsVehicleInRangeOfPoint(vehicleid, 10, BusinessData[x][bEntranceX], BusinessData[x][bEntranceY], BusinessData[x][bEntranceZ]))
-							{
-								dealership = true;
-								break;
-							}
-						}
-					}
+					if(FindBizOfType(vehicleid, 4, 10.0) != -1) dealership = true;
 
 					if(dealership)
 					{
-					    new labelstring[32], first = VehicleLabel[vehicleid][vLabelCount], second = VehicleLabel[vehicleid][vLabelTime], Float:percent = (float(second-first)/float(second))*float(10);
-
-						for(new x = 10; x > 0; --x)
-						{
-						    if(x - floatround(percent) > 0)
-								format(labelstring, sizeof(labelstring), "%s|", labelstring);
-						    else
-								format(labelstring, sizeof(labelstring), "%s-", labelstring);
-	     				}
+					new labelstring[32];
+					BuildLabelBar(vehicleid, labelstring, sizeof(labelstring));
 
 						format(vgstr, sizeof(vgstr), "(( %s ))\nUPGRADING ARMOUR", labelstring);
 			            UpdateDynamic3DTextLabelText(VehicleLabel[vehicleid][vLabel], COLOR_GREEN2, vgstr);
@@ -359,29 +348,12 @@ task Vehicles[1000]()
 				{
 					new bool:dealership;
 
-					foreach (new x : Business)
-					{
-						if(BusinessData[x][bType] == 4)
-						{
-							if(IsVehicleInRangeOfPoint(vehicleid, 10, BusinessData[x][bEntranceX], BusinessData[x][bEntranceY], BusinessData[x][bEntranceZ]))
-							{
-								dealership = true;
-								break;
-							}
-						}
-					}
+					if(FindBizOfType(vehicleid, 4, 10.0) != -1) dealership = true;
 
 					if(dealership)
 					{
-						new labelstring[32], first = VehicleLabel[vehicleid][vLabelCount], second = VehicleLabel[vehicleid][vLabelTime], Float:percent = (float(second-first)/float(second))*float(10);
-
-						for(new x = 10; x > 0; --x)
-						{
-						    if(x - floatround(percent) > 0)
-								format(labelstring, sizeof(labelstring), "%s|", labelstring);
-						    else
-								format(labelstring, sizeof(labelstring), "%s-", labelstring);
-	     				}
+					new labelstring[32];
+					BuildLabelBar(vehicleid, labelstring, sizeof(labelstring));
 
 	     				switch(VehicleLabel[vehicleid][vLabelType])
 	     				{
@@ -551,29 +523,12 @@ task Vehicles[1000]()
 				{
 				    new bool:dealership;
 
-					foreach (new x : Business)
-					{
-						if(BusinessData[x][bType] == 4)
-						{
-							if(IsVehicleInRangeOfPoint(vehicleid, 10, BusinessData[x][bEntranceX], BusinessData[x][bEntranceY], BusinessData[x][bEntranceZ]))
-							{
-								dealership = true;
-								break;
-							}
-						}
-					}
+					if(FindBizOfType(vehicleid, 4, 10.0) != -1) dealership = true;
 
 					if(dealership)
 					{
-						new labelstring[32], first = VehicleLabel[vehicleid][vLabelCount], second = VehicleLabel[vehicleid][vLabelTime], Float:percent = (float(second-first)/float(second))*float(10);
-
-						for(new x = 10; x > 0; --x)
-						{
-						    if(x-floatround(percent) > 0)
-								format(labelstring, sizeof(labelstring), "%s|", labelstring);
-						    else
-								format(labelstring, sizeof(labelstring), "%s-", labelstring);
-	     				}
+					new labelstring[32];
+					BuildLabelBar(vehicleid, labelstring, sizeof(labelstring));
 
 						format(vgstr, sizeof(vgstr), "(( %s ))\nVehicle registration", labelstring);
 			            UpdateDynamic3DTextLabelText(VehicleLabel[vehicleid][vLabel], COLOR_GREEN2, vgstr);
@@ -621,15 +576,8 @@ task Vehicles[1000]()
 				{
 					if(IsVehicleInRangeOfPoint(vehicleid, 10, 2520.3499,-1486.5232,23.9993)) // Black Market
 					{
-					    new labelstring[32], first = VehicleLabel[vehicleid][vLabelCount], second = VehicleLabel[vehicleid][vLabelTime], Float:percent = (float(second-first)/float(second))*float(10);
-
-						for(new x = 10; x > 0; --x)
-						{
-						    if(x - floatround(percent) > 0)
-								format(labelstring, sizeof(labelstring), "%s|", labelstring);
-						    else
-								format(labelstring, sizeof(labelstring), "%s-", labelstring);
-	     				}
+					new labelstring[32];
+					BuildLabelBar(vehicleid, labelstring, sizeof(labelstring));
 
 						format(vgstr, sizeof(vgstr), "(( %s ))\nRemoving registration", labelstring);
 			            UpdateDynamic3DTextLabelText(VehicleLabel[vehicleid][vLabel], COLOR_GREEN2, vgstr);

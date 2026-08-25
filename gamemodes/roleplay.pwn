@@ -1819,17 +1819,6 @@ enum Request_Data
 
 new VehicleRequests[100][Request_Data];
 
-#define MAX_REPORTS 100
-
-enum e_Report_Data
-{
-	reportBy,
-	reportPlayer,
-	reportReason[128]
-}
-
-new Reports[MAX_REPORTS][e_Report_Data];
-
 #define MAX_FRIENDS 100
 #define LOGIN_SOUND 5205
 
@@ -5619,7 +5608,8 @@ public OnPlayerRequestClass(playerid, classid)
 	{
 	    TogglePlayerSpectating(playerid, true);
 		SetPlayerColor(playerid, COLOR_GRAD2);
-		AccountCheck(playerid);
+		RandomLoginScreen(playerid);
+		SQL_CheckBanAccount(playerid);
 		RemovePlayerClothing(playerid);
 		return true;
 	}
@@ -5711,13 +5701,6 @@ RandomLoginScreen(playerid)
 			InterpolateCameraLookAt(playerid, 1104.463378, -957.352600, 88.703643, 1327.557739, -899.820861, 112.577796, 9000);
 	    }
 	}
-}
-
-FUNX::AccountCheck(playerid)
-{
-    RandomLoginScreen(playerid);
-
-	SQL_CheckBanAccount(playerid);
 }
 
 SetPlayerWeaponSkill(playerid, skill)
@@ -6275,7 +6258,7 @@ SetPlayerSpawn(playerid)
 	{
 	    FirstSpawn{playerid} = true;
 
-	    if(!FinishedTutorial{playerid}) showServerMOTD(playerid);
+	    if(!FinishedTutorial{playerid}) SendPlayerMOTD(playerid);
 	}
 	return true;
 }
@@ -8978,31 +8961,6 @@ public OnPlayerStreamIn(playerid, forplayerid)
 	return true;
 }
 
-MoneyFormat(integer)
-{
-	new value[20], string[20];
-
-	valstr(value, integer);
-
-	new charcount;
-
-	for(new i = strlen(value); i >= 0; i --)
-	{
-		format(string, sizeof(string), "%c%s", value[i], string);
-
-		if(charcount == 3)
-		{
-			if(i != 0)
-				format(string, sizeof(string), ",%s", string);
-			charcount = 0;
-		}
-
-		charcount ++;
-	}
-
-	return string;
-}
-
 public OnPlayerClickTextDraw(playerid, Text:clickedid)
 {
 	if(UI_Purchase{playerid})
@@ -9431,7 +9389,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 				}
 				else
 				{
-					format(str, sizeof(str), "Cart: ~g~$%s", MoneyFormat(GetPVarInt(playerid, "PriceCount")));
+					format(str, sizeof(str), "Cart: ~g~%s", FormatNumber(GetPVarInt(playerid, "PriceCount")));
 					PlayerTextDrawSetString(playerid, Store_Cart[playerid], str);
 				}
 	        }
@@ -15690,7 +15648,7 @@ Dialog:Arrest_Record(playerid, response, listitem, inputtext[])
 	if(strcmp("done", inputtext, true) == 0)
 	{
 		GetPVarString(playerid, "ArrestRecord", astring, sizeof(astring));
-	 	format(astring, sizeof(astring), string_replace("\n", " ", astring));
+	 	format(astring, sizeof(astring), "%s", strreplace(astring, "\n", " "));
 		DeletePVar(playerid, "ArrestRecord");
 
 		SetPVarString(userid, "ArrestRecord", astring);
@@ -15909,13 +15867,6 @@ ResetGlobalVariables()
 		    VehicleRequests[i][requestStamp][0] = EOS;
 	    }
 
-	    if(i < MAX_REPORTS)
-	    {
-	        Reports[i][reportBy] = INVALID_PLAYER_ID;
-	        Reports[i][reportPlayer] = INVALID_PLAYER_ID;
-			Reports[i][reportReason][0] = EOS;
-	    }
-
 	    if(i < MAX_ATM_LIMIT) ATMS[i][aID] = -1;
 
 	    if(i < MAX_DROP_ITEMS) DroppedWeapons[i][DropExists] = false;
@@ -15982,8 +15933,6 @@ CMD:disablecmd(playerid, params[])
 	SendClientMessageEx(playerid, COLOR_LIGHTRED, "Command /%s is now disabled. (/enablecmd to enable it again)", params);	
 	return true;
 }
-
-showServerMOTD(playerid) return SendPlayerMOTD(playerid);
 
 Dialog:MotdUpdate(playerid, response, listitem, inputtext[])
 {
@@ -16732,76 +16681,6 @@ ConfirmDialog_Response(playerid, response)
 	return;
 } // Credits to Mmartin (SA-MP forums)
 
-
-string_replace(const search[], const replace[], const source[])
-{
-	new newnick[256];
-	new newlen;
-	for(new i; i < strlen(source); ++i)
-	{
-		if(strlen(search) > 1 && i != (strlen(source) - 1))
-		{
-			new matched = 1;
-			new start = i;
-
-			for(new s=0; s < strlen(search) && matched == 1; ++s)
-			{
-				if(source[i] != search[s] && s == 0)
-				{
-					newnick[newlen] = source[i];
-					matched = 0;
-				}
-				else
-				{
-					if(source[i] == search[s])
-					{
-						i++;
-					}
-					else
-					{
-						matched = 0;
-					}
-				}
-			}
-			if(matched == 0)
-			{
-				while (start <= i)
-				{
-					newnick[newlen] = source[start];
-					newlen++;
-					start++;
-				}
-			}
-			else
-			{
-				for(new r; r < strlen(replace); ++r)
-				{
-					newnick[newlen] = replace[r];
-					newlen++;
-				}
-				i = (start + (strlen(search) - 1));
-			}
-		}
-		else
-		{
-			if(strlen(search) == 1 && source[i] == search[0])
-			{
-				for(new r; r < strlen(replace); ++r)
-				{
-					newnick[newlen] = replace[r];
-					newlen++;
-				}
-			}
-			else
-			{
-				newnick[newlen] = source[i];
-				newlen++;
-			}
-		}
-	}
-	newnick[newlen] = EOS;
-	return newnick;
-}
 
 // Commented DCC blocks removed
 
