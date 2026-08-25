@@ -1860,7 +1860,8 @@ Dialog:Help_Main(playerid, response, listitem, inputtext[])
 			strcat(gstr, "{A9C4E4}/v buypark{FFFFFF} - Buy parking location\n");
 			strcat(gstr, "{A9C4E4}/v park{FFFFFF} - Park your vehicle\n");
 			strcat(gstr, "{A9C4E4}/hood / /trunk / /vehpackage{FFFFFF} - Vehicle hood, trunk & package\n");
-			strcat(gstr, "{A9C4E4}/fill / /fuel{FFFFFF} - Refuel vehicle at gas station\n");
+			strcat(gstr, "{A9C4E4}/fill{FFFFFF} - Refuel vehicle at gas station\n");
+			strcat(gstr, "{A9C4E4}/fuel{FFFFFF} - Check current fuel level\n");
 			strcat(gstr, "{A9C4E4}/rw / /rollwindow{FFFFFF} - Roll vehicle windows up/down\n");
 			strcat(gstr, "{A9C4E4}/vehiclename / /colorlist / /paintcar{FFFFFF} - Vehicle name & colors\n");
 			strcat(gstr, "{A9C4E4}/service / /checkcomponents / /setbuycomp / /buycomp{FFFFFF} - Repairs & components\n");
@@ -2055,7 +2056,8 @@ Dialog:Help_FactionList(playerid, response, listitem, inputtext[])
 			strcat(gstr, "{A9C4E4}/v buypark{FFFFFF} - Buy parking location\n");
 			strcat(gstr, "{A9C4E4}/v park{FFFFFF} - Park your vehicle\n");
 			strcat(gstr, "{A9C4E4}/hood / /trunk / /vehpackage{FFFFFF} - Vehicle hood, trunk & package\n");
-			strcat(gstr, "{A9C4E4}/fill / /fuel{FFFFFF} - Refuel vehicle at gas station\n");
+			strcat(gstr, "{A9C4E4}/fill{FFFFFF} - Refuel vehicle at gas station\n");
+			strcat(gstr, "{A9C4E4}/fuel{FFFFFF} - Check current fuel level\n");
 			strcat(gstr, "{A9C4E4}/rw / /rollwindow{FFFFFF} - Roll vehicle windows up/down\n");
 			strcat(gstr, "{A9C4E4}/vehiclename / /colorlist / /paintcar{FFFFFF} - Vehicle name & colors\n");
 			strcat(gstr, "{A9C4E4}/service / /checkcomponents / /setbuycomp / /buycomp{FFFFFF} - Repairs & components\n");
@@ -18223,8 +18225,9 @@ CMD:fill(playerid, params[])
 	new Float:px, Float:py, Float:pz;
 	GetPlayerPos(playerid, px, py, pz);
 
-	if((id = Car_GetID(vehicleid)) == -1)
-	    return SendClientMessage(playerid, COLOR_LIGHTRED, "You must be in a personal vehicle.");
+	// personal vehicles and your own faction's vehicles can be filled
+	if((id = Car_GetID(vehicleid)) == -1 && IsAFactionCar(vehicleid, PlayerData[playerid][pFaction]) == -1)
+	    return SendClientMessage(playerid, COLOR_LIGHTRED, "You can only fill personal or faction vehicles.");
 
 	if((id = Business_NearestFill(px, py, pz)) != -1)
 	{
