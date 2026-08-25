@@ -1,3 +1,9 @@
+// Permission gates: swallow the common early-return so call sites are one line.
+#define AdminGate(%0,%1) \
+	if(PlayerData[%0][pAdmin] < %1) return SendErrorMessage(%0, "You're not authorized to use this command.")
+#define UnauthGate(%0,%1) \
+	if(PlayerData[%0][pAdmin] < %1) return SendUnauthMessage(%0, "You're not authorized to use this command.")
+
 #define SendErrorMessage(%0,%1) \
 	SendClientMessageEx(%0, COLOR_LIGHTRED, "ERROR:{FFFFFF} "%1)
 
@@ -345,4 +351,15 @@ ProxJoinServer(playerid, const str[])
 		}
 	}
 	return true;
+}
+
+// Second-chance target lookup: sscanf miss -> masked-player name match.
+// Returns INVALID_PLAYER_ID when nobody matches.
+stock ResolveMaskedTarget(const params[])
+{
+	new name[MAX_PLAYER_NAME];
+	if(sscanf(params, "s[24]", name))
+	    return INVALID_PLAYER_ID;
+
+	return GetPlayerMaskID(name);
 }

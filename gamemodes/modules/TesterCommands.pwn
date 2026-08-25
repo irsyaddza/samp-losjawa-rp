@@ -14,7 +14,7 @@ CMD:testerhelp(playerid, params[])
 CMD:helpme(playerid, params[])
 {
 	if(isnull(params))
-		return SendClientMessage(playerid, COLOR_GREY, "USAGE: /helpme [text]");
+		return SendSyntaxMessage(playerid, "/helpme [text]");
 
 	if(PlayerData[playerid][pHelpme] >= 1)
 		return SendClientMessage(playerid, COLOR_LIGHTRED, "You currently have 1 open requests, please wait until they are concluded before sending in more.");
@@ -72,7 +72,7 @@ CMD:rsd(playerid, params[])
 	;
 
 	if(sscanf(params, "u", userid))
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /rsd [playerid]");
+		return SendSyntaxMessage(playerid, "/rsd [playerid]");
 
 	if(!IsPlayerConnected(userid) || !SQL_IsLogged(userid))
 		return SendClientMessage(playerid, COLOR_LIGHTRED, "The specified player ID is either not connected or has not authenticated.");
@@ -117,7 +117,7 @@ CMD:drs(playerid, params[])
 	;
 
 	if(sscanf(params, "u", userid))
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /drs [playerid]");
+		return SendSyntaxMessage(playerid, "/drs [playerid]");
 
 	if(!IsPlayerConnected(userid))
 		return SendClientMessage(playerid, COLOR_LIGHTRED, "The specified player ID is either not connected or has not authenticated.");
@@ -320,7 +320,7 @@ CMD:z(playerid, params[])
 	new str1[128], str2[128], bool:splitted = false;
 
 	if(isnull(params))
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /z [tester chat]");
+		return SendSyntaxMessage(playerid, "/z [tester chat]");
 
 	if(strlen(params) > 80)
 	{

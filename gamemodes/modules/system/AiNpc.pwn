@@ -336,7 +336,7 @@ CMD:npc(playerid, params[])
 	new option[24], extra[64];
 	if(sscanf(params, "s[24]S()[64]", option, extra))
 	{
-		SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /npc [create/list/delete]");
+		SendSyntaxMessage(playerid, "/npc [create/list/delete]");
 		return 1;
 	}
 
@@ -362,7 +362,7 @@ CMD:npc(playerid, params[])
 	{
 		new slot = strval(extra);
 		if(isnull(extra) || !Iter_Contains(AiNpc, slot))
-			return SendErrorMessage(playerid, "USAGE: /npc delete [npc_id]");
+			return SendSyntaxMessage(playerid, "/npc delete [npc_id]");
 
 		if(DestroyAiNpc(slot))
 		{

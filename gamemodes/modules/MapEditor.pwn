@@ -47,7 +47,7 @@ new METextData[MAX_MAP_OBJECTS][MAX_OBJECT_MAT_SLOT][e_ME_TEXT];
 // ── Helper macros ─────────────────────────────────────────────────────────────
 #define ObjMsg(%0,%1)  SendClientMessageEx(%0, COLOR_GREEN,  "MAPEDIT: {FFFFFF}" %1)
 #define ObjErr(%0,%1)  SendClientMessageEx(%0, COLOR_RED,    "MAPEDIT ERROR: {FFFFFF}" %1)
-#define ObjCmd(%0,%1)  SendClientMessageEx(%0, COLOR_YELLOW, "USAGE: {FFFFFF}" %1)
+#define ObjCmd(%0,%1)  SendSyntaxMessage(%0, %1)
 
 // ── RGBAToHex (duplicate-safe) ────────────────────────────────────────────────
 #define ME_RGBAToHex(%0,%1,%2,%3) \

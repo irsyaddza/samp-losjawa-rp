@@ -586,7 +586,7 @@ CMD:dance(playerid, params[])
     new animid;
 
    	if(sscanf(params, "d", animid)) 
-        return SendClientMessage(playerid, COLOR_GREY, "USAGE: /dance [1-13]");
+        return SendSyntaxMessage(playerid, "/dance [1-13]");
 
 	switch(animid)
 	{
@@ -603,7 +603,7 @@ CMD:dance(playerid, params[])
        	case 11: ApplyAnimation(playerid, "DANCING", "dnce_M_b", 4.0, 1, 0, 0, 0, 0, 1);
         case 12: ApplyAnimation(playerid, "DANCING", "dnce_M_c", 4.0, 1, 0, 0, 0, 0, 1);
         case 13: ApplyAnimation(playerid, "DANCING", "dnce_M_d", 4.0, 1, 0, 0, 0, 0, 1);
-  		default: SendClientMessage(playerid, COLOR_GREY, "USAGE: /dance [style 1-13]");
+  		default: SendSyntaxMessage(playerid, "/dance [style 1-13]");
 	}
 
 	if(animid >= 1 && animid <= 13) PlayerData[playerid][pAnimation] = 1;
@@ -623,7 +623,7 @@ CMD:strip(playerid, params[])
     new animid;
 
    	if(sscanf(params, "d", animid)) 
-        return SendClientMessage(playerid, COLOR_GREY, "USAGE: /strip [1-11]");
+        return SendSyntaxMessage(playerid, "/strip [1-11]");
 
 	switch(animid)
 	{
@@ -638,7 +638,7 @@ CMD:strip(playerid, params[])
 		case 9: SetPlayerSpecialAction(playerid, SPECIAL_ACTION_DANCE2);
 		case 10: SetPlayerSpecialAction(playerid, SPECIAL_ACTION_DANCE3);
 		case 11: SetPlayerSpecialAction(playerid, SPECIAL_ACTION_DANCE4);
-  		default: SendClientMessage(playerid, COLOR_GREY, "USAGE: /strip [style 1-11]");
+  		default: SendSyntaxMessage(playerid, "/strip [style 1-11]");
 	}
 
 	if(animid >= 1 && animid <= 11) PlayerData[playerid][pAnimation] = 1;
@@ -657,7 +657,7 @@ CMD:wave(playerid, params[])
 
    	new animid;
 
-   	if(sscanf(params,"d",animid)) return SendClientMessage(playerid, COLOR_GREY, "USAGE:/wave [1-3]");
+   	if(sscanf(params,"d",animid)) return SendSyntaxMessage(playerid, "/wave [1-3]");
 
 	switch(animid)
 	{
@@ -716,7 +716,7 @@ CMD:gsign(playerid, params[])
     new animid;
 
    	if(sscanf(params, "d", animid))
-   		return SendClientMessage(playerid, COLOR_GREY, "USAGE: /gsign [1-10]");
+   		return SendSyntaxMessage(playerid, "/gsign [1-10]");
 
 	switch(animid)
 	{
@@ -731,7 +731,7 @@ CMD:gsign(playerid, params[])
         case 8: ApplyAnimation(playerid, "GHANDS", "gsign4LH", 4.0, false, true, true, true, 1, true);
         case 9: ApplyAnimation(playerid, "GHANDS", "gsign5", 4.0, false, true, true, true, 1, true);
         case 10: ApplyAnimation(playerid, "GHANDS", "gsign5LH", 4.0, false, true, true, true, 1, true);
-  		default: SendClientMessage(playerid, COLOR_GREY, "USAGE: /gsign [1-10]");
+  		default: SendSyntaxMessage(playerid, "/gsign [1-10]");
    	}
 
    	if(animid >= 1 && animid <= 10) PlayerData[playerid][pAnimation] = 1;
@@ -748,7 +748,7 @@ CMD:dj(playerid, params[])
 	new animid;
 
    	if(sscanf(params,"d",animid))
-	   return SendClientMessage(playerid, COLOR_GREY, "USAGE:/dj [1-4]");
+	   return SendSyntaxMessage(playerid, "/dj [1-4]");
 
 	switch(animid)
 	{
@@ -756,7 +756,7 @@ CMD:dj(playerid, params[])
     	case 2: ApplyAnimation(playerid, "SCRATCHING", "scdlulp", 4.0, 1, 0, 0, 0, 0, 1);
      	case 3: ApplyAnimation(playerid, "SCRATCHING", "scdrdlp", 4.0, 1, 0, 0, 0, 0, 1);
      	case 4: ApplyAnimation(playerid, "SCRATCHING", "scdrulp", 4.0, 1, 0, 0, 0, 0, 1);
-      	default: SendClientMessage(playerid, COLOR_GREY, "USAGE:/dj [1-4]");
+      	default: SendSyntaxMessage(playerid, "/dj [1-4]");
 	}
 
 	if(animid >= 1 && animid <= 4) PlayerData[playerid][pAnimation] = 1;

@@ -51,8 +51,7 @@ CMD:stats(playerid, params[])
 	    return true;
 	}
 
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1);
 
 	if(!IsPlayerConnected(userid))
 		return SendErrorMessage(playerid, "The player you specified isn't connected.");
@@ -289,7 +288,7 @@ CMD:l(playerid, params[])
 	new str[128];
 
 	if(isnull(params))
-	    return SendClientMessage(playerid, COLOR_GREY, "USAGE: (/l)ocal [local chat]");
+	    return SendSyntaxMessage(playerid, "(/l)ocal [local chat]");
 
 	if(strlen(params) > 80)
 	{
@@ -314,7 +313,7 @@ CMD:t(playerid, params[])
     new str[128];
 
 	if(isnull(params))
-	    return SendClientMessage(playerid, COLOR_GREY, "USAGE: (/t)ocal [t chat]");
+	    return SendSyntaxMessage(playerid, "(/t)ocal [t chat]");
 
     if(PlayerData[playerid][pInjured])
         return SendClientMessage(playerid, COLOR_GRAD1, "   you can't speak.");
@@ -487,7 +486,7 @@ YCMD:dshout(playerid, params[], help) = ds;
 CMD:ds(playerid, params[])
 {
 	if(isnull(params))
-	    return SendClientMessage(playerid, COLOR_GREY, "USAGE: (/ds)hout [local chat]");
+	    return SendSyntaxMessage(playerid, "(/ds)hout [local chat]");
 
     if(PlayerData[playerid][pInjured])
         return SendErrorMessage(playerid, "Can't use /me's in deathmode.");
@@ -761,18 +760,10 @@ CMD:w(playerid, params[])
 	new userid, text[128];
 
     if(sscanf(params, "us[128]", userid, text))
-	    return SendClientMessage(playerid, COLOR_GRAD2, "USAGE: (/w)hisper [playerid/Mask/PartOfName] [whisper text]");
+	    return SendSyntaxMessage(playerid, "(/w)hisper [playerid/Mask/PartOfName] [whisper text]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]{s[128]}", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "Invalid player specified.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "Invalid player specified.");
 	if(userid == playerid)
 	    return SendClientMessage(playerid, COLOR_LIGHTRED, "That's your ID");
 
@@ -1003,7 +994,7 @@ CMD:pm(playerid, params[])
 	new userid, text[128];
 
     if(sscanf(params, "us[128]", userid, text))
-	    return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /pm [playerid/PON] text");
+	    return SendSyntaxMessage(playerid, "/pm [playerid/PON] text");
 
 	if(!IsPlayerConnected(userid))
 		return SendErrorMessage(playerid, "The player you specified isn't connected.");
@@ -1204,23 +1195,15 @@ CMD:greet(playerid, params[])
 
 	if(sscanf(params, "ud", userid, animslot))
 	{
-		SendClientMessage(playerid, COLOR_WHITE, "USAGE: /greet [id/Mask/PartofName] AnimSlot");
+		SendSyntaxMessage(playerid, "/greet [id/Mask/PartofName] AnimSlot");
 		SendClientMessage(playerid, COLOR_GREEN, "[ 1 ] Kiss   [ 2 ] Greet [ 3 ] Greet2 [ 4 ] Greet3");
 		SendClientMessage(playerid, COLOR_GREEN, "[ 5 ] Greet4  [ 6 ] Greet5 [ 7 ] Greet6 [ 8 ] Greet7");
 		SendClientMessage(playerid, COLOR_GREEN, "[ 9 ] Formal Handshake");
 		return true;
 	}
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(playerid == userid)
 	    return SendErrorMessage(playerid, "You can't greet yourself.");
 
@@ -1245,18 +1228,10 @@ CMD:acceptshake(playerid, params[])
 	new userid;
 
 	if(sscanf(params, "u", userid))
-		return SendClientMessage(playerid, COLOR_WHITE, "USAGE: /acceptshake [playerID]");
+		return SendSyntaxMessage(playerid, "/acceptshake [playerID]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(RequestedToShake[playerid][0] != userid)
 	    return SendClientMessage(playerid, COLOR_LIGHTRED, "Invalid request.");
 
@@ -1416,16 +1391,8 @@ CMD:convo(playerid, params[])
 	if(sscanf(params, "u", userid))
 		return SendSyntaxMessage(playerid, "/convo [playerid/PartOfName]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(userid == playerid)
 		return SendErrorMessage(playerid, "You can't pm yourself.");
 
@@ -1489,7 +1456,7 @@ CMD:blockpm(playerid, params[])
 	;
 
 	if(sscanf(params, "u", userid))
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /blockpm [PlayerID/PartOfName]");
+		return SendSyntaxMessage(playerid, "/blockpm [PlayerID/PartOfName]");
 
 	if(!IsPlayerConnected(userid))
 		return SendClientMessage(playerid, COLOR_LIGHTRED, "Playerid is not an active playerid.");
@@ -2392,7 +2359,7 @@ CMD:radiohelp(playerid, params[])
 
 CMD:note(playerid, params[])
 {
-	SendClientMessage(playerid, COLOR_YELLOW2, "USAGE: /note [action]");
+	SendSyntaxMessage(playerid, "/note [action]");
 	SendClientMessage(playerid, COLOR_YELLOW2, "[Show] /note show [noteID] [PlayerID / PartOfName]  (* You may not type in NoteID and PlayerID)");
 	SendClientMessage(playerid, COLOR_YELLOW2, "[Create] /note create [text]");
 	SendClientMessage(playerid, COLOR_YELLOW2, "[Delete] /note delete [number 1-5]");
@@ -3147,16 +3114,8 @@ CMD:givedrug(playerid, params[])
 	if(sscanf(params, "ud", userid, package))
 	    return SendSyntaxMessage(playerid, "/givedrug [playerid/PartOfName] [package_id]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!IsPlayerNearPlayer(playerid, userid, 5.0))
 		return SendErrorMessage(playerid, "You aren't near that player.");
 
@@ -3250,16 +3209,8 @@ CMD:mypackage(playerid, params[])
 	if(sscanf(params, "u", userid))
 		return ShowPlayerWeapons(playerid, playerid);
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]{ds[128]}", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!IsPlayerNearPlayer(playerid, userid, 5.0))
 		return SendErrorMessage(playerid, "You aren't near that player.");
 
@@ -3467,7 +3418,7 @@ CMD:takeweapon(playerid, params[])
 
 	if(sscanf(params, "dS()[10]", vehslot, string))
 	{
-	    SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /takeweapon(/tw) [vehicle slot] ([slot])");
+	    SendSyntaxMessage(playerid, "/takeweapon(/tw) [vehicle slot] ([slot])");
 		SendClientMessage(playerid, COLOR_LIGHTRED, "HINT: If you don't input [slot] it will put contents of vehicle package's slot in your package's empty slot.");
 		return true;
 	}
@@ -3577,16 +3528,8 @@ CMD:giveallpackages(playerid, params[])
 	if(sscanf(params, "u", userid))
 	    return SendSyntaxMessage(playerid, "/giveallpackages [PlayerID/PartOfName/MaskID]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]{dS()[64]}", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(userid == playerid)
 		return SendServerMessage(playerid, "You are not allowed to sell to yourself.");
 
@@ -3661,16 +3604,8 @@ CMD:sellpackage(playerid, params[])
 	if(sscanf(params, "ud", userid, slot))
 	    return SendSyntaxMessage(playerid, "/sellpackage [playerid/PartOfName] [slot]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]{dS()[64]}", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(userid == playerid)
 		return SendServerMessage(playerid, "You are not allowed to sell to yourself.");
 
@@ -4040,7 +3975,7 @@ CMD:attributes(playerid, params[])
 {
 	if(isnull(params))
 	{
-	    SendClientMessage(playerid, COLOR_GRAD1, "USAGE: /attributes [description]");
+	    SendSyntaxMessage(playerid, "/attributes [description]");
 
 	    if(!isnull(PlayerData[playerid][pAttribute]) && strlen(PlayerData[playerid][pAttribute]))
 			SendClientMessageEx(playerid, COLOR_GRAD1, "Current: %s", PlayerData[playerid][pAttribute]);
@@ -4067,16 +4002,8 @@ CMD:examine(playerid, params[])
 	if(sscanf(params, "u", userid))
 		return SendSyntaxMessage(playerid, "/examine [playerid/PartOfName]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
  	format(sgstr, sizeof(sgstr), "%s%s%s", ReturnName(userid, 0), strlen(PlayerData[userid][pAttribute]) ? (" | ") : (""), PlayerData[userid][pAttribute]);
 	SetPlayerChatBubble(userid, sgstr, COLOR_PURPLE, 20.0, 6000);
 	return true;
@@ -4112,16 +4039,8 @@ CMD:pay(playerid, params[])
 	if(sscanf(params, "udS()[24]", userid, amount, emote))
 	    return SendSyntaxMessage(playerid, "/pay [playerid/name] [amount] [emote]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]{dS()[24]}", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!IsPlayerNearPlayer(playerid, userid, 5.0))
 	    return SendErrorMessage(playerid, "You aren't close enough to them.");
 
@@ -4252,7 +4171,7 @@ ProccessBuyGunCommand(playerid, const params[])
 			weaponid = 47; price = 2000; ammo_price = 2000;
 		}
 
-		if(!weaponid || !price || !ammo_price) return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /buyweapon [weapon] [ammo]"); //[add(0/1)]
+		if(!weaponid || !price || !ammo_price) return SendSyntaxMessage(playerid, "/buyweapon [weapon] [ammo]"); //[add(0/1)]
 
 		if(weaponid == 47) ammo = 1;
 
@@ -4278,7 +4197,7 @@ ProccessBuyGunCommand(playerid, const params[])
 	price = GetPVarInt(playerid, "buygun_price");
 
 	if(!weaponid || !price)
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /buyweapon [weapon] [ammo]");
+		return SendSyntaxMessage(playerid, "/buyweapon [weapon] [ammo]");
 
 	if(PlayerData[playerid][pCash] < price)
 	    return SendClientMessage(playerid, COLOR_LIGHTRED, "You don't have enough money.");
@@ -4608,18 +4527,10 @@ CMD:frisk(playerid, params[])
 	new userid;
 
 	if(sscanf(params, "u", userid))
-		return SendClientMessage(playerid, COLOR_GREY, "USAGE: /frisk [playerid/PartOfName]");
+		return SendSyntaxMessage(playerid, "/frisk [playerid/PartOfName]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!IsPlayerNearPlayer(playerid, userid, 5.0))
 		return SendErrorMessage(playerid, "You aren't near that player.");
 
@@ -4643,16 +4554,8 @@ CMD:friskapprove(playerid, params[])
 	if(sscanf(params, "u", userid))
 		return SendSyntaxMessage(playerid, "/friskapprove [player/id]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "Not connected player.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "Not connected player.");
 	if(FriskApproved[playerid][userid])
 	    return SendServerMessage(playerid, "That player already has frisk approval from you.");
 
@@ -5252,7 +5155,7 @@ CMD:bcast(playerid, params[])
         return SendErrorMessage(playerid, "You're not a news reporter.");
 
     if(isnull(params))
-        return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /bcast (/n)ews [broadcasting news]");
+        return SendSyntaxMessage(playerid, "/bcast (/n)ews [broadcasting news]");
 
     if(strlen(params) > 70)
     {
@@ -5471,16 +5374,8 @@ CMD:invite(playerid, params[])
 	if(sscanf(params, "u", userid))
 	    return SendSyntaxMessage(playerid, "/invite [ID/Mask/partofName]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!SQL_IsLogged(userid))
 		return SendErrorMessage(playerid, "The player you specified isn't logged in.");
 
@@ -5545,16 +5440,8 @@ CMD:uninvite(playerid, params[])
 	if(sscanf(params, "u", userid))
 	    return SendSyntaxMessage(playerid, "/uninvite [ID/Mask/partofName]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!SQL_IsLogged(userid))
 		return SendErrorMessage(playerid, "The player you specified isn't logged in.");
 
@@ -5602,16 +5489,8 @@ CMD:rank(playerid, params[])
 	    return SendSyntaxMessage(playerid, "/rank [playerid/PartOfName] [NewRankID]");
 	}
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]{d}", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!SQL_IsLogged(userid))
 		return SendErrorMessage(playerid, "The player you specified isn't logged in.");
 
@@ -7263,7 +7142,7 @@ CMD:houseupgrade(playerid, params[])
 
 	if(sscanf(params, "s[24]D(-1)", option, itemnumb))
 	{
-		SendClientMessage(playerid, COLOR_WHITE, "USAGE: /houseupgrade [level]");
+		SendSyntaxMessage(playerid, "/houseupgrade [level]");
 		SendClientMessage(playerid, COLOR_GRAD1, "|Buy: To purchase new items </houseupgrade buy to see more details.>");
 		SendClientMessage(playerid, COLOR_GRAD1, "|Remove: To Remove current items </houseupgrade remove to see more details.>");
 		return true;
@@ -7273,7 +7152,7 @@ CMD:houseupgrade(playerid, params[])
 	{
  		if(itemnumb < 1 || itemnumb > 2)
 		{
-			SendClientMessage(playerid, COLOR_WHITE, "USAGE: /houseupgrade buy [itemid]");
+			SendSyntaxMessage(playerid, "/houseupgrade buy [itemid]");
 			SendClientMessage(playerid, COLOR_GRAD1, "|_______ Items to Buy _______|");
 			SendClientMessage(playerid, COLOR_GRAD1, "<item ID>- <Price> : <Name>");
 			SendClientMessage(playerid, COLOR_GRAD3, "1- $6125: Fridge");
@@ -7317,7 +7196,7 @@ CMD:houseupgrade(playerid, params[])
 	{
 		if(itemnumb < 0 || itemnumb > 3)
 		{
-		    SendClientMessage(playerid, COLOR_WHITE, "USAGE: /houseupgrade remove [item]");
+		    SendSyntaxMessage(playerid, "/houseupgrade remove [item]");
 			ShowHouseItemDetail(playerid, house);
 			return true;
 		}
@@ -7449,7 +7328,7 @@ CMD:myhouse(playerid, params[])
 	if(sscanf(params, "s[32]S()[32]S()[32]", oneString, secString, thirdString))
 	{
 		SendClientMessageEx(playerid, COLOR_GRAD1, "Your House address is %s, San Andreas", ReturnPropertyAddress(house));
-		SendClientMessage(playerid, COLOR_GRAD2, "USAGE: /myhouse [choice]");
+		SendSyntaxMessage(playerid, "/myhouse [choice]");
 		SendClientMessage(playerid, COLOR_GRAD2, "| Phone | Security");
 		SendClientMessage(playerid, COLOR_GRAD2, "| Items | Cash | Inform");
 		SendClientMessage(playerid, COLOR_GRAD3, "HINT: /houseupgrade for upgrading your house.");
@@ -7688,16 +7567,8 @@ CMD:grantbuild(playerid, params[])
 		if(sscanf(params, "u", userid))
 		    return SendSyntaxMessage(playerid, "/grantbuild [playerid/PartOfName]");
 
-		if(userid == INVALID_PLAYER_ID)
-		{
-			new maskid[MAX_PLAYER_NAME];
-			sscanf(params, "s[24]", maskid);
-			if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-			{
-				return SendErrorMessage(playerid, "The player you specified isn't connected.");
-			}
-		}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+		return SendErrorMessage(playerid, "The player you specified isn't connected.");
 		if(!SQL_IsLogged(userid))
 			return SendErrorMessage(playerid, "The player you specified isn't logged in.");
 
@@ -7733,16 +7604,8 @@ CMD:grantbuild(playerid, params[])
 		if(sscanf(params, "u", userid))
 		    return SendSyntaxMessage(playerid, "/grantbuild [playerid/PartOfName]");
 
-		if(userid == INVALID_PLAYER_ID)
-		{
-			new maskid[MAX_PLAYER_NAME];
-			sscanf(params, "s[24]", maskid);
-			if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-			{
-				return SendErrorMessage(playerid, "The player you specified isn't connected.");
-			}
-		}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+		return SendErrorMessage(playerid, "The player you specified isn't connected.");
 		if(!SQL_IsLogged(userid))
 			return SendErrorMessage(playerid, "The player you specified isn't logged in.");
 
@@ -7894,16 +7757,8 @@ CMD:operation(playerid, params[])
 	if(sscanf(params, "u", userid))
 		return SendSyntaxMessage(playerid, "/operation [playerid/PartOfName]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(userid == INVALID_PLAYER_ID)
 	    return SendClientMessage(playerid, COLOR_GRAD1, "The player is disconnected.");
 
@@ -7944,16 +7799,8 @@ CMD:putinambu(playerid, params[])
 	if(sscanf(params, "u", userid))
 		return SendSyntaxMessage(playerid, "/putinambu [playerid/PartOfName]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(userid == INVALID_PLAYER_ID || !IsPlayerNearPlayer(playerid, userid, 10.0))
 	    return SendClientMessage(playerid, COLOR_LIGHTRED, "The player is disconnected. Or not near you");
 
@@ -9364,16 +9211,8 @@ CMD:takedrugs(playerid, params[])
 	if(sscanf(params, "u", userid))
 	    return SendSyntaxMessage(playerid, "/takedrugs [playerid/partOfName]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!IsPlayerNearPlayer(playerid, userid, 2.5))
 		return SendErrorMessage(playerid, "You aren't near that player.");
 
@@ -9407,16 +9246,8 @@ CMD:tie(playerid, params[])
 	if(sscanf(params, "u", userid))
 	    return SendSyntaxMessage(playerid, "/tie [playerid/Mask/PartOfName]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(IsCuffed{playerid} || IsTied{playerid} || PlayerData[playerid][pInjured])
 		return SendErrorMessage(playerid, "You cannot perform this action right now.");	
 	
@@ -9454,16 +9285,8 @@ CMD:untie(playerid, params[])
 	if(sscanf(params, "u", userid))
 	    return SendSyntaxMessage(playerid, "/untie [playerid/Mask/PartOfName]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(IsCuffed{playerid} || IsTied{playerid} || PlayerData[playerid][pInjured])
 		return SendErrorMessage(playerid, "You cannot perform this action right now.");	
 
@@ -9494,16 +9317,8 @@ CMD:handcuff(playerid, params[])
 	if(sscanf(params, "u", userid))
 	    return SendSyntaxMessage(playerid, "/handcuff [playerid/partOfName]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!PlayerData[playerid][pHandCuffs] && !AdminDuty{playerid})
 	    return SendErrorMessage(playerid, "You don't have any handcuffs.");
 
@@ -9548,16 +9363,8 @@ CMD:passhandcuffs(playerid, params[])
 	if(sscanf(params, "u", userid))
 	    return SendSyntaxMessage(playerid, "/passhandcuffs [playerid/PoN]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!IsPlayerNearPlayer(playerid, userid, 5.0))
 		return SendErrorMessage(playerid, "You are not close enough to that player.");
 
@@ -9590,16 +9397,8 @@ CMD:unhandcuff(playerid, params[])
 	if(!IsPolice(playerid) && GetFactionType(playerid) != FACTION_CORRECTIONAL && !AdminDuty{playerid})
   		return SendUnauthMessage(playerid, "Unauthorized.");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!IsPlayerNearPlayer(playerid, userid, 5.0))
 		return SendErrorMessage(playerid, "You aren't near that player.");
 
@@ -9935,16 +9734,8 @@ CMD:passgun(playerid, params[])
 	if(sscanf(params, "ui", userid, weaponid))
 		return SendSyntaxMessage(playerid, "/passgun [playerid/PoN] [weapon]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!SQL_IsLogged(userid))
 		return SendErrorMessage(playerid, "The player you specified isn't logged in.");
 
@@ -10074,16 +9865,8 @@ CMD:heal(playerid, params[])
 	    return true;
 	}
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(userid == INVALID_PLAYER_ID || !IsPlayerNearPlayer(playerid, userid, 10.0))
 	    return SendClientMessage(playerid, COLOR_LIGHTRED, "The player is disconnected. Or not near you");
 
@@ -10219,16 +10002,8 @@ CMD:detain(playerid, params[])
 	if(sscanf(params, "us[16]", userid, seat))
 	    return SendSyntaxMessage(playerid, "/detain [playerid / PoN ] [fr (frontright) / bl (backleft) / br (backright)]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]{s[128]}", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "Invalid player specified.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "Invalid player specified.");
 	if(IsABicycle(vehicleid) || IsABike(vehicleid))
 	    return SendErrorMessage(playerid, "You can't use this while in a bike.");
 
@@ -10283,16 +10058,8 @@ CMD:eject(playerid, params[])
 	if(sscanf(params, "u", userid))
 	    return SendSyntaxMessage(playerid, "/eject [playerid/PartOfName]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]{s[128]}", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "Invalid player specified.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "Invalid player specified.");
 	if(userid == playerid)
 	    return SendErrorMessage(playerid, "You can't eject yourself.");
 
@@ -11683,16 +11450,8 @@ CMD:paintcar(playerid, params[])
 		if(sscanf(params, "uddS()[16]", userid, color1, color2, confirm))
 			return SendSyntaxMessage(playerid, "/paintcar [playerid/PartOfName] [color 1] [color 2]");
 
-		if(userid == INVALID_PLAYER_ID)
-		{
-			new maskid[MAX_PLAYER_NAME];
-			sscanf(params, "s[24]{ddS()[16]}", maskid);
-			if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-			{
-				return SendErrorMessage(playerid, "The player you specified isn't connected.");
-			}
-		}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+		return SendErrorMessage(playerid, "The player you specified isn't connected.");
 		if(color1 > 255 || color2 > 255 || color1 < 0 || color2 < 0)
 			return SendClientMessage(playerid, COLOR_LIGHTRED, "Invalid color specified (0-255).");
 
@@ -11766,16 +11525,8 @@ CMD:service(playerid, params[])
 			return true;
 		}
 
-		if(userid == INVALID_PLAYER_ID)
-		{
-			new maskid[MAX_PLAYER_NAME];
-			sscanf(params, "s[24]{dS()[16]}", maskid);
-			if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-			{
-				return SendErrorMessage(playerid, "The player you specified isn't connected.");
-			}
-		}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+		return SendErrorMessage(playerid, "The player you specified isn't connected.");
 		if(userid == playerid)
 			return SendClientMessage(playerid, COLOR_GRAD1, "You cannot offer services to yourself.");
 
@@ -12275,7 +12026,7 @@ CMD:gofishing(playerid, params[])
 	new fishplace = strval(params);
 
 	if(isnull(params) && (fishplace != 1 && fishplace != 2))
-	    return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: {FFFFFF}/gofishing [1(on the ship)/2(From the bridge)]");
+	    return SendSyntaxMessage(playerid, "{FFFFFF}/gofishing [1(on the ship)/2(From the bridge)]");
 
 	if(PlayerData[playerid][pFishes])
 		return SendClientMessage(playerid, COLOR_LIGHTRED, "You can't go fishing if you have fish on you.");
@@ -12618,7 +12369,7 @@ CMD:bizbank(playerid, params[])
 	if(sscanf(params, "d", cashdeposit))
 	{
 	    SendClientMessageEx(playerid, COLOR_GRAD3, " You Have $40,500 in your till.", BusinessData[bouse][bTill]);
-		SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /bizbank [amount]");
+		SendSyntaxMessage(playerid, "/bizbank [amount]");
 		return true;
 	}
 
@@ -12787,7 +12538,7 @@ CMD:withdraw(playerid, params[])
 	{
 		if(sscanf(params, "d", cashdeposit))
 		{
-			SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /withdraw [amount]");
+			SendSyntaxMessage(playerid, "/withdraw [amount]");
 			SendClientMessageEx(playerid, COLOR_GRAD3, " You Have $%d in your account.", PlayerData[playerid][pAccount]);
 			return true;
 		}
@@ -12858,7 +12609,7 @@ CMD:bank(playerid, params[])
 	{
 		if(sscanf(params, "d", cashdeposit))
 		{
-			SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /bank [amount]");
+			SendSyntaxMessage(playerid, "/bank [amount]");
 			SendClientMessageEx(playerid, COLOR_GRAD3, " You Have $%d in your account.", PlayerData[playerid][pAccount]);
 			return true;
 		}
@@ -12968,7 +12719,7 @@ CMD:savings(playerid, params[])
 	        new savings = strval(params);
 
     		if(!savings)
-		    	return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE:{FFFFFF} To create a savings account /savings [amount]");
+		    	return SendSyntaxMessage(playerid, "{FFFFFF} To create a savings account /savings [amount]");
 
 			if(savings == 50000 || savings == 100000)
 			{
@@ -12996,7 +12747,7 @@ CMD:savings(playerid, params[])
 					}
 
 					SendNoticeMessage(playerid, "Your savings are left. %d/%d paydays (%d%s)", currently, paycheck, floatround(currently / float(paycheck) * 100), "%%");
-					SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: {FFFFFF} To withdraw your savings{FF6347}use /savings withdraw");*/
+					SendSyntaxMessage(playerid, "{FFFFFF} To withdraw your savings{FF6347}use /savings withdraw");*/
 				}
 				else SendClientMessage(playerid, COLOR_GRAD1, "You don't have enough money.");
 			}
@@ -13151,7 +12902,7 @@ CMD:towcar(playerid, params[])
 	;
 
 	if(sscanf(params, "d", vehicleid))
-		return SendNoticeMessage(playerid, "USAGE: /towcar [vehicleid]");
+		return SendSyntaxMessage(playerid, "/towcar [vehicleid]");
 
 	if(!IsValidVehicle(vehicleid))
 	{
@@ -13315,7 +13066,7 @@ YCMD:unscramble(playerid, params[], help) = uns;
 CMD:uns(playerid, params[])
 {
 	if(isnull(params))
-	    return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /(uns)cramble <unscrambled word>");
+	    return SendSyntaxMessage(playerid, "/(uns)cramble <unscrambled word>");
 
 	if(IsPlayerInAnyVehicle(playerid) && h_vid[playerid] != -1)
 	{
@@ -13736,7 +13487,7 @@ CMD:setslot(playerid, params[])
 	;
 
 	if(sscanf(params, "d", slot))
-		return SendClientMessage(playerid, COLOR_WHITE, "USAGE: /setslot [radio slot]");
+		return SendSyntaxMessage(playerid, "/setslot [radio slot]");
 
 	if(slot < 1 || slot > PlayerData[playerid][pRadio])
 		return SendClientMessage(playerid, COLOR_WHITE, "Your radio doesn't support that slot.");
@@ -13776,7 +13527,7 @@ CMD:setchannel(playerid, params[])
 	new slot, ch;
 
 	if(sscanf(params, "dd", slot, ch))
-		return SendClientMessage(playerid, COLOR_WHITE, "USAGE: /setchannel [radio slot] [channel number]");
+		return SendSyntaxMessage(playerid, "/setchannel [radio slot] [channel number]");
 
 	if(slot < 1 || slot > PlayerData[playerid][pRadio])
         return SendClientMessage(playerid, COLOR_WHITE, "Your radio doesn't support that slot.");
@@ -14330,7 +14081,7 @@ CMD:vehiclename(playerid, parmas[])
 
 	if(sscanf(parmas, "s[64]", vehiclename))
 	{
-		SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /vehiclename [Enter Custom Name]");
+		SendSyntaxMessage(playerid, "/vehiclename [Enter Custom Name]");
 		SendClientMessage(playerid, COLOR_YELLOW3, "SERVER: Do not include any periods at the end of your request.");
 		SendClientMessage(playerid, COLOR_YELLOW3, "SERVER: Your custom model name should include the model's year.");
 		SendClientMessage(playerid, COLOR_YELLOW3, "SERVER: Want to remove an existing custom name? /remove_vehiclename.");
@@ -14414,7 +14165,7 @@ CMD:v(playerid, params[])
 		new userid = INVALID_PLAYER_ID, price;
 
 		if(sscanf(params, "{s[24]}ud", userid, price))
-			return SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle sell [playerid/PartOfName] [price]");
+			return SendSyntaxMessage(playerid, "/(v)ehicle sell [playerid/PartOfName] [price]");
 
 		if(userid == INVALID_PLAYER_ID)
 		{
@@ -14480,7 +14231,7 @@ CMD:v(playerid, params[])
 		strmid(text, params, 6, strlen(params));
 
 		if(isnull(text))
-		    return SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle UItag [name]");
+		    return SendSyntaxMessage(playerid, "/(v)ehicle UItag [name]");
 
 	    if(strlen(text) < 3 || strlen(text) > 15)
 	        return SendErrorMessage(playerid, "Must be at least 3 characters and can't be longer than 15.");
@@ -14507,7 +14258,7 @@ CMD:v(playerid, params[])
 		;
 
 		if(sscanf(cf, "u", userid))
-			return SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle duplicatekey [playerid/PartOfName]");
+			return SendSyntaxMessage(playerid, "/(v)ehicle duplicatekey [playerid/PartOfName]");
 
 		if(userid == playerid)
 			return SendClientMessage(playerid, COLOR_LIGHTRED, "It can't be you.");
@@ -14575,7 +14326,7 @@ CMD:v(playerid, params[])
 		if(sscanf(cf, "d", keyid))
 		{
 		    SendClientMessage(playerid, COLOR_YELLOW3, "HINT: Use /(v)ehicle keys to get a list of the keys you have.");
-		    SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle dropkey [Key Slot]");
+		    SendSyntaxMessage(playerid, "/(v)ehicle dropkey [Key Slot]");
 		    return true;
 		}
 
@@ -14626,7 +14377,7 @@ CMD:v(playerid, params[])
 
 		        if(!strlen(cf))
 		        {
-	             	SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade [upgrade] [upgrade-level]");
+	             	SendSyntaxMessage(playerid, "/(v)ehicle upgrade [upgrade] [upgrade-level]");
 	                SendClientMessage(playerid, COLOR_YELLOW3, "[UPGRADES] lock, alarm, immob, insurance, armour");
 	                SendClientMessage(playerid, COLOR_YELLOW3, "[UPGRADES] battery, engine (( This option overwrites the original. ))");
 	         	}
@@ -14647,12 +14398,12 @@ CMD:v(playerid, params[])
 					    else
 					    {
 					        SendClientMessageEx(playerid, COLOR_YELLOW, "This operation requires %s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / VehicleUpgradeLock[uplevel-1][u_rate]) + VehicleUpgradeLock[uplevel-1][u_price]));
-					        SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade [upgrade] [upgrade-level] {FFFF00}yes");
+					        SendSyntaxMessage(playerid, "/(v)ehicle upgrade [upgrade] [upgrade-level] {FFFF00}yes");
 					    }
 					}
 					else
 					{
-		                SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade lock [lock-level]");
+		                SendSyntaxMessage(playerid, "/(v)ehicle upgrade lock [lock-level]");
 		                SendClientMessageEx(playerid, COLOR_YELLOW3, "Lock Level 1 - {33AA33}%s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / VehicleUpgradeLock[0][u_rate]) + VehicleUpgradeLock[0][u_price]));
 		                SendClientMessageEx(playerid, COLOR_YELLOW3, "Lock Level 2 - {33AA33}%s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / VehicleUpgradeLock[1][u_rate]) + VehicleUpgradeLock[1][u_price]));
 		                SendClientMessageEx(playerid, COLOR_YELLOW3, "Lock Level 3 - {33AA33}%s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / VehicleUpgradeLock[2][u_rate]) + VehicleUpgradeLock[2][u_price]));
@@ -14676,12 +14427,12 @@ CMD:v(playerid, params[])
 					    else
 					    {
 					        SendClientMessageEx(playerid, COLOR_YELLOW, "This operation requires %s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / VehicleUpgradeAlarm[uplevel-1][u_rate]) + VehicleUpgradeAlarm[uplevel-1][u_price]));
-					        SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade [upgrade] [upgrade-level] {FFFF00}yes");
+					        SendSyntaxMessage(playerid, "/(v)ehicle upgrade [upgrade] [upgrade-level] {FFFF00}yes");
 					    }
 					}
 					else
 					{
-		                SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade alarm [alarm-level]");
+		                SendSyntaxMessage(playerid, "/(v)ehicle upgrade alarm [alarm-level]");
 		                SendClientMessageEx(playerid, COLOR_YELLOW3, "Alarm Level 1 - {33AA33}%s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / VehicleUpgradeAlarm[0][u_rate]) + VehicleUpgradeAlarm[0][u_price]));
 		                SendClientMessageEx(playerid, COLOR_YELLOW3, "Alarm Level 2 - {33AA33}%s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / VehicleUpgradeAlarm[1][u_rate]) + VehicleUpgradeAlarm[1][u_price]));
 		                SendClientMessageEx(playerid, COLOR_YELLOW3, "Alarm Level 3 - {33AA33}%s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / VehicleUpgradeAlarm[2][u_rate]) + VehicleUpgradeAlarm[2][u_price]));
@@ -14705,12 +14456,12 @@ CMD:v(playerid, params[])
 					    else
 					    {
 					        SendClientMessageEx(playerid, COLOR_YELLOW, "This operation requires %s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / VehicleUpgradeImmob[uplevel-1][u_rate]) + VehicleUpgradeImmob[uplevel-1][u_price]));
-					        SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade [upgrade] [upgrade-level] {FFFF00}yes");
+					        SendSyntaxMessage(playerid, "/(v)ehicle upgrade [upgrade] [upgrade-level] {FFFF00}yes");
 					    }
 					}
 					else
 					{
-		                SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade immob [immob-level]");
+		                SendSyntaxMessage(playerid, "/(v)ehicle upgrade immob [immob-level]");
 		                SendClientMessageEx(playerid, COLOR_YELLOW3, "Immob Level 1 - {33AA33}%s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / VehicleUpgradeImmob[0][u_rate]) + VehicleUpgradeImmob[0][u_price]));
 		                SendClientMessageEx(playerid, COLOR_YELLOW3, "Immob Level 2 - {33AA33}%s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / VehicleUpgradeImmob[1][u_rate]) + VehicleUpgradeImmob[1][u_price]));
 		                SendClientMessageEx(playerid, COLOR_YELLOW3, "Immob Level 3 - {33AA33}%s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / VehicleUpgradeImmob[2][u_rate]) + VehicleUpgradeImmob[2][u_price]));
@@ -14734,12 +14485,12 @@ CMD:v(playerid, params[])
 					    else
 					    {
 					        SendClientMessageEx(playerid, COLOR_YELLOW, "This operation requires a %s", FormatNumber(((IsABike(vehicleid)) ? 1000 : 2500) *uplevel));
-							SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade [upgrade] [upgrade-level] {FFFF00}yes");
+							SendSyntaxMessage(playerid, "/(v)ehicle upgrade [upgrade] [upgrade-level] {FFFF00}yes");
 					    }
 					}
 					else
 					{
-		                SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade insurance [insurance-level]");
+		                SendSyntaxMessage(playerid, "/(v)ehicle upgrade insurance [insurance-level]");
 		                SendClientMessage(playerid, COLOR_YELLOW3, "Insurance 1st Level: Vehicle will always respawn with its max health.");
 						SendClientMessage(playerid, COLOR_YELLOW3, "Insurance 2nd Level: Protection against vehicle damage. Vehicle will re-spawn good as new.");
                         SendClientMessage(playerid, COLOR_YELLOW3, "Insurance 3rd Level: Vehicle modification coverage. We got your fancy layout and XM tunes covered!");
@@ -14766,12 +14517,12 @@ CMD:v(playerid, params[])
 					    else
 					    {
 					        SendClientMessageEx(playerid, COLOR_YELLOW, "This operation requires %s", FormatNumber(uplevel * GetVehicleDataArmourCost(CarData[carid][carModel])));
-					        SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade [upgrade] [upgrade-level] {FFFF00}yes");
+					        SendSyntaxMessage(playerid, "/(v)ehicle upgrade [upgrade] [upgrade-level] {FFFF00}yes");
 					    }
 					}
 					else
 					{
-		                SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade armour [amount]");
+		                SendSyntaxMessage(playerid, "/(v)ehicle upgrade armour [amount]");
 		                SendClientMessage(playerid, COLOR_YELLOW3, "AMOUNT: 10-250");
 		                SendClientMessageEx(playerid, COLOR_YELLOW3, "{33AA33}$%d{F0EA92} per Armour point.", GetVehicleDataArmourCost(CarData[carid][carModel]));
 					}
@@ -14791,7 +14542,7 @@ CMD:v(playerid, params[])
 					else
 					{
 					   	SendClientMessageEx(playerid, COLOR_YELLOW, "This operation requires %s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / 2.48) + floatround(VehicleData[CarData[carid][carModel] - 400][c_battery] * 13.0)));
-					  	SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade battery {FFFF00}yes");
+					  	SendSyntaxMessage(playerid, "/(v)ehicle upgrade battery {FFFF00}yes");
 					}
 				}
 				else if(!strcmp(cf, "engine", true))
@@ -14809,12 +14560,12 @@ CMD:v(playerid, params[])
 					else
 					{
 					   	SendClientMessageEx(playerid, COLOR_YELLOW, "This operation requires %s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / 1.72) + floatround(VehicleData[CarData[carid][carModel] - 400][c_engine] * 13.0)));
-					  	SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade engine {FFFF00}yes");
+					  	SendSyntaxMessage(playerid, "/(v)ehicle upgrade engine {FFFF00}yes");
 					}
 				}
 				else
 				{
-	             	SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade [upgrade] [upgrade-level]");
+	             	SendSyntaxMessage(playerid, "/(v)ehicle upgrade [upgrade] [upgrade-level]");
 	                SendClientMessage(playerid, COLOR_YELLOW3, "[UPGRADES] lock, alarm, immob, insurance, armour");
 	                SendClientMessage(playerid, COLOR_YELLOW3, "[UPGRADES] battery, engine (( This option overlaps the original. ))");
 				}
@@ -14847,7 +14598,7 @@ CMD:v(playerid, params[])
 			SendClientMessage(playerid, COLOR_YELLOW3, "SERVER: You have chosen to make the vehicle a debris.");
 			SendClientMessageEx(playerid, COLOR_YELLOW3, "SERVER: You will get just %s From the debris", FormatNumber(scrap_price));
 			SendClientMessage(playerid, COLOR_YELLOW3, "SERVER: When you destroy a debris the vehicle will be removed from the existing.");
-			SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle scrap yes");
+			SendSyntaxMessage(playerid, "/(v)ehicle scrap yes");
 		}
 	}
 	else if(!strcmp(type, "buy", true))
@@ -14898,7 +14649,7 @@ CMD:v(playerid, params[])
 			if(sscanf(cf, "d", keyid))
 			{
 				SendClientMessage(playerid, COLOR_YELLOW3, "You have multiple private vehicles spawned.");
-				SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle find vehicleid");
+				SendSyntaxMessage(playerid, "/(v)ehicle find vehicleid");
 
 				for(new i = 0; i < last + 1; ++i)
 				{
@@ -15199,7 +14950,7 @@ CMD:v(playerid, params[])
 			if(sscanf(cf, "d", keyid))
 			{
 				SendClientMessage(playerid, COLOR_YELLOW3, "You have multiple private vehicles spawned.");
-				SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle tow vehicleid");
+				SendSyntaxMessage(playerid, "/(v)ehicle tow vehicleid");
 
 				for(new i = 0; i < last + 1; ++i)
 				{
@@ -15962,16 +15713,8 @@ CMD:passbottle(playerid, params[])
 	if(sscanf(params, "uS()[64]", userid, emote))
 	    return SendClientMessage(playerid, COLOR_LIGHTRED, "Usage: /passbottle [playerid/partOfName] [optional: emote]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]{s[128]}", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!IsPlayerNearPlayer(playerid, userid, 5.0))
 	    return SendErrorMessage(playerid, "Not close enough.");
 
@@ -16428,7 +16171,7 @@ CMD:carsign(playerid, params[])
 		}
 		else
 		{
-			SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /remove_carsign {FFFFFF}- When you're done with it.");
+			SendSyntaxMessage(playerid, "/remove_carsign {FFFFFF}- When you're done with it.");
 
 			CoreVehicles[vehicleid][vehSignText] = Create3DTextLabel(params, COLOR_WHITE, 0.0, 0.0, 0.0, 25.0, 0, 0);
 			Attach3DTextLabelToVehicle(CoreVehicles[vehicleid][vehSignText], vehicleid, -0.7, -1.9, -0.3);
@@ -16453,7 +16196,7 @@ CMD:carsign(playerid, params[])
 				}
 				else
 				{
-					SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /remove_carsign {FFFFFF}- When you're done with it.");
+					SendSyntaxMessage(playerid, "/remove_carsign {FFFFFF}- When you're done with it.");
 
 					CoreVehicles[vehicleid][vehSignText] = Create3DTextLabel(params, 0x00B301FF, 0.0, 0.0, 0.0, 25.0, GetPlayerVirtualWorld(playerid), 0);
 					Attach3DTextLabelToVehicle(CoreVehicles[vehicleid][vehSignText], vehicleid, -0.7, -1.9, -0.3);
@@ -16750,16 +16493,8 @@ CMD:taxi(playerid, params[])
 		if(sscanf(params,"{s[11]}d",id))
 			return SendSyntaxMessage(playerid, "/taxi check [playerid]");
 
-		if(id == INVALID_PLAYER_ID)
-		{
-			new maskid[MAX_PLAYER_NAME];
-			sscanf(params, "{s[11]}s[24]", maskid);
-			if((id = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-			{
-				return SendErrorMessage(playerid, "The player you specified isn't connected.");
-			}
-		}
-
+if(id == INVALID_PLAYER_ID && (id = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+		return SendErrorMessage(playerid, "The player you specified isn't connected.");
 		if(PlayerData[id][pJob] != JOB_TAXI)
 			return SendClientMessage(playerid, COLOR_WHITE, "The player is not Taxi Driver.");
 
@@ -17222,16 +16957,8 @@ CMD:arrestrecord(playerid, params[])
 	if(sscanf(params, "uD(0)", userid, forcearrest))
 	    return SendSyntaxMessage(playerid, "/arrestrecord [playerid/Mask/partofName]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!SQL_IsLogged(userid))
 		return SendErrorMessage(playerid, "The player you specified isn't logged in.");
 
@@ -17913,7 +17640,7 @@ CMD:apb(playerid, params[])
 	if(sscanf(params, "s[32]S()[32]", option, action))
 	{
 		SendClientMessage(playerid, COLOR_LIGHTRED, "___________________________________");
-		SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /apb [action] | ( ) means optional");
+		SendSyntaxMessage(playerid, "/apb [action] | ( ) means optional");
 		SendClientMessage(playerid, COLOR_LIGHTRED, "[Show] /apb show (page number)");
 		SendClientMessage(playerid, COLOR_LIGHTRED, "[Details] /apb details [number]");
 		SendClientMessage(playerid, COLOR_LIGHTRED, "[Clear] /apb clear [number]");
@@ -17927,7 +17654,7 @@ CMD:apb(playerid, params[])
 	if(!strcmp(option, "show", true))
 	{
 		if(isnull(action) || !IsNumeric(action))
-		    return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /apb show (page number)");
+		    return SendSyntaxMessage(playerid, "/apb show (page number)");
 
 		new currentpage = strval(action);
 
@@ -17986,7 +17713,7 @@ CMD:apb(playerid, params[])
 	else if(!strcmp(option, "details", true))
 	{
 		if(isnull(action) || !IsNumeric(action))
-		    return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /apb details [number]");
+		    return SendSyntaxMessage(playerid, "/apb details [number]");
 
 		new idx = strval(action);
 
@@ -18006,7 +17733,7 @@ CMD:apb(playerid, params[])
 	else if(!strcmp(option, "clear", true))
 	{
 		if(isnull(action) || !IsNumeric(action))
-		    return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /apb clear [number]");
+		    return SendSyntaxMessage(playerid, "/apb clear [number]");
 
 		new idx = strval(action);
 
@@ -18032,7 +17759,7 @@ CMD:apb(playerid, params[])
 	else if(!strcmp(option, "create", true))
 	{
 	    if(isnull(action))
-	        return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /apb create [suspect] // [charges]");
+	        return SendSyntaxMessage(playerid, "/apb create [suspect] // [charges]");
 
 	    new idx = -1, pos;
 
@@ -18081,16 +17808,8 @@ CMD:fine(playerid, params[])
 	if(sscanf(params, "uds[128]", userid, amount, reason))
 		return SendClientMessage(playerid, COLOR_LIGHTRED, "Usage: /fine [playerid/Mask/PartOfName] [amount] [reason, 60 char max]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]{ds[60]}", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	/*if(userid == playerid)
 		return SendErrorMessage(playerid, "You can't fine yourself.");*/
 
@@ -18143,16 +17862,8 @@ CMD:fines(playerid, params[])
 		if(!PlayerData[playerid][pOnDuty])
 			return SendErrorMessage(playerid, "You're not on duty.");
 
-		if(userid == INVALID_PLAYER_ID)
-		{
-			new maskid[MAX_PLAYER_NAME];
-			sscanf(params, "s[24]", maskid);
-			if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-			{
-				return SendErrorMessage(playerid, "The player you specified isn't connected.");
-			}
-		}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+		return SendErrorMessage(playerid, "The player you specified isn't connected.");
 		ListPlayerFines(playerid, userid);
 	}
 	return true;
@@ -18332,16 +18043,8 @@ CMD:licenses(playerid, params[])
 	if(sscanf(params, "u", userid))
 	    return SendSyntaxMessage(playerid, "/licenses [ID/partofName/MaskID]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]{s[128]}", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!IsPlayerNearPlayer(playerid, userid, 5.0))
 	    return SendErrorMessage(playerid, "You aren't near that player.");
 
