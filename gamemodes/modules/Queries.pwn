@@ -221,6 +221,21 @@ SQL_ReturnEscaped(const string[])
 // Callbacks
 
 forward Faction_Load();
+// Default rank ladders used when the DB row is empty (j = rank index 0..18)
+static const g_aDefaultEMSRanks[14][32] = {
+	"Medical Director", "Chief Medical Officer", "Chief of Surgery", "Attending Physician",
+     "Senior Resident Doctor", "Resident Doctor", "Medical Intern", "Chief Paramedic",
+     "Senior Paramedic", "Paramedic II", "Paramedic I", "Advanced EMT",
+     "EMT-Basic", "Student EMT"
+};
+
+static const g_aDefaultFireRanks[14][32] = {
+	"Fire Chief", "Assistant Fire Chief", "Deputy Fire Chief", "Battalion Chief",
+     "Fire Captain II", "Fire Captain I", "Fire Lieutenant II", "Fire Lieutenant I",
+     "Senior Engineer", "Firefighter III", "Firefighter II", "Firefighter I",
+     "Probationary Firefighter", "Fire Recruit"
+};
+
 public Faction_Load()
 {
 	new
@@ -262,24 +277,10 @@ public Faction_Load()
 			    }
 			    else
 			    {
-			    	switch(j)
-			    	{
-			    		case 0: format(EMSRanks[i][j], 32, "Medical Director");
-			    		case 1: format(EMSRanks[i][j], 32, "Chief Medical Officer");
-			    		case 2: format(EMSRanks[i][j], 32, "Chief of Surgery");
-			    		case 3: format(EMSRanks[i][j], 32, "Attending Physician");
-			    		case 4: format(EMSRanks[i][j], 32, "Senior Resident Doctor");
-			    		case 5: format(EMSRanks[i][j], 32, "Resident Doctor");
-			    		case 6: format(EMSRanks[i][j], 32, "Medical Intern");
-			    		case 7: format(EMSRanks[i][j], 32, "Chief Paramedic");
-			    		case 8: format(EMSRanks[i][j], 32, "Senior Paramedic");
-			    		case 9: format(EMSRanks[i][j], 32, "Paramedic II");
-			    		case 10: format(EMSRanks[i][j], 32, "Paramedic I");
-			    		case 11: format(EMSRanks[i][j], 32, "Advanced EMT");
-			    		case 12: format(EMSRanks[i][j], 32, "EMT-Basic");
-			    		case 13: format(EMSRanks[i][j], 32, "Student EMT");
-			    		default: format(EMSRanks[i][j], 32, "EMS Trainee");
-			    	}
+			    	if(j < sizeof g_aDefaultEMSRanks)
+			    		format(EMSRanks[i][j], 32, g_aDefaultEMSRanks[j]);
+			    	else
+			    		format(EMSRanks[i][j], 32, "EMS Trainee");
 			    }
 
 			    format(rank, sizeof(rank), "fireRank%d", j + 1);
@@ -291,24 +292,10 @@ public Faction_Load()
 			    }
 			    else
 			    {
-			    	switch(j)
-			    	{
-			    		case 0: format(FireRanks[i][j], 32, "Fire Chief");
-			    		case 1: format(FireRanks[i][j], 32, "Assistant Fire Chief");
-			    		case 2: format(FireRanks[i][j], 32, "Deputy Fire Chief");
-			    		case 3: format(FireRanks[i][j], 32, "Battalion Chief");
-			    		case 4: format(FireRanks[i][j], 32, "Fire Captain II");
-			    		case 5: format(FireRanks[i][j], 32, "Fire Captain I");
-			    		case 6: format(FireRanks[i][j], 32, "Fire Lieutenant II");
-			    		case 7: format(FireRanks[i][j], 32, "Fire Lieutenant I");
-			    		case 8: format(FireRanks[i][j], 32, "Senior Engineer");
-			    		case 9: format(FireRanks[i][j], 32, "Firefighter III");
-			    		case 10: format(FireRanks[i][j], 32, "Firefighter II");
-			    		case 11: format(FireRanks[i][j], 32, "Firefighter I");
-			    		case 12: format(FireRanks[i][j], 32, "Probationary Firefighter");
-			    		case 13: format(FireRanks[i][j], 32, "Fire Recruit");
-			    		default: format(FireRanks[i][j], 32, "Fire Trainee");
-			    	}
+			    	if(j < sizeof g_aDefaultFireRanks)
+			    		format(FireRanks[i][j], 32, g_aDefaultFireRanks[j]);
+			    	else
+			    		format(FireRanks[i][j], 32, "Fire Trainee");
 			    }
 			}
 		}
@@ -405,6 +392,9 @@ public Bizz_Load()
 		cache_get_value_name_float(i, "biz_etX", BusinessData[i][bExitX]);
 		cache_get_value_name_float(i, "biz_etY", BusinessData[i][bExitY]);
 		cache_get_value_name_float(i, "biz_etZ", BusinessData[i][bExitZ]);
+		cache_get_value_name_float(i, "biz_fillX", BusinessData[i][bFillX]);
+		cache_get_value_name_float(i, "biz_fillY", BusinessData[i][bFillY]);
+		cache_get_value_name_float(i, "biz_fillZ", BusinessData[i][bFillZ]);
 		cache_get_value_name_int(i, "biz_level", BusinessData[i][bLevelNeeded]);
 		cache_get_value_name_int(i, "biz_price", BusinessData[i][bBuyPrice]);
 		cache_get_value_name_int(i, "biz_encost", BusinessData[i][bEntranceCost]);

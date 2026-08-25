@@ -256,34 +256,7 @@ IWS_LoadPickups()
         new itype, matprice, matstock, schprice;
         new Float:x, Float:y, Float:z;
 
-        // ponytail: sscanf-style manual parse
-        new idx = 0, tok[32], field = 0;
-        for(new c = 0; c <= strlen(line); ++c)
-        {
-            if(line[c] == ' ' || line[c] == '\n' || line[c] == '\r' || line[c] == EOS)
-            {
-                tok[idx] = EOS;
-                if(idx > 0)
-                {
-                    switch(field)
-                    {
-                        case 0: itype    = strval(tok);
-                        case 1: x        = floatstr(tok);
-                        case 2: y        = floatstr(tok);
-                        case 3: z        = floatstr(tok);
-                        case 4: matprice = strval(tok);
-                        case 5: matstock = strval(tok);
-                        case 6: schprice = strval(tok);
-                    }
-                    field++;
-                    idx = 0;
-                }
-            }
-            else
-            {
-                tok[idx++] = line[c];
-            }
-        }
+        sscanf(line, "d f f f d d d", itype, x, y, z, matprice, matstock, schprice);
 
         IWSPickup[i][iws_Type]     = itype;
         IWSPickup[i][iws_MatPrice] = matprice;

@@ -1012,34 +1012,27 @@ Car_SaveID(carid)
 	return false;
 }
 
-SaveVehicleDamage(vehicleid)
-{
-	new slot = -1;
+// panels, doors, lights, tires + health snapshot helpers (one body each)
 
-	if((slot = Car_GetID(vehicleid)) != -1)
-	{
-	    // panels, doors, lights, tires
-		GetVehicleDamageStatus(vehicleid, CarData[slot][carDamage][0], CarData[slot][carDamage][1], CarData[slot][carDamage][2], CarData[slot][carDamage][3]);
-		GetVehicleHealth(vehicleid, CarData[slot][carHealth]);
-	}
+SaveSlotVehicleDamage(slot)
+{
+	GetVehicleDamageStatus(CarData[slot][carVehicle], CarData[slot][carDamage][0], CarData[slot][carDamage][1], CarData[slot][carDamage][2], CarData[slot][carDamage][3]);
+	GetVehicleHealth(CarData[slot][carVehicle], CarData[slot][carHealth]);
 }
 
 SaveVehicleDamageID(slot)
 {
 	if(slot == -1) return true;
 
-	new vehicleid = CarData[slot][carVehicle];
-
-	// panels, doors, lights, tires
-	GetVehicleDamageStatus(vehicleid, CarData[slot][carDamage][0], CarData[slot][carDamage][1], CarData[slot][carDamage][2], CarData[slot][carDamage][3]);
-	GetVehicleHealth(vehicleid, CarData[slot][carHealth]);
+	SaveSlotVehicleDamage(slot);
 	return true;
 }
 
-SaveSlotVehicleDamage(slot)
+SaveVehicleDamage(vehicleid)
 {
-	GetVehicleDamageStatus(CarData[slot][carVehicle], CarData[slot][carDamage][0], CarData[slot][carDamage][1], CarData[slot][carDamage][2], CarData[slot][carDamage][3]);
-	GetVehicleHealth(CarData[slot][carVehicle], CarData[slot][carHealth]);
+	new slot = Car_GetID(vehicleid);
+
+	if(slot != -1) SaveSlotVehicleDamage(slot);
 }
 
 PutPlayerSettingVehicle(playerid, model, price)
@@ -1185,6 +1178,23 @@ PutPlayerSettingVehicle(playerid, model, price)
 	return true;
 }
 
+// Per-level upgrade blurbs shown on the dealership info dialog
+static const g_aLockLevelText[4][] =
+{
+	"{33AA33}+{FFFFFF}500 second wait time protection against\n\tprying break-in method.\n\t{33AA33}+{FFFFFF}Stronger armor- better defense against\n\tphysical attack breaching. -Fist & melee",
+	"{33AA33}+{FFFFFF}750 second wait time protection against\n\tprying break-in method.\n\t{33AA33}+{FFFFFF}Special armor- better defense x2 against\n\tmelee attack breaching.",
+	"{33AA33}+{FFFFFF}750 second wait time protection against\n\tprying break-in method.\n\t{33AA33}+{FFFFFF}Special armor- better defense x2 against\n\tmelee attack breaching.\n\t{33AA33}+{FFFFFF}Special armor protection blocks physical\n\tattack breaching. -Fist",
+	"{33AA33}+{FFFFFF}1,250 second wait time protection against\n\tprying break-in method.\n\t{33AA33}+{FFFFFF}Special armor protection blocks all types\n\tof physical attack breaching."
+};
+
+static const g_aAlarmLevelText[4][] =
+{
+	"{FF6347}+{FFFFFF}Loud Vehicle Alarm",
+	"{FF6347}+{FFFFFF}Loud Vehicle Alarm\n\t{FF6347}+{FFFFFF}Vehicle alerts the owner of a possible breach.",
+	"{FF6347}+{FFFFFF}Loud Vehicle Alarm\n\t{FF6347}+{FFFFFF}Vehicle alerts the owner of a possible breach.\n\t{FF6347}+{FFFFFF}Vehicle alerts the local police department of a\n\tpossible breach.",
+	"{FF6347}+{FFFFFF}Loud Vehicle Alarm\n\t{FF6347}+{FFFFFF}Vehicle alerts the owner of a possible breach.\n\t{FF6347}+{FFFFFF}Vehicle alerts the local police department of a\n\tpossible breach.\n\t{FF6347}+{FFFFFF}Vehicle blip will appear on the law enforcement's\n\tradar"
+};
+
 ShowPlayerDealercarDialog(playerid)
 {
 	new model = GetVehicleModel(VDealerVehicle[playerid]), price = VDealerPrice[playerid], string[64], string2[1024];
@@ -1200,25 +1210,7 @@ ShowPlayerDealercarDialog(playerid)
 		format(string2, sizeof(string2), "%s\n{FFFF00}Lock:\t\t{B4B5B7} level %d\t{FFFFFF}%s", string2,
 		VDealerLock[playerid] + 1, FormatNumber(floatround(VDealerPrice[playerid] / VehicleUpgradeLock[id][u_rate]) + VehicleUpgradeLock[id][u_price]));
 
-		switch(VDealerLock[playerid])
-		{
-		    case 1:
-			{
-		        format(string2, sizeof(string2), "%s\n\t{33AA33}+{FFFFFF}500 second wait time protection against\n\tprying break-in method.\n\t{33AA33}+{FFFFFF}Stronger armor- better defense against\n\tphysical attack breaching. -Fist & melee", string2);
-		    }
-		    case 2:
-			{
-		        format(string2, sizeof(string2), "%s\n\t{33AA33}+{FFFFFF}750 second wait time protection against\n\tprying break-in method.\n\t{33AA33}+{FFFFFF}Special armor- better defense x2 against\n\tmelee attack breaching.", string2);
-		    }
-		    case 3:
-			{
-		        format(string2, sizeof(string2), "%s\n\t{33AA33}+{FFFFFF}750 second wait time protection against\n\tprying break-in method.\n\t{33AA33}+{FFFFFF}Special armor- better defense x2 against\n\tmelee attack breaching.\n\t{33AA33}+{FFFFFF}Special armor protection blocks physical\n\tattack breaching. -Fist", string2);
-		    }
-		    case 4:
-			{
-		        format(string2, sizeof(string2), "%s\n\t{33AA33}+{FFFFFF}1,250 second wait time protection against\n\tprying break-in method.\n\t{33AA33}+{FFFFFF}Special armor protection blocks all types\n\tof physical attack breaching.", string2);
-		    }
-		}
+		format(string2, sizeof(string2), "%s\n\t%s", string2, g_aLockLevelText[VDealerLock[playerid] - 1]);
 	}
 	if(VDealerAlarm[playerid])
 	{
@@ -1226,25 +1218,7 @@ ShowPlayerDealercarDialog(playerid)
 		format(string2, sizeof(string2), "%s\n{FFFF00}Alarm:\t\t{B4B5B7} level %d\t{FFFFFF}%s", string2,
 		VDealerAlarm[playerid], FormatNumber(floatround(VDealerPrice[playerid] / VehicleUpgradeAlarm[id][u_rate]) + VehicleUpgradeAlarm[id][u_price]));
 
-		switch(VDealerAlarm[playerid])
-		{
-		    case 1:
-			{
-		        format(string2, sizeof(string2), "%s\n\t{FF6347}+{FFFFFF}Loud Vehicle Alarm", string2);
-		    }
-		    case 2:
-			{
-		        format(string2, sizeof(string2), "%s\n\t{FF6347}+{FFFFFF}Loud Vehicle Alarm\n\t{FF6347}+{FFFFFF}Vehicle alerts the owner of a possible breach.", string2);
-		    }
-		    case 3:
-			{
-		        format(string2, sizeof(string2), "%s\n\t{FF6347}+{FFFFFF}Loud Vehicle Alarm\n\t{FF6347}+{FFFFFF}Vehicle alerts the owner of a possible breach.\n\t{FF6347}+{FFFFFF}Vehicle alerts the local police department of a\n\tpossible breach.", string2);
-		    }
-		    case 4:
-			{
-		        format(string2, sizeof(string2), "%s\n\t{FF6347}+{FFFFFF}Loud Vehicle Alarm\n\t{FF6347}+{FFFFFF}Vehicle alerts the owner of a possible breach.\n\t{FF6347}+{FFFFFF}Vehicle alerts the local police department of a\n\tpossible breach.\n\t{FF6347}+{FFFFFF}Vehicle blip will appear on the law enforcement's\n\tradar", string2);
-		    }
-		}
+		format(string2, sizeof(string2), "%s\n\t%s", string2, g_aAlarmLevelText[VDealerAlarm[playerid] - 1]);
 	}
 
 	if(VDealerImmob[playerid])
@@ -2323,22 +2297,15 @@ Car_GetID(vehicleid)
 SetSlotVehicleDamage(slot)
 {
     SetVehicleDamageStatus(CarData[slot][carVehicle],CarData[slot][carDamage][0],CarData[slot][carDamage][1],CarData[slot][carDamage][2],CarData[slot][carDamage][3]);
-	//UpdateVehicleDamageStatus(CarData[slot][carVehicle],CarData[slot][carDamage][0],CarData[slot][carDamage][1],CarData[slot][carDamage][2],CarData[slot][carDamage][3]);
 	if(CarData[slot][carHealth] > 249) SetVehicleHealth(CarData[slot][carVehicle],CarData[slot][carHealth]);
 	else SetVehicleHealth(CarData[slot][carVehicle],250);
 }
 
 SetVehicleDamage(vehicleid)
 {
-	new slot = -1;
+	new slot = Car_GetID(vehicleid);
 
-	if((slot = Car_GetID(vehicleid)) != -1)
-	{
-	    SetVehicleDamageStatus(CarData[slot][carVehicle],CarData[slot][carDamage][0],CarData[slot][carDamage][1],CarData[slot][carDamage][2],CarData[slot][carDamage][3]);
-		//UpdateVehicleDamageStatus(CarData[slot][carVehicle],CarData[slot][carDamage][0],CarData[slot][carDamage][1],CarData[slot][carDamage][2],CarData[slot][carDamage][3]);
-		if(CarData[slot][carHealth] > 249) SetVehicleHealth(CarData[slot][carVehicle],CarData[slot][carHealth]);
-		else SetVehicleHealth(CarData[slot][carVehicle],250);
-	}
+	if(slot != -1) SetSlotVehicleDamage(slot);
 }
 
 RenderPlayerCarMenu(playerid, page, caramount, const data[][], const header[] = "", dealership = 0)

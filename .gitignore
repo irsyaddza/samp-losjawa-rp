@@ -33,5 +33,8 @@ mysql/data/
 # Secrets
 scriptfiles/ai_config.json
 
+# Local DB dumps
+jawa_backup.sql
+
 #agents
 opencode.json

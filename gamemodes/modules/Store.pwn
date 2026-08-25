@@ -109,7 +109,7 @@ AddItemToCart(playerid, x, index_id)
 		}
 	}
 
-	format(str, sizeof(str), "Cart: ~g~$%s", MoneyFormat(temp));
+	format(str, sizeof(str), "Cart: ~g~%s", FormatNumber(temp));
 	PlayerTextDrawSetString(playerid, Store_Cart[playerid], str);
 }
 

@@ -229,30 +229,9 @@ stock ClearPreviewObjects(playerid)
 
 stock MapRequest_HexToInt(const string[])
 {
-    new i = 0;
-    // Skip leading spaces
-    while (string[i] == ' ' || string[i] == '\t') i++;
-
-    if (string[i] == '0' && (string[i+1] == 'x' || string[i+1] == 'X'))
-    {
-        i += 2;
-    }
-    
-    new val = 0;
-    while (string[i] != '\0')
-    {
-        new c = string[i];
-        new digit = 0;
-        
-        if (c >= '0' && c <= '9') digit = c - '0';
-        else if (c >= 'a' && c <= 'f') digit = c - 'a' + 10;
-        else if (c >= 'A' && c <= 'F') digit = c - 'A' + 10;
-        else break; // Non-hex character
-        
-        val = (val * 16) + digit;
-        i++;
-    }
-    return val;
+    new value;
+    if(sscanf(string, "h", value)) return 0;
+    return value;
 }
 
 stock MapRequest_ParseColor(const string[])

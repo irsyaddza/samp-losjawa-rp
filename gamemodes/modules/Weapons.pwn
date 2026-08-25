@@ -548,52 +548,37 @@ DropGun_Nearest(playerid)
 
 RemoveWeaponOnly(playerid, weaponid)
 {
-    deleyAC_Nop{playerid} = true;
-
-	ResetPlayerWeapons(playerid);
-
-	for(new i = 0; i < 13; ++i)
-	{
-	    if(PlayerData[playerid][pGuns][i] != weaponid)
-		{
-			if(PlayerData[playerid][pGuns][i])
-			{
-				GivePlayerWeapon(playerid, PlayerData[playerid][pGuns][i], PlayerData[playerid][pAmmo][i]);
-			}
-		}
-		else
-		{
-            PlayerData[playerid][pGuns][i] = 0;
-            PlayerData[playerid][pAmmo][i] = 0;
-	    }
-	}
-
-    cl_DressHoldWeapon(playerid, GetPlayerWeapon(playerid));
-
-	deleyAC_Nop{playerid} = false;
-	return true;
+	return RemoveWeaponEx(playerid, weaponid, false);
 }
 
 RemoveWeapon(playerid, weaponid)
+{
+	return RemoveWeaponEx(playerid, weaponid, true);
+}
+
+RemoveWeaponEx(playerid, weaponid, bool:clearSlots)
 {
     deleyAC_Nop{playerid} = true;
 
 	ResetPlayerWeapons(playerid);
 
-	if(IsMelee(weaponid))
+	if(clearSlots)
 	{
-		PlayerData[playerid][pWeapon][0] = 0;
-		PlayerData[playerid][pAmmunation][0] = 0;
-	}
-	else if(IsPrimary(weaponid))
-	{
-		PlayerData[playerid][pWeapon][1] = 0;
-		PlayerData[playerid][pAmmunation][1] = 0;
-	}
-	else if(IsSecondary(weaponid))
-	{
-		PlayerData[playerid][pWeapon][2] = 0;
-		PlayerData[playerid][pAmmunation][2] = 0;
+		if(IsMelee(weaponid))
+		{
+			PlayerData[playerid][pWeapon][0] = 0;
+			PlayerData[playerid][pAmmunation][0] = 0;
+		}
+		else if(IsPrimary(weaponid))
+		{
+			PlayerData[playerid][pWeapon][1] = 0;
+			PlayerData[playerid][pAmmunation][1] = 0;
+		}
+		else if(IsSecondary(weaponid))
+		{
+			PlayerData[playerid][pWeapon][2] = 0;
+			PlayerData[playerid][pAmmunation][2] = 0;
+		}
 	}
 
 	for(new i = 0; i < 13; ++i)
