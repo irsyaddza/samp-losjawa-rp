@@ -105,8 +105,8 @@ Optional plugins:
     
 */
 
-#include "..\..\YSI_Core\y_utils"
-#include "..\..\YSI_Coding\y_va"
+#include "../../YSI_Core/y_utils"
+#include "../../YSI_Coding/y_va"
 
 // "y_iterate" is always higher than "foreach".
 #define _Y_ITERATE_LOCAL_VERSION        43
@@ -324,14 +324,14 @@ Optional plugins:
 #include "y_foreach_macros"
 
 #include "y_foreach_impl"
-#include "..\..\YSI_Coding\y_hooks"
+#include "../../YSI_Coding/y_hooks"
 #include "y_foreach_yield"
 
 #if _FOREACH_CHARACTERS || _FOREACH_VEHICLES || _FOREACH_ACTORS
-	#include "..\..\YSI_Coding\y_hooks"
+	#include "../../YSI_Coding/y_hooks"
 #endif
 #if _FOREACH_VEHICLES || _FOREACH_ACTORS
-	#include "..\..\YSI_Coding\y_remote"
+	#include "../../YSI_Coding/y_remote"
 #endif
 #include "y_foreach_iterators"
 

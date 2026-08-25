@@ -3,7 +3,7 @@
 	Los Jawa Roleplay
 */
 
-#include <YSI_Coding\y_hooks>
+#include <YSI_Coding/y_hooks>
 
 #define MAX_SWEEPER_SPAWNS      (50)
 #define MAX_SWEEPER_ROUTES      (100)

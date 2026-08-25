@@ -76,7 +76,7 @@ Optional plugins:
 	Me - sscanf2, fixes2, Whirlpool.
 */
 
-#include "..\..\YSI_Core\y_utils"
+#include "../../YSI_Core/y_utils"
 
 #define BINTREE_NO_BRANCH -1
 #define BINTREE_NOT_FOUND -1

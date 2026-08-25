@@ -76,7 +76,7 @@ Optional plugins:
 	Me - sscanf2, fixes2, Whirlpool.
 */
 
-#include "..\..\YSI_Core\y_utils"
+#include "../../YSI_Core/y_utils"
 
 #if !defined MAX_XML_FILES
 	#define MAX_XML_FILES               (5)

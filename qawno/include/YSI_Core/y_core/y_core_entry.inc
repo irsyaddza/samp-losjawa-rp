@@ -123,9 +123,9 @@ Optional plugins:
 
 // Avoid an error with `forward OnRuntimeError(code, &bool:suppress);` in here after already ALS
 // hooking it (#266).
-#tryinclude "..\..\crashdetect"
+#tryinclude "../../crashdetect"
 #tryinclude <crashdetect>
-#tryinclude "..\..\..\crashdetect"
+#tryinclude "../../../crashdetect"
 #tryinclude "crashdetect"
 
 // `FIX_OnRconCommand` and `FIX_OnClientCheckResponse` might use `_FIXES_DEFAULT`.
@@ -273,7 +273,7 @@ stock const YSIM_VERMAX[] = "X";
 #include "y_cell_impl"
 #include "y_amx_impl"
 #include "y_shortfunc"
-#include "..\..\YSI_Players\y_android\y_android_entry"
+#include "../../YSI_Players/y_android/y_android_entry"
 #include "y_utils_impl"
 
 // Part of "y_scriptinit", but requires "y_amx".
@@ -378,7 +378,7 @@ stock _YSI_ConstMod(const &var, const val)
 
 // These are conditional, and use most of the preceeding code.
 #if defined YSI_TESTS
-	#include "..\y_testing"
+	#include "../y_testing"
 #endif
 
 #if defined YSI_YES_MODE_CACHE

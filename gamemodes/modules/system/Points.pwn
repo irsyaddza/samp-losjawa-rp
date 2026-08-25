@@ -387,7 +387,7 @@ stock Point_Refresh(i)
     return 1;
 }
 
-#include <YSI_Coding\y_hooks>
+#include <YSI_Coding/y_hooks>
 hook OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 {
     if(GetPlayerState(playerid) == PLAYER_STATE_DRIVER)

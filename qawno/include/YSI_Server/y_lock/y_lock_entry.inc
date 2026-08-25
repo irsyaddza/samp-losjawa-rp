@@ -132,8 +132,8 @@ Optional plugins:
 #endif
 
 #define YSI_LOCK_MODE
-#include "..\..\YSI_Core\y_utils"
-#include "..\..\YSI_Coding\y_hooks"
+#include "../../YSI_Core/y_utils"
+#include "../../YSI_Coding/y_hooks"
 
 _DoYLock(P:C(from);)
 {

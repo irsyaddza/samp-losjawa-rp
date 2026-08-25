@@ -76,7 +76,7 @@ Optional plugins:
 	Me - sscanf2, fixes2, Whirlpool.
 */
 
-#include "..\..\YSI_Core\y_utils"
+#include "../../YSI_Core/y_utils"
 
 #define PUNY_BASE (36)
 #define PUNY_CHAR ('-')

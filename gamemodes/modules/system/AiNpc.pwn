@@ -1,6 +1,6 @@
 // ponytail: Full AI NPC system integrated with pawn-requests (Southclaws) & OpenRouter API
 
-#include <YSI_Coding\y_hooks>
+#include <YSI_Coding/y_hooks>
 
 #define MAX_AI_NPC (30)
 

@@ -76,9 +76,9 @@ Optional plugins:
 	Me - sscanf2, fixes2, Whirlpool.
 */
 
-#include "..\..\YSI_Core\y_utils"
-#include "..\..\YSI_Coding\y_timers"
-#include "..\..\YSI_Coding\y_hooks"
+#include "../../YSI_Core/y_utils"
+#include "../../YSI_Coding/y_timers"
+#include "../../YSI_Coding/y_hooks"
 
 #if !defined PHP_RECEIVE || !defined PHP_SEND
 	#error You must define PHP_RECEIVE and PHP_SEND before including y_php.

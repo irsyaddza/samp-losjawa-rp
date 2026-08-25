@@ -48,16 +48,16 @@
 /// <p/>
 
 #if !defined ADDRESSOF_INC
-	#tryinclude "..\amx\addressof"
+	#tryinclude "../amx/addressof"
 #endif
 #if !defined ADDRESSOF_INC
-	#tryinclude <amx_assembly\addressof>
+	#tryinclude <amx_assembly/addressof>
 #endif
 #if !defined ADDRESSOF_INC
-	#tryinclude "..\amx_assembly\addressof"
+	#tryinclude "../amx_assembly/addressof"
 #endif
 #if !defined ADDRESSOF_INC
-	#tryinclude "..\..\amx_assembly\addressof"
+	#tryinclude "../../amx_assembly/addressof"
 #endif
 #if !defined ADDRESSOF_INC
 	#tryinclude "addressof"
@@ -73,16 +73,16 @@
 #endif
 
 #if !defined ADDRESSOF_JIT_INC
-	#tryinclude "..\amx\addressof_jit"
+	#tryinclude "../amx/addressof_jit"
 #endif
 #if !defined ADDRESSOF_JIT_INC
-	#tryinclude <amx_assembly\addressof_jit>
+	#tryinclude <amx_assembly/addressof_jit>
 #endif
 #if !defined ADDRESSOF_JIT_INC
-	#tryinclude "..\amx_assembly\addressof_jit"
+	#tryinclude "../amx_assembly/addressof_jit"
 #endif
 #if !defined ADDRESSOF_JIT_INC
-	#tryinclude "..\..\amx_assembly\addressof_jit"
+	#tryinclude "../../amx_assembly/addressof_jit"
 #endif
 #if !defined ADDRESSOF_JIT_INC
 	#tryinclude "addressof_jit"
@@ -95,16 +95,16 @@
 #endif
 
 #if !defined AMX_HEADER_INC
-	#tryinclude "..\amx\amx_header"
+	#tryinclude "../amx/amx_header"
 #endif
 #if !defined AMX_HEADER_INC
-	#tryinclude <amx_assembly\amx_header>
+	#tryinclude <amx_assembly/amx_header>
 #endif
 #if !defined AMX_HEADER_INC
-	#tryinclude "..\amx_assembly\amx_header"
+	#tryinclude "../amx_assembly/amx_header"
 #endif
 #if !defined AMX_HEADER_INC
-	#tryinclude "..\..\amx_assembly\amx_header"
+	#tryinclude "../../amx_assembly/amx_header"
 #endif
 #if !defined AMX_HEADER_INC
 	#tryinclude "amx_header"

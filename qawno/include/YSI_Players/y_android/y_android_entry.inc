@@ -87,8 +87,8 @@ Optional plugins:
 	#endinput
 #endif
 
-#include "..\..\YSI_Core\y_core\y_core_entry"
-#include "..\..\YSI_Core\y_core\y_rconfix"
+#include "../../YSI_Core/y_core/y_core_entry"
+#include "../../YSI_Core/y_core/y_rconfix"
 
 static stock
 	YSI_g_sTimers[MAX_PLAYERS],

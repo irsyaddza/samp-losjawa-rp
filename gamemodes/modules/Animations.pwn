@@ -65,6 +65,443 @@ AnimationCheck(playerid, bool:caranim = false)
 	return false;
 }
 
+// ---- data-driven animation commands ----
+static const g_aAnimLib[102][] = {
+	"PED",
+	"MISC",
+	"MISC",
+	"PLAYIDLES",
+	"PED",
+	"SWEET",
+	"PED",
+	"PLAYIDLES",
+	"PED",
+	"MISC",
+	"GRAVEYARD",
+	"PED",
+	"GRAVEYARD",
+	"PED",
+	"PED",
+	"PED",
+	"PED",
+	"FAT",
+	"PED",
+	"PED",
+	"PED",
+	"PED",
+	"POLICE",
+	"BEACH",
+	"RAPPING",
+	"GANGS",
+	"GANGS",
+	"GANGS",
+	"GANGS",
+	"BENCHPRESS",
+	"GANGS",
+	"BD_FIRE",
+	"GRAFFITI",
+	"ON_LOOKERS",
+	"BD_FIRE",
+	"BD_FIRE",
+	"FIGHT_E",
+	"ON_LOOKERS",
+	"ON_LOOKERS",
+	"FIGHT_C",
+	"BD_FIRE",
+	"BAR",
+	"BEACH",
+	"BEACH",
+	"BEACH",
+	"BUDDY",
+	"BUDDY",
+	"BUDDY",
+	"PYTHON",
+	"SMOKING",
+	"GANGS",
+	"BUDDY",
+	"BUDDY",
+	"BSKTBALL",
+	"BSKTBALL",
+	"BSKTBALL",
+	"BSKTBALL",
+	"BSKTBALL",
+	"BSKTBALL",
+	"GRENADE",
+	"BSKTBALL",
+	"BSKTBALL",
+	"BSKTBALL",
+	"BSKTBALL",
+	"BSKTBALL",
+	"BSKTBALL",
+	"BSKTBALL",
+	"FIGHT_B",
+	"FIGHT_C",
+	"BASEBALL",
+	"FIGHT_B",
+	"FIGHT_B",
+	"SNIPER",
+	"KNIFE",
+	"KNIFE",
+	"FIGHT_B",
+	"FIGHT_B",
+	"POLICE",
+	"FIGHT_C",
+	"FIGHT_C",
+	"FIGHT_C",
+	"FIGHT_C",
+	"FIGHT_C",
+	"DODGE",
+	"DODGE",
+	"DODGE",
+	"RIOT",
+	"ON_LOOKERS",
+	"ON_LOOKERS",
+	"SWEET",
+	"SWEET",
+	"ROCKET",
+	"GHANDS",
+	"PED",
+	"FIGHT_D",
+	"DEALER",
+	"VAN",
+	"VAN",
+	"PED",
+	"PED",
+	"INT_OFFICE",
+	"INT_OFFICE"
+};
+static const g_aAnimName[102][] = {
+	"gang_gunstand",
+	"Hiker_Pose_L",
+	"Hiker_Pose",
+	"stretch",
+	"KD_left",
+	"sweet_ass_slap",
+	"WALK_armed",
+	"SHIFT",
+	"IDLE_ARMED",
+	"PLYRLEAN_LOOP",
+	"MRNM_LOOP",
+	"IDLESTANCE_OLD",
+	"PRST_LOOPA",
+	"FLOOR_HIT_F",
+	"FUCKU",
+	"COWER",
+	"GUM_EAT",
+	"IDLE_tired",
+	"IDLE_TIRED",
+	"SEAT_DOWN",
+	"TURN_180",
+	"KO_SKID_FRONT",
+	"DOOR_KICK",
+	"bather",
+	"LAUGH_01",
+	"SHAKE_CARA",
+	"SHAKE_CARSH",
+	"INVITE_YES",
+	"DEALER_DEAL",
+	"GYM_BP_CELEBRATE",
+	"INVITE_NO",
+	"BD_PANIC_04",
+	"SPRAYCAN_FIRE",
+	"PANIC_SHOUT",
+	"WASH_UP",
+	"WASH_UP",
+	"HIT_FIGHTKICK_B",
+	"SHOUT_01",
+	"SHOUT_LOOP",
+	"HITC_3",
+	"BD_PANIC_02",
+	"DNK_STNDM_LOOP",
+	"PARKSIT_M_LOOP",
+	"SITNWAIT_LOOP_W",
+	"PARKSIT_W_LOOP",
+	"BUDDY_CROUCHFIRE",
+	"BUDDY_CROUCHRELOAD",
+	"BUDDY_FIRE",
+	"PYTHON_FIRE",
+	"M_smklean_loop",
+	"smkcig_prtl",
+	"BUDDY_FIRE_POOR",
+	"BUDDY_RELOAD",
+	"BBALL_DEF_JUMP_SHOT",
+	"BBALL_DEF_LOOP",
+	"BBALL_DEF_STEPR",
+	"BBALL_IDLE",
+	"BBALL_WALK",
+	"BBALL_RUN",
+	"WEAPON_THROW",
+	"BBALL_DNK",
+	"BBALL_DNK_GLI",
+	"BBALL_DNK_LND",
+	"BBALL_JUMP_SHOT",
+	"BBALL_PICKUP",
+	"BBALL_REACT_MISS",
+	"BBALL_JUMP_END",
+	"HITB_1",
+	"FIGHTC_M",
+	"BAT_M",
+	"FIGHTB_1",
+	"FIGHTB_2",
+	"WEAPON_SNIPER",
+	"KILL_KNIFE_PED_DIE",
+	"KNIFE_HIT_1",
+	"FIGHTB_G",
+	"HITB_2",
+	"DOOR_KICK",
+	"FIGHTC_1",
+	"FIGHTC_2",
+	"FIGHTC_3",
+	"FIGHTC_BLOCK",
+	"FIGHTC_G",
+	"CRUSH_JUMP",
+	"COVER_DIVE_01",
+	"COVER_DIVE_02",
+	"RIOT_PUNCHES",
+	"LKAROUND_LOOP",
+	"LKUP_LOOP",
+	"SWEET_INJUREDLOOP",
+	"LAFIN_SWEET",
+	"RocketFire",
+	"GSIGN5LH",
+	"ROADCROSS",
+	"FIGHTD_3",
+	"SHOP_PAY",
+	"VAN_OPEN_BACK_RHS",
+	"VAN_OPEN_BACK_LHS",
+	"KO_SHOT_STOM",
+	"KO_SHOT_FRONT",
+	"OFF_SIT_BORED_LOOP",
+	"OFF_SIT_IDLE_LOOP"
+};
+static const Float:g_aAnimDelta[102] = {
+	4.0,
+	4.0,
+	4.0,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1,
+	4.1
+};
+static const g_aAnimParams[102][6] = {
+	{1,0,0,0,0,1},
+	{0,1,1,1,0,1},
+	{0,1,1,1,0,1},
+	{0,0,0,0,0,1},
+	{0,1,1,1,0,1},
+	{0,0,0,0,0,1},
+	{1,1,1,1,1,1},
+	{0,0,0,0,0,1},
+	{1,0,0,0,0,1},
+	{1,1,0,0,0,1},
+	{1,0,0,0,0,1},
+	{1,0,0,0,0,1},
+	{1,0,0,0,0,1},
+	{0,0,0,1,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,1,0,1},
+	{0,0,0,0,0,1},
+	{1,0,0,0,0,1},
+	{1,0,0,0,0,1},
+	{0,0,0,1,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,1,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,1,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,1,0,1},
+	{0,0,0,1,0,1},
+	{0,0,0,1,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{1,0,0,0,0,1},
+	{0,1,1,1,1,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{1,0,0,0,0,1},
+	{1,1,1,0,0,1},
+	{0,0,0,0,0,1},
+	{1,1,1,0,0,1},
+	{1,1,1,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,1,1,1,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,1,1,0,0,1},
+	{0,1,1,0,0,1},
+	{0,1,1,0,0,1},
+	{0,1,1,0,0,1},
+	{0,1,1,0,0,1},
+	{0,1,1,0,0,1},
+	{0,1,1,0,0,1},
+	{0,1,1,0,0,1},
+	{0,1,1,0,0,1},
+	{0,1,1,0,0,1},
+	{0,1,1,0,0,1},
+	{0,1,1,1,0,1},
+	{0,1,1,1,0,1},
+	{0,1,1,1,1,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,0,0,0,0,1},
+	{0,1,1,1,0,1},
+	{0,1,1,1,0,1},
+	{1,0,0,0,0,1},
+	{1,0,0,0,0,1}
+};
+stock DoAnim(playerid, slot, bool:usecd)
+{
+	if(AnimationCheck(playerid))
+	    return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+
+	if(usecd && ((gettime() - AnimCooldown[playerid]) < 5))
+		return SendClientMessage(playerid, COLOR_LIGHTRED, "You need to wait 5 seconds between each animation");
+
+	PlayerData[playerid][pAnimation] = 1;
+
+	ApplyAnimation(playerid, g_aAnimLib[slot], g_aAnimName[slot], g_aAnimDelta[slot],
+	    g_aAnimParams[slot][0], g_aAnimParams[slot][1], g_aAnimParams[slot][2],
+	    g_aAnimParams[slot][3], g_aAnimParams[slot][4], g_aAnimParams[slot][5]);
+
+	if(usecd) AnimCooldown[playerid] = gettime();
+	return true;
+}
+
+// ---- custom animation commands ----
+
 // Commands
 
 YCMD:sa(playerid, params[], help) = stopanim;
@@ -120,100 +557,23 @@ CMD:carry(playerid, params[])
 	return true;
 }
 
-CMD:aim(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:aim(playerid, params[]) return DoAnim(playerid, 0, true); // PED.gang_gunstand
 
-    if((gettime() - AnimCooldown[playerid]) < 5) 
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "You need to wait 5 seconds between each animation");
 
-    PlayerData[playerid][pAnimation] = 1;
-    ApplyAnimation(playerid, "PED", "gang_gunstand", 4.0, 1, 0, 0, 0, 0, 1);
+CMD:taxil(playerid, params[]) return DoAnim(playerid, 1, true); // MISC.Hiker_Pose_L
 
-    AnimCooldown[playerid] = gettime();
-   	return true;
-}
 
-CMD:taxil(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:taxir(playerid, params[]) return DoAnim(playerid, 2, true); // MISC.Hiker_Pose
 
-    if((gettime() - AnimCooldown[playerid]) < 5) 
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "You need to wait 5 seconds between each animation");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:stretch(playerid, params[]) return DoAnim(playerid, 3, true); // PLAYIDLES.stretch
 
-    ApplyAnimation(playerid, "MISC", "Hiker_Pose_L", 4.0, 0, 1, 1, 1, 0, 1);
 
-    AnimCooldown[playerid] = gettime();
-   	return true;
-}
+CMD:flip(playerid, params[]) return DoAnim(playerid, 4, true); // PED.KD_left
 
-CMD:taxir(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    if((gettime() - AnimCooldown[playerid]) < 5) 
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "You need to wait 5 seconds between each animation");
+CMD:slapass(playerid, params[]) return DoAnim(playerid, 5, true); // SWEET.sweet_ass_slap
 
-    PlayerData[playerid][pAnimation] = 1;
-
-   	ApplyAnimation(playerid, "MISC", "Hiker_Pose", 4.0, 0, 1, 1, 1, 0, 1);
-
-   	AnimCooldown[playerid] = gettime();
-   	return true;
-}
-
-CMD:stretch(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    if((gettime() - AnimCooldown[playerid]) < 5) 
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "You need to wait 5 seconds between each animation");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "PLAYIDLES", "stretch", 4.1, 0, 0, 0, 0, 0, 1);
-
-    AnimCooldown[playerid] = gettime();
-    return true;
-}
-
-CMD:flip(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    if((gettime() - AnimCooldown[playerid]) < 5) 
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "You need to wait 5 seconds between each animation");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-   	ApplyAnimation(playerid, "PED", "KD_left", 4.1, 0, 1, 1, 1, 0, 1);
-    
-   	AnimCooldown[playerid] = gettime();
-   	return true;
-}
-
-CMD:slapass(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    if((gettime() - AnimCooldown[playerid]) < 5) 
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "You need to wait 5 seconds between each animation");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "SWEET", "sweet_ass_slap", 4.1, false, false, false, false, 0, true);
-
-    AnimCooldown[playerid] = gettime();
-    return true;
-}
 
 CMD:dance(playerid, params[])
 {
@@ -327,20 +687,8 @@ CMD:handsup(playerid, params[])
 	return true;
 }
 
-CMD:rifflewalkstance(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:rifflewalkstance(playerid, params[]) return DoAnim(playerid, 6, true); // PED.WALK_armed
 
-    if((gettime() - AnimCooldown[playerid]) < 5) 
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "You need to wait 5 seconds between each animation");
-
-    PlayerData[playerid][pAnimation] = 1;
- 	ApplyAnimation(playerid,"PED","WALK_armed", 4.1, 1, 1, 1, 1, 1, 1);
- 	AnimCooldown[playerid] = gettime();
-
-	return true;
-}
 
 CMD:rifflerunstance(playerid, params[])
 {
@@ -934,21 +1282,8 @@ CMD:fightstance(playerid, params[])
     return true;
 }
 
-CMD:idle(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:idle(playerid, params[]) return DoAnim(playerid, 7, true); // PLAYIDLES.SHIFT
 
-    if((gettime() - AnimCooldown[playerid]) < 5)  
-        return SendClientMessage(playerid, COLOR_LIGHTRED, "You need to wait 5 seconds between each animation");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "PLAYIDLES", "SHIFT", 4.1, false, false, false, false, 0, true);
-
-    AnimCooldown[playerid] = gettime();
-    return true;
-}
 
 CMD:crossarm(playerid, params[])
 {
@@ -999,929 +1334,257 @@ CMD:crosswin(playerid, params[])
     return true;
 }
 
-CMD:rifflestance(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:rifflestance(playerid, params[]) return DoAnim(playerid, 8, false); // PED.IDLE_ARMED
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "PED", "IDLE_ARMED", 4.1, true, false, false, false, 0, true);
-    return true;
-}
+CMD:lean2(playerid, params[]) return DoAnim(playerid, 9, false); // MISC.PLYRLEAN_LOOP
 
-CMD:lean2(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:mourn(playerid, params[]) return DoAnim(playerid, 10, false); // GRAVEYARD.MRNM_LOOP
 
-    ApplyAnimation(playerid, "MISC", "PLYRLEAN_LOOP", 4.1, true, true, false, false, 0, true);
-    return true;
-}
 
-CMD:mourn(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:old(playerid, params[]) return DoAnim(playerid, 11, false); // PED.IDLESTANCE_OLD
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "GRAVEYARD", "MRNM_LOOP", 4.1, true, false, false, false, 0, true);
-    return true;
-}
+CMD:priest(playerid, params[]) return DoAnim(playerid, 12, false); // GRAVEYARD.PRST_LOOPA
 
-CMD:old(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:frontfall(playerid, params[]) return DoAnim(playerid, 13, false); // PED.FLOOR_HIT_F
 
-    ApplyAnimation(playerid, "PED", "IDLESTANCE_OLD", 4.1, true, false, false, false, 0, true);
-    return true;
-}
 
-CMD:priest(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:fuckyou(playerid, params[]) return DoAnim(playerid, 14, false); // PED.FUCKU
 
-    PlayerData[playerid][pAnimation] = 1;
-    
-    ApplyAnimation(playerid, "GRAVEYARD", "PRST_LOOPA", 4.1, true, false, false, false, 0, true);
-    return true;
-}
 
-CMD:frontfall(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:cover(playerid, params[]) return DoAnim(playerid, 15, false); // PED.COWER
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "PED", "FLOOR_HIT_F", 4.1, false, false, false, true, 0, true);
-    return true;
-}
+CMD:eatanim(playerid, params[]) return DoAnim(playerid, 16, false); // PED.GUM_EAT
 
-CMD:fuckyou(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:exhausted(playerid, params[]) return DoAnim(playerid, 17, false); // FAT.IDLE_tired
 
-    ApplyAnimation(playerid, "PED", "FUCKU", 4.1, false, false, false, false, 0, true);
-    return true;
-}
 
-CMD:cover(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:tired(playerid, params[]) return DoAnim(playerid, 18, false); // PED.IDLE_TIRED
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "PED", "COWER", 4.1, false, false, false, true, 0, true);
-    return true;
-}
+CMD:seat(playerid, params[]) return DoAnim(playerid, 19, false); // PED.SEAT_DOWN
 
-CMD:eatanim(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:uturn(playerid, params[]) return DoAnim(playerid, 20, false); // PED.TURN_180
 
-    ApplyAnimation(playerid, "PED", "GUM_EAT", 4.1, false, false, false, false, 0, true);
-    return true;
-}
 
-CMD:exhausted(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:fallkick(playerid, params[]) return DoAnim(playerid, 21, false); // PED.KO_SKID_FRONT
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "FAT", "IDLE_tired", 4.1, true, false, false, false, 0, true);
-    return true;
-}
+CMD:kickdoor(playerid, params[]) return DoAnim(playerid, 22, false); // POLICE.DOOR_KICK
 
-CMD:tired(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:lay(playerid, params[]) return DoAnim(playerid, 23, false); // BEACH.bather
 
-    ApplyAnimation(playerid, "PED", "IDLE_TIRED", 4.1, true, false, false, false, 0, true);
-    return true;
-}
 
-CMD:seat(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:laugh(playerid, params[]) return DoAnim(playerid, 24, false); // RAPPING.LAUGH_01
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "PED", "SEAT_DOWN", 4.1, false, false, false, true, 0, true);
-    return true;
-}
+CMD:downpush(playerid, params[]) return DoAnim(playerid, 25, false); // GANGS.SHAKE_CARA
 
-CMD:uturn(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:lowbump(playerid, params[]) return DoAnim(playerid, 26, false); // GANGS.SHAKE_CARSH
 
-    ApplyAnimation(playerid, "PED", "TURN_180", 4.1, false, false, false, false, 0, true);
-    return true;
-}
 
-CMD:fallkick(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:agree(playerid, params[]) return DoAnim(playerid, 27, false); // GANGS.INVITE_YES
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "PED", "KO_SKID_FRONT", 4.1, false, false, false, true, 0, true);
-    return true;
-}
+CMD:deal(playerid, params[]) return DoAnim(playerid, 28, false); // GANGS.DEALER_DEAL
 
-CMD:kickdoor(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:flex(playerid, params[]) return DoAnim(playerid, 29, false); // BENCHPRESS.GYM_BP_CELEBRATE
 
-    ApplyAnimation(playerid, "POLICE", "DOOR_KICK", 4.1, false, false, false, false, 0, true);
-    return true;
-}
 
-CMD:lay(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:reject(playerid, params[]) return DoAnim(playerid, 30, false); // GANGS.INVITE_NO
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "BEACH", "bather", 4.1, false, false, false, false, 0, true);
-    return true;
-}
+CMD:shouldercheck(playerid, params[]) return DoAnim(playerid, 31, false); // BD_FIRE.BD_PANIC_04
 
-CMD:laugh(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:spray(playerid, params[]) return DoAnim(playerid, 32, false); // GRAFFITI.SPRAYCAN_FIRE
 
-    ApplyAnimation(playerid, "RAPPING", "LAUGH_01", 4.1, false, false, false, false, 0, true);
-    return true;
-}
 
-CMD:downpush(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:upshout(playerid, params[]) return DoAnim(playerid, 33, false); // ON_LOOKERS.PANIC_SHOUT
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "GANGS", "SHAKE_CARA", 4.1, false, false, false, false, 0, true);
-    return true;
-}
+CMD:washhands(playerid, params[]) return DoAnim(playerid, 34, false); // BD_FIRE.WASH_UP
 
-CMD:lowbump(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:dishes(playerid, params[]) return DoAnim(playerid, 35, false); // BD_FIRE.WASH_UP
 
-    ApplyAnimation(playerid, "GANGS", "SHAKE_CARSH", 4.1, false, false, false, false, 0, true);
-    return true;
-}
 
-CMD:agree(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:getupb(playerid, params[]) return DoAnim(playerid, 36, false); // FIGHT_E.HIT_FIGHTKICK_B
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "GANGS", "INVITE_YES", 4.1, false, false, false, false, 0, true);
-    return true;
-}
+CMD:shoutat(playerid, params[]) return DoAnim(playerid, 37, false); // ON_LOOKERS.SHOUT_01
 
-CMD:deal(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:shout2(playerid, params[]) return DoAnim(playerid, 38, false); // ON_LOOKERS.SHOUT_LOOP
 
-    ApplyAnimation(playerid, "GANGS", "DEALER_DEAL", 4.1, false, false, false, false, 0, true);
-    return true;
-}
 
-CMD:flex(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:fallhit(playerid, params[]) return DoAnim(playerid, 39, false); // FIGHT_C.HITC_3
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "BENCHPRESS", "GYM_BP_CELEBRATE", 4.1, false, false, false, false, 0, true);
-    return true;
-}
+CMD:forwardlook(playerid, params[]) return DoAnim(playerid, 40, false); // BD_FIRE.BD_PANIC_02
 
-CMD:reject(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:sipdrink(playerid, params[]) return DoAnim(playerid, 41, false); // BAR.DNK_STNDM_LOOP
 
-    ApplyAnimation(playerid, "GANGS", "INVITE_NO", 4.1, false, false, false, false, 0, true);
-	return true;
-}
 
-CMD:shouldercheck(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:sit(playerid, params[]) return DoAnim(playerid, 42, false); // BEACH.PARKSIT_M_LOOP
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "BD_FIRE", "BD_PANIC_04", 4.1, false, false, false, false, 0, true);
-    return true;
-}
+CMD:sit2(playerid, params[]) return DoAnim(playerid, 43, false); // BEACH.SITNWAIT_LOOP_W
 
-CMD:spray(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:sit3(playerid, params[]) return DoAnim(playerid, 44, false); // BEACH.PARKSIT_W_LOOP
 
-    ApplyAnimation(playerid, "GRAFFITI", "SPRAYCAN_FIRE", 4.1, false, false, false, false, 0, true);
-    return true;
-}
 
-CMD:upshout(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:crouchshoot(playerid, params[]) return DoAnim(playerid, 45, false); // BUDDY.BUDDY_CROUCHFIRE
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "ON_LOOKERS", "PANIC_SHOUT", 4.1, false, false, false, false, 0, true);
-    return true;
-}
+CMD:crouchreload(playerid, params[]) return DoAnim(playerid, 46, false); // BUDDY.BUDDY_CROUCHRELOAD
 
-CMD:washhands(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:aimshoot(playerid, params[]) return DoAnim(playerid, 47, false); // BUDDY.BUDDY_FIRE
 
-    ApplyAnimation(playerid, "BD_FIRE", "WASH_UP", 4.1, false, false, false, false, 0, true);
-    return true;
-}
 
-CMD:dishes(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:aimshoot2(playerid, params[]) return DoAnim(playerid, 48, false); // PYTHON.PYTHON_FIRE
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "BD_FIRE", "WASH_UP", 4.1, false, false, false, false, 0, true);
-    return true;
-}
+CMD:smokelean(playerid, params[]) return DoAnim(playerid, 49, false); // SMOKING.M_smklean_loop
 
-CMD:getupb(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:smoke(playerid, params[]) return DoAnim(playerid, 50, false); // GANGS.smkcig_prtl
 
-    ApplyAnimation(playerid, "FIGHT_E", "HIT_FIGHTKICK_B", 4.1, false, false, false, true, 0, true);
-    return true;
-}
 
-CMD:shoutat(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:shotgun(playerid, params[]) return DoAnim(playerid, 51, false); // BUDDY.BUDDY_FIRE_POOR
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "ON_LOOKERS", "SHOUT_01", 4.1, false, false, false, false, 0, true);
-    return true;
-}
+CMD:shottyreload(playerid, params[]) return DoAnim(playerid, 52, false); // BUDDY.BUDDY_RELOAD
 
-CMD:shout2(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:blockshot(playerid, params[]) return DoAnim(playerid, 53, false); // BSKTBALL.BBALL_DEF_JUMP_SHOT
 
-    ApplyAnimation(playerid, "ON_LOOKERS", "SHOUT_LOOP", 4.1, false, false, false, false, 0, true);
-    return true;
-}
 
-CMD:fallhit(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:defense(playerid, params[]) return DoAnim(playerid, 54, false); // BSKTBALL.BBALL_DEF_LOOP
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "FIGHT_C", "HITC_3", 4.1, false, false, false, false, 0, true);
-    return true;
-}
+CMD:defenser(playerid, params[]) return DoAnim(playerid, 55, false); // BSKTBALL.BBALL_DEF_STEPR
 
-CMD:forwardlook(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:dribble(playerid, params[]) return DoAnim(playerid, 56, false); // BSKTBALL.BBALL_IDLE
 
-    ApplyAnimation(playerid, "BD_FIRE", "BD_PANIC_02", 4.1, false, false, false, false, 0, true);
-    return true;
-}
 
-CMD:sipdrink(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:dribble2(playerid, params[]) return DoAnim(playerid, 57, false); // BSKTBALL.BBALL_WALK
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "BAR", "DNK_STNDM_LOOP", 4.1, false, false, false, false, 0, true);
-    return true;
-}
+CMD:dribble3(playerid, params[]) return DoAnim(playerid, 58, false); // BSKTBALL.BBALL_RUN
 
-CMD:sit(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:throw(playerid, params[]) return DoAnim(playerid, 59, false); // GRENADE.WEAPON_THROW
 
-    ApplyAnimation(playerid, "BEACH", "PARKSIT_M_LOOP", 4.1, false, false, false, true, 0, true);
-    return true;
-}
 
-CMD:sit2(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:dunk(playerid, params[]) return DoAnim(playerid, 60, false); // BSKTBALL.BBALL_DNK
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "BEACH", "SITNWAIT_LOOP_W", 4.1, false, false, false, true, 0, true);
-    return true;
-}
+CMD:dunk2(playerid, params[]) return DoAnim(playerid, 61, false); // BSKTBALL.BBALL_DNK_GLI
 
-CMD:sit3(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:fakeshot(playerid, params[]) return DoAnim(playerid, 62, false); // BSKTBALL.BBALL_DNK_LND
 
-    ApplyAnimation(playerid, "BEACH", "PARKSIT_W_LOOP", 4.1, false, false, false, true, 0, true);
-    return true;
-}
 
-CMD:crouchshoot(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:jumpshot(playerid, params[]) return DoAnim(playerid, 63, false); // BSKTBALL.BBALL_JUMP_SHOT
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "BUDDY", "BUDDY_CROUCHFIRE", 4.1, false, false, false, false, 0, true);
-    return true;
-}
+CMD:pickupball(playerid, params[]) return DoAnim(playerid, 64, false); // BSKTBALL.BBALL_PICKUP
 
-CMD:crouchreload(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:angry(playerid, params[]) return DoAnim(playerid, 65, false); // BSKTBALL.BBALL_REACT_MISS
 
-    ApplyAnimation(playerid, "BUDDY", "BUDDY_CROUCHRELOAD", 4.1, false, false, false, false, 0, true);
-    return true;
-}
 
-CMD:aimshoot(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:stealball(playerid, params[]) return DoAnim(playerid, 66, false); // BSKTBALL.BBALL_JUMP_END
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "BUDDY", "BUDDY_FIRE", 4.1, false, false, false, false, 0, true);
-    return true;
-}
+CMD:backhit(playerid, params[]) return DoAnim(playerid, 67, false); // FIGHT_B.HITB_1
 
-CMD:aimshoot2(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:flykick(playerid, params[]) return DoAnim(playerid, 68, false); // FIGHT_C.FIGHTC_M
 
-    ApplyAnimation(playerid, "PYTHON", "PYTHON_FIRE", 4.1, false, false, false, false, 0, true);
-    return true;
-}
 
-CMD:smokelean(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:bitchslap(playerid, params[]) return DoAnim(playerid, 69, false); // BASEBALL.BAT_M
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "SMOKING", "M_smklean_loop", 4.1, true, false, false, false, 0, true);
-    return true;
-}
+CMD:box1(playerid, params[]) return DoAnim(playerid, 70, false); // FIGHT_B.FIGHTB_1
 
-CMD:smoke(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:box2(playerid, params[]) return DoAnim(playerid, 71, false); // FIGHT_B.FIGHTB_2
 
-    ApplyAnimation(playerid, "GANGS", "smkcig_prtl", 4.1, false, true, true, true, 1, true);
-    return true;
-}
 
-CMD:shotgun(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:aimfast(playerid, params[]) return DoAnim(playerid, 72, false); // SNIPER.WEAPON_SNIPER
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "BUDDY", "BUDDY_FIRE_POOR", 4.1, false, false, false, false, 0, true);
-    return true;
-}
+CMD:choke(playerid, params[]) return DoAnim(playerid, 73, false); // KNIFE.KILL_KNIFE_PED_DIE
 
-CMD:shottyreload(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:dodge(playerid, params[]) return DoAnim(playerid, 74, false); // KNIFE.KNIFE_HIT_1
 
-    ApplyAnimation(playerid, "BUDDY", "BUDDY_RELOAD", 4.1, false, false, false, false, 0, true);
-    return true;
-}
 
-CMD:blockshot(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:groundhit(playerid, params[]) return DoAnim(playerid, 75, false); // FIGHT_B.FIGHTB_G
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "BSKTBALL", "BBALL_DEF_JUMP_SHOT", 4.1, false, false, false, false, 0, true);
-    return true;
-}
+CMD:hit(playerid, params[]) return DoAnim(playerid, 76, false); // FIGHT_B.HITB_2
 
-CMD:defense(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:kickhim(playerid, params[]) return DoAnim(playerid, 77, false); // POLICE.DOOR_KICK
 
-    ApplyAnimation(playerid, "BSKTBALL", "BBALL_DEF_LOOP", 4.1, true, false, false, false, 0, true);
-    return true;
-}
 
-CMD:defenser(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:kungfu1(playerid, params[]) return DoAnim(playerid, 78, false); // FIGHT_C.FIGHTC_1
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "BSKTBALL", "BBALL_DEF_STEPR", 4.1, true, true, true, false, 0, true);
-    return true;
-}
+CMD:kungfu2(playerid, params[]) return DoAnim(playerid, 79, false); // FIGHT_C.FIGHTC_2
 
-CMD:dribble(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:kungfu3(playerid, params[]) return DoAnim(playerid, 80, false); // FIGHT_C.FIGHTC_3
 
-    ApplyAnimation(playerid, "BSKTBALL", "BBALL_IDLE", 4.1, false, false, false, false, 0, true);
-    return true;
-}
 
-CMD:dribble2(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:kungfublock(playerid, params[]) return DoAnim(playerid, 81, false); // FIGHT_C.FIGHTC_BLOCK
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "BSKTBALL", "BBALL_WALK", 4.1, true, true, true, false, 0, true);
-    return true;
-}
+CMD:kungfustomp(playerid, params[]) return DoAnim(playerid, 82, false); // FIGHT_C.FIGHTC_G
 
-CMD:dribble3(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:crushjump(playerid, params[]) return DoAnim(playerid, 83, false); // DODGE.CRUSH_JUMP
 
-    ApplyAnimation(playerid, "BSKTBALL", "BBALL_RUN", 4.1, true, true, true, false, 0, true);
-    return true;
-}
 
-CMD:throw(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:coverdive(playerid, params[]) return DoAnim(playerid, 84, false); // DODGE.COVER_DIVE_01
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "GRENADE", "WEAPON_THROW", 4.1, false, false, false, false, 0, true);
-    return true;
-}
+CMD:coverdive2(playerid, params[]) return DoAnim(playerid, 85, false); // DODGE.COVER_DIVE_02
 
-CMD:dunk(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:punch(playerid, params[]) return DoAnim(playerid, 86, false); // RIOT.RIOT_PUNCHES
 
-    ApplyAnimation(playerid, "BSKTBALL", "BBALL_DNK", 4.1, false, false, false, false, 0, true);
-    return true;
-}
 
-CMD:dunk2(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:lookout(playerid, params[]) return DoAnim(playerid, 87, false); // ON_LOOKERS.LKAROUND_LOOP
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "BSKTBALL", "BBALL_DNK_GLI", 4.1, false, false, false, false, 0, true);
-    return true;
-}
+CMD:lookout2(playerid, params[]) return DoAnim(playerid, 88, false); // ON_LOOKERS.LKUP_LOOP
 
-CMD:fakeshot(playerid, params[])
-{
-    if(AnimationCheck(playerid)) 
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:injured(playerid, params[]) return DoAnim(playerid, 89, false); // SWEET.SWEET_INJUREDLOOP
 
-    ApplyAnimation(playerid, "BSKTBALL", "BBALL_DNK_LND", 4.1, false, false, false, false, 0, true);
-    return true;
-}
 
-CMD:jumpshot(playerid, params[])
-{
-    if(AnimationCheck(playerid))         
-        return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:gotshot(playerid, params[]) return DoAnim(playerid, 90, false); // SWEET.LAFIN_SWEET
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "BSKTBALL", "BBALL_JUMP_SHOT", 4.1, false, false, false, false, 0, true);
-    return true;
-}
+CMD:compready(playerid, params[]) return DoAnim(playerid, 91, false); // ROCKET.RocketFire
 
-CMD:pickupball(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "BSKTBALL", "BBALL_PICKUP", 4.1, false, false, false, false, 0, true);
-    return true;
-}
-
-CMD:angry(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "BSKTBALL", "BBALL_REACT_MISS", 4.1, false, false, false, false, 0, true);
-    return true;
-}
-
-CMD:stealball(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "BSKTBALL", "BBALL_JUMP_END", 4.1, false, false, false, false, 0, true);
-    return true;
-}
-
-CMD:backhit(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "FIGHT_B", "HITB_1", 4.1, false, false, false, false, 0, true);
-    return true;
-}
-
-CMD:flykick(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "FIGHT_C", "FIGHTC_M", 4.1, false, false, false, false, 0, true);
-    return true;
-}
-
-CMD:bitchslap(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "BASEBALL", "BAT_M", 4.1, false, false, false, false, 0, true);
-    return true;
-}
-
-CMD:box1(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "FIGHT_B", "FIGHTB_1", 4.1, false, false, false, false, 0, true);
-    return true;
-}
-
-CMD:box2(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "FIGHT_B", "FIGHTB_2", 4.1, false, false, false, false, 0, true);
-    return true;
-}
-
-CMD:aimfast(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-	ApplyAnimation(playerid, "SNIPER", "WEAPON_SNIPER", 4.1, false, false, false, false, 0, true);
-	return true;
-}
-
-CMD:choke(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "KNIFE", "KILL_KNIFE_PED_DIE", 4.1, false, true, true, true, 0, true);
-    return true;
-}
-
-CMD:dodge(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "KNIFE", "KNIFE_HIT_1", 4.1, false, false, false, false, 0, true);
-    return true;
-}
-
-CMD:groundhit(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "FIGHT_B", "FIGHTB_G", 4.1, false, false, false, false, 0, true);
-    return true;
-}
-
-CMD:hit(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "FIGHT_B", "HITB_2", 4.1, false, false, false, false, 0, true);
-    return true;
-}
-
-CMD:kickhim(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "POLICE", "DOOR_KICK", 4.1, false, false, false, false, 0, true);
-    return true;
-}
-
-CMD:kungfu1(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "FIGHT_C", "FIGHTC_1", 4.1, false, true, true, false, 0, true);
-    return true;
-}
-
-CMD:kungfu2(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "FIGHT_C", "FIGHTC_2", 4.1, false, true, true, false, 0, true);
-    return true;
-}
-
-CMD:kungfu3(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "FIGHT_C", "FIGHTC_3", 4.1, false, true, true, false, 0, true);
-	return true;
-}
-
-CMD:kungfublock(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "FIGHT_C", "FIGHTC_BLOCK", 4.1, false, true, true, false, 0, true);
-    return true;
-}
-
-CMD:kungfustomp(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "FIGHT_C", "FIGHTC_G", 4.1, false, true, true, false, 0, true);
-    return true;
-}
-
-CMD:crushjump(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "DODGE", "CRUSH_JUMP", 4.1, false, true, true, false, 0, true);
-    return true;
-}
-
-CMD:coverdive(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "DODGE", "COVER_DIVE_01", 4.1, false, true, true, false, 0, true);
-    return true;
-}
-
-CMD:coverdive2(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "DODGE", "COVER_DIVE_02", 4.1, false, true, true, false, 0, true);
-    return true;
-}
-
-CMD:punch(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "RIOT", "RIOT_PUNCHES", 4.1, false, true, true, false, 0, true);
-    return true;
-}
-
-CMD:lookout(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "ON_LOOKERS", "LKAROUND_LOOP", 4.1, false, true, true, false, 0, true);
-    return true;
-}
-
-CMD:lookout2(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "ON_LOOKERS", "LKUP_LOOP", 4.1, false, true, true, false, 0, true);
-    return true;
-}
-
-CMD:injured(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "SWEET", "SWEET_INJUREDLOOP", 4.1, false, true, true, true, 0, true);
-    return true;
-}
-
-CMD:gotshot(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "SWEET", "LAFIN_SWEET", 4.1, false, true, true, true, 0, true);
-    return true;
-}
-
-CMD:compready(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-	    return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "ROCKET", "RocketFire", 4.1, false, true, true, true, 1, true);
-    return true;
-}
 
 CMD:animtest(playerid, params[])
 {
@@ -1962,115 +1625,35 @@ CMD:caranim(playerid, params[])
    	return true;
 }
 
-CMD:salute(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:salute(playerid, params[]) return DoAnim(playerid, 92, false); // GHANDS.GSIGN5LH
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "GHANDS", "GSIGN5LH", 4.1, false, false, false, false, 0, true);
-    return true;
-}
+CMD:roadcross(playerid, params[]) return DoAnim(playerid, 93, false); // PED.ROADCROSS
 
-CMD:roadcross(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:push(playerid, params[]) return DoAnim(playerid, 94, false); // FIGHT_D.FIGHTD_3
 
-    ApplyAnimation(playerid, "PED", "ROADCROSS", 4.1, false, false, false, false, 0, true);
-    return true;
-}
 
-CMD:push(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:payshop(playerid, params[]) return DoAnim(playerid, 95, false); // DEALER.SHOP_PAY
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "FIGHT_D", "FIGHTD_3", 4.1, false, false, false, false, 0, true);
-    return true;
-}
+CMD:openright(playerid, params[]) return DoAnim(playerid, 96, false); // VAN.VAN_OPEN_BACK_RHS
 
-CMD:payshop(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:openleft(playerid, params[]) return DoAnim(playerid, 97, false); // VAN.VAN_OPEN_BACK_LHS
 
-    ApplyAnimation(playerid, "DEALER", "SHOP_PAY", 4.1, false, false, false, false, 0, true);
-    return true;
-}
 
-CMD:openright(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:getshot(playerid, params[]) return DoAnim(playerid, 98, false); // PED.KO_SHOT_STOM
 
-    PlayerData[playerid][pAnimation] = 1;
 
-    ApplyAnimation(playerid, "VAN", "VAN_OPEN_BACK_RHS", 4.1, false, false, false, false, 0, true);
-    return true;
-}
+CMD:fallover(playerid, params[]) return DoAnim(playerid, 99, false); // PED.KO_SHOT_FRONT
 
-CMD:openleft(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
 
-    PlayerData[playerid][pAnimation] = 1;
+CMD:deskbored(playerid, params[]) return DoAnim(playerid, 100, false); // INT_OFFICE.OFF_SIT_BORED_LOOP
 
-    ApplyAnimation(playerid, "VAN", "VAN_OPEN_BACK_LHS", 4.1, false, false, false, false, 0, true);
-    return true;
-}
 
-CMD:getshot(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
+CMD:desksit(playerid, params[]) return DoAnim(playerid, 101, false); // INT_OFFICE.OFF_SIT_IDLE_LOOP
 
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "PED", "KO_SHOT_STOM", 4.1, false, true, true, true, 0, true);
-    return true;
-}
-
-CMD:fallover(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "PED", "KO_SHOT_FRONT", 4.1, false, true, true, true, 0, true);
-    return true;
-}
-
-CMD:deskbored(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "INT_OFFICE", "OFF_SIT_BORED_LOOP", 4.1, true, false, false, false, 0, true);
-    return true;
-}
-
-CMD:desksit(playerid, params[])
-{
-    if(AnimationCheck(playerid))
-		return SendClientMessage(playerid, COLOR_GRAD1, "Cannot play animation at this time.");
-
-    PlayerData[playerid][pAnimation] = 1;
-
-    ApplyAnimation(playerid, "INT_OFFICE", "OFF_SIT_IDLE_LOOP", 4.1, true, false, false, false, 0, true);
-    return true;
-}
 
 CMD:chat(playerid, params[])
 {
@@ -2217,4 +1800,4 @@ Dialog:AnimCategoriesDialog(playerid, response, listitem, inputtext[])
 Dialog:AnimSubDialog(playerid, response, listitem, inputtext[])
 {
 	return Command_ReProcess(playerid, "anims", 0);
-}
+}

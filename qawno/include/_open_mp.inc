@@ -301,21 +301,21 @@ public const __OPEN_MP_VERSION = 0;
 #tryinclude <string>
 #tryinclude <time>
 
-#tryinclude "..\pawn-stdlib\args"
-#tryinclude "..\pawn-stdlib\console"
-#tryinclude "..\pawn-stdlib\core"
-#tryinclude "..\pawn-stdlib\file"
-#tryinclude "..\pawn-stdlib\float"
-#tryinclude "..\pawn-stdlib\string"
-#tryinclude "..\pawn-stdlib\time"
+#tryinclude "../pawn-stdlib/args"
+#tryinclude "../pawn-stdlib/console"
+#tryinclude "../pawn-stdlib/core"
+#tryinclude "../pawn-stdlib/file"
+#tryinclude "../pawn-stdlib/float"
+#tryinclude "../pawn-stdlib/string"
+#tryinclude "../pawn-stdlib/time"
 
-#tryinclude <pawn-stdlib\args>
-#tryinclude <pawn-stdlib\console>
-#tryinclude <pawn-stdlib\core>
-#tryinclude <pawn-stdlib\file>
-#tryinclude <pawn-stdlib\float>
-#tryinclude <pawn-stdlib\string>
-#tryinclude <pawn-stdlib\time>
+#tryinclude <pawn-stdlib/args>
+#tryinclude <pawn-stdlib/console>
+#tryinclude <pawn-stdlib/core>
+#tryinclude <pawn-stdlib/file>
+#tryinclude <pawn-stdlib/float>
+#tryinclude <pawn-stdlib/string>
+#tryinclude <pawn-stdlib/time>
 
 // No `args` check - it is optional.
 

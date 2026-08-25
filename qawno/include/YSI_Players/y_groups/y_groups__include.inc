@@ -15,7 +15,7 @@
 #if defined Y_COMMANDS_GROUP_NAME
 	#define MASTER 51
 	#define YSIM_U_DISABLE
-	#include "..\..\YSI_Core\y_master"
+	#include "../../YSI_Core/y_master"
 
 	#define _GROUP_MAKE_LIMIT       Y_COMMANDS_GROUP_LIMIT
 	#define _GROUP_MAKE_NAME        Y_COMMANDS_GROUP_NAME
@@ -25,13 +25,13 @@
 	#undef Y_COMMANDS_GROUP_NAME
 	#undef Y_COMMANDS_GROUP_TAG
 
-	#include "..\..\YSI_Core\y_master"
+	#include "../../YSI_Core/y_master"
 #endif
 
 #if defined Y_AREAS_GROUP_NAME
 	#define MASTER 50
 	#define YSIM_U_DISABLE
-	#include "..\..\YSI_Core\y_master"
+	#include "../../YSI_Core/y_master"
 
 	#define _GROUP_MAKE_LIMIT       Y_AREAS_GROUP_LIMIT
 	#define _GROUP_MAKE_NAME        Y_AREAS_GROUP_NAME
@@ -41,13 +41,13 @@
 	#undef Y_AREAS_GROUP_NAME
 	#undef Y_AREAS_GROUP_TAG
 
-	#include "..\..\YSI_Core\y_master"
+	#include "../../YSI_Core/y_master"
 #endif
 
 #if defined Y_CLASSES_GROUP_NAME
 	#define MASTER 61
 	#define YSIM_U_DISABLE
-	#include "..\..\YSI_Core\y_master"
+	#include "../../YSI_Core/y_master"
 
 	#define _GROUP_MAKE_LIMIT       Y_CLASSES_GROUP_LIMIT
 	#define _GROUP_MAKE_NAME        Y_CLASSES_GROUP_NAME
@@ -57,13 +57,13 @@
 	#undef Y_CLASSES_GROUP_NAME
 	#undef Y_CLASSES_GROUP_TAG
 
-	#include "..\..\YSI_Core\y_master"
+	#include "../../YSI_Core/y_master"
 #endif
 
 #if defined Y_RACES_GROUP_NAME
 	#define MASTER 53
 	#define YSIM_U_DISABLE
-	#include "..\..\YSI_Core\y_master"
+	#include "../../YSI_Core/y_master"
 
 	#define _GROUP_MAKE_LIMIT       Y_RACES_GROUP_LIMIT
 	#define _GROUP_MAKE_NAME        Y_RACES_GROUP_NAME
@@ -73,12 +73,12 @@
 	#undef Y_RACES_GROUP_NAME
 	#undef Y_RACES_GROUP_TAG
 
-	#include "..\..\YSI_Core\y_master"
+	#include "../../YSI_Core/y_master"
 #endif
 
 #if defined Y_GTEST_GROUP_NAME
 	#define MASTER 60
-	#include "..\..\YSI_Core\y_master"
+	#include "../../YSI_Core/y_master"
 
 	#define _GROUP_MAKE_LIMIT       Y_GTEST_GROUP_LIMIT
 	#define _GROUP_MAKE_NAME        Y_GTEST_GROUP_NAME
@@ -88,7 +88,7 @@
 	#undef Y_GTEST_GROUP_NAME
 	#undef Y_GTEST_GROUP_TAG
 
-	#include "..\..\YSI_Core\y_master"
+	#include "../../YSI_Core/y_master"
 #endif
 
 //#if defined Y_TIMERS_GROUP_NAME

@@ -186,7 +186,7 @@ CHAIN_HOOK(Profiling)
 // These all need to come AFTER the types are defined in case the have profilings.
 #include "y_utils"
 
-#include "..\YSI_Coding\y_va"
+#include "../YSI_Coding/y_va"
 
 #define Y_PROFILING_PROFILE_SEARCH _A<@y_P>
 #define Y_PROFILING_INIT _C<@yP_>

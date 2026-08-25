@@ -78,8 +78,8 @@ Optional plugins:
 
 forward bool:_Testing_End();
 
-#include "..\y_utils"
-#include "..\..\YSI_Server\y_stringise"
+#include "../y_utils"
+#include "../../YSI_Server/y_stringise"
 
 CHAIN_HOOK(Testing)
 #undef CHAIN_ORDER
@@ -1078,8 +1078,8 @@ TEST__ y_testing_Asserts()
 #endif
 
 #if defined YSI_TESTS
-	#include "..\y_core\y_utils_tests"
-	#include "..\y_core\y_als_tests"
-	#include "..\y_core\y_cell_tests"
+	#include "../y_core/y_utils_tests"
+	#include "../y_core/y_als_tests"
+	#include "../y_core/y_cell_tests"
 #endif
 

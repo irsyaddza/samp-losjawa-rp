@@ -2,7 +2,7 @@
  * DrugStore.pwn - Dynamic Drug Store System for Los Jawa RP
  */
 
-#include <YSI_Coding\y_hooks>
+#include <YSI_Coding/y_hooks>
 
 #define MAX_DRUG_STORES 20
 
