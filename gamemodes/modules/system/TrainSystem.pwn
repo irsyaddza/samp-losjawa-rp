@@ -13,7 +13,7 @@
     ============================================================================
 */
 
-#include <YSI_Coding\y_hooks>
+#include <YSI_Coding/y_hooks>
 
 #define MAX_TRAIN_STATIONS (20)
 #define MAX_TRAIN_CENTERS (10)
@@ -143,6 +143,8 @@ new Text:gTrainBoardingBG = Text:INVALID_TEXT_DRAW;
 
 // --- Player TextDraws ---
 
+// Occupies player-textdraw slot 0 so real HUD textdraws never land on it.
+// Slot 0 is unreliable on some clients and silently fails to render otherwise.
 new PlayerText:pTrainDummy[MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
 new PlayerText:pTrainReportTo[MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
 new PlayerText:pTrainTimeLeft[MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
@@ -623,6 +625,7 @@ stock CreateTrainPlayerTextDraws(playerid)
     if(pTrainPassengerNext[playerid] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, pTrainPassengerNext[playerid]); pTrainPassengerNext[playerid] = PlayerText:INVALID_TEXT_DRAW; }
     if(pTrainBoardingBar[playerid] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, pTrainBoardingBar[playerid]); pTrainBoardingBar[playerid] = PlayerText:INVALID_TEXT_DRAW; }
 
+    // Slot-0 guard: must be (re)created BEFORE the visible textdraws.
     pTrainDummy[playerid] = CreatePlayerTextDraw(playerid, 0.000, 0.000, " ");
 
     pTrainReportTo[playerid] = CreatePlayerTextDraw(playerid, 17.000, 250.000, "Report to: Unity Station");
@@ -707,18 +710,6 @@ stock HideTrainBoardingBar(playerid)
     {
         PlayerTextDrawHide(playerid, pTrainBoardingBar[playerid]);
     }
-    return 1;
-}
-
-stock ShowTrainDriverHUD(playerid)
-{
-    #pragma unused playerid
-    return 1;
-}
-
-stock HideTrainDriverHUD(playerid)
-{
-    #pragma unused playerid
     return 1;
 }
 
@@ -971,7 +962,6 @@ ptask TrainSystemTimer[1000](playerid)
             {
                 SendClientMessage(playerid, COLOR_LIGHTRED, "[RAILROAD DISPATCH]: Shift cancelled because you did not enter the train cabin within 1 minute.");
                 PlayerOnTrainJob[playerid] = false;
-                HideTrainDriverHUD(playerid);
                 DisablePlayerCheckpoint(playerid);
                 RemovePlayerFromTrainQueue(playerid);
                 CheckAndDispatchNextDriver();
@@ -1002,7 +992,6 @@ ptask TrainSystemTimer[1000](playerid)
                     SendClientMessageEx(playerid, COLOR_LIGHTRED, "[RAILROAD DISPATCH]: Shift cancelled for staying outside the train cabin longer than 1 minute.");
                     PlayerExitTimer[playerid] = 0;
                     PlayerOnTrainJob[playerid] = false;
-                    HideTrainDriverHUD(playerid);
                     DisablePlayerCheckpoint(playerid);
                     TogglePlayerControllable(playerid, true);
                     RemovePlayerFromTrainQueue(playerid);
@@ -1023,7 +1012,6 @@ ptask TrainSystemTimer[1000](playerid)
 
             if(model == 538 || model == 537)
             {
-                ShowTrainDriverHUD(playerid);
 
                 new step = PlayerTrainStep[playerid];
                 new Float:targetX, Float:targetY, Float:targetZ, Float:limit;
@@ -1105,7 +1093,6 @@ ptask TrainSystemTimer[1000](playerid)
                             SendClientMessageEx(playerid, COLOR_LIGHTRED, "[RAILROAD DISPATCH]: Removed from shift due to 30s departure AFK timeout (train did not move).");
                             PlayerDepartureWarning[playerid] = false;
                             PlayerOnTrainJob[playerid] = false;
-                            HideTrainDriverHUD(playerid);
                             DisablePlayerCheckpoint(playerid);
                             RemovePlayerFromVehicle(playerid);
                             SetCameraBehindPlayer(playerid);
@@ -1460,7 +1447,6 @@ CMD:trainjob(playerid, params[])
         PlayerExitTimer[playerid] = 0;
         PlayerMountTimer[playerid] = 0;
 
-        HideTrainDriverHUD(playerid);
         HideTrainDispatchHUD(playerid);
         DisablePlayerCheckpoint(playerid);
 
@@ -1590,7 +1576,6 @@ CMD:trainjob(playerid, params[])
         // Set standard SA-MP free-look vehicle camera behind player
         SetCameraBehindPlayer(playerid);
 
-        ShowTrainDriverHUD(playerid);
 
         SendClientMessageEx(playerid, COLOR_GREEN, "[TRAIN JOB]: 2 station shift started! Target Route: %s -> %s.", startName, targetName);
         SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "* %s inserts the master key into the locomotive console, checking brake pressures before starting the engine.", ReturnName(playerid, 0));
@@ -2092,9 +2077,3 @@ public OnRailCrossingCreated(slot)
     return 1;
 }
 
-forward SetTrainCinematicCamera(playerid);
-public SetTrainCinematicCamera(playerid)
-{
-    SetCameraBehindPlayer(playerid);
-    return 1;
-}

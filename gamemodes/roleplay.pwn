@@ -1015,57 +1015,12 @@ new
 new ghour = 0, gminute = 0, gsecond = 0, timeshift = 0, shifthour;
 
 // CARGO SHIP
-/*#define NUM_SHIP_ATTACHMENTS 11
-#define NUM_SHIP_ROUTE_POINTS 8
-#define SPEED_CARGOSHIP  20
-
-new Float:gShipHullOrigin[3] = {2841.49097, -2426.09570, 24.51091}; //2829.95313, -2479.57031, 3.88730};
-
-new gShipAttachmentModelIds[NUM_SHIP_ATTACHMENTS] =
-{
-	5167, 5156, 5158, 3724, 5154, 5160, 5157, 3724, 5166, 5336, 5155
-};
-
-new Float:gShipAttachmentPos[NUM_SHIP_ATTACHMENTS][6] =
-{
-	{2838.03125, -2371.95313, 5.97090,   0.00000, 0.00000, -90.00000},
-	{2837.96118, -2423.90869, 9.54590,   0.00000, 0.00000, -90.00000},
-	{2837.77344, -2334.47656, 11.99220,   0.00000, 0.00000, 0.00000},
-	{2838.19531, -2407.14063, 28.10849,   0.00000, 0.00000, -90.00000},
-	
-	{2838.14063, -2447.84375, 14.32000,   0.00000, 0.00000, -90.00000},
-	{2829.95313, -2479.57031, 3.88730, 0.000000,   0.000000, -90.000000},
-	
-	{2838.01318, -2532.64331, 15.69740,   0.00000, 0.00000, -90.00000},
-	{2838.19531, -2488.66406, 27.83050,   0.00000, 0.00000, 90.00000},
-	{2829.95288, -2479.64819, 3.78360,   0.00000, 0.00000, -90.00000},
-	{2829.95313, -2479.57031, 5.26560,   0.00000, 0.00000, 0.00000},
-	{2838.02344, -2358.47656, 21.31250,   0.00000, 0.00000, -90.00000}
-};
-
-new Float:gShipRoutePoints[NUM_SHIP_ROUTE_POINTS][6] =
-{
-	//{2829.95313, -2479.57031, 3.88730, 0.000000,   0.000000, -90.000000},
-    //{2838.14063, -2447.84375, 3.88730,   0.00000, 0.00000, -90.00000},
-    
-    {2841.49097, -2426.09570, 24.51091, 0.00000, 0.00000, -90.00000},
-	{2829.915283, -2843.347167, 3.88730, 0.000000, 0.000000, -90.000000},
-	{3248.907226, -2978.197998, 3.88730, 0.000000, 0.000000, -9.799991},
-	{3283.973876, -3070.623535, 3.88730, 0.000000, 0.000000, -9.799991},
-	{3356.869140, -2824.702880, 3.88730, 0.000000, 0.000000, 3.400008},
-	{3306.186035, -2767.182373, 3.88730, 0.000000, 0.000000, 105.200027},
-	{3529.560546, -2100.971435, 3.88730, 0.000000, 0.000000, 168.300140},
-	{2994.928222, -2480.779541, 3.88730, 0.000000, 0.000000, -90.000000}
-};
-
-new gMainShipObjectId;*/
 
 new gShipDeparture;
 new gShipRamp1, gShipRamp2;
 new gShipTextLine1;
 new gShipTextLine2;
 new gShipTextLine3;
-//new gShipsAttachments[NUM_SHIP_ATTACHMENTS];
 //new gShipCurrentPoint = 1; // current route point the ship is at. We start at route 1
 new gShipTime;
 new carryCrate[MAX_PLAYERS];
@@ -1544,7 +1499,6 @@ new DeletingATM[MAX_PLAYERS char];
 new BouttaDelete[MAX_PLAYERS];
 new calltimer[MAX_PLAYERS];
 new smstimer[MAX_PLAYERS];
-new Tax = 0;
 new TaxValue = 20;
 new adTick[MAX_PLAYERS];
 new DollaPickup[2];
@@ -1632,49 +1586,20 @@ stock ClearGameTextColor(const string[])
     return aaa;
 }
 
-// Dialog HELP
-#define DIALOG_MAIN_MENU        1000
-#define DIALOG_GENERAL          1001
-#define DIALOG_CHAT             1002
-#define DIALOG_PLAYER           1003
-#define DIALOG_FACTION          1004
-#define DIALOG_PROPERTY         1005
-#define DIALOG_VEHICLE          1006
-#define DIALOG_BUSINESS         1007
-#define DIALOG_JOBS             1008
-#define DIALOG_POLICE           1009
-#define DIALOG_MEDICAL          1010
-#define DIALOG_DRUGS            1011
-#define DIALOG_WEAPONS          1012
-#define DIALOG_PHONES           1013
-#define DIALOG_ADMIN            1014
-
 enum
 {
-	DIALOG_DEFAULT,
 	DIALOG_CONFIRM_SYS,
 	DIALOG_MDC_NAME,
 	DIALOG_MDC_PLATE,
-	DIALOG_MDC_PLATE_LIST,
 	DIALOG_MDC_CALLSIGN,
 	DIALOG_FILTER_CHARGES,
-	DIALOG_EDIT_BONE,
-	DIALOG_DRUG_MENU,
-	DIALOG_DRUG_AMOUNT,
-	DIALOG_DRUG_TRANSFER,
-	DIALOG_REFUND_DRUG,
-	DIALOG_REFUND_STORAGE,
-	DIALOG_REFUND_AMOUNT,
 	DIALOG_CHANGELOG,
 	DIALOG_RULES,
-	DIALOG_FRISK,
 	TOLLS_DIALOG,
-	TOLLS_DIALOG2,
 };
 
 new globalWeather = 2;
 
-new CharSelection[MAX_PLAYERS][MAX_CHARACTERS];
 new SelectedCharacter[MAX_PLAYERS];
 
 enum scInfo
@@ -1874,14 +1799,6 @@ public UnFreezePlayer(playerid)
 new bool:FinishedDownloadingModels[MAX_PLAYERS char];
 new bool:AnimationsPreloaded[MAX_PLAYERS char];
 new TempWeapons[MAX_PLAYERS][3][2];
-//new TracingProgress[MAX_PLAYERS];
-//new LastTracedNumber[MAX_PLAYERS];
-//new TracingCP[MAX_PLAYERS];
-//new TracingTowerData[MAX_PLAYERS][2];
-//new TraceTimer[MAX_PLAYERS];
-//new TraceString[MAX_PLAYERS][800];
-//new bool:Tracing[MAX_PLAYERS char];
-//new TraceGangzone[MAX_PLAYERS][2];
 new EntranceArea[MAX_PLAYERS];
 new CarNames[MAX_PLAYERS][6][64];
 new PlayerSerial[MAX_PLAYERS][50];
@@ -1926,16 +1843,8 @@ new Friends[MAX_PLAYERS][MAX_FRIENDS][FRIEND_DATA];
 new bool:ToggleNames[MAX_PLAYERS char];
 new BreakingIn[MAX_PLAYERS];
 
-#define MAX_ADMIN_ACTIONS 10
 
-enum a_Action_Data
-{
-	actionID,
-	actionText[256],
-	actionAdmin[MAX_PLAYER_NAME]
-};
 
-new AdminActions[MAX_PLAYERS][MAX_ADMIN_ACTIONS][a_Action_Data];
 
 #define ONFOOT_DISTANCE 50.0
 #define VEHICLE_DISTANCE 50.0
@@ -2010,7 +1919,7 @@ enum TOLL_INFO
 
 new aTolls[MAX_TOLLS][TOLL_INFO];
 
-new L_a_RequestAllowedCop, L_a_Pickup[MAX_TOLLS * 2], L_a_TollObject[MAX_TOLLS * 2]; // 0 & 1 = Richhman, 2 & 3 = Flint, 4 & 5 = LV, 6 & 7 = BlueBerry right
+new L_a_Pickup[MAX_TOLLS * 2], L_a_TollObject[MAX_TOLLS * 2]; // 0 & 1 = Richhman, 2 & 3 = Flint, 4 & 5 = LV, 6 & 7 = BlueBerry right
 
 new PlayerStates[10][20] =
 {
@@ -2136,7 +2045,6 @@ new PlayerSweeperRouteIndex[MAX_PLAYERS] = {-1, ...};
 #include "modules/system/AdPoints.pwn"
 #include "modules/system/Marriage.pwn"
 #include "modules/system/TrainSystem.pwn"
-#include "modules/system/MedicinePoint.pwn"
 #include "modules/system/AiNpc.pwn"
 
 public OnGameModeInit()
@@ -2270,12 +2178,6 @@ public OnGameModeExit()
 	mysql_close(dbCon);
 	DestroyHudV2GlobalTDs();
 
-    /*for(new i = 0; i < NUM_SHIP_ATTACHMENTS; ++i)
-	{
-	    DestroyObject(gShipsAttachments[i]);
-	}
-
-    DestroyObject(gMainShipObjectId);*/
     
 	return true;
 }
@@ -3537,27 +3439,6 @@ ConvertTime(&cts, &ctm=-1,&cth=-1,&ctd=-1,&ctw=-1,&ctmo=-1,&cty=-1)
     return strii;
 }
 
-/*IsNumeric(const str[])
-{
-	for(new i = 0, l = strlen(str); i != l; ++i)
-	{
-	    if(i == 0 && str[0] == '-')
-			continue;
-
-	    else if(str[i] < '0' || str[i] > '9')
-			return 0;
-	}
-	return true;
-}
-
-IsPlayerIdle(playerid)
-{
-	new
-	    index = GetPlayerAnimationIndex(playerid)
-	;
-
-	return ((index == 1275) || (1181 <= index <= 1192) || (index == 1151));
-}*/
 
 AccountName(playerid)
 {
@@ -3633,17 +3514,6 @@ ReturnSiteDate()
 	return date;
 }
 
-/*ReturnDate()
-{
-	static
-	    date[36];
-
-	getdate(date[2], date[1], date[0]);
-	gettime(date[3], date[4], date[5]);
-
-	format(date, sizeof(date), "%d-%02d-%02d, %02d:%02d:%02d", date[2], date[1], date[0], date[3], date[4], date[5]);
-	return date;
-}*/
 
 HowLongAgo(inputSeconds)
 {
@@ -3764,62 +3634,6 @@ public KickTimer(playerid)
 	return false;
 }
 
-/*Log_Write(const path[], const str[], {Float,_}:...)
-{
-	static
-	    args,
-	    start,
-	    end,
-	    File:file,
-	    string[1024]
-	;
-
-	if((start = strfind(path, "/")) != -1)
-	{
-	    strmid(string, path, 0, start + 1);
-
-	    if(!fexist(string))
-	        return printf("** Warning: Directory \"%s\" doesn't exist.", string);
-	}
-
-	#emit LOAD.S.pri 8
-	#emit STOR.pri args
-
-	file = fopen(path, io_append);
-
-	if(!file)
-	    return 0;
-
-	if(args > 8)
-	{
-		#emit ADDR.pri str
-		#emit STOR.pri start
-
-	    for (end = start + (args - 8); end > start; end -= 4)
-		{
-	        #emit LREF.pri end
-	        #emit PUSH.pri
-		}
-		#emit PUSH.S str
-		#emit PUSH.C 1024
-		#emit PUSH.C string
-		#emit PUSH.C args
-		#emit SYSREQ.C format
-
-		fwrite(file, string);
-		fwrite(file, "\r\n");
-		fclose(file);
-
-		#emit LCTRL 5
-		#emit SCTRL 4
-		#emit RETN
-	}
-
-	fwrite(file, str);
-	fwrite(file, "\r\n");
-	fclose(file);
-	return true;
-}*/
 
 randomEx(min, max)
 {
@@ -3903,41 +3717,6 @@ RemoveAlpha(color)
     return (color & ~0xFF);
 }
 
-/*GetPlayerLocationEx(playerid, &Float:fX, &Float:fY, &Float:fZ)
-{
-    if(PlayerData[playerid][pLocal] != 255)
-	{
-		new i;
-
-		if(InProperty[playerid] != -1)
-		{
-   			i = InProperty[playerid];
-
-			fX = PropertyData[i][hEntranceX];
-			fY = PropertyData[i][hEntranceY];
-			fZ = PropertyData[i][hEntranceZ];
-		}
-		else if(InApartment[playerid] != -1)
-		{
-   			i = InApartment[playerid];
-
-			fX = ComplexData[i][aEntranceX];
-			fY = ComplexData[i][aEntranceY];
-			fZ = ComplexData[i][aEntranceZ];
-		}
-		else if(InBusiness[playerid] != -1)
-		{
-			i = InBusiness[playerid];
-
-			fX = BusinessData[i][bEntranceX];
-			fY = BusinessData[i][bEntranceY];
-			fZ = BusinessData[i][bEntranceZ];
-		}
-	}
-	else GetPlayerPos(playerid, fX, fY, fZ);
-
-	return true;
-}*/
 
 GetPlayerLocation(playerid)
 {
@@ -4028,12 +3807,6 @@ SetPlayerToFacePlayer(playerid, targetid)
 	return false;
 }
 
-/*CheckFallInAir(playerid)
-{
-    new index = GetPlayerAnimationIndex(playerid);
-
-    return (index == 1130 || index == 1132 || index == 1129 || index == 1133|| index == 1134 || index == 958); //FALL_FALL, FALL_GLIDE, FALL_COLLAPSE, FALL_LAND, FALL_SKYDIVE
-}*/
 
 SetCooldown(playerid,type,amount)
 {
@@ -4672,10 +4445,6 @@ CreateRentalVehicles()
 
 	CarRent[16] =   AddStaticVehicleEx(492, 1667.4218, -2314.7898, -2.9757, 269.9921, 0, 0, 2000, 0); // Airport
 
-	/*CarRent[16] =   AddStaticVehicleEx(492, 1657.2308, -2314.7529, -2.9780, 269.8067, 0, 0, 2000, 0); // Airport
-	CarRent[17] =   AddStaticVehicleEx(492, 1667.4218, -2314.7898, -2.9757, 269.9921, 0, 0, 2000, 0); // Airport
-	CarRent[18] =   AddStaticVehicleEx(492, 1691.5570, -2314.8240, -2.9748, 270.1819, 0, 0, 2000, 0); // Airport
-	CarRent[19] =   AddStaticVehicleEx(492, 1703.7242, -2314.7913, -2.9772, 270.3328, 0, 0, 2000, 0); // Airport*/
 
     for(new c = 0; c < sizeof(CarRent); ++c)
     {
@@ -4860,11 +4629,6 @@ ResetStatistics(playerid) // Clear player Stats
 			ClothingData[playerid][i][cl_object] = 0;
 		}
 
-		if(i < MAX_CHARACTERS)
-		{
-		    CharSelection[playerid][i] = -1;
-		}
-
 		if(i < 10)
 		{
 		    RoadBlocks[playerid][i][roadblockObject] = INVALID_OBJECT_ID;
@@ -4906,7 +4670,6 @@ ResetStatistics(playerid) // Clear player Stats
 
 		if(i < 10)
 		{
-	    	AdminActions[playerid][i][actionID] = 0;
 	    	LastCheatDetection[playerid][i] = 0;
 		}
 
@@ -5014,11 +4777,6 @@ ResetStatistics(playerid) // Clear player Stats
 	PfSpec[playerid][leftrightold] = 0;
 	PfSpec[playerid][FlySpec] = 0;
 
-	/*TracingProgress[playerid] = 0;
- 	TracingTowerData[playerid][0] = 0;
- 	TracingTowerData[playerid][1] = 0;
-	TraceString[playerid][0] = EOS;
-	Tracing{playerid} = false;*/
 
 	WritingArrest[playerid] = INVALID_PLAYER_ID;
 
@@ -8052,152 +7810,6 @@ public OnPlayerEnterRaceCheckpoint(playerid)
 	return true;
 }
 
-/*public OnPlayerSelectedMenuRow(playerid, row)
-{
-    new Menu:Current = GetPlayerMenu(playerid);
-
-	if(Current == Guide)
-	{
-	    switch(row)
-	    {
-	        case 0:
-	        {
-	            HideMenuForPlayer(Guide, playerid);
-	            ShowMenuForPlayer(GuideJob1, playerid);
-	            return 1;
-			}
-			case 1:
-			{
-			    SendClientMessage(playerid, COLOR_GREEN,"___________How to call taxi:___________");
-				SendClientMessage(playerid, COLOR_WHITE,"/call 544");
-				SendClientMessage(playerid, COLOR_GREEN,"______________________");
-
-				//SendClientMessage(playerid, COLOR_WHITE,"To stand up /stopanim");
-			}
-			case 2:
-			{
-			    SendClientMessage(playerid, COLOR_GREEN,"___________Bus routes:___________");
-				SendClientMessage(playerid, COLOR_WHITE,"BLACK ROUTE: LS Airport -> License Office -> Alhambra -> LS Bank -> Motel");
-                SendClientMessage(playerid, COLOR_WHITE,"RED ROUTE: Food Mart -> Marina -> Rodeo -> Vinewood -> Hospital");
-                SendClientMessage(playerid, COLOR_WHITE,"GREEN ROUTE: Vinewood 24/7 -> Dillimore -> Blueberry -> Montgomery -> Palomino Creek");
-                SendClientMessage(playerid, COLOR_WHITE,"YELLOW ROUTE: Restaurant -> Market st. -> Bank -> Glen Park -> East LS -> Red Pen -> Grove st. -> LS Gym");
-				SendClientMessage(playerid, COLOR_GREEN,"______________________");
-
-				//SendClientMessage(playerid, COLOR_WHITE,"To stand up /stopanim");
-			}
-			case 3:
-			{
-			    SendClientMessage(playerid, COLOR_GREEN,"___________Where to live:___________");
-				SendClientMessage(playerid, COLOR_WHITE,"- Pay to rent a room in the hotel.");
-                SendClientMessage(playerid, COLOR_WHITE,"- Room for rent in the house behind.");
-                SendClientMessage(playerid, COLOR_WHITE,"- Or live at LS Airport Motel");
-				SendClientMessage(playerid, COLOR_GREEN,"______________________");
-
-				//SendClientMessage(playerid, COLOR_WHITE,"To stand up /stopanim");
-			}
-			case 4:
-			{
-			    SendClientMessage(playerid, COLOR_GREEN,"___________Medic help:___________");
-				SendClientMessage(playerid, COLOR_WHITE,"/call 911");
-				SendClientMessage(playerid, COLOR_GREEN,"______________________");
-
-				//SendClientMessage(playerid, COLOR_WHITE,"To stand up /stopanim");
-			}
-			case 5:
-			{
-			    SendClientMessage(playerid, COLOR_GREEN,"___________Police help:___________");
-				SendClientMessage(playerid, COLOR_WHITE,"/call 911");
-				SendClientMessage(playerid, COLOR_GREEN,"______________________");
-
-				//SendClientMessage(playerid, COLOR_WHITE,"To stand up /stopanim");
-			}
-			case 6:
-			{
-			    SendClientMessage(playerid, COLOR_GREEN,"_____Legacy Roleplay Server Forums:_____");
-				SendClientMessage(playerid, COLOR_WHITE,"(Read the rules and instructions there.)");
-                SendClientMessage(playerid, COLOR_WHITE,"forum.legacy-rp.net");
-				SendClientMessage(playerid, COLOR_GREEN,"______________________");
-
-				//SendClientMessage(playerid, COLOR_WHITE,"To stand up /stopanim");
-			}
-		}
-        SendClientMessage(playerid, COLOR_WHITE,"To stand up /stopanim");
-
-	  	TogglePlayerControllable(playerid, 0);
-  		ShowMenuForPlayer(Guide, playerid);
-	}
-
-	if(Current == GuideJob1)
-	{
-	    switch(row)
-	    {
-	        case 0:
-	        {
-	            HideMenuForPlayer(GuideJob1, playerid);
-	            ShowMenuForPlayer(GuideJob2, playerid);
-	            return 1;
-			}
-	        case 2: // Farmer
-	        {
-			    SendClientMessage(playerid, COLOR_GREEN,"___________Farmer:___________");
-				SendClientMessage(playerid, COLOR_WHITE,"The farmer harvested the farm produce.");
-                SendClientMessage(playerid, COLOR_WHITE,"/harvest");
-                SendClientMessage(playerid, COLOR_YELLOW,"> The location of this occupation is marked on the map.");
-				SendClientMessage(playerid, COLOR_GREEN,"______________________");
-				SetPlayerCheckpoint(playerid, -382.5893,-1426.3422,26.2217, 3.5);
-				gPlayerCheckpointStatus[playerid] = CHECKPOINT_NEWSPAPER;
-
-			}
-		}
-        SendClientMessage(playerid, COLOR_WHITE,"To stand up /stopanim");
-
-	  	TogglePlayerControllable(playerid, 0);
-  		ShowMenuForPlayer(GuideJob1, playerid);
-	}
-
-	if(Current == GuideJob2)
-	{
-	    switch(row)
-	    {
-	        case 0:
-	        {
-	            HideMenuForPlayer(GuideJob2, playerid);
-	            ShowMenuForPlayer(Guide, playerid);
-	            return 1;
-			}
-
-	        case 2: // Car mechanic
-	        {
-		    	SendClientMessage(playerid, COLOR_GREEN,"___________Mechanic:___________");
-				SendClientMessage(playerid, COLOR_WHITE,"Repair and paint the car using");
-				SendClientMessage(playerid, COLOR_WHITE,"auto parts and trailers");
-                SendClientMessage(playerid, COLOR_WHITE,"/paintcar /repaircar /carparts /refillcar");
-                SendClientMessage(playerid, COLOR_YELLOW,"> The location of this occupation is marked on the map.");
-				SendClientMessage(playerid, COLOR_GREEN,"______________________");
-				SetPlayerCheckpoint(playerid, 88.4620,-165.0116,2.5938, 3.5);
-				gPlayerCheckpointStatus[playerid] = CHECKPOINT_NEWSPAPER;
-	            return 1;
-			}
-	        case 3: // Trucker
-	        {
-		    	SendClientMessage(playerid, COLOR_GREEN,"___________Trucker:___________");
-				SendClientMessage(playerid, COLOR_WHITE,"Los Santos Trucks; The economy in the city.");
-				SendClientMessage(playerid, COLOR_WHITE,"be ready for driving! (/truckerjob)");
-                SendClientMessage(playerid, COLOR_YELLOW,"> The location of this occupation is marked on the map.");
-				SendClientMessage(playerid, COLOR_GREEN,"______________________");
-				SetPlayerCheckpoint(playerid, -78.0338,-1136.1221,1.0781, 3.5);
-				gPlayerCheckpointStatus[playerid] = CHECKPOINT_NEWSPAPER;
-	            return 1;
-			}
-
-		}
-
-	  	TogglePlayerControllable(playerid, 0);
-  		ShowMenuForPlayer(GuideJob1, playerid);
-	}
-
-	return true;
-}*/
 
 public OnPlayerExitedMenu(playerid)
 {
@@ -8624,17 +8236,6 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 		}
 	}
 
-	/*if(newkeys & KEY_CTRL_BACK) // doesn't work
-	{
-		if(IsPlayerInAnyVehicle(playerid))
-		{
-		    if(GetPlayerCameraMode(playerid) == 55)
-			{
-	            RemovePlayerDriveby(playerid);
-	            return true;
-			}
-		}
-	}*/
 
 	if(Pressed(KEY_WALK))
 	{
@@ -8646,20 +8247,6 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 	        PlayerData[playerid][pFreeze] = 0;
 		}
 
-		/*if(PlayerData[playerid][pSpectating] != INVALID_PLAYER_ID && PlayerData[playerid][pAdmin] >= 1)
-		{
-			PlayerData[playerid][pSpectating] = INVALID_PLAYER_ID;
-
-		    TogglePlayerSpectating(playerid, false);
-			SetCameraBehindPlayer(playerid);
-
-		    SetPlayerDynamicPos(playerid, PlayerData[playerid][pPos][0], PlayerData[playerid][pPos][1], PlayerData[playerid][pPos][2]);
-		    SetPlayerInterior(playerid, PlayerData[playerid][pInterior]);
-		    SetPlayerVirtualWorld(playerid, PlayerData[playerid][pWorld]);
-
-			SetPlayerWeapons(playerid);
-			return true;
-		}*/		
 	}
 
 	if(PfSpec[playerid][FlySpec] == 1)
@@ -9350,35 +8937,6 @@ public OnPlayerUpdate(playerid)
 
 	AFKTimer[playerid] = 3;
 
-	/*if(PfSpec[playerid][FlySpec] == 1)
-	{
-		// Get the player's currently held keys
-		new keys, updown, leftright;
-		GetPlayerKeys(playerid, keys, updown, leftright);
-
-		if(PfSpec[playerid][mdir] && (GetTickCount() - PfSpec[playerid][lastmove] > 100))
-		{
-			MoveCamera(playerid);
-		}
-
-		if(PfSpec[playerid][updownold] != updown || PfSpec[playerid][leftrightold] != leftright)
-		{
-			if((PfSpec[playerid][updownold] != 0 || PfSpec[playerid][leftrightold] != 0) && updown == 0 && leftright == 0)
-			{
-				StopPlayerObject(playerid, PfSpec[playerid][fsobj]);
-				PfSpec[playerid][mdir] = 0;
-			}
-			else
-			{
-				PfSpec[playerid][mdir] = GetMoveDirectionFromKeys(updown, leftright);
-				MoveCamera(playerid);
-			}
-		}
-
-		PfSpec[playerid][updownold] = updown;
-		PfSpec[playerid][leftrightold] = leftright;
-		return false;
-	}*/
 	
 	AFKTimer[playerid] = 3;
 	return true;
@@ -10966,11 +10524,6 @@ ResetVehicle(vehicleid, bool:personal_car = false)
 		if(IsValidDynamicObject(CoreVehicles[vehicleid][vSiren])) DestroyDynamicObject(CoreVehicles[vehicleid][vSiren]);
 		if(IsValidDynamicObject(CoreVehicles[vehicleid][vSiren2])) DestroyDynamicObject(CoreVehicles[vehicleid][vSiren2]);
 
-		/*if(CoreVehicles[vehicleid][vehSign])
-		{
-			Delete3DTextLabel(CoreVehicles[vehicleid][vehSignText]);
-			CoreVehicles[vehicleid][vehSign] = 0;
- 		}*/
 
 		CoreVehicles[vehicleid][vehicleIsCargoLoad] = 0;
 		CoreVehicles[vehicleid][vehicleCargoTime] = 0;
@@ -11261,11 +10814,6 @@ public OnSignalCreated(signalid)
 
 public OnPlayerPickUpDynamicPickup(playerid, pickupid)
 {
-	/*if(pickupid == NewsPickup)
-	{
-		GameTextForPlayer(playerid, "~w~/newspaper to read newspaper about possible jobs in the city~n~", 8000, 4);
-		return true;
-	}*/
 
 
 	if(pickupid == MechanicPickup)
@@ -11915,19 +11463,6 @@ public OnEditedMoveDoor(objectid)
 	return true;
 }
 
-/*GetClosestComplexID(playerid)
-{
-	if(InApartment[playerid] != -1) return InApartment[playerid];
-
-	foreach (new i : Property)
-	{
-		if(IsPlayerInRangeOfPoint(playerid, 3.0, ComplexData[i][aEntranceX], ComplexData[i][aEntranceY], ComplexData[i][aEntranceZ]))
-		{
-			return i;
-		}
-	}
-	return -1;
-}*/
 
 forward OnWeaponSettingsInsert(playerid, slot);
 public OnWeaponSettingsInsert(playerid, slot)
@@ -13935,50 +13470,6 @@ public Float:GetPosInFrontOfVehicle(vehicleid, &Float:x, &Float:y, Float:distanc
 	return a;
 }
 
-stock GetUnixTime()
-{
-	new Year, Month, Day,Hour,Minute,Second;
-	getdate(Year, Month, Day);
-	gettime(Hour,Minute,Second);
-	return mktime(Hour,Minute,Second,Day,Month,Year);
-}
-
-stock mktime(hour,minute,second,day,month,year)
-{
-	new timestamp2;
-
-	timestamp2 = second + (minute * 60) + (hour * 3600);
-
-	new days_of_month[12];
-
-	if( ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0) ) {
-		days_of_month = {                         // Schaltjahr
-			31,29,31,30,31,30,31,31,30,31,30,31
-		};
-	}
-	else {
-		days_of_month = {                         // keins
-			31,28,31,30,31,30,31,31,30,31,30,31
-		};
-	}
-	new days_this_year = 0;
-	days_this_year = day;
-	if(month > 1) {                               // No January Calculation, because its always the 0 past months
-		for(new i=0; i != month-1; ++i) {
-			days_this_year += days_of_month[i];
-		}
-	}
-	timestamp2 += days_this_year * 86400;
-
-	for(new j=1970;j!=year;++j) {
-		timestamp2 += 31536000;
-// Schaltjahr + 1 Tag
-		if( ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0) )  timestamp2 += 86400;
-	}
-
-	return timestamp2;
-}
-
 Toll_CloseToll(TollID)
 {
 	if(TollID == RichmanToll)
@@ -14054,57 +13545,6 @@ Toll_OpenToll(TollID)
 	TollsOpenCount ++;
 }
 
-stock Toll_TimePassedCops(playerid) // Cops have to wait for <TollDelayCop> seconds between every /toll (Global)
-{
-	new L_i_tick = GetUnixTime();
-
-	if(L_a_RequestAllowedCop > L_i_tick && L_a_RequestAllowedCop != 0)
-	{
-		SendClientMessageEx(playerid, COLOR_LIGHTRED, "You will have to wait at least %d seconds between each toll payment.", TollDelayCop);
-		return false;
-	}
-
-	L_a_RequestAllowedCop = (L_i_tick + TollDelayCop);
-	return true;
-}
-
-stock ReturnTollStatus(id)
-{
-	new status[20];
-
-	if(aTolls[id][E_tLocked] == 1)
-	{
-	    format(status, 20, "{F17986}Locked");
-	}
-	else
-	{
-	    format(status, 20, "{DDFF3F}Unlocked");
-	}
-
-	return status;
-}
-
-stock ShowAllTolls(playerid)
-{
-	gstr[0] = EOS;
-
-	strcat(gstr, "Booth Name\tStatus\tEmergency\n");
-	format(sgstr, sizeof(sgstr), "Hampton Barns\t{AFAFAF}Closed\t%s\n", ReturnTollStatus(BlueberryTollR));
-	strcat(gstr, sgstr);
-	format(sgstr, sizeof(sgstr), "Panopticon\t{AFAFAF}Closed\t%s\n", ReturnTollStatus(BlueberryTollL));
-	strcat(gstr, sgstr);
-	format(sgstr, sizeof(sgstr), "LSLV Highway\t{AFAFAF}Closed\t%s\n", ReturnTollStatus(LVToll));
-	strcat(gstr, sgstr);
-	format(sgstr, sizeof(sgstr), "Flint Range\t{AFAFAF}Closed\t%s\n", ReturnTollStatus(FlintToll));
-	strcat(gstr, sgstr);
-	format(sgstr, sizeof(sgstr), "Rodeo Bank\t{AFAFAF}Closed\t%s\n", ReturnTollStatus(RichmanToll));
-	strcat(gstr, sgstr);
-
-	strcat(gstr, "{AFAFAF}Lock all booths\n");
-	strcat(gstr, "{AFAFAF}Unlock all booths");
-
-	ShowPlayerDialog(playerid, TOLLS_DIALOG2, DIALOG_STYLE_TABLIST_HEADERS, "{FFFFFF}Toolbooth Management", gstr, "Select", "Back");
-}
 
 GetVehicleCargoLoad(vehicleid)
 {
@@ -14344,14 +13784,6 @@ SetPlayerCheckpointEx(playerid, Float:x, Float:y, Float:z, Float:distance, statu
 	return true;
 }
 
-IsJobSide(jobid)
-{
-	if(jobid == JOB_NONE || jobid == JOB_MECHANIC || jobid == JOB_TAXI)
-		return true;
-
-	return false;
-}
-
 ReturnJobName(playerid, jobid)
 {
 	new name[32];
@@ -14482,21 +13914,6 @@ FUNX::OnIPAddressUnbanned(playerid, address[])
 	return true;
 }
 
-/*IsAnIP(str[])
-{
-	if(!str[0] || str[0] == '\1')
-		return 0;
-
-	for(new i = 0, l = strlen(str); i != l; ++i)
-	{
-	    if((str[i] < '0' || str[i] > '9') && str[i] != '.')
-	        return 0;
-
-	    if(0 < ((i == 0) ? (strval(str)) : (strval(str[i + 1]))) > 255)
-	        return 0;
-	}
-	return true;
-}*/
 
 ReturnDonateRank(rank)
 {
@@ -15007,38 +14424,6 @@ SetBusinessInterior(playerid, bizid, int)
 	return true;
 }
 
-/*CreateGuideMenus()
-{
-	Guide = CreateMenu("Los Santos Newspaper", 1, 50.0, 180.0, 300.0, 300.0);
-	SetMenuColumnHeader(Guide, 0, "Citizen info");
-	AddMenuItem(Guide, 0, "Next page");
-	AddMenuItem(Guide, 0, "How to call taxi");
-	AddMenuItem(Guide, 0, "Bus routes");
-	AddMenuItem(Guide, 0, "Where to live");
-	AddMenuItem(Guide, 0, "Medic help");
-	AddMenuItem(Guide, 0, "Police help");
-	AddMenuItem(Guide, 0, "OOC: Forum link");
-
-	GuideJob1 = CreateMenu("Los Santos Newspaper", 1, 50.0, 180.0, 300.0, 300.0);
-	SetMenuColumnHeader(GuideJob1, 0, "Employment and legal jobs");
-	AddMenuItem(GuideJob1, 0, "Next page");
-	AddMenuItem(GuideJob1, 0, "Detective");
-	AddMenuItem(GuideJob1, 0, "Farmer");
-	AddMenuItem(GuideJob1, 0, "Lawyer");
-	AddMenuItem(GuideJob1, 0, "Pizza deliver");
-	AddMenuItem(GuideJob1, 0, "Hot Dog Man");
-	AddMenuItem(GuideJob1, 0, "IceCream Man");
-	AddMenuItem(GuideJob1, 0, "Trashman");
-
-	GuideJob2 = CreateMenu("Los Santos Newspaper", 1, 50.0, 180.0, 300.0, 300.0);
-	SetMenuColumnHeader(GuideJob2, 0, "Employment and legal jobs");
-	AddMenuItem(GuideJob2, 0, "Next page");
-	AddMenuItem(GuideJob2, 0, "Courier");
-	AddMenuItem(GuideJob2, 0, "Car mechanic");
-	AddMenuItem(GuideJob2, 0, "Trucker");
-	AddMenuItem(GuideJob2, 0, "Bartender");
-	AddMenuItem(GuideJob2, 0, "Boxing career");
-}*/
 
 forward SetUnTazed(playerid);
 public SetUnTazed(playerid)
@@ -15134,13 +14519,6 @@ GetPlayerNearMeal(playerid)
 	{
 		return true;
 	}
-	/*for(new i = 0; i != sizeof(MealDrop); ++i)
-  	{
-	    if(IsPlayerInRangeOfPoint(playerid, 2.5, MealDrop[i][mX],MealDrop[i][mY],MealDrop[i][mZ]))
-	    {
-			return i;
-	    }
-    }*/
     return false;
 }
 
@@ -15237,24 +14615,6 @@ ShowBoomBoxStations(playerid)
 	return true;
 }
 
-/*StartMusicInVehicle(vehicle, url[])
-{
-	if(CoreVehicles[vehicle][vradioOn])
-	{
-		foreach(Player, i)
-		{
-			if(GetPlayerVehicleID(i) == vehicle)
-			{
-				StopAudioStreamForPlayer(i);
-				PlayAudioStreamForPlayer(i, url);
-
-                SendClientMessageEx(i, COLOR_DARKGREEN, "%s has tuned the radio to %s", ReturnName(playerid, 0), CoreVehicles[vehicle][vradioStation]);
-				SendClientMessageEx(i, COLOR_LIGHTRED, "Radio changed to station %s", CoreVehicles[vehicle][vradioStation]);
-			}
-		}
-	}
-	return true;
-}*/
 
 StopCarBoomBox(carid)
 {
@@ -16280,86 +15640,6 @@ DeployRoadblock(playerid, rb, const note[])
 	return true;
 }
 
-/*CountVehicleTickets(owner[])
-{
-	new name[MAX_PLAYER_NAME + 1];
-	format(name, MAX_PLAYER_NAME, "%s", owner);
-	for(new i = 0, len = strlen(name); i < len; ++i) if(name[i] == '_') name[i] = ' ';
-
-	new checkQuery[128], count;
-
-	mysql_format(dbCon, checkQuery, sizeof(checkQuery), "SELECT * FROM `fines` WHERE `addressee` = '%s' AND `type` = 1", name);
-	new Cache:cache = mysql_query(dbCon, checkQuery);
-
-	count = cache_num_rows();
-
-	cache_delete(cache);
-	return count;
-}
-
-CountPlayerTickets(playerid)
-{
-	new checkQuery[128], count;
-
-	mysql_format(dbCon, checkQuery, sizeof(checkQuery), "SELECT * FROM `fines` WHERE `addressee` = '%s' AND `type` = 0", ReturnNameEx(playerid));
-	new Cache:cache = mysql_query(dbCon, checkQuery);
-
-	count = cache_num_rows();
-
-	cache_delete(cache);
-	return count;
-}
-
-CountTickets(playerid)
-{
-	new checkQuery[128], count;
-
-	mysql_format(dbCon, checkQuery, sizeof(checkQuery), "SELECT * FROM `fines` WHERE `addressee` = '%s'", ReturnNameEx(playerid));
-	new Cache:cache = mysql_query(dbCon, checkQuery);
-
-	count = cache_num_rows();
-
-	cache_delete(cache);
-	return count;
-}
-
-CountTicketsByName(owner[])
-{
-	new name[MAX_PLAYER_NAME + 1];
-	format(name, MAX_PLAYER_NAME, "%s", owner);
-	for(new i = 0, len = strlen(name); i < len; ++i) if(name[i] == '_') name[i] = ' ';
-
-	new checkQuery[128], count;
-
-	mysql_format(dbCon, checkQuery, sizeof(checkQuery), "SELECT * FROM `fines` WHERE `addressee` = '%s'", name);
-	new Cache:cache = mysql_query(dbCon, checkQuery);
-
-	count = cache_num_rows();
-
-	cache_delete(cache);
-	return count;
-}
-
-FindVehicleByPlate(plate[])
-{
-	foreach (new i : sv_playercar) if(!strcmp(plate, CarData[i][carPlate], true)) return i;
-	return -1;
-}
-
-AddCriminalRecord(playerid, szCharge[], iOfficer)
-{
-	if(strlen(szCharge) < 5)
-	{
-		SendClientMessage(iOfficer, COLOR_LIGHTRED, "You must enter more than 5 characters.");
-		return 0;
-	}
-	else
-	{
-		format(gquery, sizeof(gquery), "INSERT INTO `criminal_record` (userid, charge, date, officer) VALUES(%d, '%s', '%s', %d)", PlayerData[playerid][pID], szCharge, ReturnDate(), PlayerData[iOfficer][pID]);
-		mysql_pquery(dbCon, gquery);
-		return true;
-	}
-}*/
 
 WriteArrestRecord(playerid, userid, playerc = INVALID_PLAYER_ID)
 {
@@ -16443,35 +15723,7 @@ Dialog:Arrest_Record(playerid, response, listitem, inputtext[])
 	return true;
 }
 
-/*PlaceVehicleFine(carid, copid, price, reason[])
-{
-	new query[512], clean_reason[64], name[MAX_PLAYER_NAME + 1];
 
-	//new exp = gettime() + 259200;
-
-	mysql_escape_string(reason, clean_reason);
-
-	format(name, MAX_PLAYER_NAME, "%s", CarData[carid][carOwnerName]);
-
-	for(new i = 0, len = strlen(name); i < len; ++i)
-	{
-		if(name[i] == '_')
-		{
-			name[i] = ' ';
-		}
-	}
-
-	format(query, sizeof(query), "INSERT INTO `fines` (`cop`, `addressee`, `agency`, `price`, `reason`, `type`) VALUES ('%s', '%s', '%s', '%d', '%s', '%d')", ReturnNameEx(copid), name, Faction_GetName(copid), price, clean_reason, CarData[carid][carID]);
-	mysql_pquery(dbCon, query);
-	return true;
-}*/
-
-/*ViewVehicleFine(playerid, targetid)
-{
-	format(gquery, sizeof(gquery), "SELECT * FROM `fines` WHERE `addressee` = '%s' AND `type` != 0", ReturnNameEx(targetid));
-	mysql_tquery(dbCon, gquery, "ShowVehicleFines", "dd", playerid, targetid);
-	return true;
-}*/
 
 FUNX::ShowVehicleFines(playerid, targetid)
 {
@@ -16510,101 +15762,6 @@ FUNX::ShowVehicleFines(playerid, targetid)
 	return true;
 }
 
-/*Dialog:VehicleFines(playerid, response, listitem, inputtext[])
-{
-	if(response)
-	{
-	    new menu[10], str[512], targetid = GetPVarInt(playerid, "PlayerFinesID");
-	    format(menu, 10, "menu%d", listitem);
-	    new rows = GetPVarInt(playerid, menu);
-
-		format(gquery, sizeof(gquery), "SELECT * FROM `fines` WHERE `addressee` = '%s' AND `id` = %d AND `type` != 0", ReturnNameEx(targetid), rows);
-		mysql_query(dbCon, gquery);
-
-		if(cache_num_rows())
-		{
-			new
-				fineid,
-				fineagency[64],
-				fineaddressee[24],
-				fineissuer[24],
-				fineprice,
-				finedate[64],
-				finereason[64];
-
-			cache_get_value_index_int(0, 0, fineid);
-			cache_get_value_index(0, 1, fineissuer);
-			cache_get_value_index(0, 2, fineaddressee);
-			cache_get_value_index(0, 3, fineagency);
-			cache_get_value_index(0, 4, finedate);
-			cache_get_value_index_int(0, 5, fineprice);
-			cache_get_value_index(0, 6, finereason);
-
-			if(targetid == playerid)
-			{
-			    SetPVarInt(playerid, "PlayerFinesChooseID", fineid);
-			    SetPVarInt(playerid, "PlayerFinesPrice", fineprice);
-			    format(str, sizeof(str), "Agencies:\t%s\nRecipients:\t\t%s\nCard issuer:\t%s\n\nNumber:\t\t$%d\nCause:\t\t%s\nDate:\t\t%s\n\nYou have 72 Hours for paying the fine" ,fineagency, fineaddressee, fineissuer, fineprice, finereason, finedate);
-				Dialog_Show(playerid,PayFines,DIALOG_STYLE_MSGBOX,"Fine Details",str,"Pay","Close");
-			}
-			else
-			{
-				format(str, sizeof(str), "Agencies:\t%s\nRecipients:\t\t%s\nCard issuer:\t%s\n\nNumber:\t\t$%d\nCause:\t\t%s\nDate:\t\t%s" ,fineagency, fineaddressee, fineissuer, fineprice, finereason, finedate);
-				Dialog_Show(playerid,ShowOnly,DIALOG_STYLE_MSGBOX,"Fine Details",str,"Close","");
-			}
-			return true;
-		}
-	}
-	return true;
-}
-
-Dialog:PlayerFines(playerid, response, listitem, inputtext[])
-{
-	if(response)
-	{
-	    new menu[10], str[512], targetid = GetPVarInt(playerid, "PlayerFinesID");
-	    format(menu, 10, "menu%d", listitem);
-	    new rows = GetPVarInt(playerid, menu);
-
-		format(gquery, sizeof(gquery), "SELECT * FROM `fines` WHERE `addressee` = '%s' AND `id` = %d AND `type` = 0", ReturnNameEx(targetid), rows);
-		mysql_query(dbCon, gquery);
-
-		if(cache_num_rows())
-		{
-			new
-				fineid,
-				fineagency[64],
-				fineaddressee[24],
-				fineissuer[24],
-				fineprice,
-				finedate[64],
-				finereason[64];
-
-			cache_get_value_index_int(0, 0, fineid);
-			cache_get_value_index(0, 1, fineissuer);
-			cache_get_value_index(0, 2, fineaddressee);
-			cache_get_value_index(0, 3, fineagency);
-			cache_get_value_index(0, 4, finedate);
-			cache_get_value_index_int(0, 5, fineprice);
-			cache_get_value_index(0, 6, finereason);
-
-			if(targetid == playerid)
-			{
-			    SetPVarInt(playerid, "PlayerFinesChooseID", fineid);
-			    SetPVarInt(playerid, "PlayerFinesPrice", fineprice);
-			    format(str, sizeof(str), "Agencies:\t%s\nRecipients:\t\t%s\nCard issuer:\t%s\n\nNumber:\t\t$%d\nCause:\t\t%s\nDate:\t\t%s\n\nYou have 72 Hours for paying the fine" ,fineagency, fineaddressee, fineissuer, fineprice, finereason, finedate);
-				Dialog_Show(playerid,PayFines,DIALOG_STYLE_MSGBOX,"Fine Details",str,"Pay","Close");
-			}
-			else
-			{
-				format(str, sizeof(str), "Agencies:\t%s\nRecipients:\t\t%s\nCard issuer:\t%s\n\nNumber:\t\t$%d\nCause:\t\t%s\nDate:\t\t%s" ,fineagency, fineaddressee, fineissuer, fineprice, finereason, finedate);
-				Dialog_Show(playerid,ShowOnly,DIALOG_STYLE_MSGBOX,"Fine Details",str,"Close","");
-			}
-			return true;
-		}
-	}
-	return true;
-}*/
 
 Dialog:PayFines(playerid, response, listitem, inputtext[])
 {
@@ -16999,287 +16156,8 @@ NeedAnS(const unit[], value)
 	return result;
 }
 
-/*CMD:flag(playerid, params[])
-{
-    if(PlayerData[playerid][pAdmin] < 1)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
-
-	new
-		userid,
-		note[256]
-	;
-
-	if(sscanf(params, "us[256]", userid, note))
-	    return SendSyntaxMessage(playerid, "/flag [playerid/PartOfName] [note]");
-
-	if(!IsPlayerConnected(userid))
-		return SendErrorMessage(playerid, "The player you specified isn't connected.");
-
-	if(!SQL_IsLogged(userid))
-		return SendErrorMessage(playerid, "The player you specified isn't logged in.");
-
-	if(!strlen(note) || strlen(note) > 256)
-	    return SendErrorMessage(playerid, "Text is too short or too long.");
-
-    new largeQuery[512];
-
-	mysql_format(dbCon, largeQuery, sizeof(largeQuery), "INSERT INTO `flags` (Text, userid, master_name, char_name, admin_name) VALUES ('%e', %d, '%e', '%e', '%e')", note, PlayerData[userid][pID], AccountData[userid][aUsername], ReturnName(userid), ReturnName(playerid));
-    mysql_tquery(dbCon, largeQuery, "OnAdminActionAdded", "dds", playerid, userid, note);
-
-	if(strlen(note) > 80)
-	{
-		SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmCmd: %s added an OnAdminAction note on %s: %.80s", ReturnName(playerid), ReturnName(userid), note);
-		SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmCmd: %s", note[80]);
-	}
-	else SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmCmd: %s added an OnAdminAction note on %s: %s", ReturnName(playerid), ReturnName(userid), note);
-
-	return true;
-}
-
-FUNX::OnAdminActionAdded(playerid, userid, text[])
-{
-	for(new i = 0; i < 10; ++i)
-	{
-	    if(!AdminActions[userid][i][actionID])
-	    {
-	        AdminActions[userid][i][actionID] = cache_insert_id();
-	        format(AdminActions[userid][i][actionText], 256, text);
-	        format(AdminActions[userid][i][actionAdmin], MAX_PLAYER_NAME, ReturnName(playerid));
-	        return true;
-	    }
-	}
-
-	for(new i = 0; i < 9; ++i)
-	{
-	    AdminActions[userid][i][actionID] = AdminActions[userid][i + 1][actionID];
-	    format(AdminActions[userid][i][actionText], 256, AdminActions[userid][i + 1][actionText]);
-	    format(AdminActions[userid][i][actionAdmin], MAX_PLAYER_NAME, AdminActions[userid][i + 1][actionAdmin]);
-	}
-
-	AdminActions[userid][9][actionID] = cache_insert_id();
-	format(AdminActions[userid][9][actionText], 256, text);
-	format(AdminActions[userid][9][actionAdmin], MAX_PLAYER_NAME, ReturnName(playerid));
-
-	//printf(" failed OnAdminActionAdded(%d, %d, %s)", playerid, userid, text);
-	return true;
-}
-
-new ANOTES[MAX_PLAYERS][11];
-
-CMD:viewnotes(playerid, params[])
-{
-    if(PlayerData[playerid][pAdmin] < 1)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
-
-	new
-		userid
-	;
-
-	if(sscanf(params, "u", userid))
-	    return SendSyntaxMessage(playerid, "/viewnotes [playerid/PartOfName]");
-
-	if(!IsPlayerConnected(userid))
-		return SendErrorMessage(playerid, "The player you specified isn't connected.");
-
-	if(!SQL_IsLogged(userid))
-		return SendErrorMessage(playerid, "The player you specified isn't logged in.");
-
-	new body[1000], count = 0;
-
-	for(new i = 0; i < 10; ++i)
-	{
-	    if(!AdminActions[userid][i][actionID]) continue;
-
-	    format(body, sizeof(body), "%s%s\n", body, AdminActions[userid][i][actionText]);
-
-	    ANOTES[playerid][count] = i;
-
-	    count++;
-	}
-
-	if(!count) return SendErrorMessage(playerid, "Nothing to show.");
-
-	ANOTES[playerid][10] = userid;
-
-	Dialog_Show(playerid, AdminActions, DIALOG_STYLE_LIST, "Admin Action", body, "Delete", "Cancel");
-
-	return true;
-}
-
-Dialog:AdminActions(playerid, response, listitem, inputtext[])
-{
-	if(!response) return true;
-	if(response)
-	{
-		new
-		    id = ANOTES[playerid][listitem],
-		    userid = ANOTES[playerid][10]
-		;
-
-		SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmCmd: %s deleted %s's OnAdminAction %d.", ReturnName(playerid), ReturnName(userid), AdminActions[userid][id][actionID]);
-
-		format(largeQuery, sizeof(largeQuery), "DELETE FROM `flags` WHERE `ID` = '%d'", AdminActions[userid][id][actionID]);
-	    mysql_pquery(dbCon, largeQuery);
-
-	    AdminActions[userid][id][actionID] = 0;
-	}
-	return true;
-}*/
 
 // Fly spec
-/*StartFlyEditor(playerid)
-{
-	new Float:X, Float:Y, Float:Z;
-	GetPlayerPos(playerid, X, Y, Z);
-
-	if(IsPlayerInAnyVehicle(playerid)) RemovePlayerFromVehicle(playerid);
-
-	PfSpec[playerid][FlySpec] = 1;
-	PfSpec[playerid][fsobj] = CreatePlayerObject(playerid, 19300, X, Y, Z, 0.0, 0.0, 0.0);
-	PfSpec[playerid][fspeed] = 50;
-
-	TempInfo[playerid][tSkin] = GetPlayerSkin(playerid);
-	TempInfo[playerid][tHealth] = PlayerData[playerid][pHealth];
-	TempInfo[playerid][tInt] = GetPlayerInterior(playerid);
-	TempInfo[playerid][tVW] = GetPlayerVirtualWorld(playerid);
-
-	SendClientMessage(playerid, COLOR_WHITE, "You have entered Fly Spectate mode");
-	SendClientMessage(playerid, COLOR_WHITE, "Use {FF6347}~k~~GO_FORWARD~ ~k~~GO_BACK~ ~k~~GO_LEFT~ ~k~~GO_RIGHT~{FFFFFF} to move the camera.");
-	SendClientMessage(playerid, COLOR_WHITE, "Press {FF6347}~k~~PED_JUMPING~{FFFFFF} to speed up and {FF6347}~k~~PED_SPRINT~{FFFFFF} to slow down.");
-	SendClientMessage(playerid, COLOR_WHITE, "To exit the spectate mode, type {FF6347}/fly{FFFFFF} again.");
-
-	TogglePlayerSpectating(playerid, true);
-	AttachCameraToPlayerObject(playerid, PfSpec[playerid][fsobj]);
-	return true;
-}
-
-EndFlyEditor(playerid)
-{
-	PfSpec[playerid][FlySpec] = 0;
-	GetPlayerCameraPos(playerid, PfSpec[playerid][CamPos][0], PfSpec[playerid][CamPos][1], PfSpec[playerid][CamPos][2]);
-	TogglePlayerSpectating(playerid, false);
-	DestroyPlayerObject(playerid, PfSpec[playerid][fsobj]);
-	SetPlayerSkin(playerid,TempInfo[playerid][tSkin]);
-	SetPlayerInterior(playerid,TempInfo[playerid][tInt]);
-	SetPlayerVirtualWorld(playerid,TempInfo[playerid][tVW]);
-	SetPlayerDynamicPos(playerid, PfSpec[playerid][CamPos][0], PfSpec[playerid][CamPos][1], PfSpec[playerid][CamPos][2]);
-	SetPlayerHealthEx(playerid,TempInfo[playerid][tHealth]);
-	ResetPlayerWeapons(playerid);
-	SetPlayerWeapons(playerid);
-	//SetTimerEx("UnFreezePlayer", 200, 0, "d", playerid);
-	PfSpec[playerid][CamPos][0] = 0;
-	PfSpec[playerid][CamPos][1] = 0;
-	PfSpec[playerid][CamPos][2] = 0;
-	PfSpec[playerid][mdir] = 0;
-	PfSpec[playerid][updownold] = 0;
-	PfSpec[playerid][leftrightold] = 0;
-	ClearTempInfo(playerid);
-	return true;
-}
-
-ClearTempInfo(playerid)
-{
-	TempInfo[playerid][tSkin] = 0;
-	TempInfo[playerid][tHealth] = 0;
-	TempInfo[playerid][tInt] = 0;
-	TempInfo[playerid][tVW] = 0;
-	TempInfo[playerid][tmX] = 0.0;
-	TempInfo[playerid][tmY] = 0.0;
-	TempInfo[playerid][tmZ] = 0.0;
-	return true;
-}
-
-GetMoveDirectionFromKeys(updown, leftright)
-{
-	new direction = 0;
-	if(leftright < 0)
-	{
-		if(updown < 0) direction = 7;//ForwardLest
-		else if(updown > 0) direction = 5;//BackLeft
-		else direction = 3;//Left
-	}
-	else if(leftright > 0)
-	{
-		if(updown < 0) direction = 8;//ForwardRight
-		else if(updown > 0) direction = 6;//BackRight
-		else direction = 4;//Right
-	}
-	else if(updown < 0) direction = 1;//Forward
-	else if(updown > 0) direction = 2;//Back
-
-	return direction;
-}
-
-MoveCamera(playerid)
-{
-	new Float:fvector[3], Float:pCPos[3];
-	GetPlayerCameraPos(playerid, pCPos[0], pCPos[1], pCPos[2]);
-	GetPlayerCameraFrontVector(playerid, fvector[0], fvector[1], fvector[2]);
-	new Float:X, Float:Y, Float:Z;
-	GetNextCameraPosition(PfSpec[playerid][mdir], pCPos, fvector, X, Y, Z);
-	MovePlayerObject(playerid, PfSpec[playerid][fsobj], X, Y, Z, PfSpec[playerid][fspeed]);
-	PfSpec[playerid][lastmove] = GetTickCount();
-	return true;
-}
-
-GetNextCameraPosition(move_mode, const Float:pCPos[3], const Float:fvector[3], &Float:X, &Float:Y, &Float:Z)
-{
-	#define OFFSET_X (fvector[0] * 6000.0)
-	#define OFFSET_Y (fvector[1] * 6000.0)
-	#define OFFSET_Z (fvector[2] * 6000.0)
-
-	switch(move_mode)
-	{
-		case 1: //Forward
-		{
-			X = pCPos[0] + OFFSET_X;
-			Y = pCPos[1] + OFFSET_Y;
-			Z = pCPos[2] + OFFSET_Z;
-		}
-		case 2: //Back
-		{
-			X = pCPos[0] - OFFSET_X;
-			Y = pCPos[1] - OFFSET_Y;
-			Z = pCPos[2] - OFFSET_Z;
-		}
-		case 3: //Left
-		{
-			X = pCPos[0] - OFFSET_Y;
-			Y = pCPos[1] + OFFSET_X;
-			Z = pCPos[2];
-		}
-		case 4: //Right
-		{
-			X = pCPos[0] + OFFSET_Y;
-			Y = pCPos[1] - OFFSET_X;
-			Z = pCPos[2];
-		}
-		case 5: //BackLeft
-		{
-			X = pCPos[0] + (-OFFSET_X - OFFSET_Y);
-			Y = pCPos[1] + (-OFFSET_Y + OFFSET_X);
-			Z = pCPos[2] - OFFSET_Z;
-		}
-		case 6: //BackRight
-		{
-			X = pCPos[0] + (-OFFSET_X + OFFSET_Y);
-			Y = pCPos[1] + (-OFFSET_Y - OFFSET_X);
-			Z = pCPos[2] - OFFSET_Z;
-		}
-		case 7: //ForwardLeft
-		{
-			X = pCPos[0] + (OFFSET_X - OFFSET_Y);
-			Y = pCPos[1] + (OFFSET_Y + OFFSET_X);
-			Z = pCPos[2] + OFFSET_Z;
-		}
-		case 8: //ForwardRight
-		{
-			X = pCPos[0] + (OFFSET_X + OFFSET_Y);
-			Y = pCPos[1] + (OFFSET_Y - OFFSET_X);
-			Z = pCPos[2] + OFFSET_Z;
-		}
-	}
-}*/
 
 Dialog:DIALOG_ATM_DELETE(playerid, response, listitem, inputtext[])
 {
@@ -17716,15 +16594,6 @@ FUNX::WT()
 
 	switch(rand)  /* This random swtich generates the next weather that the server will have */
 	{
-		/*case 0:format(string, sizeof(string), "[Weather Report] - SUNNY SKIES - MODERATE WIND - CHANCE OF SHOWERS");
-		case 1:format(string, sizeof(string), "[Weather Report] - SUNNY SKIES - LIGHT WIND - FOGGY START TO THE MORNING");
-		case 2:format(string, sizeof(string), "[Weather Report] - SUNNY SKIES - NO WIND - NO OTHER ALERTS");
-		case 3:format(string, sizeof(string), "[Weather Report] - SUNNY SKIES - EXTREME WINDS - FINE SPELLS");
-		case 4:format(string, sizeof(string), "[Weather Report] - SUNNY SKIES - HEAVY WINDS - NO OTHER ALERTS");
-		case 5:format(string, sizeof(string), "[Weather Report] - SUNNY SKIES - NO WIND - CHANCE OF LATE NIGHT FOG");
-		case 7:format(string, sizeof(string), "[Weather Report] - SUNNY SKIES - LIGHT WIND - NO OTHER ALERTS");
-		case 8:format(string, sizeof(string), "[Weather Report] - WETNESS - FULL GAZES - NO OTHER ALERTS");
-		case 9:format(string, sizeof(string), "[Weather Report] - HEAVY FOG - STRONG WINDS - FINE SPELLS DEVELOPING IN THE EVENING");*/
 	}
 
 	/*SendClientMessageToAll(-1, string); */
@@ -17863,18 +16732,6 @@ ConfirmDialog_Response(playerid, response)
 	return;
 } // Credits to Mmartin (SA-MP forums)
 
-/*strtolower(text[])
-{
-	new newstr[256];
-	format(newstr, 256, text);
-
-	for(new c = 0, length = strlen(newstr); c < length; ++c)
-	{
-		newstr[c] = tolower(newstr[c]);
-	}
-
-	return newstr;
-}*/
 
 string_replace(const search[], const replace[], const source[])
 {

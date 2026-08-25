@@ -4253,104 +4253,6 @@ Dialog:BuyWeapon(playerid, response, listitem, inputtext[])
 	return true;
 }
 
-stock ReturnAmmoPrice(const weapon[])
-{
-	if(!strcmp(weapon, "knuckles", true)) return 200;
-	if(!strcmp(weapon, "knife", true)) return 300;
-	if(!strcmp(weapon, "poolcue", true)) return 200;
-	if(!strcmp(weapon, "dildo2", true)) return 100;
-	if(!strcmp(weapon, "flowers", true)) return 100;
-	if(!strcmp(weapon, "molotov", true)) return 2000;
-	if(!strcmp(weapon, "deagle", true)) return 15;
-	if(!strcmp(weapon, "mp5", true)) return 30;
-	if(!strcmp(weapon, "tec9", true)) return 30;
-	if(!strcmp(weapon, "fireex", true)) return 20;
-
-	if(!strcmp(weapon, "golfclub", true)) return 200;
-	if(!strcmp(weapon, "bat", true)) return 300;
-	if(!strcmp(weapon, "katana", true)) return 400;
-	if(!strcmp(weapon, "dildo3", true)) return 100;
-	if(!strcmp(weapon, "cane", true)) return 300;
-	if(!strcmp(weapon, "colt", true)) return 10;
-	if(!strcmp(weapon, "shotgun", true)) return 15;
-	if(!strcmp(weapon, "ak47", true)) return 30;
-	if(!strcmp(weapon, "rifle", true)) return 40;
-	if(!strcmp(weapon, "camera", true)) return 2000;
-
-	if(!strcmp(weapon, "nightstick", true)) return 200;
-	if(!strcmp(weapon, "shovel", true)) return 200;
-	if(!strcmp(weapon, "dildo1", true)) return 100;
-	if(!strcmp(weapon, "dildo4", true)) return 100;
-	if(!strcmp(weapon, "grenade", true)) return 2000;
-	if(!strcmp(weapon, "sdpistol", true)) return 10;
-	if(!strcmp(weapon, "mac10", true)) return 30;
-	if(!strcmp(weapon, "m4", true)) return 30;
-	if(!strcmp(weapon, "sprifle", true)) return 2500;
-	if(!strcmp(weapon, "parachute", true)) return 500;
-
-	return 0;
-}
-
-stock ReturnWeaponPrice(const weapon[])
-{
-	if(!strcmp(weapon, "knuckles", true)) return 200;
-	if(!strcmp(weapon, "knife", true)) return 300;
-	if(!strcmp(weapon, "poolcue", true)) return 200;
-	if(!strcmp(weapon, "dildo2", true)) return 100;
-	if(!strcmp(weapon, "flowers", true)) return 100;
-	if(!strcmp(weapon, "molotov", true)) return 6000;
-	if(!strcmp(weapon, "deagle", true)) return 7000;
-	if(!strcmp(weapon, "mp5", true)) return 13500;
-	if(!strcmp(weapon, "tec9", true)) return 8600;
-	if(!strcmp(weapon, "fireex", true)) return 2000;
-
-	if(!strcmp(weapon, "golfclub", true)) return 200;
-	if(!strcmp(weapon, "bat", true)) return 300;
-	if(!strcmp(weapon, "katana", true)) return 400;
-	if(!strcmp(weapon, "dildo3", true)) return 100;
-	if(!strcmp(weapon, "cane", true)) return 300;
-	if(!strcmp(weapon, "colt", true)) return 5000;
-	if(!strcmp(weapon, "shotgun", true)) return 7000;
-	if(!strcmp(weapon, "ak47", true)) return 15000;
-	if(!strcmp(weapon, "rifle", true)) return 15000;
-	if(!strcmp(weapon, "camera", true)) return 50;
-
-	if(!strcmp(weapon, "nightstick", true)) return 200;
-	if(!strcmp(weapon, "shovel", true)) return 200;
-	if(!strcmp(weapon, "dildo1", true)) return 100;
-	if(!strcmp(weapon, "dildo4", true)) return 100;
-	if(!strcmp(weapon, "grenade", true)) return 8000;
-	if(!strcmp(weapon, "sdpistol", true)) return 8000;
-	if(!strcmp(weapon, "mac10", true)) return 9500;
-	if(!strcmp(weapon, "m4", true)) return 17500;
-	if(!strcmp(weapon, "sprifle", true)) return 50000;
-	if(!strcmp(weapon, "parachute", true)) return 500;
-
-	return 0;
-}
-
-new WeaponName[48][32] =
-{
-	"Fists","knuckles","golfclub","nightstick","knife","baseball","shovel",
-	"poolcue","katana","Chainsaw","dildo1","dildo2","dildo3","dildo4","flowers","cane",
-	"grenade","teargas","molotov","","","","colt","sdpistol","deagle","shotgun","sawnoff","combat",
-	"uzi","mp5","ak47","m4","tec9","Rifle","sprifle","rocket","heat","flamethrower",
-	"minigun","satchel","detonator","spraycan","fireex","camera","nigtvision","goggles","parachute","armour"
-};
-
-stock GetWeaponIDFromName(const name[])
-{
-	for(new i = 0;i <= 46;++i)
-	{
-	    if(strfind(WeaponName[i], name, true) == -1) continue;
-
-		return i;
-	}
-
-	return -1;
-}
-
-
 CMD:buygun(playerid, params[])
 {
 	ProccessBuyGunCommand(playerid, params);
@@ -5793,20 +5695,6 @@ CMD:rank(playerid, params[])
 	return true;
 }
 
-stock CanUseMDC(playerid, type)
-{
-	if(PlayerData[playerid][pAdmin]) return true;
-
-	switch(type)
-	{
-		case FACTION_POLICE, FACTION_SHERIFF:
-			return true;
-		default:
-			return false;
-	}
-
-	return false;
-}
 
 CMD:accept(playerid, params[])
 {
@@ -12247,23 +12135,6 @@ CMD:stopharvest(playerid, params[])
 	else return SendClientMessage(playerid, COLOR_GRAD1, "   You have not started harvesting yet.");
 }
 // Libery Harvest
-stock StartHarvesting(playerid)
-{
-    new rand;
-	if(far_place[playerid])
-	{
-		rand = random(sizeof(BlueFarm));
-		SetPlayerCheckpointEx(playerid, BlueFarm[rand][0],BlueFarm[rand][1],BlueFarm[rand][2], 5.0, CHECKPOINT_FARMER, rand);
-	}
-	else
-	{
-		rand = random(sizeof(FlintFarm));
-		SetPlayerCheckpointEx(playerid, FlintFarm[rand][0],FlintFarm[rand][1],FlintFarm[rand][2], 5.0, CHECKPOINT_FARMER, rand);
-	}
-	return true;
-}
-
-YCMD:rw(playerid, params[], help) = rollwindow;
 
 CMD:rollwindow(playerid,params[])
 {

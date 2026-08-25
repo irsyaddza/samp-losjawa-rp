@@ -23,16 +23,3 @@ new
 	MySQL:dbCon
 ;
 
-/*
-	#define SERVER_NAME "[0.3-DL] Los Jawa Roleplay | Development!"
-	#define SQL_HOSTNAME "mysql"
-	#define SQL_USERNAME "samp"
-	#define SQL_DATABASE "jawa"
-	#define SQL_PASSWORD "samppassword"
-
-	#define SERVER_NAME "[0.3-DL] Los Jawa Roleplay | Sotot Everyday!"
-	#define SQL_HOSTNAME "eu2.ultra-h.com"
-	#define SQL_USERNAME "server_13239"
-	#define SQL_DATABASE "server_13239_jawa"
-	#define SQL_PASSWORD "3vmlnreiwu"
-*/

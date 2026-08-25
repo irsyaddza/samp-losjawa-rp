@@ -282,22 +282,6 @@ stock ME_DeleteFromDb(slot)
     return 1;
 }
 
-// Helper: escape \n chars in material text for file export
-stock ME_EscapeNewline(const src[], dest[], len)
-{
-    new j = 0;
-    for(new i = 0; src[i] && j < len - 1; i++)
-    {
-        if(src[i] == '\n' && j < len - 2)
-        {
-            dest[j++] = '\\';
-            dest[j++] = 'n';
-        }
-        else dest[j++] = src[i];
-    }
-    dest[j] = EOS;
-}
-
 // Helper: replace \n literal (two chars) with real newline
 stock ME_UnescapeNewline(const src[], dest[], len)
 {
@@ -321,7 +305,7 @@ stock ME_IsAdmin(playerid)
 // =============================================================================
 //  Hooks
 // =============================================================================
-#include <YSI_Coding\y_hooks>
+#include <YSI_Coding/y_hooks>
 
 hook OnPlayerDisconnect(playerid, reason)
 {

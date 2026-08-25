@@ -785,41 +785,6 @@ CMD:re(playerid, params[])
 	return true;
 }
 
-stock FindFreeReportID()
-{
-	for(new i = 0; i < MAX_REPORTS; ++i)
-	{
-		if(Reports[i][reportBy] == INVALID_PLAYER_ID)
-		{
-		    return i;
-		}
-	}
-	return -1;
-}
-
-stock IsValidReport(id)
-{
-	if(id < 0 || id >= MAX_REPORTS) return false;
-
-	if(Reports[id][reportBy] != INVALID_PLAYER_ID) return true;
-
-	return false;
-}
-
-stock DeleteReport(id)
-{
-	Reports[id][reportBy] = INVALID_PLAYER_ID;
-	Reports[id][reportPlayer] = INVALID_PLAYER_ID;
-	Reports[id][reportReason][0] = EOS;
-}
-
-stock SaveReport(id, by, player, text[])
-{
-	Reports[id][reportBy] = by;
-	Reports[id][reportPlayer] = player;
-	format(Reports[id][reportReason], 128, text);
-}
-
 
 CMD:ar(playerid, params[])
 {
@@ -1618,14 +1583,6 @@ Dialog:VehicleRequest_Details(playerid, response, listitem, inputtext[])
 	}
 
 	return true;
-}
-
-stock DeleteVehicleNameRequest(id)
-{
-    VehicleRequests[id][reqID] = -1;
-	VehicleRequests[id][reqPlayer] = INVALID_PLAYER_ID;
-	VehicleRequests[id][reqVehID] = INVALID_VEHICLE_ID;
-    VehicleRequests[id][reqName][0] = EOS;
 }
 
 CMD:watchradio(playerid, params[])

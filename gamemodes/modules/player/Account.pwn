@@ -576,15 +576,6 @@ public OnQueryFinished(extraid, threadid)
 
 				CheckFightingStyle(extraid);
 
-               	/*if(!active)
-				{
-					SendClientMessage(extraid, COLOR_LIGHTRED, "NOTE: Until you make your application and character is accepted you won't be able to play");
-					SendClientMessage(extraid, COLOR_LIGHTRED, "VISIT: legacy-rp.net");
-					SendClientMessage(extraid, COLOR_LIGHTRED, "Your character is not accepted yet!");
-					SendClientMessage(extraid, COLOR_LIGHTRED, "Regards, Legacy-RP Administration team.");
-
-					KickEx(extraid);
-				}*/
 
 				SetPlayerScore(extraid, PlayerData[extraid][pLevel]);
 

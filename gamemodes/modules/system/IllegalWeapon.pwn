@@ -372,14 +372,6 @@ IWS_ResetPlayer(playerid)
 
 // --- Pickup handler (called from OnPlayerPickUpDynamicPickup) ---
 
-IWS_OnPickup(playerid, pickupid)
-{
-    new slot = IWS_FindPickupSlot(pickupid);
-    if(slot == -1) return false;
-    // ponytail: pickup just shows 3D text, no action on pickup itself
-    return true;
-}
-
 // --- Admin Commands ---
 
 

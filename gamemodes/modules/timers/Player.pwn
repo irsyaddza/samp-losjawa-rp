@@ -1088,7 +1088,6 @@ PayDay()
 					PlayerData[i][pJobRank] = 0;
 			}
 
-			Tax += TaxValue;
 
 			PlayerData[i][pAccount] -= TaxValue;
 

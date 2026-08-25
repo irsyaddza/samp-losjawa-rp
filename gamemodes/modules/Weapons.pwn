@@ -824,13 +824,6 @@ IsBrutallyWounded(playerid)
 	return false;
 }
 
-/*IsPlayerDead(playerid)
-{
-	if(DeathMode{playerid})
-		return true;
-
-	return false;
-}*/
 
 ReturnDeathReason(reason)
 {

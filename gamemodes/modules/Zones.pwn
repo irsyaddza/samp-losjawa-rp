@@ -581,19 +581,6 @@ Get2DZone(Float: x, Float: y, zone[], len)
 	return false;
 }
 
-/*GetPlayer2DZoneID(playerid)
-{
-    new Float:x, Float:y, Float:z;
-    GetPlayerPos(playerid, x, y, z);
-	for(new i = 0; i != sizeof(gSAZones); ++i)
-	{
-        if(x >= gSAZones[i][SAZONE_AREA][0] && x <= gSAZones[i][SAZONE_AREA][3] && y >= gSAZones[i][SAZONE_AREA][1] && y <= gSAZones[i][SAZONE_AREA][4])
-        {
-            return i;
-        }
-	}
-	return 0;
-}*/
 
 Get2DPosZone(Float:x, Float:y, zone[], len)
 {
@@ -727,15 +714,3 @@ ReturnAreaCode(const areaName[])
 	return 999;
 }
 
-/*ReturnCityCode(cityid)
-{
-	if(strcmp("Los Santos", gSACities[cityid][SACITY_NAME], false) == 0) return 213;
-	if(strcmp("San Fierro", gSACities[cityid][SACITY_NAME], false) == 0) return 415;
-    if(strcmp("Las Venturas", gSACities[cityid][SACITY_NAME], false) == 0) return 702;
-    if(strcmp("Flint County", gSACities[cityid][SACITY_NAME], false) == 0) return 707;
-    if(strcmp("Red County", gSACities[cityid][SACITY_NAME], false) == 0) return 714;
-    if(strcmp("Bone County", gSACities[cityid][SACITY_NAME], false) == 0) return 760;
-    if(strcmp("Tierra Robada", gSACities[cityid][SACITY_NAME], false) == 0) return 619;
-    if(strcmp("Whetstone", gSACities[cityid][SACITY_NAME], false) == 0) return 408;
-	return 555;
-}*/

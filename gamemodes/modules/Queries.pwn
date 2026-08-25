@@ -200,25 +200,6 @@ SQL_LogPlayerDeath(playerid, killerid, reason)
 	return true;
 }
 
-/*SQL_LogCheat(playerid, const key[], const log[])
-{
-	new query[512];
-
-	new clean_log[256];
-	mysql_escape_string(log, clean_log);
-
-	new clean_key[20];
-	mysql_escape_string(key, clean_key);
-
-	format(query, sizeof(query), "INSERT INTO logs_cheat (admin, master_name, char_name, action_key, action_log, stamp) VALUES (%d, '%s', '%s', '%s', '%s', %d)", AccountData[playerid][aUserid], AccountData[playerid][aUsername], ReturnName(playerid), clean_key, clean_log, gettime());
-	mysql_pquery(dbCon, query);
-
-    format(query, sizeof(query), "[%s] %s (%s)", ConverTimestampToDate(gettime()), log, key);
-
-	Log_Write("RawLogs/cheats.txt", query);
-
-	//if(!systemVariables[DiscordStatus]) DCC_SendChannelMessage(cheatLogsChannel, query);
-}*/
 
 SQL_LogMask(playerid, const key[], const log[])
 {
