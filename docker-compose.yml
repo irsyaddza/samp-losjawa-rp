@@ -34,6 +34,11 @@ services:
   #  SA-MP Server — berjalan di atas Linux
   # ─────────────────────────────────────────────
   samp:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     build:
       context: .
       dockerfile: Dockerfile

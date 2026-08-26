@@ -302,6 +302,7 @@ public Faction_Load()
 	}
 
 	printf("[SERVER]: %d factions were loaded from \"%s\" database...", rows, SQL_DATABASE);
+	Init_StepDone();   // factions
 	return true;
 }
 
@@ -430,6 +431,7 @@ public Bizz_Load()
     }
 
 	printf("[SERVER]: %d businesses were loaded from \"%s\" database...", rows, SQL_DATABASE);
+	Init_StepDone();   // businesses
 	return true;
 }
 
@@ -547,6 +549,7 @@ public Vehicle_Load()
 	}
 
 	if(success) printf("[SERVER]: %d vehicles were loaded from \"%s\" database...", systemVariables[vehicleCounts][0], SQL_DATABASE);
+	Init_StepDone();   // vehicles
 
 	SideJob_RefreshAllLabels();   // boot-time availability counts on sidejob labels
 
@@ -739,6 +742,7 @@ public Movedoor_Load()
 	}
 
 	printf("[SERVER]: %d dynamic movable doors were loaded from \"%s\" database...", total, SQL_DATABASE);
+	Init_StepDone();   // movable doors
 	return true;
 }
 
@@ -1004,6 +1008,7 @@ public House_Load()
     }
 
     printf("[SERVER]: %d houses were loaded from \"%s\" database...", totals, SQL_DATABASE);
+    Init_StepDone();   // houses
     return true;
 }
 

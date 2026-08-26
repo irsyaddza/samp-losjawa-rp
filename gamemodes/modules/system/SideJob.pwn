@@ -80,6 +80,7 @@ enum E_SJ_ROUTE
 };
 new SJRoutes[MAX_SJ_TYPES][MAX_SJ_ROUTES][E_SJ_ROUTE];
 new SJRouteCount[MAX_SJ_TYPES];
+new SJRouteTypesLoaded;
 
 enum E_SJ_CP
 {
@@ -315,6 +316,7 @@ public SideJob_LoadSpawns()
 		SideJob_RefreshSpawnLabel(i);
 	}
 	printf("[SERVER]: Loaded %d sidejob spawns...", Iter_Count(sj_spawn));
+	Init_StepDone();   // sidejob spawns
 	return 1;
 }
 
@@ -342,6 +344,8 @@ public SideJob_LoadRoutes(type)
 		    SJDefs[SideJob_Row(type)][sjdCpTable], SJRoutes[type][i][sjrID]);
 		mysql_tquery(dbCon, q, "SideJob_LoadCheckpoints", "dd", type, i);
 	}
+	SJRouteTypesLoaded++;
+	if(SJRouteTypesLoaded == MAX_SJ_TYPES - 1) Init_StepDone();   // all sidejob route sets loaded
 	printf("[SERVER]: Loaded %d %s routes...", SJRouteCount[type], SJDefs[SideJob_Row(type)][sjdName]);
 	return 1;
 }

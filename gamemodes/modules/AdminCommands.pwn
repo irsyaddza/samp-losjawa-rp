@@ -1239,6 +1239,40 @@ CMD:maketester(playerid, params[])
 }
 
 // GMX & Restart Lock System
+// Unlock is readiness-based: a repeating checker opens the server as soon as
+// every core async loader has finished (Init_StepDone), with a hard timeout
+// fallback so one dead query can never keep the server locked forever.
+#define INIT_STEPS_EXPECTED   8
+new InitStepsDone = 0;
+new InitStopwatchSecs = 0;
+new InitLockTimerID = -1;
+
+stock Init_StepDone()
+{
+    InitStepsDone++;
+}
+
+stock Init_BeginLock()
+{
+    InitStepsDone = 0;
+    InitStopwatchSecs = 0;
+    if(InitLockTimerID != -1) KillTimer(InitLockTimerID);
+    InitLockTimerID = SetTimer("OnServerRestartLockCheck", 3000, true);
+}
+
+forward OnServerRestartLockCheck();
+public OnServerRestartLockCheck()
+{
+    InitStopwatchSecs += 3;
+
+    if(InitStepsDone < INIT_STEPS_EXPECTED && InitStopwatchSecs < 120)
+        return;   // still loading; re-check in 3s
+
+    KillTimer(InitLockTimerID);
+    InitLockTimerID = -1;
+    OnServerRestartLockFinish();
+}
+
 new bool:gServerRestarting = false;
 new gGMXTimerID = -1;
 new gGMXCountdown = 0;
@@ -1272,7 +1306,13 @@ public OnServerRestartLockFinish()
 {
 	SendRconCommand("password 0");
 	SendRconCommand("hostname "SERVER_NAME"");
-	printf("[SERVER RESTART]: The 2-minute restart lock is over. The server is open to the public again!");
+
+	if(InitStepsDone < INIT_STEPS_EXPECTED)
+		printf("[SERVER RESTART]: Lock released by TIMEOUT after %ds - only %d/%d core loaders finished! Check the database.",
+		    InitStopwatchSecs, InitStepsDone, INIT_STEPS_EXPECTED);
+	else
+		printf("[SERVER RESTART]: All %d core systems loaded in %ds. Server is open to the public!",
+		    INIT_STEPS_EXPECTED, InitStopwatchSecs);
 	return 1;
 }
 

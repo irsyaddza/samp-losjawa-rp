@@ -296,7 +296,6 @@ stock MapRequest_ParseColor(const string[])
 
 stock ApplyMaterialFromLine(obj, const param_string[])
 {
-    printf("[ApplyMaterial] Calling ApplyMaterialFromLine for obj %d, params: '%s'", obj, param_string);
     if (obj == INVALID_OBJECT_ID) {
         printf("[ApplyMaterial] Error: obj is INVALID_OBJECT_ID");
         return 0;
@@ -351,14 +350,12 @@ stock ApplyMaterialFromLine(obj, const param_string[])
         mat_color = MapRequest_ParseColor(p_color);
     }
 
-    printf("[ApplyMaterial] Success! Setting mat: idx %d, model %d, txd '%s', tex '%s', color 0x%x", mat_idx, model_id, txd_name, tex_name, mat_color);
     SetDynamicObjectMaterial(obj, mat_idx, model_id, txd_name, tex_name, mat_color);
     return 1;
 }
 
 stock ApplyMaterialTextFromLine(obj, const param_string[])
 {
-    printf("[ApplyMaterialText] Calling for obj %d, params: '%s'", obj, param_string);
     if (obj == INVALID_OBJECT_ID) return 0;
 
     new first_quote = strfind(param_string, "\"", true);
@@ -464,7 +461,6 @@ stock ApplyMaterialTextFromLine(obj, const param_string[])
         }
     }
 
-    printf("[ApplyMaterialText] Success! idx %d, text '%s', size %d, font '%s', fontsize %d, color 0x%x, back_color 0x%x, align %d", mat_idx, text_val, mat_size, font_face, font_size, font_color, back_color, align);
     SetDynamicObjectMaterialText(obj, mat_idx, text_val, mat_size, font_face, font_size, bold, font_color, back_color, align);
     return 1;
 }
@@ -978,6 +974,7 @@ public OnLoadAllApprovedMappings()
         }
     }
     printf("[MappingRequest] Loaded %d custom mappings, spawned %d objects.", rows, count);
+    Init_StepDone();   // custom mappings
     return 1;
 }
 

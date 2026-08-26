@@ -2100,7 +2100,7 @@ public OnGameModeInit()
 
     SendRconCommand("hostname [Los Jawa RP is initializing, please wait...]");
     SendRconCommand("password restartlock123");
-    SetTimer("OnServerRestartLockFinish", 120000, false);
+    Init_BeginLock();   // unlocks when core loaders finish (timeout fallback: 120s)
 
     new rconWeb[200];
     format(rconWeb, sizeof(rconWeb), "weburl %s", gServerSite);
