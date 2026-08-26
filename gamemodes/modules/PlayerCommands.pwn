@@ -17992,41 +17992,97 @@ Dialog:FuelRefill(playerid, response, listitem, inputtext[])
 
 CMD:motd(playerid, params[]) return SendPlayerMOTD(playerid);
 
-forward OnLoadPlayerChangelog(playerid);
-public OnLoadPlayerChangelog(playerid)
-{
-	new rows;
-	cache_get_row_count(rows);
+// ── Changelog (versioned; managed via website) ──────────────────────────────
 
-	gstr[0] = EOS;
-	if(!rows)
-	{
-		strcat(gstr, "{FF0000}Changelog not updated yet.\n\nAdmin must use /addchangelog.");
-	}
-	else
-	{
-		strcat(gstr, "{FFFFFF}No. | Log Update | Updated By\n{A9C4E4}------------------------------------------------------------\n");
-		for(new i = 0; i < rows && i < 20; i++)
-		{
-			new entry[140], addedBy[24], addedDate[32], line[256];
-			cache_get_value_name(i, "entry", entry, sizeof(entry));
-			cache_get_value_name(i, "added_by", addedBy, sizeof(addedBy));
-			cache_get_value_name(i, "added_date", addedDate, sizeof(addedDate));
-
-			format(line, sizeof(line), "{FFBF00}%d. {FFFFFF}%s {7E98B6}(by %s - %s)\n", i + 1, entry, addedBy, addedDate);
-			strcat(gstr, line);
-		}
-	}
-
-	new title[64];
-	format(title, sizeof(title), "Server Changelogs | %s", gServerMode);
-	ShowPlayerDialog(playerid, DIALOG_CHANGELOG, DIALOG_STYLE_MSGBOX, title, gstr, "Close", "");
-	return 1;
-}
+#define MAX_CHANGELOG_VERSIONS   15
+new CLVersions[MAX_PLAYERS][MAX_CHANGELOG_VERSIONS][64];
+new CLVerCount[MAX_PLAYERS];
 
 CMD:changelog(playerid, params[])
 {
-	mysql_tquery(dbCon, "SELECT * FROM `server_changelogs` ORDER BY `id` DESC LIMIT 25", "OnLoadPlayerChangelog", "d", playerid);
+	mysql_tquery(dbCon,
+	    "SELECT `version`, COUNT(*) AS cnt FROM `server_changelogs` GROUP BY `version` ORDER BY MAX(`created_at`) DESC",
+	    "OnLoadChangelogVersions", "d", playerid);
+	return 1;
+}
+
+forward OnLoadChangelogVersions(playerid);
+public OnLoadChangelogVersions(playerid)
+{
+	new rows = cache_num_rows();
+	if(!rows)
+	    return SendErrorMessage(playerid, "No changelog entries have been published yet.");
+
+	CLVerCount[playerid] = 0;
+
+	new str[1024], line[128];
+	format(str, sizeof(str), "Version\tUpdates\n");
+
+	for(new i = 0; i < rows && i < MAX_CHANGELOG_VERSIONS; ++i)
+	{
+	    new ver[64], cnt;
+	    cache_get_value_name(i, "version", ver, sizeof(ver));
+	    cache_get_value_name_int(i, "cnt", cnt);
+
+	    format(CLVersions[playerid][CLVerCount[playerid]], 64, ver);
+
+	    format(line, sizeof(line), "%s\t%d update(s)\n", ver, cnt);
+	    strcat(str, line);
+
+	    CLVerCount[playerid]++;
+	}
+
+	Dialog_Show(playerid, ChangeLogList, DIALOG_STYLE_TABLIST_HEADERS, "Server Changelogs", str, "View", "Close");
+	return 1;
+}
+
+Dialog:ChangeLogList(playerid, response, listitem, inputtext[])
+{
+	if(!response || listitem >= CLVerCount[playerid]) return 1;
+
+	new q[256];
+	mysql_format(dbCon, q, sizeof(q),
+	    "SELECT `added_date`, `entry` FROM `server_changelogs` WHERE `version` = '%e' ORDER BY `id` DESC LIMIT 30",
+	    CLVersions[playerid][listitem]);
+
+	SetPVarString(playerid, "CL_Version", CLVersions[playerid][listitem]);
+	mysql_tquery(dbCon, q, "OnLoadChangelogEntries", "d", playerid);
+	return 1;
+}
+
+forward OnLoadChangelogEntries(playerid);
+public OnLoadChangelogEntries(playerid)
+{
+	new ver[64];
+	GetPVarString(playerid, "CL_Version", ver, sizeof(ver));
+
+	new rows = cache_num_rows();
+	gstr[0] = EOS;
+
+	for(new i = 0; i < rows; ++i)
+	{
+	    new entry[160], addedDate[32], line[256];
+	    cache_get_value_name(i, "entry", entry, sizeof(entry));
+	    cache_get_value_name(i, "added_date", addedDate, sizeof(addedDate));
+
+	    format(line, sizeof(line), "{FFBF00}[%s]{FFFFFF} %s\n", addedDate, entry);
+	    strcat(gstr, line);
+	}
+
+	if(!rows) strcat(gstr, "{FF0000}No entries.");
+
+	new title[80];
+	format(title, sizeof(title), "Changelog - %s", ver);
+	Dialog_Show(playerid, ChangeLogEntries, DIALOG_STYLE_MSGBOX, title, gstr, "Close", "< Back");
+	return 1;
+}
+
+Dialog:ChangeLogEntries(playerid, response, listitem, inputtext[])
+{
+	if(!response) // "< Back"
+	    mysql_tquery(dbCon,
+	        "SELECT `version`, COUNT(*) AS cnt FROM `server_changelogs` GROUP BY `version` ORDER BY MAX(`created_at`) DESC",
+	        "OnLoadChangelogVersions", "d", playerid);
 	return 1;
 }
 

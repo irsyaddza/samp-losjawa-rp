@@ -3,7 +3,7 @@ import Link from 'next/link';
 import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { RowDataPacket } from 'mysql2';
-import { ArrowLeft, Shield } from 'lucide-react';
+import { ArrowLeft, Shield, FileText, ArrowRight } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import AdminPanel from './AdminPanel';
 
@@ -84,6 +84,22 @@ export default async function AdminPortalPage() {
             Review new character applications and manage player donator statuses.
           </p>
         </div>
+
+        {session.adminLevel === 1337 && (
+          <Link
+            href="/dashboard/admin/changelog"
+            className="mb-8 flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-5 py-4 transition hover:border-amber-500/50"
+          >
+            <div>
+              <p className="text-sm font-bold text-white flex items-center gap-2">
+                <FileText className="h-4 w-4 text-amber-500" />
+                Changelog Manager
+              </p>
+              <p className="text-xs text-zinc-500 mt-0.5">Publish server updates to /changelog and the website.</p>
+            </div>
+            <ArrowRight className="h-4 w-4 text-zinc-600" />
+          </Link>
+        )}
 
         {/* Admin Applications Review List */}
         <AdminPanel initialApps={pendingApps as any[]} currentAdminLevel={session.adminLevel} />

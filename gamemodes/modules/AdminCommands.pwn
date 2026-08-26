@@ -1364,25 +1364,6 @@ CMD:versionedit(playerid, params[])
 	return true;
 }
 
-CMD:addchangelog(playerid, params[])
-{
-	if(PlayerData[playerid][pAdmin] < 4)
-		return SendUnauthMessage(playerid, "You are not authorized to use this command.");
-
-	new logEntry[256];
-	if(sscanf(params, "s[256]", logEntry))
-		return SendSyntaxMessage(playerid, "/addchangelog [text update] (ex: /addchangelog [ADD] New JOB)");
-
-	new dateStr[64];
-	format(dateStr, sizeof(dateStr), "%s", ReturnSiteDate());
-
-	new query[512];
-	mysql_format(dbCon, query, sizeof(query), "INSERT INTO `server_changelogs` (`entry`, `added_by`, `added_date`) VALUES ('%e', '%e', '%e')", logEntry, AccountName(playerid), dateStr);
-	mysql_tquery(dbCon, query);
-
-	return true;
-}
-
 CMD:clearchangelog(playerid, params[])
 {
 	if(PlayerData[playerid][pAdmin] < 1337)

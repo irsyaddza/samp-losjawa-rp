@@ -30,6 +30,7 @@ interface NavbarProps {
 const mainNavLinks = [
   { href: '/#stats', label: 'Stats' },
   { href: '/#features', label: 'Features' },
+  { href: '/changelog', label: 'Changelog' },
   { href: '/donator', label: 'Donator' },
 ];
 

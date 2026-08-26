@@ -50,8 +50,14 @@ SQL_Connect()
 			"`id` INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY," \
 			"`entry` VARCHAR(256) NOT NULL," \
 			"`added_by` VARCHAR(32) NOT NULL DEFAULT 'Admin'," \
-			"`added_date` VARCHAR(64) NOT NULL DEFAULT 'Current'" \
+			"`added_date` VARCHAR(64) NOT NULL DEFAULT 'Current'," \
+			"`version` VARCHAR(64) NOT NULL DEFAULT 'Legacy'," \
+			"`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP" \
 		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+		// Changelog versioning columns (duplicate-safe)
+		mysql_tquery(dbCon, "ALTER TABLE `server_changelogs` ADD COLUMN `version` VARCHAR(64) NOT NULL DEFAULT 'Legacy';");
+		mysql_tquery(dbCon, "ALTER TABLE `server_changelogs` ADD COLUMN `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;");
 
 		// Ensure AI NPC table exists
 		mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `npc_ai` (" \

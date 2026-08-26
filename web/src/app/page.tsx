@@ -11,6 +11,7 @@ import {
   Compass,
   Sparkles,
   Play,
+  FileText,
   ArrowRight,
   BadgeCheck,
   MessageSquare,
@@ -103,6 +104,13 @@ export default async function Home() {
                     <Play className="h-4 w-4" />
                     Connect to server
                   </a>
+                  <Link
+                    href="/changelog"
+                    className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
+                  >
+                    <FileText className="h-4 w-4" />
+                    Changelog
+                  </Link>
                 </div>
 
                 <div className="mt-8 flex flex-wrap gap-3 text-sm text-zinc-400">
