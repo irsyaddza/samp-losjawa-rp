@@ -548,6 +548,8 @@ public Vehicle_Load()
 
 	if(success) printf("[SERVER]: %d vehicles were loaded from \"%s\" database...", systemVariables[vehicleCounts][0], SQL_DATABASE);
 
+	SideJob_RefreshAllLabels();   // boot-time availability counts on sidejob labels
+
 	return true;
 }
 

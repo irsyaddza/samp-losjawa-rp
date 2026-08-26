@@ -13252,11 +13252,7 @@ CMD:engine(playerid, params[])
 	{
 		if((id = Vehicle_GetID(vehicleid)) != -1)
 		{
-			if(vehicleVariables[id][vVehicleSideJob] == 1 && PlayerBusVehicle[playerid] == vehicleid)
-			{
-				canstart = true;
-			}
-			else if(vehicleVariables[id][vVehicleSideJob] == 2 && PlayerSweeperVehicle[playerid] == vehicleid)
+			if(SideJob_IsActiveVehicle(playerid, vehicleid))
 			{
 				canstart = true;
 			}

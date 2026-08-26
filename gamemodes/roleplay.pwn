@@ -2009,14 +2009,6 @@ forward RefreshTutorial(playerid);
 #include "modules/Prison.pwn"
 new LastEngineToggle[MAX_PLAYERS];
 new LastCargoPickupMsg[MAX_PLAYERS];
-new PlayerBusVehicle[MAX_PLAYERS] = {INVALID_VEHICLE_ID, ...};
-new PlayerBusVehicleIndex[MAX_PLAYERS] = {-1, ...};
-new PlayerBusCheckpointStep[MAX_PLAYERS] = {0, ...};
-new PlayerBusRouteIndex[MAX_PLAYERS] = {-1, ...};
-new PlayerSweeperVehicle[MAX_PLAYERS] = {INVALID_VEHICLE_ID, ...};
-new PlayerSweeperVehicleIndex[MAX_PLAYERS] = {-1, ...};
-new PlayerSweeperCheckpointStep[MAX_PLAYERS] = {0, ...};
-new PlayerSweeperRouteIndex[MAX_PLAYERS] = {-1, ...};
 #include "modules/system/IllegalWeapon.pwn"
 #include "modules/system/JobPoints.pwn"
 #include "modules/system/Farmer.pwn"
@@ -2029,8 +2021,7 @@ new PlayerSweeperRouteIndex[MAX_PLAYERS] = {-1, ...};
 #include "modules/HudV2.pwn"
 #include "modules/MappingRequest.pwn"
 #include "modules/police/Fines.pwn"
-#include "modules/system/BusJob.pwn"
-#include "modules/system/SweeperJob.pwn"
+#include "modules/system/SideJob.pwn"
 #include "modules/system/AdPoints.pwn"
 #include "modules/system/Marriage.pwn"
 #include "modules/system/TrainSystem.pwn"
@@ -2041,8 +2032,7 @@ public OnGameModeInit()
 	mysql_log(ERROR);
 
 	SQL_Connect();
-	BusJob_SetupTable();
-	SweeperJob_SetupTable();
+	SideJob_SetupTable();
     SetupIndustry();
 	Farmer_SetupTable();
 	DrugStore_Init();
