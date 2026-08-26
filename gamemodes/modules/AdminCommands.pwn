@@ -279,9 +279,7 @@ CMD:unbanip(playerid, params[])
  	if(strlen(params) < 3)
 	    return SendErrorMessage(playerid, "Input is too short.");
 
-	new Regex:r = Regex_New(".*\\d{1,3}\\.+\\d{1,3}\\.+\\d{1,3}\\.+\\d{1,3}.*"), RegexMatch:m;
-
-	if(!Regex_Match(params, r, m))
+	if(!IsIPv4Like(params))
 		return SendErrorMessage(playerid, "Invalid IP Address specified.");
 
 	mysql_format(dbCon, gquery, sizeof(gquery), "DELETE FROM `bans` WHERE `playerIP` = '%e'", params);

@@ -111,6 +111,44 @@ enum enum_SalaryHistory
 new SalaryHistory[MAX_PLAYERS][MAX_SALARY_HISTORY][enum_SalaryHistory];
 new SalaryHistoryCount[MAX_PLAYERS];
 
+// Plain-Pawn validators replacing pawnregex.so calls (that plugin
+// segfaults on this server build). Semantics identical to the regexes.
+
+// Equivalent of ^[A-Za-z0-9 ]+$ within a length window.
+stock IsAlnumSpace(const s[], minlen, maxlen)
+{
+	new len = strlen(s);
+	if(len < minlen || len > maxlen) return 0;
+
+	for(new i = 0; i < len; ++i)
+	{
+		new c = s[i];
+		if(c != ' ' && (c < '0' || c > '9') && (c < 'A' || c > 'Z') && (c < 'a' || c > 'z'))
+		    return 0;
+	}
+	return 1;
+}
+
+// Equivalent of ^\d{1,3}(\.\d{1,3}){3}$ — a plain dotted quad.
+stock IsIPv4Like(const s[])
+{
+	new i = 0, groups = 0;
+
+	while(s[i])
+	{
+		new dig = 0;
+		while(s[i] >= '0' && s[i] <= '9') { i++; dig++; }
+
+		if(dig < 1 || dig > 3) return 0;
+		groups++;
+
+		if(s[i] == '.') { i++; continue; }
+		if(!s[i]) break;
+		return 0;
+	}
+	return (groups == 4);
+}
+
 stock AddSalaryHistory(playerid, amount, const sourceStr[])
 {
     if(!IsPlayerConnected(playerid)) return 0;

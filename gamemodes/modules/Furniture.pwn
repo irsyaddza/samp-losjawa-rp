@@ -2012,12 +2012,7 @@ Dialog:HandleFurnitureRename(playerid, response, listitem, inputtext[])
 {
 	if(response)
 	{
-		if(strlen(inputtext) < 3 || strlen(inputtext) > 30)
-		    return Dialog_Show(playerid, HandleFurnitureRename, DIALOG_STYLE_INPUT, "Custom Naming:", "You can give your furniture a name\n\t- The letter must not be less than 3 characters\n\t- Characters must be at least 3 characters\n\t- Special characters can not be used", "Select", "<<");
-
-		new Regex:r = Regex_New("^[A-Za-z0-9 ]+$"), RegexMatch:m;
-
-		if(!Regex_Match(inputtext, r, m))
+		if(!IsAlnumSpace(inputtext, 3, 30))
 		    return Dialog_Show(playerid, HandleFurnitureRename, DIALOG_STYLE_INPUT, "Custom Naming:", "You can give your furniture a name\n\t- The letter must not be less than 3 characters\n\t- Characters must be at least 3 characters\n\t- Special characters can not be used", "Select", "<<");
 
         OnPlayerRenameFurniture(playerid, GetPVarInt(playerid, "ChosenFurnitureSlot"), inputtext);
