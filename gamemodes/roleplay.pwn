@@ -5246,15 +5246,57 @@ Relog_Player(playerid)
 	if(!SQL_IsLogged(playerid) || AccountData[playerid][aUserid] <= 0)
 		return SendErrorMessage(playerid, "You are not logged in.");
 
-	// 1. Save current character data
-	SQL_SaveCharacter(playerid, false);
+	// 1. Save current character data, then load the character list after it commits
+	SQL_SaveCharacter(playerid, false, true);
 
 	// 2. Exit any vehicle
 	if(IsPlayerInAnyVehicle(playerid))
 		RemovePlayerFromVehicle(playerid);
 
-	// 3. Clear weapons and animations
+	// 2b. Despawn all spawned private vehicles & clear keys
+	//     (mirrors OnPlayerDisconnect vehicle cleanup)
+	{
+		new vehicleid, carid;
+		for(new i = 0; i < MAX_VEHICLE_KEYS; ++i)
+		{
+			carid = PlayerData[playerid][pCarKeys][i];
+
+			if(carid != 9999)
+			{
+				if(Iter_Contains(sv_playercar, carid))
+				{
+					vehicleid = CarData[carid][carVehicle];
+
+					if(CoreVehicles[vehicleid][vOwnerID] != INVALID_PLAYER_ID && CoreVehicles[vehicleid][vOwnerID] == playerid)
+					{
+						if(VehicleLabel[vehicleid][vLabelTime])
+						{
+							if(!CoreVehicles[vehicleid][vbreaktime]) Iter_Remove(sv_activevehicles, vehicleid);
+
+							ResetVehicleLabel(vehicleid);
+
+							CoreVehicles[vehicleid][vOwnerID] = INVALID_PLAYER_ID;
+							CoreVehicles[vehicleid][vUpgradeID] = 0;
+						}
+					}
+
+					Car_DespawnEx(carid);
+				}
+
+				PlayerData[playerid][pCarKeys][i] = 9999;
+			}
+		}
+
+		// Also reset duplicate keys (they belong to the old character)
+		for(new i = 0; i < 10; ++i)
+		{
+			PlayerData[playerid][pDupKeys][i] = 9999;
+		}
+	}
+
+	// 3. Clear weapons, money display and animations
 	ResetPlayerWeapons(playerid);
+	ResetPlayerMoney(playerid);
 	ClearAnimations(playerid);
 
 	// Remove all attached objects (weapons on back, accessories, etc.)
@@ -5275,9 +5317,75 @@ Relog_Player(playerid)
 	// 4. Reset in-game flags
 	Spawned{playerid} = false;
 	LoggedIn{playerid} = false;
+	SafeTime[playerid] = 120;
 
 	// 5. Mark character as not selected (pID = -1 means "at char select screen")
 	PlayerData[playerid][pID] = -1;
+
+	// Reset character-specific data so nothing carries over to next character
+	PlayerData[playerid][pFaction] = -1;
+	PlayerData[playerid][pFactionID] = -1;
+	PlayerData[playerid][pFactionRank] = 0;
+	PlayerData[playerid][pFactionEdit] = -1;
+	PlayerData[playerid][pDBRank] = 0;
+	PlayerData[playerid][pSWATRank] = 0;
+	PlayerData[playerid][pEMSRank] = 0;
+	PlayerData[playerid][pFireRank] = 0;
+	PlayerData[playerid][pSwat] = false;
+	PlayerData[playerid][pFireman] = false;
+	PlayerData[playerid][pJob] = 0;
+	PlayerData[playerid][pJobRank] = 0;
+	PlayerData[playerid][pCareer] = 0;
+	// Note: pAdmin is account-level (loaded from accounts table on connect), so do NOT reset it on relog
+	PlayerData[playerid][pDonateRank] = 0;
+	PlayerData[playerid][pDonateUnix] = 0;
+	PlayerData[playerid][pHouseKey] = -1;
+	PlayerData[playerid][pComplexKey] = -1;
+	PlayerData[playerid][pPbiskey] = -1;
+	PlayerData[playerid][pPCarkey] = 9999;
+	PlayerData[playerid][pMarriedTo][0] = EOS;
+	PlayerData[playerid][pWeapon][0] = 0;
+	PlayerData[playerid][pWeapon][1] = 0;
+	PlayerData[playerid][pWeapon][2] = 0;
+	PlayerData[playerid][pAmmunation][0] = 0;
+	PlayerData[playerid][pAmmunation][1] = 0;
+	PlayerData[playerid][pAmmunation][2] = 0;
+	PlayerData[playerid][pCash] = 0;
+	PlayerData[playerid][pAccount] = 0;
+	PlayerData[playerid][pSavings] = 0;
+	PlayerData[playerid][pSavingsCollect] = 0;
+	PlayerData[playerid][pLevel] = 1;
+	PlayerData[playerid][pExp] = 0;
+	PlayerData[playerid][pExpCounter] = 0;
+	PlayerData[playerid][pPlayingSeconds] = 0;
+	PlayerData[playerid][pPnumber] = 0;
+	PlayerData[playerid][pPhoneModel] = 0;
+	PlayerData[playerid][pInjured] = 0;
+	PlayerData[playerid][pJailed] = 0;
+	PlayerData[playerid][pSentenceTime] = 0;
+	PlayerData[playerid][pPrimaryLicense] = 0;
+	PlayerData[playerid][pSecondaryLicense] = 0;
+	PlayerData[playerid][pCCWLic] = 0;
+	PlayerData[playerid][pWepLic] = 0;
+	PlayerData[playerid][pCarLic] = 0;
+	PlayerData[playerid][pFlyLic] = 0;
+	PlayerData[playerid][pMedLic] = 0;
+	PlayerData[playerid][pTruckLic] = 0;
+	PlayerData[playerid][pOnDuty] = 0;
+	PlayerData[playerid][pOnDutySkin] = 0;
+	PlayerData[playerid][pFavUniform] = 0;
+	pIllegalJob[playerid] = 0;
+	MedicBill[playerid] = 0;
+	TotalPlayerDamages[playerid] = 0;
+	DeathReason[playerid] = 0;
+	AdminDuty{playerid} = false;
+	TesterDuty{playerid} = false;
+	KnockedOut{playerid} = false;
+	ForceKnockout{playerid} = false;
+	TazerActive{playerid} = false;
+	BeanbagActive{playerid} = false;
+	LessLethalActive{playerid} = false;
+	TagColor{playerid} = false;
 
 	// 6. Restore player name back to account name (strip character name)
 	SetPlayerName(playerid, AccountData[playerid][aUsername]);
@@ -5313,8 +5421,12 @@ Relog_Player(playerid)
 		HUD_Created{playerid} = false;
 	}
 
-	// 12. Reload character list from DB → triggers THREAD_CHECK_CHARACTER → TextDraw char selection
-	SQL_LoadCharacters(playerid);
+	// 11. Character list will be loaded by the delayed callback
+	//     (OnCharacterSavedThenLoadList → 5s → OnRelogLoadCharacterList)
+	//     to ensure all side-table saves have committed first.
+	//     Do NOT call SQL_LoadCharacters here — a second load would
+	//     reset SelectedCharacter/CharacterCache and corrupt any
+	//     selection the player makes during the delay window.
 
 	if(GetPVarInt(playerid, "LobbyMusicOff") == 0)
 	{
@@ -5325,7 +5437,7 @@ Relog_Player(playerid)
 	return 1;
 }
 
-SQL_SaveCharacter(playerid, bool:quit = true)
+SQL_SaveCharacter(playerid, bool:quit = true, bool:thenLoadList = false)
 {
 	if(!SQL_IsLogged(playerid) || PlayerData[playerid][pID] == -1) return false;
 
@@ -5446,7 +5558,11 @@ SQL_SaveCharacter(playerid, bool:quit = true)
 		PlayerData[playerid][pID]
 	);
 
-	mysql_pquery(dbCon, query);
+	// Relog path: the character-list load must run only AFTER this save commits.
+	if(thenLoadList)
+	    mysql_tquery(dbCon, query, "OnCharacterSavedThenLoadList", "d", playerid);
+	else
+	    mysql_pquery(dbCon, query);
 
 	//printf("QUERY LENGTH WAS %d", strlen(query));
 
@@ -5565,6 +5681,24 @@ SQL_SaveCharacter(playerid, bool:quit = true)
 		}
 	}
 	return true;
+}
+
+forward OnCharacterSavedThenLoadList(playerid);
+public OnCharacterSavedThenLoadList(playerid)
+{
+	// Side-saves (weapons/sms/clothing) are separate async queries; give them
+	// time to commit or a fast character pick loads stale side-table data.
+	if(!IsPlayerConnected(playerid)) return 1;
+	SetTimerEx("OnRelogLoadCharacterList", 5000, false, "d", playerid);
+	return 1;
+}
+
+forward OnRelogLoadCharacterList(playerid);
+public OnRelogLoadCharacterList(playerid)
+{
+	if(!IsPlayerConnected(playerid)) return 1;
+	SQL_LoadCharacters(playerid);
+	return 1;
 }
 
 AddPlayerCallHistory(playerid, number, type)
@@ -6321,7 +6455,7 @@ ShowStatistics(playerid, targetid)
 
 	// Faction info
 	new factionText[64], factionid = PlayerData[targetid][pFaction];
-	if(factionid != -1)
+	if(factionid >= 0 && factionid < MAX_FACTIONS && FactionData[factionid][factionExists])
 		format(factionText, sizeof(factionText), "%s (%s)", Faction_GetName(targetid), Faction_GetRank(targetid));
 	else
 		format(factionText, sizeof(factionText), "Civilian");
@@ -6354,7 +6488,7 @@ ShowStatistics(playerid, targetid)
 	for(new i = 0; i < MAX_VEHICLE_KEYS; ++i)
 	{
 		new keyIdx = PlayerData[targetid][pCarKeys][i];
-		if(keyIdx != 9999)
+		if(keyIdx >= 0 && keyIdx < MAX_PLAYER_VEHICLES && Iter_Contains(sv_playercar, keyIdx))
 		{
 			if(spawnedCount > 0) strcat(vehList, ", ");
 			new tempVeh[64];

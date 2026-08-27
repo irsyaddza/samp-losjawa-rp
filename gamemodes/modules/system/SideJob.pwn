@@ -132,6 +132,13 @@ stock GetVehicleServerID(vehicleid)
 	return -1;
 }
 
+stock SideJob_IsPlayerBusy(playerid)
+{
+	for(new t = 1; t < MAX_SJ_TYPES; ++t)
+	    if(PlayerSJVehicle[playerid][t] != INVALID_VEHICLE_ID) return true;
+	return false;
+}
+
 stock SideJob_IsActiveVehicle(playerid, vehicleid)
 {
 	if(vehicleid == INVALID_VEHICLE_ID) return false;

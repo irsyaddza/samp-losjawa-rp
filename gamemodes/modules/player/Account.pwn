@@ -496,6 +496,7 @@ public OnQueryFinished(extraid, threadid)
 					if(count == 6) break;
 				}
 
+				ResetPlayerMoney(extraid);
 				GivePlayerMoney(extraid, PlayerData[extraid][pCash]);
 
 				SetPlayerFaction(extraid);
@@ -776,6 +777,13 @@ public OnQueryFinished(extraid, threadid)
 		    CharSelTotalSlots[extraid] = rows;
 		    SelectedSlot[extraid] = 0;
 		    SelectedCharacter[extraid] = 0;
+
+		    // Reset login timeout timer for character selection
+		    SafeTime[extraid] = 120;
+
+		    // Reset combined level before re-accumulating from fresh DB rows
+		    AccountData[extraid][aCombinedLevel][0] = 0;
+		    AccountData[extraid][aCombinedLevel][1] = 0;
 
 		    for(new i = 0; i != rows; ++i)
 		    {

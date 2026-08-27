@@ -9,6 +9,15 @@ CMD:relog(playerid, params[])
 	if(IsBrutallyWounded(playerid))
 		return SendErrorMessage(playerid, "You cannot relog while critically injured.");
 
+	// Block relog during active sessions or restraints - prevents state
+	// carry-over into the next character and RP escape.
+	if(SideJob_IsPlayerBusy(playerid) || RentedHarvester[playerid] != INVALID_VEHICLE_ID
+	|| PlayerOnTrainJob[playerid]
+	|| TestingSkin[playerid]
+	|| GetPVarInt(playerid, "ME_EditSlot") > 0
+	|| IsCuffed{playerid} || IsTazed{playerid} || IsTied{playerid} || KnockedOut{playerid})
+		return SendErrorMessage(playerid, "Finish or cancel your current activity before using /relog.");
+
 	if(!PlayerData[playerid][pAdmin] && !PlayerData[playerid][pDonateRank])
 		return SendUnauthMessage(playerid, "This command is only available for Donators and Admins.");
 

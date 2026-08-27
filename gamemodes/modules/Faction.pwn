@@ -358,7 +358,7 @@ Faction_GetName(playerid)
 		factionid = PlayerData[playerid][pFaction],
 		name[32] = "None";
 
- 	if(factionid == -1)
+ 	if(factionid < 0 || factionid >= MAX_FACTIONS)
 	    return name;
 
 	if(!FactionData[factionid][factionExists])
@@ -399,8 +399,12 @@ Faction_GetRank(playerid)
 		factionid = PlayerData[playerid][pFaction],
 		rank[32] = "None";
 
- 	if(factionid == -1)
+ 	if(factionid < 0 || factionid >= MAX_FACTIONS || !FactionData[factionid][factionExists])
 	    return rank;
+
+	new prank = PlayerData[playerid][pFactionRank];
+	if(prank < 1 || prank > 15)
+		return rank;
 
 	if(GetFactionType(playerid) == FACTION_POLICE && PlayerData[playerid][pDBRank] > 0)
 	{
@@ -409,7 +413,7 @@ Faction_GetRank(playerid)
 			case 1: format(rank, 32, "Detective I");
 			case 2: format(rank, 32, "Detective II");
 			case 3: format(rank, 32, "Detective III");
-			default: format(rank, 32, FactionRanks[factionid][PlayerData[playerid][pFactionRank] - 1]);
+			default: format(rank, 32, FactionRanks[factionid][prank - 1]);
 		}
 		return rank;
 	}
@@ -422,7 +426,7 @@ Faction_GetRank(playerid)
 			case 1: format(rank, 32, "%s Operator", divName);
 			case 2: format(rank, 32, "%s Team Leader", divName);
 			case 3: format(rank, 32, "%s Commander", divName);
-			default: format(rank, 32, FactionRanks[factionid][PlayerData[playerid][pFactionRank] - 1]);
+			default: format(rank, 32, FactionRanks[factionid][prank - 1]);
 		}
 		return rank;
 	}
@@ -436,7 +440,7 @@ Faction_GetRank(playerid)
 				case 2: format(rank, 32, "Paramedic");
 				case 3: format(rank, 32, "Resident Doctor");
 				case 4: format(rank, 32, "Chief Medical Officer");
-				default: format(rank, 32, FactionRanks[factionid][PlayerData[playerid][pFactionRank] - 1]);
+				default: format(rank, 32, FactionRanks[factionid][prank - 1]);
 			}
 			return rank;
 		}
@@ -448,13 +452,13 @@ Faction_GetRank(playerid)
 				case 2: format(rank, 32, "Firefighter");
 				case 3: format(rank, 32, "Fire Lieutenant");
 				case 4: format(rank, 32, "Battalion Chief");
-				default: format(rank, 32, FactionRanks[factionid][PlayerData[playerid][pFactionRank] - 1]);
+				default: format(rank, 32, FactionRanks[factionid][prank - 1]);
 			}
 			return rank;
 		}
 	}
 
-	format(rank, 32, FactionRanks[factionid][PlayerData[playerid][pFactionRank] - 1]);
+	format(rank, 32, FactionRanks[factionid][prank - 1]);
 	return rank;
 }
 
@@ -463,7 +467,7 @@ ReturnRank(factionid, id)
     new
 		rank[32] = "None";
 
- 	if(factionid == -1)
+ 	if(factionid < 0 || factionid >= MAX_FACTIONS || id < 0 || id >= 15)
 	    return rank;
 
 	format(rank, 32, FactionRanks[factionid][id]);
@@ -882,7 +886,7 @@ AssignFactionPermissions(playerid)
 
 SetPlayerFaction(playerid)
 {
-	if(PlayerData[playerid][pFactionID] != -1)
+	if(PlayerData[playerid][pFactionID] > 0)
 	{
 		PlayerData[playerid][pFaction] = GetFactionByID(PlayerData[playerid][pFactionID]);
 
@@ -909,6 +913,10 @@ SetPlayerFaction(playerid)
 				cache_delete(cache);
 			}
 		}
+	}
+	else
+	{
+		ResetFaction(playerid, false);
 	}
 }
 

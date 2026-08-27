@@ -3081,6 +3081,15 @@ FUNX::OnPlayerVehicleSpawn(playerid)
 			cache_get_value_name_float(0, "carPosY", CarData[i][carPos][1]);
 			cache_get_value_name_float(0, "carPosZ", CarData[i][carPos][2]);
 			cache_get_value_name_float(0, "carPosR", CarData[i][carPos][3]);
+
+			// Fallback: If vehicle parking position is unset (0, 0, 0), spawn near player
+			if(CarData[i][carPos][0] == 0.0 && CarData[i][carPos][1] == 0.0 && CarData[i][carPos][2] == 0.0)
+			{
+				GetPlayerPos(playerid, CarData[i][carPos][0], CarData[i][carPos][1], CarData[i][carPos][2]);
+				GetPlayerFacingAngle(playerid, CarData[i][carPos][3]);
+				CarData[i][carPos][0] += 2.5;
+			}
+
 			cache_get_value_name_int(0, "carColor1", CarData[i][carColor1]);
 			cache_get_value_name_int(0, "carColor2", CarData[i][carColor2]);
 			cache_get_value_name_int(0, "carPaintjob", CarData[i][carPaintjob]);
@@ -3117,7 +3126,15 @@ FUNX::OnPlayerVehicleSpawn(playerid)
             AssignCarLicenseWeapons(i, str);
 
 			CarData[i][carVehicle] = CreateVehicle(CarData[i][carModel], CarData[i][carPos][0], CarData[i][carPos][1], CarData[i][carPos][2], CarData[i][carPos][3], CarData[i][carColor1], CarData[i][carColor2], -1);
+			if(CarData[i][carVehicle] == INVALID_VEHICLE_ID || CarData[i][carVehicle] == 0)
+			{
+				SendErrorMessage(playerid, "Server vehicle limit reached or failed to create vehicle.");
+				ClosePlayerCarMenu(playerid);
+				return true;
+			}
 			ResetVehicle(CarData[i][carVehicle]);
+			LinkVehicleToInterior(CarData[i][carVehicle], GetPlayerInterior(playerid));
+			SetVehicleVirtualWorld(CarData[i][carVehicle], GetPlayerVirtualWorld(playerid));
 
             SetVehicleNumberPlate(CarData[i][carVehicle], CarData[i][carPlate]);
 
