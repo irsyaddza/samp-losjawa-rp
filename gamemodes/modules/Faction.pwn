@@ -72,7 +72,7 @@ stock UpdateFactionSpawnPickup(factionid, slot)
 
 		// Create 3D Text Label with Spawn Name
 		new labelStr[128];
-		format(labelStr, sizeof(labelStr), "[ %s ]\n{FFFFFF}Faction Spawn Point", FactionSpawns[factionid][slot][spawnName]);
+		format(labelStr, sizeof(labelStr), "[ %s ]\n{FFFFFF}Faction Spawn Point\n{FFFFFF}Use {FFFF00}/duty, /uniform {FFFFFF}to on duty or change uniform", FactionSpawns[factionid][slot][spawnName]);
 		FactionSpawns[factionid][slot][spawnText] = CreateDynamic3DTextLabel(labelStr, 0x7E98B6FF, x, y, z + 0.75, 12.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, vwid, intid);
 	}
 	return 1;
