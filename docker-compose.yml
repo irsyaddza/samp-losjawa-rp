@@ -7,13 +7,13 @@ services:
     container_name: ljrp-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD wajib diisi di .env}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-jawa}
-      MYSQL_USER: ${MYSQL_USER:-samp}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-samppassword}
+      MYSQL_USER: ${MYSQL_USER:?MYSQL_USER wajib diisi di .env}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD wajib diisi di .env}
       TZ: Asia/Jakarta
     ports:
-      - "3306:3306"          # buka ke host (untuk HeidiSQL/dev tools)
+      - "127.0.0.1:3306:3306"    
     volumes:
       - mysql_data:/var/lib/mysql
       - ./mysql/init:/docker-entrypoint-initdb.d
@@ -57,8 +57,8 @@ services:
       - ./roleplay.amx:/samp/roleplay.amx
     environment:
       MYSQL_HOST: mysql
-      MYSQL_USER: ${MYSQL_USER:-samp}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-samppassword}
+      MYSQL_USER: ${MYSQL_USER:?MYSQL_USER wajib diisi di .env}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD wajib diisi di .env}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-jawa}
       TZ: Asia/Jakarta
     networks:
@@ -80,10 +80,10 @@ services:
       - "3000:3000"
     environment:
       DB_HOST: mysql
-      DB_USER: ${MYSQL_USER:-samp}
-      DB_PASSWORD: ${MYSQL_PASSWORD:-samppassword}
+      DB_USER: ${MYSQL_USER:?MYSQL_USER wajib diisi di .env}
+      DB_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSOWRD wajib diisi di .env}
       DB_DATABASE: ${MYSQL_DATABASE:-jawa}
-      JWT_SECRET: ${JWT_SECRET:-losjawaroleplaysecretkey123}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET wajib diisi di .env}
       NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-http://localhost:3000}
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
