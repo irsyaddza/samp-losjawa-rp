@@ -109,7 +109,7 @@ AddItemToCart(playerid, x, index_id)
 		}
 	}
 
-	format(str, sizeof(str), "Cart: ~g~$%s", MoneyFormat(temp));
+	format(str, sizeof(str), "Cart: ~g~%s", FormatNumber(temp));
 	PlayerTextDrawSetString(playerid, Store_Cart[playerid], str);
 }
 
@@ -188,45 +188,6 @@ ReturnRadioPrice(itemid)
 	return true;
 }
 
-/*ReturnItemPrice(itemid)
-{
-	switch(itemid)
-	{
-	    case 0:
-			return 500;
-	    case 1:
-	        return 10000;
-	    case 2:
-	        return 1500;
-	    case 3:
-     		return 500;
-	    case 4:
-     		return 200;
-		case 5:
-     		return 500;
-		case 6:
-     		return 5000;
-		case 7:
-     		return 200;
-		case 8:
-     		return 500;
-	}
-	return true;
-}
-
-ReturnRadioPrice(itemid)
-{
-	switch(itemid)
-	{
-	    case 0:
-			return 2000;
-	    case 1:
-	        return 5000;
-	    case 2:
-	        return 8000;
-	}
-	return true;
-}*/
 
 ReturnRadioSlots(itemid)
 {

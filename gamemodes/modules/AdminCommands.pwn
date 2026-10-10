@@ -1,3 +1,16 @@
+#if !defined CMD_ALIAS
+#define CMD_ALIAS(%0,%1) \
+    CMD:%0(playerid, params[]) \
+    { \
+        new _target[128]; \
+        _target = %1; \
+        if(params[0] == '\0') return Command_ReProcess(playerid, _target, 0); \
+        new _cmd[128]; \
+        format(_cmd, sizeof(_cmd), "%s %s", _target, params); \
+        return Command_ReProcess(playerid, _cmd, 0); \
+    }
+#endif
+
 new EditingHouseID[MAX_PLAYERS];
 new EditingHouseOption[MAX_PLAYERS][30];
 
@@ -73,8 +86,7 @@ CMD:respawnrental(playerid, params[])
 
 CMD:createcar(playerid, params[])
 {
- 	if(PlayerData[playerid][pAdmin] < 4)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+ 	AdminGate(playerid, 4);
     
     new userid, model, color1, color2, lock, immob, alarm, xm;
     	
@@ -118,12 +130,11 @@ CMD:createcar(playerid, params[])
 	return true;
 }
 
-YCMD:aduty(playerid, params[], help) = adminduty;
+CMD_ALIAS(aduty, "/adminduty")
 
 CMD:adminduty(playerid, params[])
 {
- 	if(PlayerData[playerid][pAdmin] < 1)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+ 	AdminGate(playerid, 1);
 
 	if(TesterDuty{playerid})
 	    return SendErrorMessage(playerid, "You can't do that while on tester duty.");
@@ -166,8 +177,7 @@ CMD:adminduty(playerid, params[])
 
 CMD:kick(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 1)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+    UnauthGate(playerid, 1);
 
 	new userid, reason[128];
 
@@ -204,8 +214,7 @@ CMD:kick(playerid, params[])
 
 CMD:ban(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 1)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+    UnauthGate(playerid, 1);
 
 	new userid, reason[128], ip[16];
 
@@ -247,8 +256,7 @@ CMD:ban(playerid, params[])
 
 CMD:unban(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1);
 
 	if(isnull(params))
 		return SendSyntaxMessage(playerid, "/unban [Firstname_Lastname]");
@@ -263,8 +271,7 @@ CMD:unban(playerid, params[])
 
 CMD:unbanip(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1);
 
 	if(isnull(params))
     	return SendSyntaxMessage(playerid, "/unbanip [IP address]");
@@ -272,9 +279,7 @@ CMD:unbanip(playerid, params[])
  	if(strlen(params) < 3)
 	    return SendErrorMessage(playerid, "Input is too short.");
 
-	new Regex:r = Regex_New(".*\\d{1,3}\\.+\\d{1,3}\\.+\\d{1,3}\\.+\\d{1,3}.*"), RegexMatch:m;
-
-	if(!Regex_Match(params, r, m))
+	if(!IsIPv4Like(params))
 		return SendErrorMessage(playerid, "Invalid IP Address specified.");
 
 	mysql_format(dbCon, gquery, sizeof(gquery), "DELETE FROM `bans` WHERE `playerIP` = '%e'", params);
@@ -284,8 +289,7 @@ CMD:unbanip(playerid, params[])
 
 CMD:getip(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 1)
-	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+    UnauthGate(playerid, 1);
 
 	new
 	    userid
@@ -306,8 +310,7 @@ CMD:getip(playerid, params[])
 
 CMD:arecord(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1);
 
 	new
 		userid
@@ -389,8 +392,7 @@ CMD:arecord(playerid, params[])
 
 CMD:ajailed(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1);
 
 	SendClientMessage(playerid, COLOR_LIGHTRED, "Players ajailed:");
 
@@ -413,8 +415,7 @@ CMD:ajailed(playerid, params[])
 
 CMD:ajail(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1);
 
 	new userid, time, reason[128];
 
@@ -449,10 +450,10 @@ CMD:ajail(playerid, params[])
 	SendClientMessageEx(playerid, COLOR_GRAD2, " %s was successfully admin jailed for %d minutes", ReturnName(userid), time);
 
 	DesyncPlayerInterior(userid);
-	SetPlayerPosEx(userid, 2689.2698, 2689.3066, 22.9472);
+	SetPlayerPosEx(userid, -9.771969, 2337.558593, 24.303375);
 	SetPlayerInteriorEx(userid, 0);
 	SetPlayerVirtualWorldEx(userid, userid + 200);
-	SetSpawnInfo(userid, NO_TEAM, PlayerData[userid][pModel], 2689.2698, 2689.3066, 22.9472, 1.0, -1, -1, -1, -1, -1, -1);
+	SetSpawnInfo(userid, NO_TEAM, PlayerData[userid][pModel], -9.771969, 2337.558593, 24.303375, 1.0, -1, -1, -1, -1, -1, -1);
 
 	new largeQuery[512];
 
@@ -463,8 +464,7 @@ CMD:ajail(playerid, params[])
 
 CMD:unjail(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1);
 
 	new
 	    userid;
@@ -487,8 +487,7 @@ CMD:unjail(playerid, params[])
 
 CMD:makedonator(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	new userid, level, time;
 
@@ -536,8 +535,7 @@ CMD:flipcar(playerid, params[])
 {
 	new vehicleid;
 
-    if(PlayerData[playerid][pAdmin] < 1)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+    AdminGate(playerid, 1);
 
 	if(sscanf(params, "d", vehicleid))
 	    return SendSyntaxMessage(playerid, "/flipcar [vehicleid]");
@@ -553,14 +551,13 @@ CMD:flipcar(playerid, params[])
     return true;
 }
 
-YCMD:spectate(playerid, params[], help) = watchplayer;
-YCMD:spec(playerid, params[], help) = watchplayer;
-YCMD:awp(playerid, params[], help) = watchplayer;
+CMD_ALIAS(spectate, "/watchplayer")
+CMD_ALIAS(spec, "/watchplayer")
+CMD_ALIAS(awp, "/watchplayer")
 
 CMD:watchplayer(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
  	new
         userid
@@ -609,14 +606,13 @@ CMD:watchplayer(playerid, params[])
 	return true;
 }
 
-YCMD:spectatecar(playerid, params[], help) = watchcar;
-YCMD:speccar(playerid, params[], help) = watchcar;
-YCMD:awc(playerid, params[], help) = watchcar;
+CMD_ALIAS(spectatecar, "/watchcar")
+CMD_ALIAS(speccar, "/watchcar")
+CMD_ALIAS(awc, "/watchcar")
 
 CMD:watchcar(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	new vehicleid = GetPlayerVehicleID(playerid);
 
@@ -642,12 +638,11 @@ CMD:watchcar(playerid, params[])
 	return true;
 }
 
-YCMD:specoff(playerid, params[], help) = watchoff;
+CMD_ALIAS(specoff, "/watchoff")
 
 CMD:watchoff(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	if(PlayerData[playerid][pSpectating] == INVALID_PLAYER_ID)
 		return SendClientMessage(playerid, COLOR_GREY, "You're not spectating anyone.");
@@ -662,13 +657,24 @@ CMD:watchoff(playerid, params[])
 	SetPlayerVirtualWorld(playerid, PlayerData[playerid][pWorld]);
 
 	SetPlayerWeapons(playerid);
+
+	if(PlayerData[playerid][pOnDuty])
+	{
+		if(PlayerData[playerid][pOnDutySkin] > 0)
+			SetPlayerSkin(playerid, PlayerData[playerid][pOnDutySkin]);
+		else if(PlayerData[playerid][pFavUniform] > 0)
+			SetPlayerSkin(playerid, PlayerData[playerid][pFavUniform]);
+	}
+	else
+	{
+		SetPlayerSkin(playerid, PlayerData[playerid][pModel]);
+	}
 	return true;
 }
 
 CMD:setint(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	new userid, interior;
 
@@ -686,8 +692,7 @@ CMD:setint(playerid, params[])
 
 CMD:setworld(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	new userid, world;
 
@@ -705,8 +710,7 @@ CMD:setworld(playerid, params[])
 
 CMD:getworld(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	SendClientMessageEx(playerid, COLOR_GRAD1, " Your current virtual world is %d.", GetPlayerVirtualWorld(playerid));
 	return true;
@@ -721,7 +725,7 @@ CMD:re(playerid, params[])
 	new inputOne[128], inputSec[128], userid = INVALID_PLAYER_ID;
 
 	if(sscanf(params, "s[128]S()[128]", inputOne, inputSec))
-	    return SendClientMessage(playerid, COLOR_LIGHTRED, "Report USAGE: /re [(Optional ID/partOfName)] [report text]");
+	    return SendSyntaxMessage(playerid, "/re [(Optional ID/partOfName)] [report text]");
 
     sscanf(inputOne, "u", userid);
 
@@ -760,55 +764,17 @@ CMD:re(playerid, params[])
 	return true;
 }
 
-stock FindFreeReportID()
-{
-	for(new i = 0; i < MAX_REPORTS; ++i)
-	{
-		if(Reports[i][reportBy] == INVALID_PLAYER_ID)
-		{
-		    return i;
-		}
-	}
-	return -1;
-}
-
-stock IsValidReport(id)
-{
-	if(id < 0 || id >= MAX_REPORTS) return false;
-
-	if(Reports[id][reportBy] != INVALID_PLAYER_ID) return true;
-
-	return false;
-}
-
-stock DeleteReport(id)
-{
-	Reports[id][reportBy] = INVALID_PLAYER_ID;
-	Reports[id][reportPlayer] = INVALID_PLAYER_ID;
-	Reports[id][reportReason][0] = EOS;
-}
-
-stock SaveReport(id, by, player, text[])
-{
-	Reports[id][reportBy] = by;
-	Reports[id][reportPlayer] = player;
-	format(Reports[id][reportReason], 128, text);
-}
-
-/*if(!IsValidReport(report))
-	return SendClientMessage(playerid, COLOR_GREY, "Invalid report specified.");*/
 
 CMD:ar(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	new
 		userid
 	;
 
 	if(sscanf(params, "u", userid))
-		return SendClientMessage(playerid, COLOR_GREY, "USAGE: /ar [playerid]");
+		return SendSyntaxMessage(playerid, "/ar [playerid]");
 
 	if(!IsPlayerConnected(userid))
 		return SendClientMessage(playerid, COLOR_GREY, "The specified player ID is either not connected or has not authenticated.");
@@ -838,13 +804,12 @@ CMD:ar(playerid, params[])
 
 CMD:dr(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	new userid, reason[128];
 
 	if(sscanf(params, "uS()[128]", userid, reason))
-		return SendClientMessage(playerid, COLOR_GREY, "USAGE: /dr [playerid] [(Optional Reason)]");
+		return SendSyntaxMessage(playerid, "/dr [playerid] [(Optional Reason)]");
 
 	if(!IsPlayerConnected(userid))
 		return SendClientMessage(playerid, COLOR_GREY, "The specified player ID is either not connected or has not authenticated.");
@@ -876,8 +841,7 @@ CMD:dr(playerid, params[])
 
 CMD:reports(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	SendClientMessage(playerid, COLOR_WHITE, "-------------------------------------------------------------------------------------------------------------------------------");
 
@@ -903,8 +867,7 @@ CMD:reports(playerid, params[])
 
 CMD:createpoint(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-	    return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
 	new name[80], point;
 
@@ -957,41 +920,109 @@ CMD:createpoint(playerid, params[])
 
 	EntranceData[point][insideApartmentSQL] = -1;
 	EntranceData[point][insideApartmentID] = -1;
+	EntranceData[point][outsideWorld] = GetPlayerVirtualWorld(playerid);
+	EntranceData[point][outsideInterior] = GetPlayerInterior(playerid);
+	EntranceData[point][insideWorld] = 0;
+	EntranceData[point][insideInterior] = 0;
+	EntranceData[point][pointPickup] = INVALID_STREAMER_ID;
+	EntranceData[point][pointPickupInside] = INVALID_STREAMER_ID;
+	EntranceData[point][pointLabel] = Text3D:INVALID_STREAMER_ID;
+	EntranceData[point][pointLabelInside] = Text3D:INVALID_STREAMER_ID;
 
-	AddPointToFile(point, name, playerPos[0], playerPos[1], playerPos[2], playerPos[3], EntranceData[point][outsideApartmentSQL], EntranceData[point][insideApartmentSQL]);
+	AddPointToFile(point, name, playerPos[0], playerPos[1], playerPos[2], playerPos[3], EntranceData[point][outsideApartmentSQL], EntranceData[point][insideApartmentSQL], EntranceData[point][outsideWorld], EntranceData[point][insideWorld], EntranceData[point][outsideInterior], EntranceData[point][insideInterior]);
 
 	Iter_Add(Entrance, point);
+	Point_Refresh(point);
 
 	SendClientMessageEx(playerid, COLOR_YELLOW, "-> Point successfully created with id #%d.", point);
 	return true;
 }
 
-stock AddPointToFile(point, name[], Float:x, Float:y, Float:z, Float:a, outsideApt, insideApt)
+stock AddPointToFile(point, name[], Float:x, Float:y, Float:z, Float:a, outsideApt, insideApt, outsideW, insideW, outsideInt, insideInt)
 {
 	new biggestQuery[500];
-	mysql_format(dbCon, biggestQuery, sizeof(biggestQuery), "INSERT INTO `points` (outsideX, outsideY, outsideZ, outsideA, outsideApartment, insideApartment, pointName) VALUES (%f, %f, %f, %f, %d, %d, '%e')", x, y, z, a, outsideApt, insideApt, name);
+	mysql_format(dbCon, biggestQuery, sizeof(biggestQuery), "INSERT INTO `points` (outsideX, outsideY, outsideZ, outsideA, outsideApartment, insideApartment, pointName, outsideWorld, insideWorld, outsideInterior, insideInterior) VALUES (%f, %f, %f, %f, %d, %d, '%e', %d, %d, %d, %d)", x, y, z, a, outsideApt, insideApt, name, outsideW, insideW, outsideInt, insideInt);
 	mysql_tquery(dbCon, biggestQuery, "OnPointInsert", "d", point);
 	return true;
 }
 
 CMD:points(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-	    return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
-	SendClientMessage(playerid, COLOR_GREY, "Listing all points...");
+	static str[2048];
+	str[0] = EOS;
+	new count = 0;
+	static listedPoints[MAX_ENTRANCES];
 
 	foreach (new i: Entrance)
 	{
-	    SendClientMessageEx(playerid, COLOR_GRAD2, "%d [%s]", i, EntranceData[i][pointName]);
+	    listedPoints[count] = i;
+	    new typeStr[32];
+	    new pType = EntranceData[i][pointType];
+	    if(pType >= 0 && pType < sizeof(PointTypes))
+	        format(typeStr, sizeof(typeStr), "%s", PointTypes[pType]);
+	    else
+	        format(typeStr, sizeof(typeStr), "Unknown (%d)", pType);
+
+	    format(str, sizeof(str), "%s%d - %s (%s)\n", str, i, EntranceData[i][pointName], typeStr);
+	    count++;
 	}
+
+	if(count == 0)
+	    return SendErrorMessage(playerid, "No points configured on the server.");
+
+	for(new idx = 0; idx < count; idx++)
+	{
+	    new pvarName[32];
+	    format(pvarName, sizeof(pvarName), "AdminPointMap_%d", idx);
+	    SetPVarInt(playerid, pvarName, listedPoints[idx]);
+	}
+	SetPVarInt(playerid, "AdminPointsCount", count);
+
+	Dialog_Show(playerid, AdminPointsList, DIALOG_STYLE_LIST, "Server Points List", str, "Edit", "Close");
 	return true;
+}
+
+Dialog:AdminPointsList(playerid, response, listitem, inputtext[])
+{
+    new count = GetPVarInt(playerid, "AdminPointsCount");
+    if(!response || count == 0)
+    {
+        for(new idx = 0; idx < count; idx++)
+        {
+            new pvarName[32];
+            format(pvarName, sizeof(pvarName), "AdminPointMap_%d", idx);
+            DeletePVar(playerid, pvarName);
+        }
+        DeletePVar(playerid, "AdminPointsCount");
+        return 1;
+    }
+
+    new pvarName[32];
+    format(pvarName, sizeof(pvarName), "AdminPointMap_%d", listitem);
+    new point = GetPVarInt(playerid, pvarName);
+
+    // Clean up
+    for(new idx = 0; idx < count; idx++)
+    {
+        new pvarNameTemp[32];
+        format(pvarNameTemp, sizeof(pvarNameTemp), "AdminPointMap_%d", idx);
+        DeletePVar(playerid, pvarNameTemp);
+    }
+    DeletePVar(playerid, "AdminPointsCount");
+
+    if(!Iter_Contains(Entrance, point))
+        return SendErrorMessage(playerid, "This point no longer exists.");
+
+    SetPVarInt(playerid, "EditingPoint", point);
+    ShowPointSettings(playerid, point);
+    return 1;
 }
 
 CMD:editpoint(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-	    return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
 	new point;
 
@@ -1039,8 +1070,7 @@ CMD:particlegun(playerid, params[])
 // graffiti
 CMD:creategraffiti(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 4)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+    UnauthGate(playerid, 4);
 
 	AddSprayLocation(playerid);
 	return true;
@@ -1048,8 +1078,7 @@ CMD:creategraffiti(playerid, params[])
 
 CMD:editgraffiti(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 4)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+    UnauthGate(playerid, 4);
 
 	new
         graffid
@@ -1079,8 +1108,7 @@ CMD:editgraffiti(playerid, params[])
 
 CMD:destroygraffiti(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 4)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+    UnauthGate(playerid, 4);
 
 	for(new ID = 0; ID < MAX_SPRAY_LOCATIONS; ++ID)
 	{
@@ -1102,16 +1130,11 @@ CMD:destroygraffiti(playerid, params[])
 CMD:makeadmin(playerid, params[])
 {
     // Hanya admin dengan level 1337 atau lebih yang bisa menggunakan command ini
-    if(PlayerData[playerid][pAdmin] < 1337)
-        return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+    UnauthGate(playerid, 1337);
 
-    new
-        userid,
-		adminlevel
-	;
-
-	if(sscanf(params, "ud", userid, adminlevel))
-        return SendSyntaxMessage(playerid, "/makeadmin [playerid/PartOfName] [admin-level]");
+    new userid;
+	if(sscanf(params, "u", userid))
+        return SendSyntaxMessage(playerid, "/makeadmin [playerid/PartOfName]");
 
 	if(!IsPlayerConnected(userid))
 		return SendErrorMessage(playerid, "The player you specified isn't connected.");
@@ -1119,29 +1142,66 @@ CMD:makeadmin(playerid, params[])
 	if(!SQL_IsLogged(userid))
 		return SendErrorMessage(playerid, "The player you specified isn't logged in.");
 
+    SetPVarInt(playerid, "makeadmin_target", userid);
 
-	if(PlayerData[userid][pAdmin] == adminlevel)
-	    return SendErrorMessage(playerid, "Player is already that level.");
+    new dialog_str[512];
+    strcat(dialog_str, "Basic Player (Level 0)\n");
+    strcat(dialog_str, "Intern (Level 1)\n");
+    strcat(dialog_str, "Junior Admin (Level 2)\n");
+    strcat(dialog_str, "Senior Admin (Level 3)\n");
+    strcat(dialog_str, "Senior Admin 2 (Level 4)\n");
+    strcat(dialog_str, "Deputy Head Admin (Level 1336)\n");
+    strcat(dialog_str, "Head Admin (Level 1337)");
 
-	if(adminlevel < 0)
-	    return SendErrorMessage(playerid, "Invalid level specified.");
-
-	PlayerData[userid][pAdmin] = adminlevel;
-
-	SendServerMessage(userid, "Admin %s has set your admin level to %d.", ReturnName(playerid, 0), adminlevel);
-
-	SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmCmd: %s set %s's admin level to %d.", ReturnName(playerid), ReturnName(userid), adminlevel);
-
-	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `accounts` SET `Admin` = '%d' WHERE `ID` = %d LIMIT 1", adminlevel, AccountData[userid][aUserid]);
-	mysql_pquery(dbCon, gquery);
+    Dialog_Show(playerid, MakeAdminDialog, DIALOG_STYLE_LIST, "Make Admin - Choose Rank", dialog_str, "Select", "Cancel");
 	return true;
+}
+
+Dialog:MakeAdminDialog(playerid, response, listitem, inputtext[])
+{
+    new userid = GetPVarInt(playerid, "makeadmin_target");
+    DeletePVar(playerid, "makeadmin_target");
+
+    if(!response)
+        return 1;
+
+    if(!IsPlayerConnected(userid) || !SQL_IsLogged(userid))
+        return SendErrorMessage(playerid, "Player is not connected.");
+
+    new adminlevel = 0;
+    new rank_name[32];
+
+    switch(listitem)
+    {
+        case 0: { adminlevel = 0; rank_name = "Basic Player"; }
+        case 1: { adminlevel = 1; rank_name = "Intern"; }
+        case 2: { adminlevel = 2; rank_name = "Junior Admin"; }
+        case 3: { adminlevel = 3; rank_name = "Senior Admin"; }
+        case 4: { adminlevel = 4; rank_name = "Senior Admin 2"; }
+        case 5: { adminlevel = 1336; rank_name = "Deputy Head Admin"; }
+        case 6: { adminlevel = 1337; rank_name = "Head Admin"; }
+    }
+
+    if(PlayerData[userid][pAdmin] == adminlevel)
+        return SendErrorMessage(playerid, "The player already holds that rank..");
+
+    PlayerData[userid][pAdmin] = adminlevel;
+
+    SendServerMessage(userid, "Admin %s has set your admin rank to: %s (Level %d).", ReturnName(playerid, 0), rank_name, adminlevel);
+    SendServerMessage(playerid, "You have set the admin rank %s to: %s (Level %d).", ReturnName(userid, 0), rank_name, adminlevel);
+
+    SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmCmd: %s has set %s's admin rank to %s (Level %d).", ReturnName(playerid), ReturnName(userid), rank_name, adminlevel);
+
+    new query[256];
+    mysql_format(dbCon, query, sizeof(query), "UPDATE `accounts` SET `Admin` = '%d' WHERE `ID` = %d LIMIT 1", adminlevel, AccountData[userid][aUserid]);
+    mysql_pquery(dbCon, query);
+    return 1;
 }
 
 CMD:maketester(playerid, params[])
 {
     // Pastikan hanya admin dengan level 1337 ke atas yang bisa menggunakan perintah ini
-    if(PlayerData[playerid][pAdmin] < 1336)
-        return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+    UnauthGate(playerid, 1336);
 
     new userid;
 
@@ -1178,10 +1238,165 @@ CMD:maketester(playerid, params[])
     return true;
 }
 
-CMD:updatemotd(playerid, params[])
+// GMX & Restart Lock System
+// Unlock is readiness-based: a repeating checker opens the server as soon as
+// every core async loader has finished (Init_StepDone), with a hard timeout
+// fallback so one dead query can never keep the server locked forever.
+#define INIT_STEPS_EXPECTED   8
+new InitStepsDone = 0;
+new InitStopwatchSecs = 0;
+new InitLockTimerID = -1;
+
+stock Init_StepDone()
+{
+    InitStepsDone++;
+}
+
+stock Init_BeginLock()
+{
+    InitStepsDone = 0;
+    InitStopwatchSecs = 0;
+    if(InitLockTimerID != -1) KillTimer(InitLockTimerID);
+    InitLockTimerID = SetTimer("OnServerRestartLockCheck", 3000, true);
+}
+
+forward OnServerRestartLockCheck();
+public OnServerRestartLockCheck()
+{
+    InitStopwatchSecs += 3;
+
+    if(InitStepsDone < INIT_STEPS_EXPECTED && InitStopwatchSecs < 120)
+        return;   // still loading; re-check in 3s
+
+    KillTimer(InitLockTimerID);
+    InitLockTimerID = -1;
+    OnServerRestartLockFinish();
+}
+
+new bool:gServerRestarting = false;
+new gGMXTimerID = -1;
+new gGMXCountdown = 0;
+
+forward OnGMXCountdownTimer();
+public OnGMXCountdownTimer()
+{
+	gGMXCountdown--;
+	if(gGMXCountdown > 0)
+	{
+		SendClientMessageToAllEx(COLOR_LIGHTRED, "[SERVER]: The server will restart in %d minutes! Please secure your position and items.", gGMXCountdown);
+	}
+	else
+	{
+		KillTimer(gGMXTimerID);
+		gGMXTimerID = -1;
+
+		SendClientMessageToAll(COLOR_LIGHTRED, "[SERVER]: The server is currently locked and reloading data. All players have been disconnected.");
+		SendRconCommand("password restartlock123");
+
+		foreach(new i : Player)
+		{
+			Kick(i);
+		}
+	}
+	return 1;
+}
+
+forward OnServerRestartLockFinish();
+public OnServerRestartLockFinish()
+{
+	SendRconCommand("password 0");
+	SendRconCommand("hostname "SERVER_NAME"");
+
+	if(InitStepsDone < INIT_STEPS_EXPECTED)
+		printf("[SERVER RESTART]: Lock released by TIMEOUT after %ds - only %d/%d core loaders finished! Check the database.",
+		    InitStopwatchSecs, InitStepsDone, INIT_STEPS_EXPECTED);
+	else
+		printf("[SERVER RESTART]: All %d core systems loaded in %ds. Server is open to the public!",
+		    INIT_STEPS_EXPECTED, InitStopwatchSecs);
+	return 1;
+}
+
+CMD:webedit(playerid, params[])
 {
 	if(PlayerData[playerid][pAdmin] < 1337)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+		return SendUnauthMessage(playerid, "Only Head Admin who can change website domain.");
+
+	new newDomain[128];
+	if(sscanf(params, "s[128]", newDomain))
+		return SendSyntaxMessage(playerid, "/webedit [new_domain] (ex: /webedit losjawarp.net)");
+
+	// Update variabel runtime
+	format(gServerSite, sizeof(gServerSite), "%s", newDomain);
+
+	// Update RCON WebURL
+	new rconCmd[200];
+	format(rconCmd, sizeof(rconCmd), "weburl %s", gServerSite);
+	SendRconCommand(rconCmd);
+
+	// Simpan permanen ke MySQL server_settings
+	new query[256];
+	mysql_format(dbCon, query, sizeof(query), "UPDATE `server_settings` SET `web_url` = '%e' WHERE `id` = 1", gServerSite);
+	mysql_tquery(dbCon, query);
+
+	SendServerMessage(playerid, "Website domain succesfully changed to: {FFBF00}%s", gServerSite);
+	SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmCmd: Head Admin %s changed website domain to '%s'.", ReturnName(playerid), gServerSite);
+	return true;
+}
+
+CMD:versionedit(playerid, params[])
+{
+	if(PlayerData[playerid][pAdmin] < 1337)
+		return SendUnauthMessage(playerid, "Only Head Admin who can change server version.");
+
+	new newVersion[64];
+	if(sscanf(params, "s[64]", newVersion))
+		return SendSyntaxMessage(playerid, "/versionedit [mode name or version] (ex: /versionedit LJ:RP 0.2.0)");
+
+	// Update variabel runtime & GameModeText
+	format(gServerMode, sizeof(gServerMode), "%s", newVersion);
+	SetGameModeText(gServerMode);
+
+	// Simpan permanen ke MySQL server_settings
+	new query[256];
+	mysql_format(dbCon, query, sizeof(query), "UPDATE `server_settings` SET `server_mode` = '%e' WHERE `id` = 1", gServerMode);
+	mysql_tquery(dbCon, query);
+
+	return true;
+}
+
+CMD:clearchangelog(playerid, params[])
+{
+	if(PlayerData[playerid][pAdmin] < 1337)
+		return SendUnauthMessage(playerid, "You are not authorized to use this command.");
+
+	mysql_tquery(dbCon, "TRUNCATE TABLE `server_changelogs`");
+	
+	return true;
+}
+
+CMD:gmx(playerid, params[])
+{
+	if(PlayerData[playerid][pAdmin] < 1337)
+		return SendUnauthMessage(playerid, "Only Head Admin (Level 1337) can use this command.");
+
+	new minutes;
+	if(sscanf(params, "d", minutes) || minutes < 1 || minutes > 60)
+		return SendSyntaxMessage(playerid, "/gmx [minute (1-60)]");
+
+	if(gGMXTimerID != -1)
+		return SendErrorMessage(playerid, "Server restart is running!");
+
+	gGMXCountdown = minutes;
+	gGMXTimerID = SetTimer("OnGMXCountdownTimer", 60000, true);
+
+	SendClientMessageToAllEx(COLOR_LIGHTRED, "[SERVER]: Admin %s is scheduling a server restart in %d minute!", ReturnName(playerid), minutes);
+	SendAdminAlert(COLOR_LIGHTRED, JUNIOR_ADMINS, "AdmCmd: %s (Head Admin) initiated server restart in %d minute(s).", ReturnName(playerid), minutes);
+	return true;
+}
+
+CMD:updatemotd(playerid, params[])
+{
+	UnauthGate(playerid, 1337);
 
 	Dialog_Show(playerid, MotdList, DIALOG_STYLE_LIST, "Update Motd", "Line 1\nLine 2\nLine 3\nLine 4\nLine 5", "Update", "Cancel");
 	return true;
@@ -1189,8 +1404,7 @@ CMD:updatemotd(playerid, params[])
 
 CMD:forceunmask(playerid, params[])
 {
- 	if(PlayerData[playerid][pAdmin] < 3)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+ 	AdminGate(playerid, 3);
 
 	new
 		userid = INVALID_PLAYER_ID
@@ -1199,16 +1413,8 @@ CMD:forceunmask(playerid, params[])
 	if(sscanf(params, "u", userid))
 		return SendSyntaxMessage(playerid, "/forceunmask [playerid/PartOfName]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(userid == playerid)
 		return SendClientMessage(playerid, COLOR_GRAD1, "You can't use it on yourself.");
 
@@ -1240,8 +1446,7 @@ stock TrashVehicleRequest(id)
 
 CMD:vehiclerequests(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 3)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+    UnauthGate(playerid, 3);
 
 	new request;
 
@@ -1358,18 +1563,9 @@ Dialog:VehicleRequest_Details(playerid, response, listitem, inputtext[])
 	return true;
 }
 
-stock DeleteVehicleNameRequest(id)
-{
-    VehicleRequests[id][reqID] = -1;
-	VehicleRequests[id][reqPlayer] = INVALID_PLAYER_ID;
-	VehicleRequests[id][reqVehID] = INVALID_VEHICLE_ID;
-    VehicleRequests[id][reqName][0] = EOS;
-}
-
 CMD:watchradio(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 2)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 2);
 
 	new channel;
 
@@ -1396,8 +1592,7 @@ CMD:watchradio(playerid, params[])
 
 CMD:propinfo(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 1)
-    	return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+    UnauthGate(playerid, 1);
 
 	new house;
 
@@ -1416,8 +1611,7 @@ CMD:propinfo(playerid, params[])
 
 CMD:desynced(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 1)
-    	return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+    UnauthGate(playerid, 1);
 
 	new userid;
 
@@ -1439,8 +1633,7 @@ CMD:desynced(playerid, params[])
 
 CMD:whereami(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 1)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+    AdminGate(playerid, 1);
 
 	new id = -1;
 
@@ -1470,8 +1663,7 @@ CMD:whereami(playerid, params[])
 
 CMD:neargraffiti(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 1)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+    AdminGate(playerid, 1);
 
 	new id = -1;
 
@@ -1485,8 +1677,7 @@ CMD:neargraffiti(playerid, params[])
 
 CMD:createsignal(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+    AdminGate(playerid, 1337);
 
 	if(isnull(params) || strlen(params) > 32)
 	    return SendSyntaxMessage(playerid, "/createsignal [name]");
@@ -1502,8 +1693,7 @@ CMD:createsignal(playerid, params[])
 
 CMD:editsignal(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
 	new id, type[24], string[128];
 
@@ -1520,11 +1710,7 @@ CMD:editsignal(playerid, params[])
 	{
 	    GetPlayerPos(playerid, SignalData[id][signalX], SignalData[id][signalY], SignalData[id][signalZ]);
 
-      	/*if(IsValidDynamicObject(SignalData[id][signalObject]))
-			DestroyDynamicObject(SignalData[id][signalObject]);
 
-     	SignalData[id][signalObject] = CreateDynamicObject(13758, SignalData[id][signalX], SignalData[id][signalY], SignalData[id][signalZ], 0.00, 0.00, 0.00);
-*/
 		Signal_Save(id);
 
 		SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn: %s has adjusted the position of Radio Tower ID %d", ReturnName(playerid), id);
@@ -1563,8 +1749,7 @@ CMD:destroysignal(playerid, params[])
 	new
 	    id = 0;
 
-    if(PlayerData[playerid][pAdmin] < 5)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+    AdminGate(playerid, 5);
 
 	if(sscanf(params, "d", id))
 	    return SendSyntaxMessage(playerid, "/destroysignal [signal id]");
@@ -1579,8 +1764,7 @@ CMD:destroysignal(playerid, params[])
 
 CMD:xyz(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1337);
 
 	new Float:x, Float:y, Float:z;
 
@@ -1597,8 +1781,7 @@ CMD:xyz(playerid, params[])
 
 CMD:goto(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1);
 
 	new userid, Float:x, Float:y, Float:z;
 
@@ -1638,8 +1821,7 @@ CMD:goto(playerid, params[])
 
 CMD:icv(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+    AdminGate(playerid, 1337);
     	
 	if(GetPlayerState(playerid) != PLAYER_STATE_ONFOOT)
 		return SendErrorMessage(playerid, "You need to be on foot.");
@@ -1679,8 +1861,7 @@ CMD:icv(playerid, params[])
 
 CMD:gotocar(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 1)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+    AdminGate(playerid, 1);
 
 	new
 		vehicleid
@@ -1706,8 +1887,7 @@ CMD:gotocar(playerid, params[])
 
 CMD:getcar(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 1)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+    AdminGate(playerid, 1);
 
 	new
 		vehicleid
@@ -1733,8 +1913,7 @@ CMD:getcar(playerid, params[])
 
 CMD:lastincar(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 2)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 2);
 
 	new
 		vehicleid
@@ -1787,8 +1966,7 @@ CMD:lastincar(playerid, params[])
 
 CMD:entercarseat(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 2)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 2);
 
 	new vehicleid, seat;
 
@@ -1812,8 +1990,7 @@ CMD:entercarseat(playerid, params[])
 
 CMD:explosion(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 2)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 2);
 
 	new userid, Float:slx, Float:sly, Float:slz;
 
@@ -1832,33 +2009,13 @@ CMD:explosion(playerid, params[])
 
 CMD:gotofs(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1);
 
 	new faction, spawn;
 
 	if(sscanf(params, "dd", faction, spawn))
 	{
-		/*new str[MAX_PLAYER_NAME + (64 * 5)], count;
 
-		for(new i = 0; i < 5; ++i)
-		{
-		    if(FactionSpawns[faction][i][spawnID] != 0)
-			{
-				format(str, sizeof(str), "%s[%d: %s]", str, i, FactionSpawns[faction][i][spawnName]);
-
-				count++;
-			}
-		}
-
-		if(!count) return SendErrorMessages(playerid, "This faction doesn't have any spawns.");
-
-		if(strlen(str) > 128)
-		{
-		    SendClientMessageEx(playerid, COLOR_GREY, "%.128s", str);
-		    SendClientMessageEx(playerid, COLOR_GREY, "%s", str[128]);
-		}
-		else SendClientMessage(playerid, COLOR_GREY, str);*/
 
 	    return SendSyntaxMessage(playerid, "/gotofs [factionid] [spawn-id]");
 	}
@@ -1898,8 +2055,7 @@ CMD:gotofs(playerid, params[])
 
 CMD:p2p(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1);
 
 	new userid, targetid;
 
@@ -1933,8 +2089,7 @@ stock SyncPlayerToPlayer(playerid, userid)
 
 CMD:p2v(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1);
 
 	new userid, vehicleid;
 
@@ -1965,8 +2120,7 @@ CMD:p2v(playerid, params[])
 
 CMD:p2iw(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1);
 
 	new userid, interior, world;
 
@@ -1985,8 +2139,7 @@ CMD:p2iw(playerid, params[])
 
 CMD:p2fs(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1);
 
 	new userid, faction;
 
@@ -2032,8 +2185,7 @@ CMD:p2fs(playerid, params[])
 
 CMD:gethere(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1);
 
 	new userid, Float:x, Float:y, Float:z;
 
@@ -2075,8 +2227,7 @@ CMD:gethere(playerid, params[])
 
 CMD:sf(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 2)
-  		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 2);
 
 	new
 	    userid
@@ -2124,8 +2275,7 @@ YCMD:unfreeze(playerid, params[], help) = thaw;
 
 CMD:thaw(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-  		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	new
 	    userid
@@ -2151,8 +2301,7 @@ CMD:thaw(playerid, params[])
 
 CMD:mute(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-  		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	new
 		userid
@@ -2196,8 +2345,7 @@ CMD:mute(playerid, params[])
 
 CMD:playsound(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 4)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+    AdminGate(playerid, 4);
 
 	new userid, soundid;
 
@@ -2213,8 +2361,7 @@ CMD:playsound(playerid, params[])
 
 CMD:slapcar(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	new vehicleid, Float:slx, Float:sly, Float:slz;
 
@@ -2233,8 +2380,7 @@ CMD:slapcar(playerid, params[])
 
 CMD:slap(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	new userid, Float:slx, Float:sly, Float:slz;
 
@@ -2262,8 +2408,7 @@ CMD:slap(playerid, params[])
 
 CMD:gotopizza(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	SetPlayerDynamicPos(playerid, 2087.6670,-1806.5240,13.5469);
 	SetPlayerInterior(playerid, 0);
@@ -2276,8 +2421,7 @@ CMD:gotopizza(playerid, params[])
 
 CMD:gotospawn(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-  		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	if(GetPlayerState(playerid) == 2)
 	{
@@ -2300,8 +2444,7 @@ CMD:gotospawn(playerid, params[])
 
 CMD:gotoprison(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-  		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	SetPlayerPosEx(playerid, 1251.0468, 896.0416, 1161.0986);
 	SyncPrisonInterior(playerid, true);
@@ -2310,8 +2453,7 @@ CMD:gotoprison(playerid, params[])
 
 CMD:gotols(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-  		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	if(GetPlayerState(playerid) == 2)
 	{
@@ -2334,8 +2476,7 @@ CMD:gotols(playerid, params[])
 
 CMD:gotosf(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 1)
-  		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+    AdminGate(playerid, 1);
 
     if(GetPlayerState(playerid) == 2)
 	{
@@ -2358,8 +2499,7 @@ CMD:gotosf(playerid, params[])
 
 CMD:gotolv(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 1)
-  		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+    AdminGate(playerid, 1);
 
     if(GetPlayerState(playerid) == 2)
 	{
@@ -2384,8 +2524,7 @@ CMD:gopos(playerid, params[])
 {
     new Float:Pos[3], int;
 
-	if(PlayerData[playerid][pAdmin] < 4)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	if(sscanf(params, "fffi", Pos[0], Pos[1], Pos[2], int))
 		return SendSyntaxMessage(playerid, "/gopos [x] [y] [z] [int]");
@@ -2402,8 +2541,7 @@ CMD:gocp(playerid, params[])
 	if(gPlayerCheckpointStatus[playerid] == CHECKPOINT_NONE)
 		return 1;
 
-	if(PlayerData[playerid][pAdmin] < 4)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	SetPlayerPosEx(playerid, gPlayerCheckpointX[playerid], gPlayerCheckpointY[playerid], gPlayerCheckpointZ[playerid]);
 	SetPlayerInterior(playerid, 0);
@@ -2418,8 +2556,7 @@ CMD:gorcp(playerid, params[])
 	if(PlayerData[playerid][pCP_Type] == -1)
 		return true;
 
-	if(PlayerData[playerid][pAdmin] < 4)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	SetPlayerPosEx(playerid, PlayerData[playerid][pCP_X], PlayerData[playerid][pCP_Y], PlayerData[playerid][pCP_Z]);
 	SetPlayerInterior(playerid, 0);
@@ -2431,8 +2568,7 @@ CMD:gorcp(playerid, params[])
 
 CMD:backup(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	foreach (new i : Player) SQL_SaveCharacter(i, false);
 	foreach (new i : Property) Property_Save(i);
@@ -2448,8 +2584,7 @@ YCMD:cac(playerid, params[], help) = clearallchat;
 
 CMD:clearallchat(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	for(new i = 0; i < 50; ++i)
 	{
@@ -2463,8 +2598,7 @@ CMD:clearguns(playerid, params[])
 	new
 	    userid;
 
-    if(PlayerData[playerid][pAdmin] < 1)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+    AdminGate(playerid, 1);
 
 	if(sscanf(params, "u", userid))
 	    return SendSyntaxMessage(playerid, "/clearguns [playerid/PartOfName]");
@@ -2480,8 +2614,7 @@ CMD:clearguns(playerid, params[])
 
 CMD:checkafk(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	SendClientMessage(playerid, COLOR_LIGHTRED, "Listing all AFK players...");
 
@@ -2498,8 +2631,7 @@ CMD:checkafk(playerid, params[])
 
 CMD:masked(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	SendClientMessage(playerid, COLOR_LIGHTRED, "Listing all masked players...");
 
@@ -2516,8 +2648,7 @@ CMD:masked(playerid, params[])
 
 CMD:ismasked(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	new
 		userid
@@ -2537,28 +2668,20 @@ CMD:ismasked(playerid, params[])
 	return true;
 }
 
-/*CMD:fly(playerid, params[])
-{
-	if(PlayerData[playerid][pAdmin] < 1337) return false;
-	if(PfSpec[playerid][FlySpec] == 0) StartFlyEditor(playerid);
-	else if(PfSpec[playerid][FlySpec] == 1) EndFlyEditor(playerid);
-	return true;
-}*/
+
 
 CMD:biztypes(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	SendClientMessage(playerid, COLOR_GRAD2, "1: Gas Station | 2: Ammunation | 3: 24/7 4: Vehicle Dealership | 5: Car Modding Shop | 6: Pay & Spray | 7: Clothing Shop");
-	SendClientMessage(playerid, COLOR_GRAD2, "8: Bars | 9: Restaurant | 10: Furniture Shop | 11: Advertisement Center | 12: Bank | 13: Weapon Factory");
+	SendClientMessage(playerid, COLOR_GRAD2, "8: Bars | 9: Restaurant | 10: Furniture Shop | 11: Disabled (/advertisement) | 12: Bank");
 	return true;
 }
 
 CMD:showbusinesses(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	gstr[0] = EOS;
 
@@ -2576,8 +2699,7 @@ CMD:showbusinesses(playerid, params[])
 
 CMD:whatbusiness(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
     new str[128];
 
@@ -2595,21 +2717,20 @@ CMD:whatbusiness(playerid, params[])
 
 CMD:makebusiness(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	new level, price, type;
 
 	if(sscanf(params, "ddd", level, price, type))
 	{
 		Dialog_Show(playerid, MbizCreateType, DIALOG_STYLE_LIST, "Create Business (Wizard) - Step 1: Type", 
-			"1: Gas Station\n2: Ammunation\n3: 24-7\n4: Vehicle Dealership\n5: Car Modding Shop\n6: Pay & Spray\n7: Clothing Shop\n8: Bar\n9: Restaurant\n10: Furniture Shop\n11: Advertisement\n12: Bank\n13: Weapon Factory", 
+			"1: Gas Station\n2: Ammunation\n3: 24-7\n4: Vehicle Dealership\n5: Car Modding Shop\n6: Pay & Spray\n7: Clothing Shop\n8: Bar\n9: Restaurant\n10: Furniture Shop\n11: Disabled (Use /advertisement)\n12: Bank", 
 			"Next", "Cancel");
 		return true;
 	}
 
-	if(type < 1 || type > 13)
-		return SendClientMessage(playerid, COLOR_GRAD2, "Invalid business type (1-13).");
+	if(type < 1 || type > 12)
+		return SendClientMessage(playerid, COLOR_GRAD2, "Invalid business type (1-12).");
 
 	CreateNewBusiness(playerid, level, price, type);
 	return true;
@@ -2619,12 +2740,16 @@ CMD:removebusiness(playerid, params[])
 {
 	new bizid, msg[128];
 
-	if(PlayerData[playerid][pAdmin] < 4)
-  		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
     if((bizid = Business_Nearest(playerid)) != -1)
 	{
 		DestroyDynamicPickup(BusinessData[bizid][bPickup]);
+		if(BusinessData[bizid][bTextLabel])
+		{
+			DestroyDynamic3DTextLabel(BusinessData[bizid][bTextLabel]);
+			BusinessData[bizid][bTextLabel] = Text3D:INVALID_3DTEXT_ID;
+		}
 
 		new ply = INVALID_PLAYER_ID;
 
@@ -2667,8 +2792,7 @@ CMD:asellbusiness(playerid, params[])
 {
 	new bizid, msg[128];
 
-	if(PlayerData[playerid][pAdmin] < 4)
-  		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	if(sscanf(params, "d", bizid))
 		return SendSyntaxMessage(playerid, "/asellbusiness [bizid]");
@@ -2715,8 +2839,7 @@ CMD:asellbusiness(playerid, params[])
 
 CMD:businessenter(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	new bizid;
 
@@ -2729,16 +2852,14 @@ CMD:businessenter(playerid, params[])
 	new Float:x, Float:y, Float:z;
 	GetPlayerPos(playerid, x, y, z);
 
-	DestroyDynamicPickup(BusinessData[bizid][bPickup]);
-
-	BusinessData[bizid][bPickup] = CreateDynamicPickup(1239, 2, x, y, z, -1, -1, -1, 100.0);
-
-	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_enX` = '%.4f', `biz_enY` = '%.4f', `biz_enZ` = '%.4f' WHERE `biz_id` = %d", x, y, z, BusinessData[bizid][bID]);
-	mysql_pquery(dbCon, gquery);
-
 	BusinessData[bizid][bEntranceX] = x;
 	BusinessData[bizid][bEntranceY] = y;
 	BusinessData[bizid][bEntranceZ] = z;
+
+	Business_Refresh(bizid);
+
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_enX` = '%.4f', `biz_enY` = '%.4f', `biz_enZ` = '%.4f' WHERE `biz_id` = %d", x, y, z, BusinessData[bizid][bID]);
+	mysql_pquery(dbCon, gquery);
 
 	SendClientMessage(playerid, COLOR_GRAD2, "Succeeded");
 	return true;
@@ -2746,8 +2867,7 @@ CMD:businessenter(playerid, params[])
 
 CMD:businessex1(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	new bizid, status;
 
@@ -2790,8 +2910,7 @@ CMD:businessex1(playerid, params[])
 
 CMD:businessex2(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	new bizid, status;
 
@@ -2834,8 +2953,7 @@ CMD:businessex2(playerid, params[])
 
 CMD:businessex3(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	new bizid, status;
 
@@ -2878,8 +2996,7 @@ CMD:businessex3(playerid, params[])
 
 CMD:businessexit(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	new bizid;
 
@@ -2911,8 +3028,7 @@ CMD:bizz(playerid, params[])
 		bizid
 	;
 
-	if(PlayerData[playerid][pAdmin] < 4)
-  		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
     if(sscanf(params, "d", bizid))
 		return SendSyntaxMessage(playerid, "/businessenter [bizid]");
@@ -2926,8 +3042,7 @@ CMD:bizz(playerid, params[])
 
 CMD:editbusiness(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	new text[256], type, bizid;
 
@@ -3050,8 +3165,7 @@ CMD:editbusiness(playerid, params[])
 
 CMD:businessint(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	new interior, business;
 
@@ -3098,8 +3212,7 @@ stock EditApartmentInterior(playerid, houseid)
 
 CMD:setapt(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	new houseid, type, text[128];
 
@@ -3210,8 +3323,7 @@ YCMD:createapartment(playerid, params[], help) = createapt;
 
 CMD:createapt(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
 	new houseid, houseinfo[60], pickup, faction, Float:x, Float:y, Float:z;
 
@@ -3275,8 +3387,7 @@ YCMD:removeapartment(playerid, params[], help) = removeapt;
 
 CMD:removeapt(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
 	new houseid;
 
@@ -3307,6 +3418,9 @@ CMD:removeapt(playerid, params[])
 
 	mysql_format(dbCon, gquery, sizeof(gquery), "DELETE FROM `apartments` WHERE `ID` = '%d' LIMIT 1", appid);
 	mysql_tquery(dbCon, gquery);
+
+	// Auto-remove custom mapping when apartment is destroyed/removed
+	OnPropertySold(3, appid);
 
 	SendClientMessageEx(playerid, COLOR_GREEN, "Apartment ID %d has been successfully removed from the database.", houseid);
 	return true;
@@ -3344,8 +3458,7 @@ Dialog:ApartmentInterior(playerid, response, listitem, inputtext[])
 
 CMD:createprop(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	new type, value;
 
@@ -3366,8 +3479,7 @@ CMD:createprop(playerid, params[])
 
 CMD:removeprop(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
 	new houseid = -1;
 
@@ -3388,8 +3500,7 @@ CMD:removeprop(playerid, params[])
 
 CMD:asellhouse(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
 	new
 	    houseid
@@ -3425,8 +3536,7 @@ CMD:asellhouse(playerid, params[])
 
 CMD:houseenter(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	new houseid, Float:px, Float:py, Float:pz;
 
@@ -3447,8 +3557,7 @@ CMD:houseenter(playerid, params[])
 
 CMD:houseexit(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	new houseid,  Float:px, Float:py, Float:pz;
 
@@ -3469,8 +3578,7 @@ CMD:houseexit(playerid, params[])
 
 CMD:setprop(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	new houseid, type, text[128];
 
@@ -3549,8 +3657,7 @@ CMD:setprop(playerid, params[])
 
 CMD:gotograffiti(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	new sprayid;
 
@@ -3570,8 +3677,7 @@ CMD:gotograffiti(playerid, params[])
 
 CMD:cleangraffiti(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	new sprayid;
 
@@ -3593,8 +3699,7 @@ YCMD:gotoapt(playerid, params[], help) = gotoapp;
 
 CMD:gotoapp(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	new houseid;
 
@@ -3614,8 +3719,7 @@ CMD:gotoapp(playerid, params[])
 
 CMD:house(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	new
 		houseid
@@ -3654,8 +3758,7 @@ CMD:house(playerid, params[])
 
 CMD:properties(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");	
+    AdminGate(playerid, 1337);	
 
 	ShowPropertyDialogue(playerid, 0);
 	return true;
@@ -3723,8 +3826,7 @@ YCMD:teles(playerid, params[], help) = tp;
 
 CMD:tp(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 3)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+    AdminGate(playerid, 3);
 
 	if(!AdminDuty{playerid})	
 		return SendUnauthMessage(playerid, "You must be on admin duty to perform this command.");			
@@ -3783,8 +3885,7 @@ CMD:tp(playerid, params[])
 
 CMD:maketele(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 3)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+    AdminGate(playerid, 3);
 
 	new name[32], interior, teleid = -1, Float:X, Float:Y, Float:Z;
 
@@ -3824,8 +3925,7 @@ CMD:maketele(playerid, params[])
 
 CMD:removetele(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 3)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+    AdminGate(playerid, 3);
 
     new teleid;
 
@@ -3844,8 +3944,7 @@ CMD:removetele(playerid, params[])
 
 CMD:fixveh(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	new
 		vehicleid,
@@ -3876,8 +3975,7 @@ CMD:fixveh(playerid, params[])
 
 CMD:healcar(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 4)
-        return SendErrorMessage(playerid, "You're not authorized to use this command.");
+    AdminGate(playerid, 4);
 
     if(!IsPlayerInAnyVehicle(playerid))
         return SendErrorMessage(playerid, "You must be in a vehicle.");
@@ -3908,8 +4006,7 @@ CMD:healcar(playerid, params[])
 
 CMD:descar(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
 	if(!IsPlayerInAnyVehicle(playerid))
 		return SendErrorMessage(playerid, "You must be in a vehicle.");
@@ -3962,12 +4059,17 @@ CMD:revive(playerid, params[])
 	if(!IsPlayerConnected(userid))
 		return SendClientMessage(playerid, COLOR_LIGHTRED, "The player you specified isn't connected.");
 
-	if(!PlayerData[userid][pInjured] && !DeathMode{userid})
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "That player isn't dead or brutally wounded.");
+	if(!PlayerData[userid][pInjured] && !DeathMode{userid} && !PlayerData[userid][pOverdosing])
+		return SendClientMessage(playerid, COLOR_LIGHTRED, "That player isn't dead, wounded, or overdosing.");
 
     RevivePlayer(userid);
 	SetPlayerHealthEx(userid, 150.0);
 	TogglePlayerControllable(userid, true);
+
+	// Clear Fentanyl Overdose state if overdosing
+	PlayerData[userid][pOverdosing] = 0;
+	PlayerData[userid][pOverdoseTimer] = 0;
+	ClearAnimations(userid);
 
 	if(PlayerData[userid][pJailed] == 3) AttachPrisonLabel(userid);
 
@@ -3981,8 +4083,7 @@ CMD:revive(playerid, params[])
 
 CMD:sethealth(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	new userid, Float:health;
 
@@ -4004,8 +4105,7 @@ CMD:sethealth(playerid, params[])
 
 CMD:gethealth(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
- 		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	new
 		Float:health
@@ -4023,8 +4123,7 @@ CMD:gethealth(playerid, params[])
 
 CMD:tod(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 2)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 2);
 
 	new
 	    time
@@ -4041,8 +4140,7 @@ CMD:tod(playerid, params[])
 
 CMD:weather(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 3)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 3);
 
     new
 		weather
@@ -4064,8 +4162,7 @@ CMD:weatherall(playerid, params[])
 {
 	new weather;
 
-	if(PlayerData[playerid][pAdmin] < 3)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 3);
 
 	if(sscanf(params, "d", weather))
 		return SendSyntaxMessage(playerid, "/weather [weatherid]");
@@ -4087,7 +4184,7 @@ CMD:givegun(playerid, params[])
 
 	if(sscanf(params, "uii", userid, weaponid, ammo))
 	{
-		SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /givegun [playerid/PartOfName] [weaponid(eg. 46 = Parachute)] [ammo]");
+		SendSyntaxMessage(playerid, "/givegun [playerid/PartOfName] [weaponid(eg. 46 = Parachute)] [ammo]");
 		SendClientMessage(playerid, COLOR_LIGHTRED, "Warning: Invalid WeaponID's will crash the server");
 		return true;
 	}
@@ -4130,8 +4227,7 @@ CMD:givegun(playerid, params[])
 
 CMD:givemoney(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 3)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 3);
 
 	new userid, amount;
 
@@ -4153,10 +4249,37 @@ CMD:givemoney(playerid, params[])
 	return true;
 }
 
+CMD:givecell(playerid, params[])
+{
+	AdminGate(playerid, 1);
+
+	new userid;
+
+	if(sscanf(params, "u", userid))
+		return SendSyntaxMessage(playerid, "/givecell [playerid/PartOfName]");
+
+	if(!IsPlayerConnected(userid))
+		return SendErrorMessage(playerid, "The player you specified isn't connected.");
+
+	if(!SQL_IsLogged(userid))
+		return SendErrorMessage(playerid, "The player you specified isn't logged in.");
+
+	if(PlayerData[userid][pPnumber])
+		return SendErrorMessage(playerid, "That player already has a phone (number: %d).", PlayerData[userid][pPnumber]);
+
+	new newNumber = 100000 + random(99999);
+	PlayerData[userid][pPnumber] = newNumber;
+	PlayerData[userid][pPhoneModel] = 0;
+
+	SendClientMessageEx(userid,   COLOR_WHITE,  "SERVER: An admin gave you a new phone. Your number: %d", newNumber);
+	SendClientMessageEx(playerid, COLOR_YELLOW, "AdmCmd: You gave a phone to %s (number: %d).", ReturnName(userid), newNumber);
+	SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmCmd: %s gave a phone to %s [%d]. Number: %d", ReturnName(playerid), ReturnName(userid), userid, newNumber);
+	return true;
+}
+
 CMD:takemoney(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 3)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 3);
 
 	new userid, amount;
 
@@ -4180,8 +4303,7 @@ CMD:takemoney(playerid, params[])
 
 CMD:setarmour(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	new userid, Float:health;
 
@@ -4203,8 +4325,7 @@ CMD:setarmour(playerid, params[])
 
 CMD:setskin(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	new userid, skin;
 
@@ -4221,30 +4342,11 @@ CMD:setskin(playerid, params[])
 	return true;
 }
 
-/*CMD:togdiscord(playerid, params[])
-{
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
 
-    if(systemVariables[DiscordStatus] == 1)
-    {
-		systemVariables[DiscordStatus] = 0;
-
-		SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(4): %s enabled discord logging.", ReturnName(playerid), playerid);
-	}
-	else
-	{
-		systemVariables[DiscordStatus] = 1;
-
-		SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(4): %s disabled discord logging.", ReturnName(playerid), playerid);
-	}
-	return true;
-}*/
 
 CMD:createaccount(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
     new username[MAX_PLAYER_NAME], password[64], quiz;
 
@@ -4289,8 +4391,7 @@ public OnAdminCreateAccountHash(playerid)
 
 CMD:createcharacter(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
     new username[MAX_PLAYER_NAME], character[MAX_PLAYER_NAME], tutorial;
 
@@ -4342,8 +4443,7 @@ FUNX::OnAccountCreated(playerid, const username[])
 
 CMD:checkaccount(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
     new username[MAX_PLAYER_NAME];
 
@@ -4403,8 +4503,7 @@ stock IsValidAccount(master[])
 
 CMD:changename(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 2)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 2);
 
 	new userid, newName[MAX_PLAYER_NAME];
 
@@ -4458,14 +4557,13 @@ stock IsValidRoleplayName(const name[])
 
 CMD:setstat(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 3)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+    AdminGate(playerid, 3);
 
 	new pid, statcode, amount;
 
 	if(sscanf(params, "udd", pid, statcode, amount))
 	{
-		SendClientMessage(playerid, COLOR_WHITE, "USAGE: /setstat [playerid] [statcode] [amount]");
+		SendSyntaxMessage(playerid, "/setstat [playerid] [statcode] [amount]");
 		SendClientMessage(playerid, COLOR_GRAD4, "|1 Level |2 Skin(not saved) |3 RespectPoints |4 Sex |5 Bank");
 		SendClientMessage(playerid, COLOR_GRAD4, "|6 Hours |7 Cash |8 Donator |9 Upgrade(removed) |10 Phone Number ");
 		SendClientMessage(playerid, COLOR_GRAD4, "|11 Savings |12 House Key |13 Radio |14 Channel(removed)");
@@ -4555,11 +4653,6 @@ CMD:setstat(playerid, params[])
 		}
 		case 9:
 		{
-			/*PlayerData[pid][pPUpgrade] = amount;
-
-			SendClientMessageEx(pid, COLOR_YELLOW, "%s set %s's upgrade points to %d", ReturnName(playerid), ReturnName(pid), amount);
-
-			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(3) %s has set %s's Upgrade Points to %d.", ReturnName(playerid), ReturnName(pid), amount);*/
 		}
 		case 10:
 		{
@@ -4593,14 +4686,7 @@ CMD:setstat(playerid, params[])
 
 			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(3) %s has set %s's Radio to %d.", ReturnName(playerid), ReturnName(pid), amount);
 		}
-		/*case 14:
-		{
-			PlayerData[pid][pRChannel] = amount;
 
-			SendClientMessageEx(pid, COLOR_YELLOW, "%s set %s's radio channel to %d", ReturnName(playerid), ReturnName(pid), amount);
-
-			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(3) %s has set %s's radio channel to %d.", ReturnName(playerid), ReturnName(pid), amount);
-		}*/
 		case 15:
 		{
 			PlayerData[pid][pPbiskey] = amount;
@@ -4609,40 +4695,7 @@ CMD:setstat(playerid, params[])
 
 			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(3) %s has set %s's Business Key to %d.", ReturnName(playerid), ReturnName(pid), amount);
 		}
-		/*case 16:
-		{
-		    if((amount < 0 || amount >= MAX_FACTIONS) || (amount != -1 && !FactionData[amount][factionExists]))
-			    return SendErrorMessage(playerid, "Invalid faction ID.");
 
-			if(amount == -1)
-			{
-			    ResetFaction(pid);
-			}
-			else
-			{
-				SetFaction(pid, amount);
-			}
-
-			SendClientMessageEx(pid, COLOR_YELLOW, "%s set %s's faction to %d", ReturnName(playerid), ReturnName(pid), amount);
-
-			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(3) %s has set %s's Faction to %d.", ReturnName(playerid), ReturnName(pid), amount);
-		}
-		case 17:
-		{
-		    new factionid;
-
-			if((factionid = PlayerData[pid][pFaction]) == -1)
-			    return SendErrorMessage(playerid, "Player is not in a faction.");
-
-		    if(amount < 1 || amount > FactionData[factionid][factionRanks])
-		        return SendErrorMessage(playerid, "Invalid rank specified 1-%d.", FactionData[factionid][factionRanks]);
-
-			PlayerData[pid][pFactionRank] = amount;
-
-			SendClientMessageEx(pid, COLOR_YELLOW, "%s set %s's faction rank to %d", ReturnName(playerid), ReturnName(pid), amount);
-
-			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(3) %s has set %s's Rank to %d.", ReturnName(playerid), ReturnName(pid), amount);
-		}*/
 		case 18:
 		{
 			PlayerData[pid][pJob] = amount;
@@ -4653,11 +4706,11 @@ CMD:setstat(playerid, params[])
 		}
 		case 19:
 		{
-			PlayerData[pid][pSideJob] = amount;
+			pIllegalJob[pid] = amount;
 
-			SendClientMessageEx(pid, COLOR_YELLOW, "%s set %s's side job to %d", ReturnName(playerid), ReturnName(pid), amount);
+			SendClientMessageEx(pid, COLOR_YELLOW, "%s set %s's illegal job to %d", ReturnName(playerid), ReturnName(pid), amount);
 
-			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(3) %s has set %s's Side Job to %d.", ReturnName(playerid), ReturnName(pid), amount);
+			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(3) %s has set %s's Illegal Job to %d.", ReturnName(playerid), ReturnName(pid), amount);
 		}
 		case 20:
 		{
@@ -4707,6 +4760,22 @@ CMD:setstat(playerid, params[])
 
             SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(3) %s has set %s's CCW License to %d.", ReturnName(playerid), ReturnName(pid), amount);
 		}
+		case 26:
+		{
+			if(amount < 0) amount = 0;
+			if(amount > 100) amount = 100;
+			PlayerData[pid][pHunger] = amount;
+			SendClientMessageEx(pid, COLOR_YELLOW, "%s set %s's hunger to %d%%", ReturnName(playerid), ReturnName(pid), amount);
+			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(3) %s has set %s's Hunger to %d%%.", ReturnName(playerid), ReturnName(pid), amount);
+		}
+		case 27:
+		{
+			if(amount < 0) amount = 0;
+			if(amount > 100) amount = 100;
+			PlayerData[pid][pThirst] = amount;
+			SendClientMessageEx(pid, COLOR_YELLOW, "%s set %s's thirst to %d%%", ReturnName(playerid), ReturnName(pid), amount);
+			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(3) %s has set %s's Thirst to %d%%.", ReturnName(playerid), ReturnName(pid), amount);
+		}
 		default:
 		{
 			return SendClientMessage(playerid, COLOR_GRAD2, "Invalid stat code.");
@@ -4717,8 +4786,7 @@ CMD:setstat(playerid, params[])
 
 CMD:gotocmdspot(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 2)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+    AdminGate(playerid, 2);
 
 	new house = InProperty[playerid];
 
@@ -4731,8 +4799,7 @@ CMD:gotocmdspot(playerid, params[])
 
 CMD:hints(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 1337)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+    UnauthGate(playerid, 1337);
 
 	gstr[0] = EOS;
 
@@ -4757,8 +4824,7 @@ CMD:variables(playerid, params[])
 
 CMD:asetrank(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 4)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+    AdminGate(playerid, 4);
 
 	new
 		userid,
@@ -4789,8 +4855,7 @@ CMD:asetrank(playerid, params[])
 
 CMD:makeleader(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 4)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+    AdminGate(playerid, 4);
 
 	new
 		userid,
@@ -4800,16 +4865,8 @@ CMD:makeleader(playerid, params[])
 	if(sscanf(params, "ud", userid, id))
 	    return SendSyntaxMessage(playerid, "/makeleader [playerid/PartOfName] [faction id] (Use -1 to remove from faction)");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]{d}", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!SQL_IsLogged(userid))
 		return SendErrorMessage(playerid, "The player you specified isn't logged in.");
 
@@ -4860,8 +4917,7 @@ CMD:makeleader(playerid, params[])
 
 CMD:viewfactions(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 4);
 
 	ViewFactions(playerid);
 	return true;
@@ -4869,8 +4925,7 @@ CMD:viewfactions(playerid, params[])
 
 CMD:createfaction(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 4)
-	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+    UnauthGate(playerid, 4);
 
 	new type, name[32];
 
@@ -4896,8 +4951,7 @@ CMD:createfaction(playerid, params[])
 
 CMD:removefaction(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 4)
-	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+    UnauthGate(playerid, 4);
 
 	new id = -1;
 
@@ -4916,8 +4970,7 @@ CMD:removefaction(playerid, params[])
 
 CMD:setfaction(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 4);
 
 	new
 	    id,
@@ -4982,8 +5035,7 @@ CMD:setfaction(playerid, params[])
 
 CMD:makegate(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
 	new modelid, faction, name[64];
 
@@ -4999,8 +5051,7 @@ CMD:makegate(playerid, params[])
 
 CMD:dupgate(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
 	new objectid, gateid, name[64];
 
@@ -5040,8 +5091,7 @@ CMD:dupgate(playerid, params[])
 
 CMD:removegate(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
 	new objectid;
 
@@ -5062,8 +5112,7 @@ CMD:removegate(playerid, params[])
 
 CMD:editgate(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
 	new objectid, type, input[64];
 
@@ -5144,8 +5193,7 @@ CMD:editgate(playerid, params[])
 
 CMD:whatgate(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
 	new Float:fDistance[2] = {99999.0, 0.0}, i = -1;
 
@@ -5171,8 +5219,7 @@ CMD:whatgate(playerid, params[])
 
 CMD:showgates(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
 	gstr[0] = EOS;
 
@@ -5201,8 +5248,7 @@ Dialog:ShowGates(playerid, response, listitem, inputtext[])
 
 CMD:showmovedoors(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
 	gstr[0] = EOS;
 
@@ -5231,8 +5277,7 @@ Dialog:ShowMovedoors(playerid, response, listitem, inputtext[])
 
 CMD:makemovedoor(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
 	new objectid, modelid, faction, name[64], Float:X, Float:Y, Float:Z;
 
@@ -5259,6 +5304,18 @@ CMD:makemovedoor(playerid, params[])
 		Doors[objectid][doorOpened] = 0;
 		Doors[objectid][doorLocked] = 0;
 		Doors[objectid][doorVirtualWorld] = GetPlayerVirtualWorld(playerid);
+		Doors[objectid][doorOpenSpeed] = 2.0;
+		Doors[objectid][doorMoveX] = X;
+		Doors[objectid][doorMoveY] = Y;
+		Doors[objectid][doorMoveZ] = Z;
+		Doors[objectid][doorMoveRX] = 0.0;
+		Doors[objectid][doorMoveRY] = 0.0;
+		Doors[objectid][doorMoveRZ] = 0.0;
+		Doors[objectid][doorCheckpoint] = INVALID_STREAMER_ID;
+		Doors[objectid][doorCheckpointMove] = INVALID_STREAMER_ID;
+		Doors[objectid][doorCPX] = X;
+		Doors[objectid][doorCPY] = Y;
+		Doors[objectid][doorCPZ] = Z;
 
 		format(Doors[objectid][doorName], 64, "%s", name);
 		Doors[objectid][doorObject] = CreateDynamicObject(modelid, X, Y, Z, 0.0, 0.0, 0.0, Doors[objectid][doorVirtualWorld], Doors[objectid][doorInterior], -1, 200.0);
@@ -5268,14 +5325,14 @@ CMD:makemovedoor(playerid, params[])
 		SendClientMessageEx(playerid, COLOR_GREEN, "New moving door has been added [DoorID: %d, ModelID: %d, Description: %s]", objectid, modelid, Doors[objectid][doorName]);
 
 		Iter_Add(Movedoors, objectid);
+		Door_Refresh(objectid);
 	}
 	return true;
 }
 
 CMD:dupmovedoor(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
 	new objectid, doorid, name[64];
 
@@ -5299,6 +5356,18 @@ CMD:dupmovedoor(playerid, params[])
 		Doors[objectid][doorOpened] = Doors[doorid][doorOpened];
 		Doors[objectid][doorLocked] = Doors[doorid][doorLocked];
 		Doors[objectid][doorVirtualWorld] = Doors[doorid][doorVirtualWorld];
+		Doors[objectid][doorOpenSpeed] = Doors[doorid][doorOpenSpeed];
+		Doors[objectid][doorMoveX] = Doors[doorid][doorMoveX];
+		Doors[objectid][doorMoveY] = Doors[doorid][doorMoveY];
+		Doors[objectid][doorMoveZ] = Doors[doorid][doorMoveZ];
+		Doors[objectid][doorMoveRX] = Doors[doorid][doorMoveRX];
+		Doors[objectid][doorMoveRY] = Doors[doorid][doorMoveRY];
+		Doors[objectid][doorMoveRZ] = Doors[doorid][doorMoveRZ];
+		Doors[objectid][doorCheckpoint] = INVALID_STREAMER_ID;
+		Doors[objectid][doorCheckpointMove] = INVALID_STREAMER_ID;
+		Doors[objectid][doorCPX] = Doors[doorid][doorCPX];
+		Doors[objectid][doorCPY] = Doors[doorid][doorCPY];
+		Doors[objectid][doorCPZ] = Doors[doorid][doorCPZ];
 
 		format(Doors[objectid][doorName], 64, "%s", name);
 
@@ -5309,14 +5378,14 @@ CMD:dupmovedoor(playerid, params[])
 		SendClientMessageEx(playerid, COLOR_GREEN, "New sliding door was copied [DoorID: %d, ModelID: %d, Description: %s]", objectid, Doors[objectid][doorModel], Doors[objectid][doorName]);
 
 		Iter_Add(Movedoors, objectid);
+		Door_Refresh(objectid);
 	}
 	return true;
 }
 
 CMD:removemovedoor(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
 	new objectid;
 
@@ -5337,8 +5406,7 @@ CMD:removemovedoor(playerid, params[])
 
 CMD:cancelmovedoor(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
 	CancelEdit(playerid);
 
@@ -5349,14 +5417,13 @@ CMD:cancelmovedoor(playerid, params[])
 
 CMD:editmovedoor(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
 	new objectid, type, input[64];
 
 	if(sscanf(params, "ddS()[64]", objectid, type, input))
 	{
-		SendSyntaxMessage(playerid, "/editmovedoor [doorid] [type (1-Object, 2-Move, 3-OpenSpeed, 4-Name, 5-Faction Type)]");
+		SendSyntaxMessage(playerid, "/editmovedoor [doorid] [type (1-Default Pos, 2-Moving Pos, 3-OpenSpeed, 4-Name, 5-Faction Type, 6-Checkpoint Pos)]");
 		SendClientMessage(playerid, COLOR_GREY, "Faction types: 1: LSPD | 2: NEWS | 3: LSFD | 4: GOV | 5: MAFIA | 6: LSSD | 7: DOC");
 		return true;
 	}
@@ -5399,7 +5466,8 @@ CMD:editmovedoor(playerid, params[])
 			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `movedoors` SET `openspeed` = '%f' WHERE `id` = %d", speed, Doors[objectid][doorID]);
 			mysql_pquery(dbCon, gquery);
 
-	      	SendClientMessageEx(playerid, COLOR_GREEN, "-> Moving door %d's speed has been adjusted to: %.0f", speed);
+			Door_Refresh(objectid);
+	      	SendClientMessageEx(playerid, COLOR_GREEN, "-> Moving door %d's speed has been adjusted to: %.1f", objectid, speed);
       	}
       	else SendSyntaxMessage(playerid, "/editmovedoor %d 3 [speed]", objectid);
 	}
@@ -5412,7 +5480,8 @@ CMD:editmovedoor(playerid, params[])
 			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `movedoors` SET `name` = '%e' WHERE `id` = %d", input, Doors[objectid][doorID]);
 			mysql_pquery(dbCon, gquery);
 
-	      	SendClientMessageEx(playerid, COLOR_GREEN, "-> Moving door %d's name has been adjusted to: %s", input);
+			Door_Refresh(objectid);
+	      	SendClientMessageEx(playerid, COLOR_GREEN, "-> Moving door %d's name has been adjusted to: %s", objectid, input);
 		}
 		else SendSyntaxMessage(playerid, "/editmovedoor %d 4 [name]", objectid);
 	}
@@ -5429,18 +5498,33 @@ CMD:editmovedoor(playerid, params[])
 				mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `movedoors` SET `faction` = '%d' WHERE `id` = %d", faction, Doors[objectid][doorID]);
 				mysql_pquery(dbCon, gquery);
 
-				SendClientMessageEx(playerid, COLOR_GREEN, "-> Moving door %d's faction has been adjusted to: %d", Doors[objectid][doorFaction]);
+				Door_Refresh(objectid);
+				SendClientMessageEx(playerid, COLOR_GREEN, "-> Moving door %d's faction has been adjusted to: %d", objectid, Doors[objectid][doorFaction]);
 	      	}
 		}
 		else SendSyntaxMessage(playerid, "/editmovedoor %d 5 [faction type]", objectid);
+	}
+	else if(type == 6)
+	{
+		new Float:X, Float:Y, Float:Z;
+		GetPlayerPos(playerid, X, Y, Z);
+		
+		Doors[objectid][doorCPX] = X;
+		Doors[objectid][doorCPY] = Y;
+		Doors[objectid][doorCPZ] = Z;
+
+		mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `movedoors` SET `cpx` = '%f', `cpy` = '%f', `cpz` = '%f' WHERE `id` = %d", X, Y, Z, Doors[objectid][doorID]);
+		mysql_pquery(dbCon, gquery);
+
+		Door_Refresh(objectid);
+		SendClientMessageEx(playerid, COLOR_GREEN, "-> Moving door %d's checkpoint position has been set to your current position.", objectid);
 	}
 	return true;
 }
 
 CMD:whatmovedoor(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
 	new Float:fDistance[2] = {99999.0, 0.0}, i = -1 ;
 
@@ -5466,8 +5550,7 @@ CMD:whatmovedoor(playerid, params[])
 
 CMD:gotojet(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 3)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 3);
 
     SetPlayerDynamicPos(playerid, 1.5491, 23.3183, 1199.5938);
 	SetPlayerInterior(playerid, 1);
@@ -5481,8 +5564,7 @@ CMD:gotojet(playerid, params[])
 
 CMD:gotoin(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 3)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 3);
 
     SetPlayerDynamicPos(playerid, 1412.639892, -1.787510, 1000.924377);
 	SetPlayerInterior(playerid, 1);
@@ -5496,8 +5578,7 @@ CMD:gotoin(playerid, params[])
 
 CMD:gotostad(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 3)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 3);
 
     SetPlayerDynamicPos(playerid, -1395.958, -208.197, 1051.170);
 	SetPlayerInterior(playerid, 0);
@@ -5511,8 +5592,7 @@ CMD:gotostad(playerid, params[])
 
 CMD:sslap(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 3)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 3);
 
 	new targetid, Float:slx, Float:sly, Float:slz;
 
@@ -5535,8 +5615,7 @@ CMD:sslap(playerid, params[])
 
 CMD:smack(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 3)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 3);
 
 	new targetid, Float:slx, Float:sly, Float:slz;
 
@@ -5561,8 +5640,7 @@ CMD:smack(playerid, params[])
 
 CMD:kickfromjob(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 3)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 3);
 
 	new userid;
 
@@ -5586,8 +5664,7 @@ CMD:kickfromjob(playerid, params[])
 
 CMD:givepack(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	new userid;
 
@@ -5614,11 +5691,10 @@ YCMD:ladmin(playerid, params[], help) = leadadmin;
 
 CMD:leadadmin(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	if(isnull(params))
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: (/la)dmin [lead admin chat]");
+		return SendSyntaxMessage(playerid, "(/la)dmin [lead admin chat]");
 
 	new str1[128], str2[128], bool:splitted = false;	
 
@@ -5658,11 +5734,10 @@ YCMD:a(playerid, params[], help) = admin;
 
 CMD:admin(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	if(isnull(params))
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: (/a)dmin [admin chat]");
+		return SendSyntaxMessage(playerid, "(/a)dmin [admin chat]");
 
 	new str1[128], str2[128], bool:splitted = false;	
 
@@ -5696,11 +5771,7 @@ CMD:admin(playerid, params[])
 		}
 	}
 
-    /*if(!systemVariables[DiscordStatus])
-    {
-		format(sgstr, sizeof(sgstr), "*Admin[%d] %s: %s", PlayerData[playerid][pAdmin], AccountName(playerid), params);
-		DCC_SendChannelMessage(adminChatChannel, sgstr);
-	}*/
+
 	return true;
 }
 
@@ -5710,7 +5781,7 @@ CMD:at(playerid, params[])
 		return SendClientMessage(playerid, COLOR_LIGHTRED, "You are not a tester!");
 
 	if(isnull(params))
-	    return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /at [all staff chat]");	
+	    return SendSyntaxMessage(playerid, "/at [all staff chat]");	
 
 	new str1[128], str2[128], bool:splitted = false;
 
@@ -5751,8 +5822,7 @@ YCMD:announce(playerid, params[], help) = aooc;
 
 CMD:aooc(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	if(isnull(params))
 	    return SendSyntaxMessage(playerid, "/(a)ooc [message]");
@@ -5774,8 +5844,7 @@ CMD:aooc(playerid, params[])
 
 CMD:setplate(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 4);
 
     if(!IsPlayerInAnyVehicle(playerid))
 		return SendClientMessage(playerid, COLOR_GRAD2, "You must be in a vehicle to use this.");
@@ -5791,8 +5860,7 @@ CMD:setplate(playerid, params[])
 
 CMD:pmears(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 4);
 
 	if(!PrivateMessageEars{playerid})
 	{
@@ -5811,8 +5879,7 @@ CMD:pmears(playerid, params[])
 
 CMD:factionears(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 4);
 
 	if(!FactionEars{playerid})
 	{
@@ -5900,8 +5967,7 @@ CMD:veh(playerid, params[])
 
 CMD:fuelveh(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1);
 
 	new id;
 
@@ -5924,8 +5990,7 @@ CMD:fuelveh(playerid, params[])
 
 CMD:fillallcars(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 3)
-	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 3);
 
 	foreach (new i : sv_vehicles)
 	{
@@ -5938,8 +6003,7 @@ CMD:fillallcars(playerid, params[])
 
 CMD:despawncars(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 3)
-	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 3);
 
 	new vehicleCount;
 
@@ -5967,8 +6031,7 @@ CMD:despawncars(playerid, params[])
 
 CMD:despawncar(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 3)
-	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 3);
 
 	new vehicleid;
 
@@ -6003,8 +6066,7 @@ CMD:despawncar(playerid, params[])
 
 CMD:testcar(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1);
 
 	new vehicleid, id = -1;
 
@@ -6030,8 +6092,7 @@ CMD:testcar(playerid, params[])
 
 CMD:apark(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1);
 
 	new vehicleid, id = -1;
 
@@ -6040,7 +6101,7 @@ CMD:apark(playerid, params[])
 		if(IsPlayerInAnyVehicle(playerid))
 			vehicleid = GetPlayerVehicleID(playerid);
 		else
-			return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /apark [vehicleid]");
+			return SendSyntaxMessage(playerid, "/apark [vehicleid]");
 	}
 
 	if(!IsValidVehicle(vehicleid))
@@ -6136,10 +6197,56 @@ CMD:saveveh(playerid, params[])
 	return true;
 }
 
+CMD:deleteucp(playerid, params[])
+{
+	if(PlayerData[playerid][pAdmin] < 1337)
+		return SendUnauthMessage(playerid, "You are not authorized to use this command.");
+
+	new ucpName[MAX_PLAYER_NAME];
+	if(sscanf(params, "s[32]", ucpName))
+		return SendSyntaxMessage(playerid, "/deleteucp [ucp_name]");
+
+	new query[512];
+	mysql_format(dbCon, query, sizeof(query), "DELETE FROM `player_drugs` WHERE `PlayerSQLID` IN (SELECT `ID` FROM `characters` WHERE `master` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e'))", ucpName);
+	mysql_tquery(dbCon, query);
+
+	mysql_format(dbCon, query, sizeof(query), "DELETE FROM `damages` WHERE `playerID` IN (SELECT `ID` FROM `characters` WHERE `master` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e'))", ucpName);
+	mysql_tquery(dbCon, query);
+
+	mysql_format(dbCon, query, sizeof(query), "DELETE FROM `clothing` WHERE `owner` IN (SELECT `ID` FROM `characters` WHERE `master` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e'))", ucpName);
+	mysql_tquery(dbCon, query);
+
+	mysql_format(dbCon, query, sizeof(query), "DELETE FROM `weapon` WHERE `owner` IN (SELECT `ID` FROM `characters` WHERE `master` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e'))", ucpName);
+	mysql_tquery(dbCon, query);
+
+	mysql_format(dbCon, query, sizeof(query), "DELETE FROM `radio` WHERE `owner` IN (SELECT `ID` FROM `characters` WHERE `master` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e'))", ucpName);
+	mysql_tquery(dbCon, query);
+
+	mysql_format(dbCon, query, sizeof(query), "DELETE FROM `cars` WHERE `carOwner` IN (SELECT `ID` FROM `characters` WHERE `master` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e'))", ucpName);
+	mysql_tquery(dbCon, query);
+
+	mysql_format(dbCon, query, sizeof(query), "UPDATE `houses` SET `owner` = 'The State', `owned` = 0 WHERE `owner` IN (SELECT `char_name` FROM `characters` WHERE `master` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e'))", ucpName);
+	mysql_tquery(dbCon, query);
+
+	mysql_format(dbCon, query, sizeof(query), "UPDATE `business` SET `biz_owner` = 'The State', `biz_owned` = 0 WHERE `biz_owner` IN (SELECT `char_name` FROM `characters` WHERE `master` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e'))", ucpName);
+	mysql_tquery(dbCon, query);
+
+	mysql_format(dbCon, query, sizeof(query), "DELETE FROM `ucp_friends` WHERE `playerID` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e') OR `friendID` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e')", ucpName, ucpName);
+	mysql_tquery(dbCon, query);
+
+	mysql_format(dbCon, query, sizeof(query), "DELETE FROM `characters` WHERE `master` IN (SELECT `ID` FROM `accounts` WHERE `Username` = '%e')", ucpName);
+	mysql_tquery(dbCon, query);
+
+	mysql_format(dbCon, query, sizeof(query), "DELETE FROM `accounts` WHERE `Username` = '%e'", ucpName);
+	mysql_tquery(dbCon, query);
+
+	SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmCmd: %s deleted UCP account '%s' and all associated data.", ReturnName(playerid, 0), ucpName);
+	return 1;
+}
+
 CMD:deleteveh(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 4)
-	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+    UnauthGate(playerid, 4);
 
 	new
 	    id = 0
@@ -6172,166 +6279,32 @@ CMD:deleteveh(playerid, params[])
 
 CMD:editveh(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 4);
 
-	new
-	    id,
-	    type[24],
-	    string[128]
-	;
-
-	if(sscanf(params, "ds[24]S()[128]", id, type, string))
- 	{
-	 	SendSyntaxMessage(playerid, "/editveh [id] [name]");
-	    SendClientMessage(playerid, COLOR_GREY, "Available names: location, faction, color1, color2, siren, plate");
-		return true;
-	}
-
-	if((id = Vehicle_GetID(id)) != -1)
+	new id = -1;
+	if(sscanf(params, "d", id))
 	{
-		if(!strcmp(type, "location", true))
+		if(IsPlayerInAnyVehicle(playerid))
 		{
-		    if(GetPlayerVehicleID(playerid) == vehicleVariables[id][vVehicleScriptID])
-		    {
-				GetVehiclePos(vehicleVariables[id][vVehicleScriptID], vehicleVariables[id][vVehiclePosition][0], vehicleVariables[id][vVehiclePosition][1], vehicleVariables[id][vVehiclePosition][2]);
-				GetVehicleZAngle(vehicleVariables[id][vVehicleScriptID], vehicleVariables[id][vVehicleRotation]);
-			}
-			else
-			{
-		 		GetPlayerPos(playerid, vehicleVariables[id][vVehiclePosition][0], vehicleVariables[id][vVehiclePosition][1], vehicleVariables[id][vVehiclePosition][2]);
-				GetPlayerFacingAngle(playerid, vehicleVariables[id][vVehicleRotation]);
-			}
-
-			Vehicle_Save(id);
-			DestroyVehicle(vehicleVariables[id][vVehicleScriptID]);
-			Iter_Remove(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
-
-			vehicleVariables[id][vVehicleScriptID] = CreateVehicle(vehicleVariables[id][vVehicleModelID], vehicleVariables[id][vVehiclePosition][0], vehicleVariables[id][vVehiclePosition][1], vehicleVariables[id][vVehiclePosition][2], vehicleVariables[id][vVehicleRotation], vehicleVariables[id][vVehicleColour][0], vehicleVariables[id][vVehicleColour][1], 60000, vehicleVariables[id][vVehicleSiren]);
-
-		  	Iter_Add(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
-
-			SetPlayerPosEx(playerid, vehicleVariables[id][vVehiclePosition][0], vehicleVariables[id][vVehiclePosition][1], vehicleVariables[id][vVehiclePosition][2] + 2.0, 1000);
-			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn: %s adjusted vehicle %d's position.", ReturnName(playerid), vehicleVariables[id][vVehicleScriptID]);
-
-		}
-		else if(!strcmp(type, "faction", true))
-		{
-		    new typeint;
-
-		    if(sscanf(string, "d", typeint))
-		 	{
-		 	    SendSyntaxMessage(playerid, "/editcar [id] [faction] [id]");
-			 	return true;
-			}
-
-			vehicleVariables[id][vVehicleFaction] = typeint;
-
-			Vehicle_Save(id);
-
-			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn: %s adjusted vehicle %d's faction to: %d", ReturnName(playerid), vehicleVariables[id][vVehicleScriptID], typeint);
-		}
-		else if(!strcmp(type, "color1", true))
-		{
-		    new color1;
-
-		    if(sscanf(string, "d", color1))
-				return SendSyntaxMessage(playerid, "/editcar [id] [color1] [color]");
-
-			if(color1 < 0 || color1 > 255)
-			    return SendClientMessage(playerid, COLOR_GRAD1, "   Color must not be lower than 0 or than 255");
-
-			vehicleVariables[id][vVehicleColour][0] = color1;
-
-			DestroyVehicle(vehicleVariables[id][vVehicleScriptID]);
-			Iter_Remove(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
-
-			vehicleVariables[id][vVehicleScriptID] = CreateVehicle(vehicleVariables[id][vVehicleModelID], vehicleVariables[id][vVehiclePosition][0], vehicleVariables[id][vVehiclePosition][1], vehicleVariables[id][vVehiclePosition][2], vehicleVariables[id][vVehicleRotation], vehicleVariables[id][vVehicleColour][0], vehicleVariables[id][vVehicleColour][1], 60000, vehicleVariables[id][vVehicleSiren]);
-
-		  	Iter_Add(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
-
-			Vehicle_Save(id);
-			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn: %s adjusted vehicle %d's 1st color to: %d", ReturnName(playerid), vehicleVariables[id][vVehicleScriptID], color1);
-		}
-		else if(!strcmp(type, "color2", true))
-		{
-		    new color2;
-
-		    if(sscanf(string, "d", color2))
-				return SendSyntaxMessage(playerid, "/editcar [id] [color2] [color]");
-
-			if(color2 < 0 || color2 > 255)
-			    return SendClientMessage(playerid, COLOR_GRAD1, "   Color must not be lower than 0 or than 255");
-
-			vehicleVariables[id][vVehicleColour][1] = color2;
-
-			DestroyVehicle(vehicleVariables[id][vVehicleScriptID]);
-			Iter_Remove(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
-
-			vehicleVariables[id][vVehicleScriptID] = CreateVehicle(vehicleVariables[id][vVehicleModelID], vehicleVariables[id][vVehiclePosition][0], vehicleVariables[id][vVehiclePosition][1], vehicleVariables[id][vVehiclePosition][2], vehicleVariables[id][vVehicleRotation], vehicleVariables[id][vVehicleColour][0], vehicleVariables[id][vVehicleColour][1], 60000, vehicleVariables[id][vVehicleSiren]);
-
-		  	Iter_Add(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
-
-			Vehicle_Save(id);
-			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn: %s adjusted vehicle %d's 2st color to: %d", ReturnName(playerid), vehicleVariables[id][vVehicleScriptID], color2);
-		}
-		else if(!strcmp(type, "siren", true))
-		{
-		    new siren;
-
-		    if(sscanf(string, "d", siren))
-				return SendSyntaxMessage(playerid, "/editcar [id] [siren] [value]");
-
-			if(siren < 0 || siren > 1)
-			    return SendClientMessage(playerid, COLOR_GRAD1, "   Siren must be 0 or 1");
-
-			vehicleVariables[id][vVehicleSiren] = siren;
-
-			Vehicle_Save(id);
-			DestroyVehicle(vehicleVariables[id][vVehicleScriptID]);
-			Iter_Remove(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
-
-			vehicleVariables[id][vVehicleScriptID] = CreateVehicle(vehicleVariables[id][vVehicleModelID], vehicleVariables[id][vVehiclePosition][0], vehicleVariables[id][vVehiclePosition][1], vehicleVariables[id][vVehiclePosition][2], vehicleVariables[id][vVehicleRotation], vehicleVariables[id][vVehicleColour][0], vehicleVariables[id][vVehicleColour][1], 60000, vehicleVariables[id][vVehicleSiren]);
-
-		  	Iter_Add(sv_vehicles, vehicleVariables[id][vVehicleScriptID]);
-
-			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn: %s adjusted vehicle %d's siren to: %d", ReturnName(playerid), vehicleVariables[id][vVehicleScriptID], siren);
-		}
-		else if(!strcmp(type, "plate", true))
-		{
-		    new newPlate[24];
-
-		    if(sscanf(string, "s[24]", newPlate))
-				return SendSyntaxMessage(playerid, "/editcar [id] [plate] [text]");
-
-			if(strlen(newPlate) < 3 || strlen(newPlate) > 9)
-			    return SendClientMessage(playerid, COLOR_GRAD1, "   Text length must be higher than 3 and lower than 10");
-
-			format(vehicleVariables[id][vVehiclePlate], 24, "%s", newPlate);
-			SetVehicleNumberPlate(vehicleVariables[id][vVehicleScriptID], vehicleVariables[id][vVehiclePlate]);
-
-			SetVehicleToRespawn(vehicleVariables[id][vVehicleScriptID]);
-
-			Vehicle_Save(id);
-			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn: %s adjusted vehicle %d's plate to: %s", ReturnName(playerid), vehicleVariables[id][vVehicleScriptID], newPlate);
+			id = GetPlayerVehicleID(playerid);
 		}
 		else
 		{
-		 	SendSyntaxMessage(playerid, "/editveh [id] [name]");
-		    SendClientMessage(playerid, COLOR_GREY, "Available names: location, faction, color1, color2, siren, plate");
+			return SendSyntaxMessage(playerid, "/editveh [vehicle script id]");
 		}
 	}
-	else
-	{
-	    SendErrorMessage(playerid, "Invalid vehicle ID specified.");
-	}
-	return true;
+
+	new varid = Vehicle_GetID(id);
+	if(varid == -1)
+	    return SendErrorMessage(playerid, "This vehicle is not a static/server vehicle.");
+
+	ShowEditStaticVehMain(playerid, varid);
+	return 1;
 }
 
 CMD:aunlockcar(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 1)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+    UnauthGate(playerid, 1);
 
 	new id = -1, str[128], vehicleid;
 
@@ -6398,8 +6371,7 @@ CMD:aunlockcar(playerid, params[])
 
 CMD:find(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 1)
-    	return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+    UnauthGate(playerid, 1);
 
     new skin, weapon, vehicle, masked, Float:range_of_you;
 
@@ -6467,8 +6439,7 @@ CMD:find(playerid, params[])
 
 CMD:findcars(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 1)
-    	return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+    UnauthGate(playerid, 1);
 
 	new model, occupied, Float:range_of_you;
 
@@ -6515,9 +6486,9 @@ CMD:findcars(playerid, params[])
         if(Distance <= range_of_you)
         {
         	if(occupied)
-				SendClientMessageEx(playerid, COLOR_GREY, "Found a %s (ID: %d) within %.0f meters of range (Occupied by %s).", ReturnName(occupied_by), ReturnVehicleModelName(vehicle_model), i, Distance);
+				SendClientMessageEx(playerid, COLOR_GREY, "Found a %s (VID: %d) within %.0f meters of range (Occupied by %s).", ReturnVehicleModelName(vehicle_model), i, Distance, ReturnName(occupied_by));
         	else
-				SendClientMessageEx(playerid, COLOR_GREY, "Found a %s (ID: %d) within %.0f meters of range (Unoccupied).", ReturnVehicleModelName(vehicle_model), i, Distance);
+				SendClientMessageEx(playerid, COLOR_GREY, "Found a %s (VID: %d) within %.0f meters of range (Unoccupied).", ReturnVehicleModelName(vehicle_model), i, Distance);
 
         	count++;
 		}
@@ -6530,8 +6501,7 @@ CMD:findcars(playerid, params[])
 
 CMD:vehname(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 2)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 2);
 
 	new rcount;
 
@@ -6570,8 +6540,7 @@ CMD:vehname(playerid, params[])
 
 CMD:refunddrug(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 2)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+    UnauthGate(playerid, 2);
 
 	new userid;
 
@@ -6598,12 +6567,19 @@ CMD:refunddrug(playerid, params[])
 	return true;
 }
 
+CMD:createdrugstore(playerid, params[])
+{
+	UnauthGate(playerid, 4);
+
+	CreateDrugStoreSpot(playerid);
+	return true;
+}
+
 //weapon packages
 
 CMD:setwpackage(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 2)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+    UnauthGate(playerid, 2);
 
 	new userid, weaponid, ammo, slot;
 
@@ -6654,8 +6630,7 @@ CMD:setwpackage(playerid, params[])
 
 CMD:glog(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1);
 
 	new dbid;
 
@@ -6692,8 +6667,7 @@ FUNX::SprayLogsResult(playerid, graffiti)
 
 CMD:log(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 2)
-	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 2);
 
 	new pName[MAX_PLAYER_NAME], filter[64], userid = INVALID_PLAYER_ID;
 
@@ -6803,31 +6777,7 @@ stock ShowPlayerLogs(playerid)
 		query[256]
 	;
 
-	/*if(strlen(PlayerLogs[playerid][searchingFilter]) >= 3)
-	{
-	    new str[5];
 
-	    format(str, 5, "%.1s", query);
-
-	    if(!strcmp(str, "s", true))
-	    {
-	        format(query, sizeof(query), "%s", query[1]);
-	    }
-
-	    if(strfind(query, "s", true) == 0)
-	    {
-		    PlayerLogs[playerid][searchingPlayer] = INVALID_PLAYER_ID;
-		    PlayerLogs[playerid][searchingSQLID] = -1;
-		    PlayerLogs[playerid][searchingName][0] = EOS;
-		    PlayerLogs[playerid][searchingFilter][0] = EOS;
-		    PlayerLogs[playerid][searchingOffset] = 0;
-
-			return SendErrorMessage(playerid, "No logs found.");
-	    }
-
-		mysql_format(dbCon, query, sizeof(query), "SELECT `Log`, `Timestamp` FROM `logs_all` WHERE `User` = '%d' AND `Log` LIKE '%e%%' OR `User` = '%d' AND `Log` LIKE '%%%e%%' ORDER BY `ID` DESC LIMIT 22 OFFSET %i", PlayerLogs[playerid][searchingSQLID], PlayerLogs[playerid][searchingFilter], PlayerLogs[playerid][searchingSQLID], PlayerLogs[playerid][searchingFilter], PlayerLogs[playerid][searchingOffset] * 21);
-		mysql_tquery(dbCon, query, "SearchLogsResult", "d", playerid);
-	}*/
 
 	if(strlen(PlayerLogs[playerid][searchingFilter]) >= 3)
 	{
@@ -6941,8 +6891,7 @@ Dialog:LogsResult(playerid, response, listitem, inputtext[])
 
 CMD:aconfig(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1);
 
 	Dialog_Show(playerid, AdminConfig, DIALOG_STYLE_TABLIST_HEADERS, "Administator Configuration Panel",
 	"Name\tStatus\tInfo\n\
@@ -6961,8 +6910,7 @@ CMD:aconfig(playerid, params[])
 
 CMD:adminsys(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1);
 
 	SendClientMessage(playerid, COLOR_GRAD1, "/adminsys is disabled.");
 	return true;
@@ -6970,8 +6918,7 @@ CMD:adminsys(playerid, params[])
 
 CMD:checkall(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1);
 
 	SendClientMessage(playerid, COLOR_GRAD1, "/checkall is disabled.");
 	return true;
@@ -6979,8 +6926,7 @@ CMD:checkall(playerid, params[])
 
 CMD:blacklist(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1);
 
 	SendClientMessage(playerid, COLOR_GRAD1, "/blacklist is disabled.");
 	return true;
@@ -6988,8 +6934,7 @@ CMD:blacklist(playerid, params[])
 
 CMD:mark(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1);
 
 	new marker;
 
@@ -7009,8 +6954,7 @@ CMD:mark(playerid, params[])
 
 CMD:gotomark(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1);
 
 	new marker;
 
@@ -7033,8 +6977,7 @@ CMD:gotomark(playerid, params[])
 
 CMD:up(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	new Float:slx, Float:sly, Float:slz;
 	GetPlayerPos(playerid, slx, sly, slz);
@@ -7044,8 +6987,7 @@ CMD:up(playerid, params[])
 
 CMD:down(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	new Float:slx, Float:sly, Float:slz;
 	GetPlayerPos(playerid, slx, sly, slz);
@@ -7055,8 +6997,7 @@ CMD:down(playerid, params[])
 
 CMD:left(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	new Float:slx, Float:sly, Float:slz;
 	GetPlayerPos(playerid, slx, sly, slz);
@@ -7066,8 +7007,7 @@ CMD:left(playerid, params[])
 
 CMD:right(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1);
 
 	new Float:slx, Float:sly, Float:slz;
 	GetPlayerPos(playerid, slx, sly, slz);
@@ -7079,8 +7019,7 @@ YCMD:ah(playerid, params[], help) = ahelp;
 
 CMD:ahelp(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 1)
-	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+    UnauthGate(playerid, 1);
     
     ShowAdminHelpMain(playerid);
     return 1;
@@ -7088,8 +7027,7 @@ CMD:ahelp(playerid, params[])
 
 CMD:signalcmds(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
 	SendClientMessage(playerid, COLOR_GRAD3, "[Level 1337]: /createsignal, /editsignal, /destroysignal");
 	return true;
@@ -7097,8 +7035,7 @@ CMD:signalcmds(playerid, params[])
 
 CMD:factioncmds(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	SendClientMessage(playerid, COLOR_GRAD3, "[Level 4]: /viewfactions /createfaction, /setfaction, /destroyfaction");
 	return true;
@@ -7106,8 +7043,7 @@ CMD:factioncmds(playerid, params[])
 
 CMD:vehcmds(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	SendClientMessage(playerid, COLOR_GRAD3, "[Level 4]: /saveveh /deleteveh /editveh");
 	return true;
@@ -7115,8 +7051,7 @@ CMD:vehcmds(playerid, params[])
 
 CMD:gatecmds(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
 	SendClientMessage(playerid, COLOR_GRAD3, "[Level 1337]: {C3C3C3}/makegate /dupgate /removegate /editgate /whatgate /showgates");
 	return true;
@@ -7124,8 +7059,7 @@ CMD:gatecmds(playerid, params[])
 
 CMD:movedoorcmds(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
 	SendClientMessage(playerid, COLOR_GRAD3, "[Level 1337]: {C3C3C3}/makemovedoor /dupmovedoor /removemovedoor /editmovedoor /whatmovedoor /showmovedoors");
 	return true;
@@ -7133,8 +7067,7 @@ CMD:movedoorcmds(playerid, params[])
 
 CMD:housecmds(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
 	SendClientMessage(playerid, COLOR_GRAD3, "[Level 1337]: /createprop /removeprop /setprop /houseenter /houseexit /asellhouse /gotohouse /serverhouses");
 	return true;
@@ -7142,8 +7075,7 @@ CMD:housecmds(playerid, params[])
 
 CMD:businesscmds(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
 	SendClientMessage(playerid, COLOR_GRAD3, "[Level 1337]: /makebusiness /removebusiness /editbusiness /businessenter /gotobusiness /serverbusinesses /asellbusiness");
 	SendClientMessage(playerid, COLOR_GRAD3, "[Level 1337]: /businessint /businessexit /biztypes /whatbusiness /showbusinesses /businessex1 /businessex2 /businessex3");
@@ -7152,8 +7084,7 @@ CMD:businesscmds(playerid, params[])
 
 CMD:telecmds(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 3)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 3);
 
 	SendClientMessage(playerid, COLOR_GRAD3, "[Level 3]: /teles /maketele /removetele /serverteles");
 	return true;
@@ -7161,8 +7092,7 @@ CMD:telecmds(playerid, params[])
 
 CMD:intpoints(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1);
 
 	gstr[0] = EOS;
 
@@ -7179,42 +7109,17 @@ CMD:intpoints(playerid, params[])
 
 CMD:streamer(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1337);
 
 	SendClientMessageEx(playerid, COLOR_CYAN, "Visible objects: %d", Streamer_GetVisibleItems(STREAMER_TYPE_OBJECT));
 	return true;
 }
 
-/*CMD:ecmd(playerid, params[])
-{
-	if(PlayerData[playerid][pAdmin] < 1337)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
 
-	new userid, command[64];
-
-	if(sscanf(params, "us[64]", userid, command))
-		return SendSyntaxMessage(playerid, "/(e)mulatecommand [playerid/PartOfName] [command]");
-
-	if(!IsPlayerConnected(userid))
-		return SendErrorMessage(playerid, "The player you specified isn't connected.");
-
-	if(!SQL_IsLogged(userid))
-		return SendErrorMessage(playerid, "The player you specified isn't logged in.");
-
-	if(!DoesCommandExist(command))
-	    return SendErrorMessage(playerid, "Command doesn't exist.");
-
-    EmulateCommand(userid, command);
-
-    SendClientMessageEx(playerid, COLOR_ORANGE, "\"%s\" called for player %s (%d).", command, ReturnName(userid), userid);
-	return true;
-}*/
 
 CMD:as(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1);
 
 	new
 	    userid
@@ -7262,11 +7167,95 @@ CMD:as(playerid, params[])
 	return true;
 }
 
+// sound test system
+CMD:sound(playerid, params[])
+{
+	UnauthGate(playerid, 4);
+
+	// --- Pure manual parsing (no sscanf) to avoid s[n] reading full string ---
+	// Skip leading spaces
+	new p = 0;
+	while(params[p] == ' ') p++;
+
+	if(!params[p]) // empty
+	{
+		SendSyntaxMessage(playerid, "/sound [test/stop/lobby1/lobby2] [value]");
+		SendClientMessage(playerid, COLOR_GREY, "  test [id]   - Play a SA-MP sound ID to yourself");
+		SendClientMessage(playerid, COLOR_GREY, "  stop        - Stop the current sound");
+		SendClientMessage(playerid, COLOR_GREY, "  lobby1 [id] - Set lobby background sound ID");
+		SendClientMessage(playerid, COLOR_GREY, "  lobby2 [url]- Set lobby audio stream URL");
+		return true;
+	}
+
+	// Extract action word
+	new action[10], aidx = 0;
+	while(params[p] && params[p] != ' ' && aidx < 9)
+		action[aidx++] = params[p++];
+	action[aidx] = '\0';
+
+	// Skip spaces to reach value
+	while(params[p] == ' ') p++;
+	// params[p] now = start of value string, or '\0' if no value
+
+	// Copy value into separate buffer for strval / format safety
+	new valueStr[256];
+	if(params[p]) strmid(valueStr, params, p, strlen(params), 255);
+
+	if(!strcmp(action, "test", true))
+	{
+		if(!valueStr[0]) return SendSyntaxMessage(playerid, "/sound test [sound_id]");
+		new soundid = strval(valueStr);
+		if(soundid < 0 || soundid > 50000)
+			return SendErrorMessage(playerid, "Sound ID must be between 0 and 50000.");
+
+		PlayerPlaySound(playerid, soundid, 0.0, 0.0, 0.0);
+		SendServerMessage(playerid, "[SOUND TEST]: Playing sound ID %d. Use /sound stop to stop.", soundid);
+	}
+	else if(!strcmp(action, "stop", true))
+	{
+		PlayerPlaySound(playerid, 0, 0.0, 0.0, 0.0);
+		StopAudioStreamForPlayer(playerid);
+		SendServerMessage(playerid, "[SOUND TEST]: Sound stopped.");
+	}
+	else if(!strcmp(action, "lobby1", true))
+	{
+		if(!valueStr[0]) return SendSyntaxMessage(playerid, "/sound lobby1 [sound_id]");
+		new soundid = strval(valueStr);
+		if(soundid < 0 || soundid > 50000)
+			return SendErrorMessage(playerid, "Sound ID must be between 0 and 50000.");
+
+		gLobbySound1 = soundid;
+		for(new i = 0; i < MAX_PLAYERS; i++)
+		{
+			if(IsPlayerConnected(i) && PlayerData[i][pID] == -1 && GetPVarInt(i, "LobbyMusicOff") == 0)
+				PlayerPlaySound(i, gLobbySound1, 0.0, 0.0, 0.0);
+		}
+		SendServerMessage(playerid, "[LOBBY SOUND]: Lobby background sound changed to ID %d.", soundid);
+	}
+	else if(!strcmp(action, "lobby2", true))
+	{
+		if(!valueStr[0]) return SendSyntaxMessage(playerid, "/sound lobby2 [stream_url]");
+
+		format(gLobbyStream2, 256, valueStr);
+
+		for(new i = 0; i < MAX_PLAYERS; i++)
+		{
+			if(IsPlayerConnected(i) && PlayerData[i][pID] == -1 && GetPVarInt(i, "LobbyMusicOff") == 0)
+				PlayAudioStreamForPlayer(i, gLobbyStream2);
+		}
+		SendServerMessage(playerid, "[LOBBY STREAM]: Lobby stream URL updated.");
+	}
+	else
+	{
+		SendSyntaxMessage(playerid, "/sound [test/stop/lobby1/lobby2] [value]");
+	}
+	return true;
+}
+
 //atm system
 CMD:createatm(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 4)
-        return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+    UnauthGate(playerid, 4);
 
     new ATM = FindFreeATM();
 
@@ -7287,8 +7276,7 @@ CMD:createatm(playerid, params[])
 
 CMD:gotoatm(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 4);
 
 	new ATM;
 
@@ -7306,8 +7294,7 @@ CMD:gotoatm(playerid, params[])
 
 CMD:deleteatm(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 4);
 
 	DeletingATM{playerid} = true;
     SelectObject(playerid);
@@ -7318,8 +7305,7 @@ CMD:deleteatm(playerid, params[])
 
 CMD:editatm(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 4);
 
     SelectObject(playerid);
 	return true;
@@ -7327,8 +7313,7 @@ CMD:editatm(playerid, params[])
 
 CMD:netstats(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 4);
 
 	new stats[400 + 1];
     GetNetworkStats(stats, sizeof(stats));
@@ -7340,8 +7325,7 @@ YCMD:sstats(playerid, params[], help) = serverstats;
 
 CMD:serverstats(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 4)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+    UnauthGate(playerid, 4);
 
 	new
 	    p_ajailed,
@@ -7383,19 +7367,11 @@ CMD:serverstats(playerid, params[])
 	return true;
 }
 
-/*CMD:asd(playerid, params[])
-{
-	foreach (new i : Command())
-	{
-		SendClientMessageEx(playerid, -1, "%s", Command_GetName(i));
-	}
-	return true;
-}*/
+
 
 CMD:tickrate(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 4)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+    UnauthGate(playerid, 4);
 			
 	SendClientMessageEx(playerid, COLOR_WHITE, "Current server tickrate is: %d", GetServerTickRate());
 	return true;
@@ -7403,8 +7379,7 @@ CMD:tickrate(playerid, params[])
 
 CMD:runquery(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 1337)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+    UnauthGate(playerid, 1337);
 
 	if(isnull(params) || strlen(params) < 3)
 	    return SendErrorMessage(playerid, "Query is too short.");
@@ -7418,8 +7393,7 @@ CMD:runquery(playerid, params[])
 
 CMD:mysqlstats(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 1337)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+    UnauthGate(playerid, 1337);
 
 	gquery[0] = EOS;
 	mysql_stat(gquery);
@@ -7475,15 +7449,14 @@ CMD:nos(playerid, params[])
 
 CMD:watchpm(playerid, params[])
 {
-    if(PlayerData[playerid][pAdmin] < 2)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+    UnauthGate(playerid, 2);
 
 	new
 		userid
 	;
 
     if(sscanf(params, "u", userid))
-	    return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /watchpm [playerid/PON]");
+	    return SendSyntaxMessage(playerid, "/watchpm [playerid/PON]");
 
 	if(!IsPlayerConnected(userid))
 		return SendErrorMessage(playerid, "The player you specified isn't connected.");
@@ -7511,7 +7484,7 @@ CMD:sotot(playerid, params[])
 
     new weaponid1, ammo1, weaponid2, ammo2;
     if(sscanf(params, "iiii", weaponid1, ammo1, weaponid2, ammo2))
-        return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /sotot [weaponid1] [ammo1] [weaponid2] [ammo2]");
+        return SendSyntaxMessage(playerid, "/sotot [weaponid1] [ammo1] [weaponid2] [ammo2]");
 
     if(IsInvalidWeapon(weaponid1) || IsInvalidWeapon(weaponid2))
         return SendErrorMessage(playerid, "Invalid weapon id specified.");
@@ -7601,6 +7574,9 @@ new const BusinessInteriorNames[49][] = {
 
 stock CreateNewBusiness(playerid, level, price, type)
 {
+	if(type == 11)
+		return SendErrorMessage(playerid, "Advertisement is no longer a business type. Use /advertisement create instead.");
+
 	new bizid = Iter_Free(Business);
 	if(bizid == -1) return SendErrorMessage(playerid, "Business limit reached.");
 	
@@ -7700,14 +7676,11 @@ stock CreateNewBusiness(playerid, level, price, type)
 			format(BusinessData[bizid][bInfo], 80, "Bank");
 			BusinessData[bizid][bMaxProducts] = 10000;
 		}
-		case 13: { // Weapon Factory
-			format(BusinessData[bizid][bInfo], 80, "Weapon Factory");
-			BusinessData[bizid][bMaxProducts] = 300;
-		}
+
 	}
 
 	BusinessData[bizid][bsubType] = 0;
-	BusinessData[bizid][bPickup] = CreateDynamicPickup(1239, 2, x, y, z, -1, -1, -1, 100.0);
+	Business_Refresh(bizid);
 
 	AddBizToFile(bizid, price, type, BusinessData[bizid][bOwner], BusinessData[bizid][bInfo], x, y, z);
 
@@ -7715,12 +7688,11 @@ stock CreateNewBusiness(playerid, level, price, type)
 	return 1;
 }
 
-YCMD:mbiz(playerid, params[], help) = managebusiness;
+CMD_ALIAS(mbiz, "/managebusiness")
 
 CMD:managebusiness(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	new bizid = -1;
 	if(sscanf(params, "d", bizid))
@@ -7793,7 +7765,7 @@ stock ShowMbizMainDialog(playerid, bizid)
 		strcat(string, line);
 		EditingBizOption[playerid][idx++] = 9;
 	}
-	else if(BusinessData[bizid][bType] == 8)
+	else if(BusinessData[bizid][bType] == 9)
 	{
 		new subName[32];
 		switch(BusinessData[bizid][bsubType])
@@ -7809,6 +7781,14 @@ stock ShowMbizMainDialog(playerid, bizid)
 		EditingBizOption[playerid][idx++] = 10;
 	}
 	
+	if(BusinessData[bizid][bType] == 1)
+	{
+		new bool:fillSet = (BusinessData[bizid][bFillX] != 0.0 || BusinessData[bizid][bFillY] != 0.0 || BusinessData[bizid][bFillZ] != 0.0);
+		format(line, sizeof(line), "Fuel Fill Location: %s\n", fillSet ? ("{00FF00}Set{FFFFFF}") : ("{FF0000}Not set (uses entrance){FFFFFF}"));
+		strcat(string, line);
+		EditingBizOption[playerid][idx++] = 22;
+	}
+
 	format(line, sizeof(line), "Interior Template: %d\n", BusinessData[bizid][bInterior]);
 	strcat(string, line);
 	EditingBizOption[playerid][idx++] = 11;
@@ -7840,6 +7820,10 @@ stock ShowMbizMainDialog(playerid, bizid)
 	strcat(string, "Teleport to Exit/Interior\n");
 	EditingBizOption[playerid][idx++] = 19;
 	
+	format(line, sizeof(line), "Pickup Model: %d\n", BusinessData[bizid][bPickupModel]);
+	strcat(string, line);
+	EditingBizOption[playerid][idx++] = 21;
+	
 	strcat(string, "{FF0000}Delete Business");
 	EditingBizOption[playerid][idx++] = 20;
 	
@@ -7862,7 +7846,7 @@ Dialog:MbizCreatePrice(playerid, response, listitem, inputtext[])
 	if(!response)
 	{
 		Dialog_Show(playerid, MbizCreateType, DIALOG_STYLE_LIST, "Create Business (Wizard) - Step 1: Type", 
-			"1: Gas Station\n2: Ammunation\n3: 24-7\n4: Vehicle Dealership\n5: Car Modding Shop\n6: Pay & Spray\n7: Clothing Shop\n8: Bar\n9: Restaurant\n10: Furniture Shop\n11: Advertisement\n12: Bank\n13: Weapon Factory", 
+			"1: Gas Station\n2: Ammunation\n3: 24-7\n4: Vehicle Dealership\n5: Car Modding Shop\n6: Pay & Spray\n7: Clothing Shop\n8: Bar\n9: Restaurant\n10: Furniture Shop\n11: Disabled (Use /advertisement)\n12: Bank", 
 			"Next", "Cancel");
 		return 1;
 	}
@@ -8185,11 +8169,22 @@ Dialog:MbizMenu(playerid, response, listitem, inputtext[])
 			BusinessData[bizid][bEntranceX] = x;
 			BusinessData[bizid][bEntranceY] = y;
 			BusinessData[bizid][bEntranceZ] = z;
-			DestroyDynamicPickup(BusinessData[bizid][bPickup]);
-			BusinessData[bizid][bPickup] = CreateDynamicPickup(1239, 2, x, y, z, -1, -1, -1, 100.0);
+			Business_Refresh(bizid);
 			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_enX` = '%.4f', `biz_enY` = '%.4f', `biz_enZ` = '%.4f' WHERE `biz_id` = '%d'", x, y, z, BusinessData[bizid][bID]);
 			mysql_tquery(dbCon, gquery);
 			SendClientMessage(playerid, COLOR_GREEN, "Entrance location updated.");
+			ShowMbizMainDialog(playerid, bizid);
+		}
+		case 22: // Set Fuel Fill Location (gas stations)
+		{
+			new Float:x, Float:y, Float:z;
+			GetPlayerPos(playerid, x, y, z);
+			BusinessData[bizid][bFillX] = x;
+			BusinessData[bizid][bFillY] = y;
+			BusinessData[bizid][bFillZ] = z;
+			mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_fillX` = '%.4f', `biz_fillY` = '%.4f', `biz_fillZ` = '%.4f' WHERE `biz_id` = '%d'", x, y, z, BusinessData[bizid][bID]);
+			mysql_tquery(dbCon, gquery);
+			SendClientMessage(playerid, COLOR_GREEN, "Fuel fill location updated. Players must stand within 20m of this point to use /fill.");
 			ShowMbizMainDialog(playerid, bizid);
 		}
 		case 16: // Set Exit Location
@@ -8232,7 +8227,31 @@ Dialog:MbizMenu(playerid, response, listitem, inputtext[])
 		{
 			Dialog_Show(playerid, MbizDeleteConfirm, DIALOG_STYLE_MSGBOX, "Delete Business", "{FF0000}WARNING:{FFFFFF} Are you sure you want to delete this business entirely?", "Delete", "Cancel");
 		}
+		case 21: // Pickup Model
+		{
+			Dialog_Show(playerid, MbizEditPickupModel, DIALOG_STYLE_INPUT, "Set Pickup Model",
+				"Enter the pickup model ID for this business.\n(0 = use default based on business type)\nExample: 19607 for government-style pickup", "Save", "Back");
+		}
 	}
+	return 1;
+}
+
+Dialog:MbizEditPickupModel(playerid, response, listitem, inputtext[])
+{
+	new bizid = EditingBizID[playerid];
+	if(!response) return ShowMbizMainDialog(playerid, bizid);
+
+	new val = strval(inputtext);
+	if(val < 0 || val > 20000)
+		return Dialog_Show(playerid, MbizEditPickupModel, DIALOG_STYLE_INPUT, "Set Pickup Model",
+			"Enter the pickup model ID for this business.\n{FF0000}Must be between 0 and 20000! (0 = default)", "Save", "Back");
+
+	BusinessData[bizid][bPickupModel] = val;
+	mysql_format(dbCon, gquery, sizeof(gquery), "UPDATE `business` SET `biz_pickup` = '%d' WHERE `biz_id` = '%d'", val, BusinessData[bizid][bID]);
+	mysql_tquery(dbCon, gquery);
+	Business_Refresh(bizid);
+	SendClientMessageEx(playerid, COLOR_GREEN, "Pickup model for business %d set to %d and refreshed.", bizid, val);
+	ShowMbizMainDialog(playerid, bizid);
 	return 1;
 }
 
@@ -8313,12 +8332,11 @@ stock CreateNewProperty(playerid, type, value)
 	return 1;
 }
 
-YCMD:mhouse(playerid, params[], help) = managehouse;
+CMD_ALIAS(mhouse, "/managehouse")
 
 CMD:managehouse(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 4);
 
 	new houseid = -1;
 	if(sscanf(params, "d", houseid))
@@ -8350,7 +8368,7 @@ stock ShowMhouseMainDialog(playerid, houseid)
 	strcat(string, line);
 	EditingHouseOption[playerid][idx++] = 1;
 	
-	format(line, sizeof(line), "Price: $%s\n", FormatNumber(PropertyData[houseid][hPrice]));
+	format(line, sizeof(line), "Price: %s\n", FormatNumber(PropertyData[houseid][hPrice]));
 	strcat(string, line);
 	EditingHouseOption[playerid][idx++] = 2;
 	
@@ -8366,11 +8384,11 @@ stock ShowMhouseMainDialog(playerid, houseid)
 	strcat(string, line);
 	EditingHouseOption[playerid][idx++] = 5;
 	
-	format(line, sizeof(line), "Rent Price: $%s\n", FormatNumber(PropertyData[houseid][hRentprice]));
+	format(line, sizeof(line), "Rent Price: %s\n", FormatNumber(PropertyData[houseid][hRentprice]));
 	strcat(string, line);
 	EditingHouseOption[playerid][idx++] = 6;
 	
-	format(line, sizeof(line), "Cash Box (Till): $%s\n", FormatNumber(PropertyData[houseid][hCash]));
+	format(line, sizeof(line), "Cash Box (Till): %s\n", FormatNumber(PropertyData[houseid][hCash]));
 	strcat(string, line);
 	EditingHouseOption[playerid][idx++] = 7;
 	
@@ -8781,13 +8799,12 @@ Dialog:MhouseMenu(playerid, response, listitem, inputtext[])
 // PONYTAIL: Unified Faction Manager (/mfac)
 // ==========================================
 
-YCMD:destroyfaction(playerid, params[], help) = removefaction;
-YCMD:mfac(playerid, params[], help) = managefaction;
+CMD_ALIAS(destroyfaction, "/removefaction")
+CMD_ALIAS(mfac, "/managefaction")
 
 CMD:managefaction(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 4);
 
 	new factionid = -1;
 	if(sscanf(params, "d", factionid))
@@ -8888,12 +8905,11 @@ stock CreateNewGate(playerid, modelid, faction, name[])
 	return 1;
 }
 
-YCMD:mgate(playerid, params[], help) = managegate;
+CMD_ALIAS(mgate, "/managegate")
 
 CMD:managegate(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 1337)
-    	return SendErrorMessage(playerid, "You're not authorized to use this command.");
+	AdminGate(playerid, 1337);
 
 	new gateid = -1;
 	if(sscanf(params, "d", gateid))
@@ -9261,12 +9277,11 @@ stock SaveVehicleAsPermanent(playerid, vehicleid)
 	return i;
 }
 
-YCMD:mveh(playerid, params[], help) = managevehicle;
+CMD_ALIAS(mveh, "/managevehicle")
 
 CMD:managevehicle(playerid, params[])
 {
-	if(PlayerData[playerid][pAdmin] < 4)
-	    return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 4);
 
 	new inputid = -1;
 	if(sscanf(params, "d", inputid))
@@ -9627,100 +9642,275 @@ enum E_AHELP_CMD
 {
 	ahName[20],
 	ahDesc[256],
-	ahSyntax[64],
+	ahSyntax[128],
 	ahLevel,
 	ahCategory // 1: Veh, 2: Prop/Biz, 3: Faction/Gate, 4: Player/Punish, 5: Teleport
 }
 
 new const AdminHelpCmds[][E_AHELP_CMD] = {
-	// Junior Admin / Level 1
-	{"/spec", "Spectate a player.", "/spec [playerid/name]", 1, 4},
-	{"/specoff", "Stop spectating a player.", "/specoff", 1, 4},
+	{"/trainstation", "Create, edit, or delete train stations.", "/trainstation [create/edit/delete]", 4, 6},
+	{"/traincenter", "Create, edit, or delete train driver centers.", "/traincenter [create/edit/delete]", 4, 6},
+	{"/traincheckpoint", "Create, edit, or delete train route checkpoints.", "/traincheckpoint [create/edit/delete]", 4, 6},
+	{"/railcrossing", "Create, edit, or delete railroad crossing gates.", "/railcrossing [create/edit/delete]", 4, 6},
+	{"/aunlockcar", "Unlock nearest vehicle for admins.", "/aunlockcar", 1, 1},
+	{"/findcars", "List active server cars matching filters.", "/findcars [model] [occupied] [range-of-you]", 1, 1},
+	{"/flipcar", "Flip player's vehicle.", "/flipcar [vehicleid]", 1, 1},
+	{"/fuelveh", "Refuel player's vehicle.", "/fuelveh [vehicle id]", 1, 1},
+	{"/slapcar", "Slap player's vehicle.", "/slapcar [vehicleid]", 1, 1},
+	{"/testcar", "Spawn temporary test vehicle.", "/testcar [vehicleid]", 1, 1},
+	{"/watchcar", "Monitor a vehicle's status.", "/watchcar [vehicleid]", 1, 1},
+	{"/house", "View house properties.", "/house [house-id]", 1, 2},
+	{"/neargraffiti", "Find graffiti near current position.", "/neargraffiti", 1, 2},
+	{"/propinfo", "View property information.", "/propinfo [houseid]", 1, 2},
+	{"/aconfig", "Admin configuration settings.", "/aconfig", 1, 4},
+	{"/admin", "Admin chat channel.", "/admin", 1, 4},
+	{"/adminduty", "Toggle admin duty state.", "/adminduty", 1, 4},
+	{"/adminsys", "Show admin system status.", "/adminsys", 1, 4},
+	{"/ahelp", "Open admin help menu.", "/ahelp", 1, 4},
+	{"/ajailed", "Show list of jailed players.", "/ajailed", 1, 4},
+	{"/aooc", "Send administrator out-of-character message.", "/(a)ooc [message]", 1, 4},
+	{"/apark", "Admin park command.", "/apark [id/amount]", 1, 4},
+	{"/ar", "Accept report.", "/ar [playerid/name]", 1, 4},
+	{"/arecord", "Check player admin records and punishment history.", "/arecord [playerid/name]", 1, 4},
+	{"/as", "Admin whisper to player.", "/as [playerid/PartOfName]", 1, 4},
+	{"/at", "Admin ticket chat channel.", "/at", 1, 4},
+	{"/backup", "Call for admin assistance.", "/backup", 1, 4},
+	{"/blacklist", "Manage player blacklist.", "/blacklist", 1, 4},
+	{"/checkafk", "Check if a player is AFK.", "/checkafk [playerid/name]", 1, 4},
+	{"/checkall", "Check all online players status.", "/checkall", 1, 4},
+	{"/clearallchat", "Clear chatbox history.", "/clearallchat", 1, 4},
+	{"/clearguns", "Strip all weapons from player.", "/clearguns [playerid/PartOfName]", 1, 4},
+	{"/desynced", "Show desynced players list.", "/desynced [playerid/PartOfName]", 1, 4},
+	{"/down", "Launch downward teleport.", "/down", 1, 4},
+	{"/dr", "Deny report.", "/dr [playerid/name] [text]", 1, 4},
+	{"/find", "Find players matching criteria.", "/find [skin] [weaponid] [vehiclemodel] [ismasked] [range-of-you]", 1, 4},
 	{"/freeze", "Freeze a player in place.", "/freeze [playerid/name]", 1, 4},
-	{"/unfreeze", "Unfreeze a frozen player.", "/unfreeze [playerid/name]", 1, 4},
+	{"/gethealth", "Show player health level.", "/gethealth [amount]", 1, 4},
+	{"/getip", "Get player IP address.", "/getip [playerid/PartOfName]", 1, 4},
+	{"/getworld", "Show current virtual world.", "/getworld", 1, 4},
+	{"/glog", "Show graffiti logs.", "/glog dbid:graffiti", 1, 4},
+	{"/intpoints", "Open interior teleportation menu.", "/intpoints", 1, 4},
+	{"/ismasked", "Check if player is masked.", "/isafk [playerid/PartOfName]", 1, 4},
+	{"/left", "Teleport player slightly to the left.", "/left", 1, 4},
+	{"/masked", "Show list of masked players.", "/masked", 1, 4},
 	{"/mute", "Mute a player from chat channels.", "/mute [playerid/name] [time in mins] [reason]", 1, 4},
-	{"/unmute", "Unmute a muted player.", "/unmute [playerid/name]", 1, 4},
+	{"/p2fs", "Put player into faction.", "/p2fs [playerid] [factionid]", 1, 4},
+	{"/p2iw", "Put player into interior and virtual world.", "/p2iw [playerid] [interior] [world]", 1, 4},
+	{"/p2p", "Put player to another player.", "/p2p [playerid] [targetid]", 1, 4},
+	{"/p2v", "Put player into vehicle.", "/p2v [playerid] [vehicleid]", 1, 4},
+	{"/pmears", "Monitor player private messages.", "/pmears", 1, 4},
+	{"/reports", "Show list of pending reports.", "/reports", 1, 4},
+	{"/respawn", "Respawn player.", "/respawn [playerid OR name]", 1, 4},
+	{"/respawnrental", "Respawn rental vehicles.", "/respawnrental", 1, 4},
+	{"/right", "Teleport player slightly to the right.", "/right", 1, 4},
+	{"/setint", "Set player interior ID.", "/setint [playerid/PartOfName] [Interior ID]", 1, 4},
+	{"/setworld", "Set player virtual world ID.", "/setworld [playerid/PartOfName] [World ID]", 1, 4},
 	{"/slap", "Slap a player (launches them slightly into the air).", "/slap [playerid/name]", 1, 4},
 	{"/smack", "Smack a player (knocks them down temporarily).", "/smack [playerid/name]", 1, 4},
-	{"/checkafk", "Check if a player is AFK.", "/checkafk [playerid/name]", 1, 4},
-	{"/arecord", "Check player admin records and punishment history.", "/arecord [playerid/name]", 1, 4},
-	{"/gotospawn", "Teleport to the player spawn point.", "/gotospawn", 1, 5},
+	{"/thaw", "Unfreeze player.", "/thaw [playerid/PartOfName]", 1, 4},
+	{"/up", "Teleport player slightly upward.", "/up", 1, 4},
+	{"/watchoff", "Stop spectating vehicle/player.", "/watchoff", 1, 4},
+	{"/watchplayer", "Spectate player.", "/watchplayer [playerid]", 1, 4},
+	{"/gotofs", "Teleport to faction spawn.", "/gotofs [factionid] [spawn-id]", 1, 5},
 	{"/gotols", "Teleport to Los Santos.", "/gotols", 1, 5},
 	{"/gotolv", "Teleport to Las Venturas.", "/gotolv", 1, 5},
+	{"/gotomark", "Teleport to admin mark.", "/gotomark [1-4]", 1, 5},
+	{"/gotopizza", "Teleport to Pizza Stack.", "/gotopizza", 1, 5},
+	{"/gotoprison", "Teleport to prison location.", "/gotoprison", 1, 5},
 	{"/gotosf", "Teleport to San Fierro.", "/gotosf", 1, 5},
+	{"/gotospawn", "Teleport to the player spawn point.", "/gotospawn", 1, 5},
+	{"/mark", "Save admin mark coordinates.", "/mark [1-4]", 1, 5},
+	{"/whereami", "Show detailed current coordinates.", "/whereami", 1, 5},
 	{"/xyz", "Show current coordinates.", "/xyz", 1, 5},
-	{"/pmears", "Monitor player private messages.", "/pmears", 1, 4},
-
-	// General Admin / Level 2
-	{"/goto", "Teleport directly to a player's position.", "/goto [playerid/name]", 2, 5},
-	{"/gethere", "Teleport a player to your current position.", "/gethere [playerid/name]", 2, 5},
-	{"/revive", "Revive a player from death or down state.", "/revive [playerid/name]", 2, 4},
-	{"/healcar", "Fully repair and restore vehicle health.", "/healcar", 2, 1},
+	{"/entercarseat", "Force enter player into vehicle seat.", "/entercarseat [vehicleid] [seat 0-3]", 2, 1},
 	{"/fixveh", "Repair a vehicle body.", "/fixveh", 2, 1},
-	{"/gotocar", "Teleport to a vehicle by its ID.", "/gotocar [samp_vehicle_id]", 2, 1},
 	{"/getcar", "Bring a vehicle to your position by its ID.", "/getcar [samp_vehicle_id]", 2, 1},
-	{"/gotohouse", "Teleport to a house by its ID.", "/gotohouse [house_id]", 2, 5},
-	{"/gotobiz", "Teleport to a business by its ID.", "/gotobiz [business_id]", 2, 5},
-	{"/veh", "Spawn a temporary vehicle for admin duty.", "/veh [model_id] [color1] [color2]", 2, 1},
+	{"/gotocar", "Teleport to a vehicle by its ID.", "/gotocar [samp_vehicle_id]", 2, 1},
+	{"/healcar", "Fully repair and restore vehicle health.", "/healcar", 2, 1},
+	{"/lastincar", "Show last driver of vehicle.", "/lastincar [veh]", 2, 1},
 	{"/nos", "Add nitro to a vehicle.", "/nos", 2, 1},
-
-	// Senior Admin / Level 3
+	{"/veh", "Spawn a temporary vehicle for admin duty.", "/veh [model_id] [color1] [color2]", 2, 1},
+	{"/vehname", "Show vehicle model name.", "/vehname", 2, 1},
+	{"/changename", "Change player character name.", "/changename [playerid/PartOfName] [New_Name]", 2, 4},
+	{"/explosion", "Create test explosion.", "/explosion [playerid]", 2, 4},
+	{"/getpos", "Get current coordinates format.", "/getpos", 2, 4},
+	{"/log", "Show logs filtering option.", "/log dbid:player_dbid OR [PlayerID/partofName] <filter log (optional)>", 2, 4},
+	{"/refunddrug", "Refund player drugs.", "/refunddrug [playerid/PartOfName]", 2, 4},
+	{"/revive", "Revive a player from death or down state.", "/revive [playerid/name]", 2, 4},
+	{"/setwpackage", "Set weapons package slots.", "/setwpackage [playerid/PartOfName] [weaponid] [ammo] [slot (Optional)]", 2, 4},
+	{"/sotot", "Sotot teleport debugging command.", "/sotot [id/amount] [id/amount] [id/amount] [id/amount]", 2, 4},
+	{"/tod", "Set time of day.", "/tod [time] (0-23)", 2, 4},
+	{"/watchpm", "Monitor player PM chat.", "/watchpm [playerid/name]", 2, 4},
+	{"/watchradio", "Monitor faction radio frequency.", "/watchradio [frequency]", 2, 4},
+	{"/gethere", "Teleport a player to your current position.", "/gethere [playerid/name]", 2, 5},
+	{"/goto", "Teleport directly to a player's position.", "/goto [playerid/name]", 2, 5},
+	{"/gotocmdspot", "Teleport to command test spot.", "/gotocmdspot", 2, 5},
+	{"/sf", "Alternative teleport.", "/sf [playerid/PartOfName]", 2, 5},
+	{"/despawncar", "Despawn a vehicle by ID.", "/despawncar [vehicleid]", 3, 1},
+	{"/despawncars", "Despawn all inactive cars.", "/despawncars", 3, 1},
+	{"/fillallcars", "Refuel all server/faction vehicles.", "/fillallcars", 3, 1},
+	{"/vehiclerequests", "Show vehicle requests list.", "/vehiclerequests [id/amount]", 3, 1},
+	{"/ajail", "Send a player to Admin Jail.", "/ajail [playerid/name] [time in mins] [reason]", 3, 4},
 	{"/ban", "Permanently ban a player from the server.", "/ban [playerid/name] [reason]", 3, 4},
+	{"/forceunmask", "Force unmask a player.", "/forceunmask [playerid/name]", 3, 4},
+	{"/givegun", "Give weapon to player.", "/givegun [playerid/name] [weapon_id] [ammo]", 3, 4},
+	{"/kick", "Kick a player from the server.", "/kick [playerid/name] [reason]", 3, 4},
+	{"/kickfromjob", "Kick player from their job.", "/disabletp [playerid/PartOfName]", 3, 4},
+	{"/setarmour", "Set player armor level.", "/setarmour [playerid/name] [amount]", 3, 4},
+	{"/sethealth", "Set player health level.", "/sethealth [playerid/name] [amount]", 3, 4},
+	{"/setskin", "Set player character skin.", "/setskin [playerid/name] [skin_id]", 3, 4},
+	{"/sslap", "Slap player multiple times.", "/sslap [playerid/PartOfName]", 3, 4},
+	{"/tp", "Teleport to coordinates or player.", "/tp [playerid/name] or [x y z]", 3, 4},
 	{"/unban", "Unban a player name.", "/unban [exact_account_name]", 3, 4},
 	{"/unbanip", "Unban an IP address.", "/unbanip [ip_address]", 3, 4},
-	{"/ajail", "Send a player to Admin Jail.", "/ajail [playerid/name] [time in mins] [reason]", 3, 4},
 	{"/unjail", "Release a player from Admin Jail.", "/unjail [playerid/name]", 3, 4},
-	{"/kick", "Kick a player from the server.", "/kick [playerid/name] [reason]", 3, 4},
-	{"/setskin", "Set player character skin.", "/setskin [playerid/name] [skin_id]", 3, 4},
-	{"/sethealth", "Set player health level.", "/sethealth [playerid/name] [amount]", 3, 4},
-	{"/setarmour", "Set player armor level.", "/setarmour [playerid/name] [amount]", 3, 4},
-	{"/givegun", "Give weapon to player.", "/givegun [playerid/name] [weapon_id] [ammo]", 3, 4},
-
-	// Head Admin / Level 4
-	{"/mhouse", "Unified GUI Property Manager. Manage nearest or specific house ID.", "/mhouse [house_id (optional)]", 4, 2},
-	{"/createprop", "Wizard to create a new property/house at current position.", "/createprop", 4, 2},
-	{"/removeprop", "Delete a property from database.", "/removeprop [house_id]", 4, 2},
-	{"/asellhouse", "Admin sell a house back to state ownership.", "/asellhouse [house_id]", 4, 2},
-	{"/mbiz", "Unified GUI Business Manager. Manage nearest or specific business ID.", "/mbiz [business_id (optional)]", 4, 2},
-	{"/makebusiness", "Create a new business at current position.", "/makebusiness [type 1-5] [price]", 4, 2},
-	{"/removebusiness", "Delete a business from database.", "/removebusiness [business_id]", 4, 2},
-	{"/asellbusiness", "Admin sell a business back to state ownership.", "/asellbusiness [business_id]", 4, 2},
-	{"/mfac", "Unified GUI Faction Manager. Manage specific faction ID.", "/mfac [faction_id (optional)]", 4, 3},
-	{"/createfaction", "Wizard to create a new faction.", "/createfaction", 4, 3},
-	{"/destroyfaction", "Delete a faction entirely (with confirmation).", "/destroyfaction [faction_id]", 4, 3},
-	{"/setfaction", "Set faction parameters manually.", "/setfaction [faction_id] [stat] [value]", 4, 3},
-	{"/mveh", "Unified GUI Vehicle Manager. Manage current or specific vehicle ID.", "/mveh [vehicle_id (optional)]", 4, 1},
-	{"/saveveh", "Save current temporary vehicle permanently to database.", "/saveveh", 4, 1},
+	{"/weather", "Set server weather condition.", "/weather [weather_id]", 3, 4},
+	{"/weatherall", "Set weather for all players.", "/weatherall [weather_id]", 3, 4},
+	{"/gotoin", "Teleport to interior point.", "/gotoin", 3, 5},
+	{"/gotojet", "Teleport to airport location.", "/gotojet", 3, 5},
+	{"/gotostad", "Teleport to stadium.", "/gotostad", 3, 5},
+	{"/maketele", "Create a custom teleport point.", "/maketele [name]", 3, 5},
+	{"/removetele", "Remove a custom teleport point.", "/removetele [id]", 3, 5},
+	{"/telecmds", "Manage custom teleports.", "/telecmds", 3, 5},
+	{"/addstaticspawn", "Create static faction vehicle spawn point.", "/addstaticspawn", 4, 1},
+	{"/createcar", "Create a server vehicle.", "/createcar [model_id] [color1] [color2] [faction_id (-1 for none)]", 4, 1},
 	{"/deleteveh", "Delete vehicle from database.", "/deleteveh [vehicle_id]", 4, 1},
 	{"/editveh", "Edit vehicle properties manually.", "/editveh [vehicle_id] [stat] [value]", 4, 1},
-
-	// Developer / Level 1337
-	{"/mgate", "Unified GUI Gate Manager. Manage nearest or specific gate ID.", "/mgate [gate_id (optional)]", 1337, 3},
-	{"/makegate", "Wizard to create a new gate.", "/makegate", 1337, 3},
-	{"/removegate", "Delete a gate from database.", "/removegate [gate_id]", 1337, 3},
+	{"/managevehicle", "Open Vehicle Manager GUI.", "/managevehicle", 4, 1},
+	{"/saveveh", "Save current temporary vehicle permanently to database.", "/saveveh", 4, 1},
+	{"/setplate", "Change vehicle number plate.", "/setplate", 4, 1},
+	{"/vehcmds", "View level 4 vehicle commands info.", "/vehcmds", 4, 1},
+	{"/aelev", "Admin Elevator Manager (create/delete/addfloor/setfaction).", "/aelev [subcommand]", 4, 2},
+	{"/asellbusiness", "Admin sell a business back to state ownership.", "/asellbusiness [business_id]", 4, 2},
+	{"/asellhouse", "Admin sell a house back to state ownership.", "/asellhouse [house_id]", 4, 2},
+	{"/biztypes", "List available business types.", "/biztypes", 4, 2},
+	{"/bizz", "Manage business entrances.", "/businessenter [bizid]", 4, 2},
+	{"/cleangraffiti", "Clean nearest graffiti.", "/cleangraffiti", 4, 2},
+	{"/createatm", "Create an ATM at current position.", "/createatm", 4, 2},
+	{"/creategraffiti", "Create new graffiti.", "/creategraffiti", 4, 2},
+	{"/createprop", "Wizard to create a new property/house at current position.", "/createprop", 4, 2},
+	{"/deleteatm", "Delete an ATM.", "/deleteatm [atm_id]", 4, 2},
+	{"/destroygraffiti", "Destroy nearest graffiti.", "/destroygraffiti", 4, 2},
+	{"/editatm", "Edit ATM properties.", "/editatm [atm_id]", 4, 2},
+	{"/editgraffiti", "Edit graffiti details.", "/editgraffiti [id]", 4, 2},
+	{"/gotoatm", "Teleport to specific ATM ID.", "/gotoatm [ID]", 4, 2},
+	{"/gotograffiti", "Teleport to graffiti by ID.", "/gotograffiti [id]", 4, 2},
+	{"/houseenter", "Teleport inside specific house.", "/houseenter [houseid]", 4, 2},
+	{"/houseexit", "Teleport outside specific house.", "/houseexit [houseid]", 4, 2},
+	{"/makebusiness", "Create a new business at current position.", "/makebusiness [type 1-5] [price]", 4, 2},
+	{"/managehouse", "Open House Manager GUI.", "/managehouse", 4, 2},
+	{"/removebusiness", "Delete a business from database.", "/removebusiness [business_id]", 4, 2},
+	{"/removeprop", "Delete a property from database.", "/removeprop [house_id]", 4, 2},
+	{"/setapt", "Set apartment property stats.", "/setapt [houseid] [statcode] [input]", 4, 2},
+	{"/setprop", "Set property stats.", "/setprop [houseid] [statcode] [input]", 4, 2},
+	{"/asetrank", "Set faction member rank.", "/asetrank [playerid/name] [rank_id]", 4, 3},
+	{"/createfaction", "Wizard to create a new faction.", "/createfaction", 4, 3},
+	{"/factioncmds", "View faction commands info.", "/factioncmds", 4, 3},
+	{"/factionears", "Listen to all faction radio frequencies.", "/factionears", 4, 3},
+	{"/makeleader", "Set player as faction leader.", "/makeleader [playerid/name] [faction_id]", 4, 3},
+	{"/managefaction", "Open Faction Manager GUI.", "/managefaction", 4, 3},
+	{"/removefaction", "Remove player from faction.", "/removefaction [playerid/name]", 4, 3},
+	{"/setfaction", "Set faction parameters manually.", "/setfaction [faction_id] [stat] [value]", 4, 3},
+	{"/viewfactions", "Show list of all factions.", "/viewfactions", 4, 3},
+	{"/businessenter", "Teleport inside specific business.", "/businessenter [bizid]", 4, 4},
+	{"/businessex1", "Toggle business entrance 1.", "/businessex1 [bizid] [1-Disabled]", 4, 4},
+	{"/businessex2", "Toggle business entrance 2.", "/businessex2 [bizid] [1-Disabled]", 4, 4},
+	{"/businessex3", "Toggle business entrance 3.", "/businessex3 [bizid] [1-Disabled]", 4, 4},
+	{"/businessexit", "Teleport outside specific business.", "/businessexit [bizid]", 4, 4},
+	{"/businessint", "Set business interior.", "/businessint [id (0-48)]", 4, 4},
+	{"/editbusiness", "Edit business properties.", "/editbusiness [names] [input]", 4, 4},
+	{"/givepack", "Give equipment pack to player.", "/givepack [playerid/PartOfName]", 4, 4},
+	{"/gopos", "Teleport to coordinate.", "/gopos [x] [y] [z] [int]", 4, 4},
+	{"/leadadmin", "Show lead administrators.", "/leadadmin", 4, 4},
+	{"/makedonator", "Give player donator status.", "/makedonator [playerid/PartOfName] [level(1-3)] [days]", 4, 4},
+	{"/managebusiness", "Open Business Manager GUI.", "/managebusiness", 4, 4},
+	{"/netstats", "Show server network statistics.", "/netstats", 4, 4},
+	{"/playsound", "Play SA-MP sound for player.", "/playsound [playerid/PartOfName] [soundid]", 4, 4},
+	{"/serverstats", "Show server status & memory statistics.", "/serverstats", 4, 4},
+	{"/showbusinesses", "List all server businesses.", "/showbusinesses", 4, 4},
+	{"/tickrate", "Show server tickrate.", "/tickrate", 4, 4},
+	{"/whatbusiness", "Show info about nearest business.", "/whatbusiness", 4, 4},
+	{"/proposepoint", "Create, remove or list propose points.", "/proposepoint [create/remove/list/goto]", 4, 4},
+	{"/trainstation", "Create, remove, list or goto train stations.", "/trainstation [create/remove/list/goto]", 4, 4},
+	{"/traincenter", "Create, remove, list or goto Train Driver Centers.", "/traincenter [create/remove/list/goto]", 4, 4},
+	{"/railcrossing", "Create, remove or list dynamic rail crossings.", "/railcrossing [create/remove/list]", 4, 4},
+	{"/gocp", "Teleport to active checkpoint.", "/gocp", 4, 5},
+	{"/gorcp", "Teleport to active race checkpoint.", "/gorcp", 4, 5},
+	{"/gotoapp", "Teleport to specific apartment.", "/gotoapp [app id]", 4, 5},
+	{"/destroysignal", "Delete signal tower.", "/destroysignal [signal_id]", 5, 4},
+	{"/maketester", "Give player tester status.", "/maketester [playerid/PartOfName]", 1336, 4},
+	{"/deleteucp", "Delete UCP account & all character data.", "/deleteucp [ucp_name]", 1337, 4},
+	{"/descar", "Force destroy server car.", "/descar", 1337, 1},
+	{"/createapt", "Create a new apartment complex.", "/createapt [Pickup Enabled: (0 / 1)] [Faction SQLID: (-1 for none)] [Information]", 1337, 2},
+	{"/housecmds", "View Level 1337 house commands info.", "/housecmds", 1337, 2},
+	{"/properties", "Show list of properties/houses.", "/properties", 1337, 2},
+	{"/removeapt", "Delete an apartment complex.", "/removeapt [Apartment ID]", 1337, 2},
+	{"/whatmovedoor", "Identify nearest movedoor.", "/whatmovedoor", 1337, 2},
+	{"/cancelmovedoor", "Cancel movedoor edit operation.", "/cancelmovedoor", 1337, 3},
+	{"/dupgate", "Duplicate an existing gate.", "/dupgate [gateid] [Description]", 1337, 3},
+	{"/dupmovedoor", "Duplicate an existing movedoor.", "/dupmovedoor [doorid] [Description]", 1337, 3},
 	{"/editgate", "Edit gate properties manually.", "/editgate [gate_id] [type] [value]", 1337, 3},
-	{"/whatgate", "Identify nearest gate script ID and SQL ID.", "/whatgate", 1337, 3},
+	{"/editmovedoor", "Edit movedoor properties manually.", "/editmovedoor [doorid] [type (1-Object, 2-Move, 3-OpenSpeed, 4-Name, 5-Faction Type)]", 1337, 3},
+	{"/gatecmds", "View gate commands info.", "/gatecmds", 1337, 3},
+	{"/makegate", "Wizard to create a new gate.", "/makegate", 1337, 3},
+	{"/makemovedoor", "Create a new movedoor.", "/makemovedoor [modelid] [Faction Type] [Description]", 1337, 3},
+	{"/managegate", "Open Gate Manager GUI.", "/managegate", 1337, 3},
+	{"/movedoorcmds", "View movedoor commands info.", "/movedoorcmds", 1337, 3},
+	{"/removegate", "Delete a gate from database.", "/removegate [gate_id]", 1337, 3},
+	{"/removemovedoor", "Delete a movedoor.", "/removemovedoor [doorid]", 1337, 3},
 	{"/showgates", "Tablist of all server gates with teleport option.", "/showgates", 1337, 3},
-	{"/setstat", "Set character stats.", "/setstat [playerid/name] [stat_name] [value]", 1337, 4},
+	{"/showmovedoors", "Tablist of all movedoors with teleport option.", "/showmovedoors", 1337, 3},
+	{"/whatgate", "Identify nearest gate script ID and SQL ID.", "/whatgate", 1337, 3},
+	{"/businesscmds", "View level 1337 business commands info.", "/businesscmds", 1337, 4},
+	{"/checkaccount", "Check account registration information.", "/checkaccount [username]", 1337, 4},
+	{"/createaccount", "Create new player account.", "/createaccount [username] [password] [quiz]", 1337, 4},
+	{"/createcharacter", "Create new character on account.", "/createcharacter [accountName] [Firstname_Lastname] [Tutorial (0/1)", 1337, 4},
+	{"/createpoint", "Create a standard point/entrance.", "/createpoint", 1337, 4},
+	{"/createsignal", "Create signal tower.", "/createsignal [range]", 1337, 4},
+	{"/ecmd", "Emulate command for player.", "/(e)mulatecommand [playerid/PartOfName] [command]", 1337, 4},
+	{"/editpoint", "Open editpoint settings.", "/editpoint [point_id]", 1337, 4},
+	{"/editsignal", "Edit signal tower properties.", "/editsignal [signal_id]", 1337, 4},
+	{"/fly", "Toggle fly mode (noclip).", "/fly", 1337, 4},
 	{"/givemoney", "Give money to a player.", "/givemoney [playerid/name] [amount]", 1337, 4},
+	{"/hints", "Configure player hint settings.", "/hints", 1337, 4},
+	{"/icv", "In-car vehicle debug commands.", "/icv", 1337, 4},
+	{"/makeadmin", "Make a player an administrator.", "/makeadmin [playerid/name] [level 1-1337]", 1337, 4},
+	{"/particlegun", "Open particle gun tool.", "/particlegun [text]", 1337, 4},
+	{"/points", "Open points manager list.", "/points", 1337, 4},
+	{"/runquery", "Execute direct SQL query (Developer).", "/runquery", 1337, 4},
+	{"/setstat", "Set character stats.", "/setstat [playerid/name] [stat_name] [value]", 1337, 4},
+	{"/signalcmds", "View signal tower commands.", "/signalcmds", 1337, 4},
+	{"/streamer", "Show streamer cache & dynamic details.", "/streamer", 1337, 4},
 	{"/takemoney", "Take money from a player.", "/takemoney [playerid/name] [amount]", 1337, 4},
-	{"/makeadmin", "Make a player an administrator.", "/makeadmin [playerid/name] [level 1-1337]", 1337, 4}
+	{"/togdiscord", "Toggle Discord integration logs.", "/togdiscord", 1337, 4},
+	{"/updatemotd", "Update Message Of The Day.", "/updatemotd [new_motd]", 1337, 4},
+	{"/variables", "Show server internal debug variables.", "/variables", 1337, 4},
+	{"/mysqlstats", "Show MySQL statistics.", "/mysqlstats", 1337, 5},
+	{"/addsidejobspawn", "Create a bus sidejob spawn point at player position.", "/addsidejobspawn", 4, 6},
+	{"/editsidejobveh", "Configure the targeted server vehicle as a bus job vehicle.", "/editsidejobveh", 4, 6},
+	{"/busroute", "Create, edit, or delete bus checkpoints and salary.", "/busroute [create/cp/cpstop/finish/delete]", 4, 6},
+	{"/sweeperroute", "Create, edit, or delete sweeper checkpoints and salary.", "/sweeperroute [create/cp/finish/delete]", 4, 6},
+	{"/illegaljob", "Create, delete, or list illegal job spawn points.", "/illegaljob [create/delete/list]", 2, 7},
+	{"/weaponsupplier", "Create or edit material/schematic spawn points.", "/weaponsupplier [create/edit]", 2, 7}
 };
 
 stock ShowAdminHelpMain(playerid)
 {
 	new string[512];
 	strcat(string, "Admin duty guidelines\n");
-	strcat(string, "Level 1: Junior Admin / Helper / Tester\n");
-	strcat(string, "Level 2: General Admin\n");
+	strcat(string, "Level 1: Intern\n");
+	strcat(string, "Level 2: Junior Admin\n");
 	strcat(string, "Level 3: Senior Admin\n");
-	strcat(string, "Level 4: Head Admin / Manager\n");
-	strcat(string, "Level 1337: Developer / Owner\n");
+	strcat(string, "Level 4: Senior Admin 2\n");
+	strcat(string, "Level 1336: Deputy Head Admin\n");
+	strcat(string, "Level 1337: Head Admin\n");
 	strcat(string, "Category: Vehicle Management\n");
 	strcat(string, "Category: Property & Business\n");
 	strcat(string, "Category: Faction & Gate Management\n");
 	strcat(string, "Category: Player Management & Punishment\n");
-	strcat(string, "Category: Teleport & Navigation");
+	strcat(string, "Category: Teleport & Navigation\n");
+	strcat(string, "Category: Create Sidejobs\n");
+	strcat(string, "Category: Illegal Weapon System");
 	
 	Dialog_Show(playerid, AdminHelpMain, DIALOG_STYLE_LIST, "Admin Help Center", string, "Select", "Close");
 	return 1;
@@ -9746,18 +9936,19 @@ Dialog:AdminHelpMain(playerid, response, listitem, inputtext[])
 	new targetVal = -1;
 	new bool:isCategory = false;
 	
-	if(listitem >= 1 && listitem <= 5) // Level
+	if(listitem >= 1 && listitem <= 6) // Level
 	{
 		if(listitem == 1) targetVal = 1;
 		else if(listitem == 2) targetVal = 2;
 		else if(listitem == 3) targetVal = 3;
 		else if(listitem == 4) targetVal = 4;
-		else if(listitem == 5) targetVal = 1337;
+		else if(listitem == 5) targetVal = 1336;
+		else if(listitem == 6) targetVal = 1337;
 		isCategory = false;
 	}
-	else if(listitem >= 6) // Category
+	else if(listitem >= 7) // Category
 	{
-		targetVal = listitem - 5; // 1: Veh, 2: Prop, 3: Faction, 4: Player, 5: Teleport
+		targetVal = listitem - 6; // 1: Veh, 2: Prop, 3: Faction, 4: Player, 5: Teleport
 		isCategory = true;
 	}
 	
@@ -9863,23 +10054,24 @@ Dialog:AdminHelpDetail(playerid, response, listitem, inputtext[])
 	new targetVal = -1;
 	new bool:isCategory = false;
 	
-	if(lastListitem >= 1 && lastListitem <= 5) // Level
+	if(lastListitem >= 1 && lastListitem <= 6) // Level
 	{
-		if(lastListitem == 1) { targetVal = 1; format(titleText, 64, "Level 1: Junior Admin / Helper / Tester"); }
-		else if(lastListitem == 2) { targetVal = 2; format(titleText, 64, "Level 2: General Admin"); }
+		if(lastListitem == 1) { targetVal = 1; format(titleText, 64, "Level 1: Intern"); }
+		else if(lastListitem == 2) { targetVal = 2; format(titleText, 64, "Level 2: Junior Admin"); }
 		else if(lastListitem == 3) { targetVal = 3; format(titleText, 64, "Level 3: Senior Admin"); }
-		else if(lastListitem == 4) { targetVal = 4; format(titleText, 64, "Level 4: Head Admin / Manager"); }
-		else if(lastListitem == 5) { targetVal = 1337; format(titleText, 64, "Level 1337: Developer / Owner"); }
+		else if(lastListitem == 4) { targetVal = 4; format(titleText, 64, "Level 4: Senior Admin 2"); }
+		else if(lastListitem == 5) { targetVal = 1336; format(titleText, 64, "Level 1336: Deputy Head Admin"); }
+		else if(lastListitem == 6) { targetVal = 1337; format(titleText, 64, "Level 1337: Head Admin"); }
 		isCategory = false;
 	}
-	else if(lastListitem >= 6) // Category
+	else if(lastListitem >= 7) // Category
 	{
-		targetVal = lastListitem - 5; // 1: Veh, 2: Prop, 3: Faction, 4: Player, 5: Teleport
-		if(lastListitem == 6) format(titleText, 64, "Category: Vehicle Management");
-		else if(lastListitem == 7) format(titleText, 64, "Category: Property & Business");
-		else if(lastListitem == 8) format(titleText, 64, "Category: Faction & Gate Management");
-		else if(lastListitem == 9) format(titleText, 64, "Category: Player Management & Punishment");
-		else if(lastListitem == 10) format(titleText, 64, "Category: Teleport & Navigation");
+		targetVal = lastListitem - 6; // 1: Veh, 2: Prop, 3: Faction, 4: Player, 5: Teleport
+		if(lastListitem == 7) format(titleText, 64, "Category: Vehicle Management");
+		else if(lastListitem == 8) format(titleText, 64, "Category: Property & Business");
+		else if(lastListitem == 9) format(titleText, 64, "Category: Faction & Gate Management");
+		else if(lastListitem == 10) format(titleText, 64, "Category: Player Management & Punishment");
+		else if(lastListitem == 11) format(titleText, 64, "Category: Teleport & Navigation");
 		isCategory = true;
 	}
 	

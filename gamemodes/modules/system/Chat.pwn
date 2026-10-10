@@ -1,3 +1,9 @@
+// Permission gates: swallow the common early-return so call sites are one line.
+#define AdminGate(%0,%1) \
+	if(PlayerData[%0][pAdmin] < %1) return SendErrorMessage(%0, "You're not authorized to use this command.")
+#define UnauthGate(%0,%1) \
+	if(PlayerData[%0][pAdmin] < %1) return SendUnauthMessage(%0, "You're not authorized to use this command.")
+
 #define SendErrorMessage(%0,%1) \
 	SendClientMessageEx(%0, COLOR_LIGHTRED, "ERROR:{FFFFFF} "%1)
 
@@ -112,16 +118,20 @@ SendPoliceMessage(color, const fmat[], va_args<>)
 	return true;
 }
 
+#if !defined FACTION_MEDIC
+#define FACTION_MEDIC (3)
+#endif
+
 SendMedicMessage(color, const fmat[], va_args<>)
 {
 	new str[145];
-	va_format(str, sizeof (str), fmat, va_start<3>);
+	va_format(str, sizeof (str), fmat, va_start<2>);
 
 	foreach (new i : Player)
 	{
-		if(PlayerData[i][pFaction] == -1) continue;
+		if(PlayerData[i][pID] == -1 || PlayerData[i][pFaction] == -1) continue;
 
-		if(GetFactionType(i) == 3 && PlayerData[i][pOnDuty])
+		if(GetFactionType(i) == FACTION_MEDIC && PlayerData[i][pOnDuty])
 		{
 		    SendClientMessage(i, color, str);
 		}
@@ -168,7 +178,7 @@ SendJobMessage(jobid, color, const fmat[], va_args<>)
 
 	foreach (new i : Player)
 	{
-		if(PlayerData[i][pJob] == jobid || PlayerData[i][pSideJob] == jobid)
+		if(PlayerData[i][pJob] == jobid)
 		{
 	 		if(jobid == JOB_TAXI)
 			{
@@ -341,4 +351,15 @@ ProxJoinServer(playerid, const str[])
 		}
 	}
 	return true;
+}
+
+// Second-chance target lookup: sscanf miss -> masked-player name match.
+// Returns INVALID_PLAYER_ID when nobody matches.
+stock ResolveMaskedTarget(const params[])
+{
+	new name[MAX_PLAYER_NAME];
+	if(sscanf(params, "s[24]", name))
+	    return INVALID_PLAYER_ID;
+
+	return GetPlayerMaskID(name);
 }

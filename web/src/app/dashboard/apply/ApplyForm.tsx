@@ -45,16 +45,16 @@ export default function ApplyForm() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || 'Gagal mengirimkan aplikasi');
+        setError(data.error || 'Failed to submit application');
       } else {
-        setSuccess('Aplikasi karakter berhasil dikirim! Silakan tunggu admin meninjau pengajuan Anda.');
+        setSuccess('Character application submitted successfully! Please wait for an administrator to review your application.');
         setTimeout(() => {
           router.push('/dashboard');
           router.refresh();
         }, 3000);
       }
     } catch {
-      setError('Koneksi internet bermasalah');
+      setError('Network connection error');
     } finally {
       setLoading(false);
     }
@@ -80,13 +80,13 @@ export default function ApplyForm() {
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
         <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
           <User className="h-5 w-5 text-amber-500" />
-          Detail Identitas Karakter
+          Character Identity Details
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-xs font-semibold text-zinc-400 mb-1.5" htmlFor="charName">
-              Nama Karakter (Format: NamaDepan_NamaBelakang)
+              Character Name (Format: Firstname_Lastname)
             </label>
             <input
               id="charName"
@@ -94,15 +94,15 @@ export default function ApplyForm() {
               required
               value={charName}
               onChange={(e) => setCharName(e.target.value)}
-              placeholder="Contoh: Ganjar_Prabroro"
+              placeholder="e.g. Michael_Corleone"
               className="w-full h-11 border border-zinc-800 rounded-xl px-4 text-xs font-medium focus:border-amber-500 focus:outline-none bg-zinc-900 text-white transition"
             />
-            <span className="text-[10px] text-zinc-500 mt-1 block">Harus diawali huruf kapital di setiap kata, dipisah garis bawah.</span>
+            <span className="text-[10px] text-zinc-500 mt-1 block">Must start with capital letters for each word, separated by an underscore.</span>
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-zinc-400 mb-1.5" htmlFor="origin">
-              Kewarganegaraan / Asal
+              Citizenship / Origin
             </label>
             <input
               id="origin"
@@ -110,14 +110,14 @@ export default function ApplyForm() {
               required
               value={origin}
               onChange={(e) => setOrigin(e.target.value)}
-              placeholder="Contoh: Indonesia, Mexico, America"
+              placeholder="e.g. United States, Mexico, Germany"
               className="w-full h-11 border border-zinc-800 rounded-xl px-4 text-xs font-medium focus:border-amber-500 focus:outline-none bg-zinc-900 text-white transition"
             />
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-zinc-400 mb-1.5" htmlFor="age">
-              Umur Karakter
+              Character Age
             </label>
             <input
               id="age"
@@ -127,14 +127,14 @@ export default function ApplyForm() {
               max="99"
               value={age}
               onChange={(e) => setAge(e.target.value)}
-              placeholder="Rentang umur: 18 - 99"
+              placeholder="Age range: 18 - 99"
               className="w-full h-11 border border-zinc-800 rounded-xl px-4 text-xs font-medium focus:border-amber-500 focus:outline-none bg-zinc-900 text-white transition"
             />
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-zinc-400 mb-1.5" htmlFor="gender">
-              Jenis Kelamin
+              Gender
             </label>
             <select
               id="gender"
@@ -142,8 +142,8 @@ export default function ApplyForm() {
               onChange={(e) => setGender(e.target.value)}
               className="w-full h-11 border border-zinc-800 rounded-xl px-4 text-xs font-medium focus:border-amber-500 focus:outline-none bg-zinc-900 text-white transition"
             >
-              <option value="Male">Laki-Laki (Male)</option>
-              <option value="Female">Perempuan (Female)</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
             </select>
           </div>
         </div>
@@ -153,13 +153,13 @@ export default function ApplyForm() {
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
         <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
           <HelpCircle className="h-5 w-5 text-amber-500" />
-          Uji Pengetahuan Roleplay (Kuis)
+          Roleplay Knowledge Quiz
         </h3>
 
         <div className="space-y-6">
           <div>
             <label className="block text-xs font-semibold text-zinc-400 mb-1.5" htmlFor="ans1">
-              Pertanyaan 1: Jelaskan apa yang dimaksud dengan Roleplay dan apa perbedaan antara IC (In-Character) dan OOC (Out-of-Character)?
+              Question 1: Explain what Roleplay means and the key difference between IC (In-Character) and OOC (Out-of-Character)?
             </label>
             <textarea
               id="ans1"
@@ -167,14 +167,14 @@ export default function ApplyForm() {
               rows={3}
               value={answer1}
               onChange={(e) => setAnswer1(e.target.value)}
-              placeholder="Berikan jawaban penjelasan Anda secara lengkap..."
+              placeholder="Provide your full answer and explanation..."
               className="w-full border border-zinc-800 rounded-xl p-4 text-xs font-medium focus:border-amber-500 focus:outline-none bg-zinc-900 text-white transition"
             />
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-zinc-400 mb-1.5" htmlFor="ans2">
-              Pertanyaan 2: Berikan contoh konkrit tindakan Metagaming (MG) dan Powergaming (PG) yang dilarang di server roleplay.
+              Question 2: Provide concrete examples of Metagaming (MG) and Powergaming (PG) that are prohibited on a roleplay server.
             </label>
             <textarea
               id="ans2"
@@ -182,7 +182,7 @@ export default function ApplyForm() {
               rows={3}
               value={answer2}
               onChange={(e) => setAnswer2(e.target.value)}
-              placeholder="Berikan contoh MG dan PG..."
+              placeholder="Provide examples of MG and PG..."
               className="w-full border border-zinc-800 rounded-xl p-4 text-xs font-medium focus:border-amber-500 focus:outline-none bg-zinc-900 text-white transition"
             />
           </div>
@@ -193,10 +193,10 @@ export default function ApplyForm() {
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
         <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
           <BookOpen className="h-5 w-5 text-amber-500" />
-          Latar Belakang Karakter (Backstory)
+          Character Backstory
         </h3>
         <p className="text-xs text-zinc-400 mb-4">
-          Tuliskan biografi/sejarah karakter Anda secara naratif (min. 200 karakter). Jelaskan dari mana dia berasal, bagaimana masa lalunya, dan apa tujuannya datang ke kota Los Jawa.
+          Write your character&apos;s biography in narrative form (min. 200 characters). Explain where they came from, their backstory, and their goals in Los Jawa.
         </p>
 
         <div>
@@ -205,13 +205,13 @@ export default function ApplyForm() {
             rows={8}
             value={story}
             onChange={(e) => setStory(e.target.value)}
-            placeholder="Tulis biografi karakter Anda di sini secara naratif..."
+            placeholder="Write your character's narrative backstory here..."
             className="w-full border border-zinc-800 rounded-xl p-4 text-xs font-medium focus:border-amber-500 focus:outline-none bg-zinc-900 text-white transition"
           />
           <div className="flex justify-between text-[10px] text-zinc-500 mt-1.5">
-            <span>Minimum 200 karakter</span>
+            <span>Minimum 200 characters</span>
             <span className={`${story.length >= 200 ? 'text-green-500' : 'text-amber-500'}`}>
-              {story.length} Karakter
+              {story.length} Characters
             </span>
           </div>
         </div>
@@ -226,7 +226,7 @@ export default function ApplyForm() {
           {loading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            'Kirim Pengajuan Karakter'
+            'Submit Character Application'
           )}
         </button>
       </div>

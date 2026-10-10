@@ -5,32 +5,7 @@
 
 // Variables
 
-enum E_POINT_INFO
-{
-	poiName[28],
-	Float:pointArea[3]
-};
 
-new const PointsOfInterest[][E_POINT_INFO] =
-{
-	{"Idlewood Pizza Stack", {2096.6606, -1806.8464, 13.5528}},
-	{"Pershing Square Park", {1529.6974, -1669.9756, 13.3828}},
-	{"Star Street DMV", {1246.6346, -1572.4646, 13.3828}},
-	{"Mall Parking Lot", {1144.7522, -1380.5360, 13.8051}},
-	{"Mall", {1125.3499, -1452.0264, 15.7981}},
-	{"All Saints Parking Lot", {1222.1118, -1331.1669, 13.5527}},
-	{"Grotti's Dealership", {542.3464, -1292.4934, 17.2422}},
-	{"Wang's Car Modshop", {414.9698, -1323.5645, 15.0610}},
-	{"Trucker Job", {-77.3972, -1136.4197, 1.0781}},
-	{"Mechanic Job", {88.6425, -165.4242, 2.5938}},
-	{"LSSD HQ", {1322.778442, -2601.142578, 13.00}},
-	{"LSPD Harbour Station", {2134.60428, -2165.755126, 13.00}},
-	{"LSPD Vinewood Station", {1297.074584, -1127.058715, 23.00}},
-	{"LSPD Detective Bureau", {1657.936279, -1427.854125, 13.00}},
-	{"SMB Pier", {148.104843, -1843.054443, 4.50}},
-	{"All Saint General Hospital", {1179.006835, -1324.070922, 14.00}},
-	{"Fire Station 69", {1244.638793, -1273.375854, 13.00}}
-};
 
 enum E_STREET_INFO
 {
@@ -606,19 +581,6 @@ Get2DZone(Float: x, Float: y, zone[], len)
 	return false;
 }
 
-/*GetPlayer2DZoneID(playerid)
-{
-    new Float:x, Float:y, Float:z;
-    GetPlayerPos(playerid, x, y, z);
-	for(new i = 0; i != sizeof(gSAZones); ++i)
-	{
-        if(x >= gSAZones[i][SAZONE_AREA][0] && x <= gSAZones[i][SAZONE_AREA][3] && y >= gSAZones[i][SAZONE_AREA][1] && y <= gSAZones[i][SAZONE_AREA][4])
-        {
-            return i;
-        }
-	}
-	return 0;
-}*/
 
 Get2DPosZone(Float:x, Float:y, zone[], len)
 {
@@ -752,15 +714,3 @@ ReturnAreaCode(const areaName[])
 	return 999;
 }
 
-/*ReturnCityCode(cityid)
-{
-	if(strcmp("Los Santos", gSACities[cityid][SACITY_NAME], false) == 0) return 213;
-	if(strcmp("San Fierro", gSACities[cityid][SACITY_NAME], false) == 0) return 415;
-    if(strcmp("Las Venturas", gSACities[cityid][SACITY_NAME], false) == 0) return 702;
-    if(strcmp("Flint County", gSACities[cityid][SACITY_NAME], false) == 0) return 707;
-    if(strcmp("Red County", gSACities[cityid][SACITY_NAME], false) == 0) return 714;
-    if(strcmp("Bone County", gSACities[cityid][SACITY_NAME], false) == 0) return 760;
-    if(strcmp("Tierra Robada", gSACities[cityid][SACITY_NAME], false) == 0) return 619;
-    if(strcmp("Whetstone", gSACities[cityid][SACITY_NAME], false) == 0) return 408;
-	return 555;
-}*/

@@ -2229,7 +2229,8 @@ FUNX::SendPlayerSMS(playerid, numberid, number)
 	return true;
 }
 
-FUNX::OnPhoneInsertSMS(targetid, exist)
+forward OnPhoneInsertSMS(targetid, exist);
+public OnPhoneInsertSMS(targetid, exist)
 {
 	if(IsPlayerConnected(targetid))
 	{
@@ -2389,9 +2390,7 @@ Dialog:AddContact(playerid, response, listitem, inputtext[])
 		if(strlen(inputtext) < 2 || strlen(inputtext) > 20)
 		    return Dialog_Show(playerid, AddContact, DIALOG_STYLE_INPUT, "Insert name", "Add a contact\n\n\t\tEnter contact name:\t\tErro: Contact must be long. 2-20 caracters", "Proceed", "Back");
 
-		new Regex:r = Regex_New("^[A-Za-z0-9 ]+$"), RegexMatch:m;
-
-		if(!Regex_Match(inputtext, r, m))
+	if(!IsAlnumSpace(inputtext, 2, 20))
 		    return Dialog_Show(playerid, AddContact, DIALOG_STYLE_INPUT, "Insert name", "Add a contact\n\n\t\tEnter contact name:\t\tErro: Invalid symbol detected.", "Proceed", "Back");
 
 		//[a-zA-Z0-9]+
@@ -2413,56 +2412,7 @@ Dialog:AddContactNum(playerid, response, listitem, inputtext[])
 		if(!IsNumeric(inputtext) || strlen(inputtext) > 10 || strlen(inputtext) <= 0)
 			return Dialog_Show(playerid, AddContactNum, DIALOG_STYLE_INPUT, "Insert number", "Add a contact\n\n\t\tEnter contact number:\t\tErro: The specified number is invalid.", "Proceed", "Back");
 
-		new count, con_max, exist = -1;
-
-		switch(PlayerData[playerid][pDonateRank])
-		{
-		    case 0: con_max = 16;
-		    case 1: con_max = 24;
-		    case 2: con_max = 32;
-		    case 3: con_max = 40;
-		}
-
-		for(new i = 0; i < 40; ++i)
-		{
-		    if(ContactData[playerid][i][contactNumber])
-			{
-                count++;
-		    }
-		    else
-		    {
-		        if(exist == -1)
-				{
-				    exist = i;
-				}
-		    }
-		}
-
-		if(count < con_max)
-		{
-			ContactData[playerid][exist][contactNumber] = strval(inputtext);
-			format(ContactData[playerid][exist][contactName], 24, name);
-
-	     	format(query, sizeof(query), "INSERT INTO `phone_contacts` (`contactAdded`, `contactAddee`, `contactName`) VALUES ('%d', '%d', '%s')", PlayerData[playerid][pPnumber], ContactData[playerid][exist][contactNumber], ContactData[playerid][exist][contactName]);
-			mysql_pquery(dbCon, query);
-
-			ContactData[playerid][exist][contactID] = cache_insert_id();
-
-           	ph_menuid[playerid] = 1;
-       		ph_sub_menuid[playerid] = 2;
-       		ph_page[playerid] = 0;
-       		ph_select_data[playerid]=exist;
-
-       		RenderPlayerPhone(playerid, ph_menuid[playerid], ph_sub_menuid[playerid]);
-		}
-		else
-		{
-           	ph_menuid[playerid] = 5;
-       		ph_sub_menuid[playerid] = 0;
-       		ph_page[playerid] = 0;
-
-       		RenderPlayerPhone(playerid, ph_menuid[playerid], ph_sub_menuid[playerid]);
-		}
+		Phone_StoreContact(playerid, strval(inputtext), name);
 	}
 	else
 	{
@@ -2617,6 +2567,60 @@ Dialog:DeleteSMS(playerid, response, listitem, inputtext[])
 	return true;
 }
 
+// Shared tail of every "add contact" flow: finds a free slot, stores the
+// contact, inserts it, and renders the resulting phone screen. Handles the
+// full-list case internally. Returns the slot index used (-1 = list was full).
+static Phone_StoreContact(playerid, number, const name[])
+{
+	new count, exist = -1;
+
+	for(new i = 0; i < 40; ++i)
+	{
+	    if(ContactData[playerid][i][contactNumber])
+			count++;
+	    else if(exist == -1)
+			exist = i;
+	}
+
+	if(count < Phone_ContactCap(playerid))
+	{
+	    new query[256];
+		ContactData[playerid][exist][contactNumber] = number;
+		format(ContactData[playerid][exist][contactName], 24, name);
+
+		format(query, sizeof(query), "INSERT INTO `phone_contacts` (`contactAdded`, `contactAddee`, `contactName`) VALUES ('%d', '%d', '%s')",
+		    PlayerData[playerid][pPnumber], ContactData[playerid][exist][contactNumber], ContactData[playerid][exist][contactName]);
+		mysql_pquery(dbCon, query);
+
+		ContactData[playerid][exist][contactID] = cache_insert_id();
+
+		ph_menuid[playerid] = 1;
+		ph_sub_menuid[playerid] = 2;
+		ph_page[playerid] = 0;
+		ph_select_data[playerid] = exist;
+	}
+	else
+	{
+		ph_menuid[playerid] = 5;
+		ph_sub_menuid[playerid] = 0;
+		ph_page[playerid] = 0;
+	}
+
+	RenderPlayerPhone(playerid, ph_menuid[playerid], ph_sub_menuid[playerid]);
+	return exist;
+}
+
+stock Phone_ContactCap(playerid)
+{
+	switch(PlayerData[playerid][pDonateRank])
+	{
+	    case 1: return 24;
+	    case 2: return 32;
+	    case 3: return 40;
+	}
+	return 16;
+}
+
 Dialog:AddHistoryContact(playerid, response, listitem, inputtext[])
 {
 	if(response)
@@ -2626,61 +2630,10 @@ Dialog:AddHistoryContact(playerid, response, listitem, inputtext[])
 		if(strlen(inputtext) < 2 || strlen(inputtext) > 20)
 		    return Dialog_Show(playerid, AddContact, DIALOG_STYLE_INPUT, "Insert name", "Add a contact\n\n\t\tEnter contact name:\t\tErro: Contact must be long. 2-20 caracters", "Proceed", "Back");
 
-		new Regex:r = Regex_New("^[A-Za-z0-9 ]+$"), RegexMatch:m;
-
-		if(!Regex_Match(inputtext, r, m))
+	if(!IsAlnumSpace(inputtext, 2, 20))
 		    return Dialog_Show(playerid, AddContact, DIALOG_STYLE_INPUT, "Insert name", "Add a contact\n\n\t\tEnter contact name:\t\tErro: Invalid symbol found.", "Proceed", "Back");
 
-		new count, con_max, exist = -1;
-
-		switch(PlayerData[playerid][pDonateRank])
-		{
-		    case 0: con_max = 16;
-		    case 1: con_max = 24;
-		    case 2: con_max = 32;
-		    case 3: con_max = 40;
-		}
-
-		for(new i = 0; i < 40; ++i)
-		{
-		    if(ContactData[playerid][i][contactNumber])
-			{
-                count++;
-		    }
-		    else
-		    {
-		        if(exist == -1)
-				{
-				    exist = i;
-				}
-		    }
-		}
-
-		if(count < con_max)
-		{
-			ContactData[playerid][exist][contactNumber] = CallHistory[playerid][id][chNumber];
-			format(ContactData[playerid][exist][contactName], 24, inputtext);
-
-	     	format(query,sizeof(query),"INSERT INTO `phone_contacts` (`contactAdded`, `contactAddee`, `contactName`) VALUES ('%d', '%d', '%s')", PlayerData[playerid][pPnumber], ContactData[playerid][exist][contactNumber], ContactData[playerid][exist][contactName]);
-			mysql_pquery(dbCon, query);
-
-			ContactData[playerid][exist][contactID] = cache_insert_id();
-
-           	ph_menuid[playerid] = 1;
-       		ph_sub_menuid[playerid]=2;
-       		ph_page[playerid] = 0;
-       		ph_select_data[playerid]=exist;
-
-       		RenderPlayerPhone(playerid, ph_menuid[playerid], ph_sub_menuid[playerid]);
-		}
-		else
-		{
-           	ph_menuid[playerid]=5;
-       		ph_sub_menuid[playerid] = 0;
-       		ph_page[playerid] = 0;
-
-       		RenderPlayerPhone(playerid, ph_menuid[playerid], ph_sub_menuid[playerid]);
-		}
+		Phone_StoreContact(playerid, CallHistory[playerid][id][chNumber], inputtext);
 	}
 	return true;
 }
@@ -2694,61 +2647,10 @@ Dialog:AddSMSContact(playerid, response, listitem, inputtext[])
 		if(strlen(inputtext) < 2 || strlen(inputtext) > 20)
 		    return Dialog_Show(playerid, AddContact, DIALOG_STYLE_INPUT, "Insert name", "Add a contact\n\n\t\tEnter contact name:\t\tErro: Contact must be long. 2-20 caracters", "Proceed", "Back");
 
-		new Regex:r = Regex_New("^[A-Za-z0-9 ]+$"), RegexMatch:m;
-
-		if(!Regex_Match(inputtext, r, m))
+	if(!IsAlnumSpace(inputtext, 2, 20))
 		    return Dialog_Show(playerid, AddContact, DIALOG_STYLE_INPUT, "Insert name", "Add a contact\n\n\t\tEnter contact name:\t\tErro: Invalid symbol found.", "Proceed", "Back");
 
-		new count, con_max, exist = -1;
-
-		switch(PlayerData[playerid][pDonateRank])
-		{
-		    case 0: con_max = 16;
-		    case 1: con_max = 24;
-		    case 2: con_max = 32;
-		    case 3: con_max = 40;
-		}
-
-		for(new i = 0; i < 40; ++i)
-		{
-		    if(ContactData[playerid][i][contactNumber])
-			{
-                count++;
-		    }
-		    else
-		    {
-		        if(exist == -1)
-				{
-				    exist = i;
-				}
-		    }
-		}
-
-		if(count < con_max)
-		{
-			ContactData[playerid][exist][contactNumber] = SmsData[playerid][id][smsOwner];
-			format(ContactData[playerid][exist][contactName], 24, inputtext);
-
-	     	format(query, sizeof(query), "INSERT INTO `phone_contacts` (`contactAdded`, `contactAddee`, `contactName`) VALUES ('%d', '%d', '%s')", PlayerData[playerid][pPnumber], ContactData[playerid][exist][contactNumber], ContactData[playerid][exist][contactName]);
-			mysql_pquery(dbCon, query);
-
-			ContactData[playerid][exist][contactID] = cache_insert_id();
-
-           	ph_menuid[playerid] = 1;
-       		ph_sub_menuid[playerid] = 2;
-       		ph_page[playerid] = 0;
-       		ph_select_data[playerid] = exist;
-
-       		RenderPlayerPhone(playerid, ph_menuid[playerid], ph_sub_menuid[playerid]);
-		}
-		else
-		{
-           	ph_menuid[playerid] = 5;
-       		ph_sub_menuid[playerid] = 0;
-       		ph_page[playerid] = 0;
-
-       		RenderPlayerPhone(playerid, ph_menuid[playerid], ph_sub_menuid[playerid]);
-		}
+		Phone_StoreContact(playerid, SmsData[playerid][id][smsOwner], inputtext);
 	}
 	return true;
 }
@@ -2849,8 +2751,11 @@ stock SendSMS(playerid, const params[])
 	if(PlayerData[playerid][pJailed])
 	    return SendClientMessage(playerid, COLOR_LIGHTRED, "Error: Your phone was confiscated by the cops.");
 
-    if(PlayerData[playerid][pInjured] || IsCuffed{playerid} || IsTied{playerid})
-		return SendErrorMessage(playerid, "You can't do this right now.");
+	if(PlayerData[playerid][pInjured])
+		return SendErrorMessage(playerid, "You can't use your phone while injured.");
+
+	if(IsCuffed{playerid} || IsTied{playerid})
+		return SendErrorMessage(playerid, "You can't use your phone while cuffed or tied.");
 
 	if(ph_menuid[playerid] == 6)
 	    return SendErrorMessage(playerid, "You can't do this now (phone off).");
@@ -2858,8 +2763,11 @@ stock SendSMS(playerid, const params[])
 	if(ph_airmode[playerid])
 		return SendErrorMessage(playerid, "You can't do this now (airplane mode on).");
 
-  	if(calltimer[playerid] || smstimer[playerid] || GetPlayerSpecialAction(playerid) > 0 || PlayerData[playerid][pCash] < 1)
-	  	return SendErrorMessage(playerid, "You can't do this right now.");
+	if(PlayerData[playerid][pCash] < 1)
+		return SendErrorMessage(playerid, "You don't have enough cash ($1) to send an SMS.");
+
+	calltimer[playerid] = 0;
+	smstimer[playerid] = 0;
 
 	new phonenumb[24], sms_text[128];
 
@@ -2912,8 +2820,11 @@ stock CallNumber(playerid, const params[])
 	if(PlayerData[playerid][pJailed])
 	    return SendClientMessage(playerid, COLOR_LIGHTRED, "Error: Your phone was confiscated by the cops.");
 
-    if(PlayerData[playerid][pInjured] || IsCuffed{playerid} || IsTied{playerid})
-		return SendErrorMessage(playerid, "You can't do this right now.");
+	if(PlayerData[playerid][pInjured])
+		return SendErrorMessage(playerid, "You can't use your phone while injured.");
+
+	if(IsCuffed{playerid} || IsTied{playerid})
+		return SendErrorMessage(playerid, "You can't use your phone while cuffed or tied.");
 
 	if(!CheckPhoneStatus(playerid))
 	    return SendErrorMessage(playerid, "You can't do this now (phone off).");
@@ -2921,8 +2832,11 @@ stock CallNumber(playerid, const params[])
 	if(ph_airmode[playerid])
 		return SendErrorMessage(playerid, "You can't do this now (airplane mode on).");
 
-  	if(calltimer[playerid] || smstimer[playerid] || GetPlayerSpecialAction(playerid) > 0 || PlayerData[playerid][pCash] < 10)
-	  	return SendErrorMessage(playerid, "You can't do this right now.");
+	if(PlayerData[playerid][pCash] < 10)
+		return SendErrorMessage(playerid, "You don't have enough cash ($10) to make a call.");
+
+	calltimer[playerid] = 0;
+	smstimer[playerid] = 0;
 
 	new phonenumb[24];
 
@@ -2953,7 +2867,7 @@ stock CallNumber(playerid, const params[])
 
   		if(pnumber == 911)
 		{
-			PlayerPlaySoundEx(playerid, 3600);
+			PlayerPlaySound(playerid, 3600, 0.0, 0.0, 0.0);
 
 			Annotation(playerid, "dials a number on their phone.");
 
@@ -2976,7 +2890,7 @@ stock CallNumber(playerid, const params[])
 		}
   		else if(pnumber == 991)
 		{
-			PlayerPlaySoundEx(playerid, 3600);
+			PlayerPlaySound(playerid, 3600, 0.0, 0.0, 0.0);
 
 			Annotation(playerid, "dials a number on their phone.");
 
@@ -3000,7 +2914,7 @@ stock CallNumber(playerid, const params[])
 		}
   		else if(pnumber == 555)
 		{
-			PlayerPlaySoundEx(playerid, 3600);
+			PlayerPlaySound(playerid, 3600, 0.0, 0.0, 0.0);
 
 			Annotation(playerid, "dials a number on their phone.");
 
@@ -3022,7 +2936,7 @@ stock CallNumber(playerid, const params[])
 		}
   		else if(pnumber == 544)
 		{
-			PlayerPlaySoundEx(playerid, 3600);
+			PlayerPlaySound(playerid, 3600, 0.0, 0.0, 0.0);
 
 			Annotation(playerid, "dials a number on their phone.");
 
@@ -3064,7 +2978,7 @@ stock CallNumber(playerid, const params[])
 				return true;
 			}
 
-			PlayerPlaySoundEx(playerid, 3600);
+			PlayerPlaySound(playerid, 3600, 0.0, 0.0, 0.0);
 
 			Annotation(playerid, "dials a number on their phone.");
 

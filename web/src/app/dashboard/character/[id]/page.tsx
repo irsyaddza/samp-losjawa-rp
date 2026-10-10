@@ -6,6 +6,7 @@ import { RowDataPacket } from 'mysql2';
 import { ArrowLeft, User, Shield, Calendar, Landmark, Coins, Heart, FileText, CheckCircle, XCircle, Car, Home, Briefcase, Lock, Unlock, Zap, Gauge } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { getSkinImageUrl, getVehicleImageUrl } from '@/lib/assets';
+import DeleteCharacterButton from '@/components/DeleteCharacterButton';
 
 // Helper mapping for Factions
 const FACTION_NAMES: Record<number, string> = {
@@ -178,7 +179,7 @@ export default async function CharacterDetailsPage({ params }: PageProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-6 relative z-10 w-full md:w-auto justify-between md:justify-end">
+          <div className="flex items-center gap-4 relative z-10 w-full md:w-auto justify-between md:justify-end">
             <span
               className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold ${
                 char.Online
@@ -186,56 +187,58 @@ export default async function CharacterDetailsPage({ params }: PageProps) {
                   : 'bg-zinc-800 text-zinc-500 border border-zinc-700/30'
               }`}
             >
-              {char.Online ? 'Sedang Online' : 'Offline'}
+              {char.Online ? 'Online' : 'Offline'}
             </span>
+
+            <DeleteCharacterButton charId={char.ID} charName={char.char_name} />
           </div>
         </div>
 
         {/* Grid Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           
-          {/* Box 1: Keuangan & Stats IC */}
+          {/* Box 1: Wallet & Faction Stats */}
           <div className="space-y-6">
             
-            {/* Keuangan */}
+            {/* Wallet & Bank */}
             <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
               <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
                 <Landmark className="h-4.5 w-4.5 text-amber-500" />
-                Dompet & Rekening Bank
+                Wallet & Bank Accounts
               </h3>
               <div className="space-y-4 text-xs">
                 <div className="flex justify-between items-center py-2 border-b border-zinc-900">
-                  <span className="text-zinc-500">Uang Tunai (Cash)</span>
+                  <span className="text-zinc-500">Cash Wallet</span>
                   <span className="font-bold text-white flex items-center gap-1">
                     <Coins className="h-3.5 w-3.5 text-amber-500" />
                     ${char.Cash.toLocaleString('en-US')}
                   </span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-zinc-900">
-                  <span className="text-zinc-500">Saldo Bank (BankAccount)</span>
+                  <span className="text-zinc-500">Bank Balance</span>
                   <span className="font-bold text-white flex items-center gap-1">
                     <Landmark className="h-3.5 w-3.5 text-amber-500" />
                     ${char.BankAccount.toLocaleString('en-US')}
                   </span>
                 </div>
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-zinc-500">Tabungan Deposito (Savings)</span>
+                  <span className="text-zinc-500">Savings Deposit</span>
                   <span className="font-bold text-white">${char.Savings.toLocaleString('en-US')}</span>
                 </div>
               </div>
             </div>
 
-            {/* Pekerjaan & Faksi */}
+            {/* Job & Faction */}
             <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
               <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
                 <Shield className="h-4.5 w-4.5 text-amber-500" />
-                Pekerjaan & Faksi
+                Job & Faction Affiliation
               </h3>
               <div className="space-y-4 text-xs">
                 <div className="py-2 border-b border-zinc-900">
-                  <span className="text-zinc-500 block mb-1">Afiliasi Faksi</span>
+                  <span className="text-zinc-500 block mb-1">Faction Affiliation</span>
                   <span className="font-bold text-white">
-                    {FACTION_NAMES[char.Faction] || 'Pemain Sipil (Civilian)'}
+                    {FACTION_NAMES[char.Faction] || 'Civilian Player'}
                   </span>
                   {char.Faction > 0 && (
                     <div className="flex flex-col gap-2 mt-1.5">
@@ -244,13 +247,13 @@ export default async function CharacterDetailsPage({ params }: PageProps) {
                         href={`/dashboard/faction/${char.Faction}`}
                         className="inline-flex items-center justify-center gap-1 rounded-lg bg-zinc-900 border border-zinc-800 hover:bg-zinc-850 py-1.5 px-3 text-[10px] font-bold text-amber-500 hover:text-amber-400 transition cursor-pointer w-fit"
                       >
-                        Buka Portal Roster Faksi →
+                        Open Faction Roster Portal →
                       </Link>
                     </div>
                   )}
                 </div>
                 <div className="py-2">
-                  <span className="text-zinc-500 block mb-1">Pekerjaan Utama</span>
+                  <span className="text-zinc-500 block mb-1">Primary Occupation</span>
                   <span className="font-bold text-white">{JOB_NAMES[char.playerJob] || 'None'}</span>
                 </div>
               </div>
@@ -258,84 +261,84 @@ export default async function CharacterDetailsPage({ params }: PageProps) {
 
           </div>
 
-          {/* Box 2: Lisensi & Status Medis */}
+          {/* Box 2: Licenses & Status */}
           <div className="space-y-6">
             
-            {/* Lisensi Resmi */}
+            {/* Legal Licenses */}
             <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
               <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
                 <FileText className="h-4.5 w-4.5 text-amber-500" />
-                Lisensi Hukum (Licenses)
+                Legal Licenses
               </h3>
               <div className="space-y-3 text-xs">
                 <div className="flex justify-between items-center py-1.5">
-                  <span className="text-zinc-400">Lisensi Mengemudi (Driving)</span>
+                  <span className="text-zinc-400">Driver&apos;s License</span>
                   {char.CarLic ? (
-                    <span className="flex items-center gap-1 text-green-400 font-semibold"><CheckCircle className="h-4 w-4" /> Aktif</span>
+                    <span className="flex items-center gap-1 text-green-400 font-semibold"><CheckCircle className="h-4 w-4" /> Active</span>
                   ) : (
-                    <span className="flex items-center gap-1 text-zinc-500 font-semibold"><XCircle className="h-4 w-4" /> Tidak Ada</span>
+                    <span className="flex items-center gap-1 text-zinc-500 font-semibold"><XCircle className="h-4 w-4" /> None</span>
                   )}
                 </div>
                 <div className="flex justify-between items-center py-1.5">
-                  <span className="text-zinc-400">Lisensi Penerbang (Flying)</span>
+                  <span className="text-zinc-400">Pilot License</span>
                   {char.FlyLic ? (
-                    <span className="flex items-center gap-1 text-green-400 font-semibold"><CheckCircle className="h-4 w-4" /> Aktif</span>
+                    <span className="flex items-center gap-1 text-green-400 font-semibold"><CheckCircle className="h-4 w-4" /> Active</span>
                   ) : (
-                    <span className="flex items-center gap-1 text-zinc-500 font-semibold"><XCircle className="h-4 w-4" /> Tidak Ada</span>
+                    <span className="flex items-center gap-1 text-zinc-500 font-semibold"><XCircle className="h-4 w-4" /> None</span>
                   )}
                 </div>
                 <div className="flex justify-between items-center py-1.5">
-                  <span className="text-zinc-400">Lisensi Medis (Medical)</span>
+                  <span className="text-zinc-400">Medical License</span>
                   {char.MedLic ? (
-                    <span className="flex items-center gap-1 text-green-400 font-semibold"><CheckCircle className="h-4 w-4" /> Aktif</span>
+                    <span className="flex items-center gap-1 text-green-400 font-semibold"><CheckCircle className="h-4 w-4" /> Active</span>
                   ) : (
-                    <span className="flex items-center gap-1 text-zinc-500 font-semibold"><XCircle className="h-4 w-4" /> Tidak Ada</span>
+                    <span className="flex items-center gap-1 text-zinc-500 font-semibold"><XCircle className="h-4 w-4" /> None</span>
                   )}
                 </div>
                 <div className="flex justify-between items-center py-1.5">
-                  <span className="text-zinc-400">Lisensi Pengemudi Truk (Trucking)</span>
+                  <span className="text-zinc-400">Trucker License</span>
                   {char.TruckLic ? (
-                    <span className="flex items-center gap-1 text-green-400 font-semibold"><CheckCircle className="h-4 w-4" /> Aktif</span>
+                    <span className="flex items-center gap-1 text-green-400 font-semibold"><CheckCircle className="h-4 w-4" /> Active</span>
                   ) : (
-                    <span className="flex items-center gap-1 text-zinc-500 font-semibold"><XCircle className="h-4 w-4" /> Tidak Ada</span>
+                    <span className="flex items-center gap-1 text-zinc-500 font-semibold"><XCircle className="h-4 w-4" /> None</span>
                   )}
                 </div>
                 <div className="flex justify-between items-center py-1.5">
-                  <span className="text-zinc-400">Lisensi Senjata (Weapons)</span>
+                  <span className="text-zinc-400">Firearms License</span>
                   {char.WepLic ? (
-                    <span className="flex items-center gap-1 text-green-400 font-semibold"><CheckCircle className="h-4 w-4" /> Aktif</span>
+                    <span className="flex items-center gap-1 text-green-400 font-semibold"><CheckCircle className="h-4 w-4" /> Active</span>
                   ) : (
-                    <span className="flex items-center gap-1 text-zinc-500 font-semibold"><XCircle className="h-4 w-4" /> Tidak Ada</span>
+                    <span className="flex items-center gap-1 text-zinc-500 font-semibold"><XCircle className="h-4 w-4" /> None</span>
                   )}
                 </div>
               </div>
             </div>
 
-            {/* Status Medis & Fisik */}
+            {/* Medical & Physical Condition */}
             <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
               <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
                 <Heart className="h-4.5 w-4.5 text-amber-500" />
-                Kondisi Fisik & Status Hukum
+                Physical Condition & Legal Status
               </h3>
               <div className="space-y-4 text-xs">
                 <div className="flex justify-between items-center py-1 border-b border-zinc-900">
-                  <span className="text-zinc-500">Kesehatan (Health)</span>
+                  <span className="text-zinc-500">Health Points</span>
                   <span className="font-bold text-white">{char.Health} HP</span>
                 </div>
                 <div className="flex justify-between items-center py-1 border-b border-zinc-900">
-                  <span className="text-zinc-500">Armour</span>
+                  <span className="text-zinc-500">Body Armour</span>
                   <span className="font-bold text-white">{char.Armour} AP</span>
                 </div>
                 <div className="flex justify-between items-center py-1 border-b border-zinc-900">
-                  <span className="text-zinc-500">Tingkat Kelaparan (Hunger)</span>
+                  <span className="text-zinc-500">Hunger Level</span>
                   <span className="font-bold text-white">{char.Hunger}%</span>
                 </div>
                 <div className="flex justify-between items-center py-1">
-                  <span className="text-zinc-500">Status Penjara (Jail Status)</span>
+                  <span className="text-zinc-500">Jail Status</span>
                   {char.Jailed ? (
-                    <span className="text-red-500 font-bold">Terpenjara ({char.SentenceTime} detik tersisa)</span>
+                    <span className="text-red-500 font-bold">Incarcerated ({char.SentenceTime} seconds remaining)</span>
                   ) : (
-                    <span className="text-green-500 font-bold">Bebas / Bersih</span>
+                    <span className="text-green-500 font-bold">Clear / Free</span>
                   )}
                 </div>
               </div>
@@ -345,18 +348,18 @@ export default async function CharacterDetailsPage({ params }: PageProps) {
 
         </div>
 
-        {/* Section 3: Aset Milik Karakter (Vehicles, Houses, Businesses) */}
+        {/* Section 3: Character Assets */}
         <div className="space-y-8">
           
-          {/* Kendaraan Pribadi */}
+          {/* Vehicles */}
           <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
             <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
               <Car className="h-5 w-5 text-amber-500" />
-              Daftar Kendaraan Pribadi ({vehicles.length})
+              Owned Personal Vehicles ({vehicles.length})
             </h3>
             
             {vehicles.length === 0 ? (
-              <p className="text-xs text-zinc-500 text-center py-6">Karakter ini tidak memiliki kendaraan pribadi.</p>
+              <p className="text-xs text-zinc-500 text-center py-6">This character does not own any vehicles.</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {vehicles.map((veh) => (
@@ -374,7 +377,7 @@ export default async function CharacterDetailsPage({ params }: PageProps) {
 
                       <div className="grid grid-cols-2 gap-y-2 pt-2 border-t border-zinc-900">
                         <div>
-                          <span className="text-zinc-500 block text-[9px] uppercase tracking-wider">Mesin</span>
+                          <span className="text-zinc-500 block text-[9px] uppercase tracking-wider">Engine Health</span>
                           <span className="font-semibold text-white flex items-center gap-1">
                             <Zap className="h-3 w-3 text-amber-500" />
                             {veh.carHealth}% HP
@@ -388,11 +391,11 @@ export default async function CharacterDetailsPage({ params }: PageProps) {
                           </span>
                         </div>
                         <div>
-                          <span className="text-zinc-500 block text-[9px] uppercase tracking-wider">Baterai</span>
+                          <span className="text-zinc-500 block text-[9px] uppercase tracking-wider">Battery</span>
                           <span className="font-semibold text-white">{veh.carBatteryL.toFixed(0)}%</span>
                         </div>
                         <div>
-                          <span className="text-zinc-500 block text-[9px] uppercase tracking-wider">Bahan Bakar</span>
+                          <span className="text-zinc-500 block text-[9px] uppercase tracking-wider">Fuel Level</span>
                           <span className="font-semibold text-white">{veh.carFuel.toFixed(0)} L</span>
                         </div>
                       </div>
@@ -418,18 +421,18 @@ export default async function CharacterDetailsPage({ params }: PageProps) {
             )}
           </div>
 
-          {/* Properti (Rumah & Bisnis) */}
+          {/* Properties (Houses & Businesses) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             
-            {/* Rumah */}
+            {/* Houses */}
             <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
               <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2">
                 <Home className="h-5 w-5 text-amber-500" />
-                Daftar Rumah / Apartemen ({houses.length})
+                Houses & Apartments ({houses.length})
               </h3>
               
               {houses.length === 0 ? (
-                <p className="text-xs text-zinc-500 text-center py-6">Karakter ini tidak memiliki rumah.</p>
+                <p className="text-xs text-zinc-500 text-center py-6">This character does not own any houses.</p>
               ) : (
                 <div className="space-y-4">
                   {houses.map((house) => (
@@ -441,9 +444,9 @@ export default async function CharacterDetailsPage({ params }: PageProps) {
                         {house.locked ? <Lock className="h-3.5 w-3.5 text-red-400" /> : <Unlock className="h-3.5 w-3.5 text-green-400" />}
                       </div>
                       <div className="flex justify-between text-zinc-500 pt-2 border-t border-zinc-900 text-[11px]">
-                        <span>Harga Beli: ${house.price.toLocaleString('en-US')}</span>
+                        <span>Price: ${house.price.toLocaleString('en-US')}</span>
                         {house.rentable === 1 && (
-                          <span className="text-amber-400 font-semibold">Sewa: ${house.rentprice}/hari</span>
+                          <span className="text-amber-400 font-semibold">Rent: ${house.rentprice}/day</span>
                         )}
                       </div>
                     </div>
@@ -452,15 +455,15 @@ export default async function CharacterDetailsPage({ params }: PageProps) {
               )}
             </div>
 
-            {/* Bisnis */}
+            {/* Businesses */}
             <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
               <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2">
                 <Briefcase className="h-5 w-5 text-amber-500" />
-                Daftar Bisnis / Perusahaan ({businesses.length})
+                Owned Businesses ({businesses.length})
               </h3>
               
               {businesses.length === 0 ? (
-                <p className="text-xs text-zinc-500 text-center py-6">Karakter ini tidak memiliki bisnis.</p>
+                <p className="text-xs text-zinc-500 text-center py-6">This character does not own any businesses.</p>
               ) : (
                 <div className="space-y-4">
                   {businesses.map((biz) => (
@@ -473,11 +476,11 @@ export default async function CharacterDetailsPage({ params }: PageProps) {
                       </div>
                       <div className="space-y-1.5 pt-2 border-t border-zinc-900 text-[11px]">
                         <div className="flex justify-between text-zinc-500">
-                          <span>Nilai Bisnis: ${biz.biz_price.toLocaleString('en-US')}</span>
-                          <span>Stok Produk: {biz.biz_prod} unit</span>
+                          <span>Business Value: ${biz.biz_price.toLocaleString('en-US')}</span>
+                          <span>Product Stock: {biz.biz_prod} units</span>
                         </div>
                         <div className="flex justify-between text-zinc-400 font-bold">
-                          <span>Uang Laci (Till)</span>
+                          <span>Register Cash (Till)</span>
                           <span className="text-green-400">${biz.biz_till.toLocaleString('en-US')}</span>
                         </div>
                       </div>

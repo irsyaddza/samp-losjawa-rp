@@ -1,22 +1,46 @@
 'use client';
 
 import Link from 'next/link';
-import { Orbit, LogOut, LayoutDashboard, Mail, User, ChevronDown, Bell } from 'lucide-react';
+import Image from 'next/image';
+import { usePathname } from 'next/navigation';
+import {
+  LogOut,
+  LayoutDashboard,
+  Mail,
+  Users,
+  ChevronDown,
+  Bell,
+  Menu,
+  X,
+  Shield,
+  Settings,
+  Globe,
+  Award
+} from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
 interface NavbarProps {
   session?: {
     username: string;
     email?: string;
+    adminLevel?: number;
   } | null;
 }
 
+const mainNavLinks = [
+  { href: '/#stats', label: 'Stats' },
+  { href: '/#features', label: 'Features' },
+  { href: '/changelog', label: 'Changelog' },
+  { href: '/donator', label: 'Donator' },
+];
+
 export default function Navbar({ session }: NavbarProps) {
+  const pathname = usePathname();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Fetch unread notification count
   useEffect(() => {
     if (!session) return;
     async function fetchCount() {
@@ -31,12 +55,10 @@ export default function Navbar({ session }: NavbarProps) {
       }
     }
     fetchCount();
-    // Poll every 60 seconds
     const interval = setInterval(fetchCount, 60000);
     return () => clearInterval(interval);
   }, [session]);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -47,142 +69,267 @@ export default function Navbar({ session }: NavbarProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  return (
-    <div className="fixed top-5 left-0 right-0 z-50 px-4 sm:px-6">
-      <div className="mx-auto max-w-5xl rounded-2xl bg-zinc-950/70 border border-zinc-800/80 shadow-[0_16px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl h-16 flex items-center justify-between px-4 sm:px-6 relative transition-all duration-300">
-        
-        {/* Subtle glass border highlights */}
-        <div className="absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-amber-500/20 to-transparent pointer-events-none" />
+  useEffect(() => {
+    setMobileOpen(false);
+    setDropdownOpen(false);
+  }, [pathname]);
 
-        {/* Left Side: Brand Logo & Title */}
+  return (
+    <header className="fixed top-0 left-0 right-0 z-50 w-full border-b border-zinc-800/80 bg-[#09090b]/90 backdrop-blur-md transition-all duration-200">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        
+        {/* Brand Logo & Title */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-zinc-950 shadow-md shadow-amber-500/10 group-hover:scale-105 group-hover:shadow-amber-500/20 transition-all duration-300">
-            <Orbit className="h-4.5 w-4.5 text-zinc-950 group-hover:rotate-180 transition-transform duration-700 ease-out" />
-          </div>
-          <span className="text-[11px] font-black tracking-[0.25em] uppercase text-zinc-100 group-hover:text-amber-500 transition-colors duration-300">
-            LOS JAWA<span className="text-amber-500 group-hover:text-zinc-100 transition-colors duration-300"> RP</span>
-          </span>
+          <Image
+            src="/logo.png"
+            alt="Los Jawa RP Logo"
+            width={44}
+            height={44}
+            className="h-10 w-auto object-contain shrink-0 transition-transform duration-200 group-hover:scale-105"
+            priority
+          />
         </Link>
 
-        {/* Center: Navigation Links */}
-        <nav className="hidden md:flex items-center gap-1 bg-zinc-900/40 p-1 rounded-xl border border-zinc-800/50">
-          <Link
-            href="/#features"
-            className="px-4 py-2 rounded-lg text-xs font-bold text-zinc-400 hover:text-white hover:bg-zinc-900/60 transition-all duration-200"
-          >
-            Fitur
-          </Link>
-          <Link
-            href="/#stats"
-            className="px-4 py-2 rounded-lg text-xs font-bold text-zinc-400 hover:text-white hover:bg-zinc-900/60 transition-all duration-200"
-          >
-            Statistik
-          </Link>
+        {/* Center Desktop Navigation Links */}
+        <nav className="hidden items-center gap-8 md:flex">
+          {mainNavLinks.map((link) => {
+            const isActive = pathname === link.href;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`relative text-xs font-bold uppercase tracking-wider transition-colors py-1 ${
+                  isActive ? 'text-amber-400' : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                {link.label}
+                {isActive && (
+                  <span className="absolute -bottom-[21px] left-0 right-0 h-[2px] bg-amber-500 shadow-[0_0_8px_#f59e0b] rounded-full" />
+                )}
+              </Link>
+            );
+          })}
+          {session && (
+            <Link
+              href="/dashboard/online"
+              className={`relative text-xs font-bold uppercase tracking-wider transition-colors py-1 ${
+                pathname === '/dashboard/online' ? 'text-amber-400' : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              Online Players
+              {pathname === '/dashboard/online' && (
+                <span className="absolute -bottom-[21px] left-0 right-0 h-[2px] bg-amber-500 shadow-[0_0_8px_#f59e0b] rounded-full" />
+              )}
+            </Link>
+          )}
           <a
             href="https://forum.losjawa-rp.net"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-4 py-2 rounded-lg text-xs font-bold text-zinc-400 hover:text-white hover:bg-zinc-900/60 transition-all duration-200"
+            className="text-xs font-bold uppercase tracking-wider text-zinc-400 hover:text-white transition-colors"
           >
             Forum
           </a>
         </nav>
 
-        {/* Right: User / Auth section */}
-        <div className="relative" ref={dropdownRef}>
+        {/* Right Section: User Dropdown or Auth Actions */}
+        <div className="flex items-center gap-3">
           {session ? (
             <div className="flex items-center gap-3">
-              {/* Inbox Shortcut with unread count */}
-              <Link 
+              {/* Notification Bell */}
+              <Link
                 href="/dashboard/inbox"
-                className="w-9 h-9 rounded-xl bg-zinc-900/30 border border-zinc-800/50 hover:border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-all duration-200 relative"
-                aria-label="Kotak Pesan"
+                className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/60 text-zinc-400 transition hover:border-amber-500/30 hover:bg-zinc-800 hover:text-white"
+                aria-label="Inbox & Notifications"
               >
                 <Bell className="h-4 w-4" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[8px] font-black text-zinc-950 ring-2 ring-zinc-950">
-                    {unreadCount}
+                  <span className="absolute -top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-amber-500 text-[9px] font-black text-black ring-2 ring-[#09090b]">
+                    {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
               </Link>
 
-              {/* User Dropdown Button */}
-              <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="h-9 pl-2 pr-3.5 rounded-xl bg-zinc-900/40 border border-zinc-800/80 hover:border-zinc-700/80 text-zinc-300 hover:text-white flex items-center gap-2.5 transition duration-300 cursor-pointer shadow-sm relative group"
-              >
-                <div className="w-6.5 h-6.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center font-black text-[9px] uppercase">
-                  {session.username.substring(0, 2)}
-                </div>
-                <span className="text-xs font-bold max-w-[120px] truncate">{session.username}</span>
-                <ChevronDown className={`h-3 w-3 text-zinc-500 group-hover:text-zinc-300 transition-transform duration-300 ${dropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {/* Dropdown Menu */}
-              {dropdownOpen && (
-                <div className="absolute right-0 mt-3.5 w-52 rounded-2xl bg-zinc-950 border border-zinc-800 p-2 shadow-2xl origin-top-right transition-all duration-300 z-50 animate-fade-in-up">
-                  <div className="px-3.5 py-2.5 border-b border-zinc-900 mb-1.5">
-                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Terhubung Sebagai</p>
-                    <p className="text-xs font-bold text-white truncate mt-0.5">{session.email || `${session.username}@ucp`}</p>
+              {/* User Dropdown Trigger */}
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setDropdownOpen((open) => !open)}
+                  className="flex items-center gap-2.5 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-1.5 text-zinc-300 transition hover:border-amber-500/30 hover:bg-zinc-800 hover:text-white cursor-pointer"
+                >
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs font-black uppercase text-amber-400">
+                    {session.username.charAt(0)}
                   </div>
-                  
-                  <Link
-                    href="/dashboard"
-                    onClick={() => setDropdownOpen(false)}
-                    className="flex w-full items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-zinc-400 hover:text-white hover:bg-zinc-900/60 transition-all duration-200"
-                  >
-                    <LayoutDashboard className="h-4 w-4 text-amber-500" />
-                    Dashboard UCP
-                  </Link>
-                  
-                  <Link
-                    href="/dashboard/inbox"
-                    onClick={() => setDropdownOpen(false)}
-                    className="flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-xs font-semibold text-zinc-400 hover:text-white hover:bg-zinc-900/60 transition-all duration-200"
-                  >
-                    <span className="flex items-center gap-2.5">
-                      <Mail className="h-4 w-4 text-amber-500" />
-                      Kotak Pesan
-                    </span>
-                    {unreadCount > 0 && (
-                      <span className="rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold text-amber-500">
-                        {unreadCount}
-                      </span>
-                    )}
-                  </Link>
+                  <span className="hidden text-xs font-bold sm:block">{session.username}</span>
+                  <ChevronDown className={`h-3.5 w-3.5 text-zinc-500 transition-transform duration-200 ${dropdownOpen ? 'rotate-180 text-amber-400' : ''}`} />
+                </button>
 
-                  <div className="h-[1px] bg-zinc-900 my-1.5" />
-                  
-                  <form action="/api/auth/logout" method="POST" className="block w-full">
-                    <button
-                      type="submit"
-                      className="flex w-full items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-red-400 hover:text-red-300 hover:bg-red-500/5 transition-all duration-200 text-left cursor-pointer"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Keluar Sesi
-                    </button>
-                  </form>
-                </div>
-              )}
+                {/* Dropdown Menu */}
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-60 rounded-2xl border border-zinc-800 bg-zinc-950 p-2 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-150">
+                    <div className="mb-2 border-b border-zinc-900 px-3 py-2.5">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">UCP Account</p>
+                      <p className="mt-0.5 truncate text-xs font-bold text-white">{session.username}</p>
+                      <p className="truncate text-[10px] text-zinc-400">{session.email || `${session.username}@ucp`}</p>
+                    </div>
+
+                    <div className="space-y-0.5">
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 transition hover:bg-zinc-900 hover:text-amber-400"
+                      >
+                        <LayoutDashboard className="h-4 w-4 text-amber-500" />
+                        Dashboard
+                      </Link>
+
+                      <Link
+                        href="/dashboard/online"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 transition hover:bg-zinc-900 hover:text-amber-400"
+                      >
+                        <Globe className="h-4 w-4 text-amber-500" />
+                        Online Players
+                      </Link>
+
+                      <Link
+                        href="/dashboard/friends"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 transition hover:bg-zinc-900 hover:text-amber-400"
+                      >
+                        <Users className="h-4 w-4 text-amber-500" />
+                        Friends
+                      </Link>
+
+                      <Link
+                        href="/dashboard/inbox"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 transition hover:bg-zinc-900 hover:text-amber-400"
+                      >
+                        <span className="flex items-center gap-2.5">
+                          <Mail className="h-4 w-4 text-amber-500" />
+                          Inbox
+                        </span>
+                        {unreadCount > 0 && (
+                          <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-400 border border-amber-500/20">
+                            {unreadCount}
+                          </span>
+                        )}
+                      </Link>
+
+                      <Link
+                        href="/dashboard/settings"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 transition hover:bg-zinc-900 hover:text-amber-400"
+                      >
+                        <Settings className="h-4 w-4 text-amber-500" />
+                        Account Settings
+                      </Link>
+
+                      {session.adminLevel && session.adminLevel > 0 ? (
+                        <Link
+                          href="/dashboard/admin"
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-amber-400 transition hover:bg-amber-500/10"
+                        >
+                          <Shield className="h-4 w-4 text-amber-400" />
+                          Admin Review Portal
+                        </Link>
+                      ) : null}
+                    </div>
+
+                    <div className="my-2 h-px bg-zinc-900" />
+
+                    <form action="/api/auth/logout" method="POST" className="block w-full">
+                      <button
+                        type="submit"
+                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-red-400 transition hover:bg-red-500/10 cursor-pointer"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Sign Out
+                      </button>
+                    </form>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
-            <div className="flex items-center gap-3">
+            <div className="hidden items-center gap-3 sm:flex">
               <Link
                 href="/login"
-                className="text-xs font-bold text-zinc-400 hover:text-white px-3 py-2 transition-colors duration-300"
+                className="text-xs font-bold uppercase tracking-wider text-zinc-400 transition hover:text-white px-3 py-2"
               >
-                Sign In
+                Sign in
               </Link>
               <Link
                 href="/register"
-                className="h-9 px-4.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 text-xs font-extrabold shadow-md shadow-amber-500/10 hover:shadow-amber-500/25 flex items-center justify-center transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                className="h-9 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs uppercase tracking-wider shadow-md transition flex items-center justify-center cursor-pointer"
               >
-                Join Us
+                Join now
               </Link>
             </div>
           )}
+
+          {/* Mobile Navigation Toggle Button */}
+          <button
+            type="button"
+            onClick={() => setMobileOpen((open) => !open)}
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/60 text-zinc-300 transition hover:text-white md:hidden"
+            aria-label="Toggle navigation"
+          >
+            {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </button>
         </div>
       </div>
-    </div>
+
+      {/* Mobile Drawer Menu */}
+      {mobileOpen && (
+        <div className="border-b border-zinc-800 bg-zinc-950/95 p-4 backdrop-blur-md md:hidden animate-in slide-in-from-top-4 duration-200">
+          <nav className="flex flex-col gap-1">
+            {mainNavLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="rounded-xl px-4 py-3 text-xs font-bold uppercase tracking-wider text-zinc-300 hover:bg-zinc-900 hover:text-white"
+              >
+                {link.label}
+              </Link>
+            ))}
+            {session && (
+              <Link
+                href="/dashboard/online"
+                className="rounded-xl px-4 py-3 text-xs font-bold uppercase tracking-wider text-zinc-300 hover:bg-zinc-900 hover:text-white"
+              >
+                Online Players
+              </Link>
+            )}
+            <a
+              href="https://forum.losjawa-rp.fun"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-xl px-4 py-3 text-xs font-bold uppercase tracking-wider text-zinc-300 hover:bg-zinc-900 hover:text-white"
+            >
+              Forum
+            </a>
+
+            {!session && (
+              <div className="mt-3 flex flex-col gap-2 border-t border-zinc-900 pt-3">
+                <Link
+                  href="/login"
+                  className="rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-white"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href="/register"
+                  className="rounded-xl bg-amber-500 px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-black"
+                >
+                  Join now
+                </Link>
+              </div>
+            )}
+          </nav>
+        </div>
+      )}
+    </header>
   );
 }

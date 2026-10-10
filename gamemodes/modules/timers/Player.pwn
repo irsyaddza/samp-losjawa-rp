@@ -13,9 +13,9 @@ ptask Players[1000](i)
 
 				if(SafeTime[i] == 1)
 				{
-					SendAdminAlert(COLOR_LIGHTRED, JUNIOR_ADMINS, "AdmCmd: %s was kicked by SYSTEM, Reason: You've been kicked, not logging on in 60 seconds.", ReturnName(i));
+					SendAdminAlert(COLOR_LIGHTRED, JUNIOR_ADMINS, "AdmCmd: %s was kicked by SYSTEM, Reason: You've been kicked, not logging on in 120 seconds.", ReturnName(i));
 
-					SendClientMessage(i, COLOR_LIGHTRED, "You've been kicked, not logging on in 60 seconds."), KickEx(i);
+					SendClientMessage(i, COLOR_LIGHTRED, "You've been kicked, not logging on in 120 seconds."), KickEx(i);
 				}
 			}
 		}
@@ -37,19 +37,9 @@ ptask Players[1000](i)
 		if (fps >= 0 && fps < 300)
 		{
 			PlayerFPS[i] = fps;
-			new fpsStr[32];
-			format(fpsStr, sizeof(fpsStr), "FPS: %d", fps);
-			PlayerTextDrawSetString(i, TD_ServerFPS[i], fpsStr);
 		}
 	}
 	PlayerDrunkLevelLast[i] = GetPlayerDrunkLevel(i);
-
-	new MapZone:zone = GetPlayerMapZone(i);
-    new zoneName[MAX_MAP_ZONE_NAME];
-    GetMapZoneName(zone, zoneName);
-	new locString[128];
-    format(locString, sizeof(locString), "%s", zoneName);
-	PlayerTextDrawSetString(i, TD_ServerLocation[i], locString);
 
 	if(PlayerData[i][pTutorialStep])
 	{
@@ -288,27 +278,159 @@ ptask Players[1000](i)
 
 		        PlayerData[i][pDrugTick]++;
 
-		        if(health + 1.0 >= MAX_DRUG_HEALTH)
+		        if(PlayerData[i][pDrugTick] == 4)
 		        {
-                    ResetDrugBoost(i);
+		            PlayerData[i][pDrugTick] = 0;
+		            PlayerData[i][pDrugBoost]--;
 
-		            SetPlayerHealthEx(i, MAX_DRUG_HEALTH);
+		            // Countdown duration (1 second per 4 ticks)
+		            if(PlayerData[i][pDrugDuration] > 0)
+		            {
+		            	PlayerData[i][pDrugDuration]--;
+
+		            	new Float:armour = PlayerData[i][pArmour];
+		            	new Float:dose = PlayerData[i][pDrugAmountUsed];
+
+		            	// === Drug-specific tick behaviors scaled by dosage (0.1, 0.2, 0.3g) ===
+		            	switch(PlayerData[i][pDrugEffects])
+		            	{
+		            		case 1: // Marijuana: slow health regen
+		            		{
+		            			if(health < 150.0) SetPlayerHealthEx(i, health + 0.3);
+		            		}
+		            		case 4: // Heroin: armor regen scaled by dose (0.1g -> +15% max, 0.2g -> +30% max, 0.3g -> +50% max per dose)
+		            		{
+		            			new Float:heroCap = (dose <= 0.15) ? (15.0) : ((dose <= 0.25) ? (30.0) : (50.0));
+		            			if(armour < 100.0)
+		            			{
+		            				new Float:newArmour = armour + (heroCap / 10.0); // gradual fill over 10 secs
+		            				if(newArmour > 100.0) newArmour = 100.0;
+		            				SetPlayerArmourEx(i, newArmour);
+		            			}
+		            		}
+		            		case 5: // Ketamine: random stumble animation (1 in 10 chance per sec)
+		            		{
+		            			if(!IsPlayerInAnyVehicle(i) && random(10) == 0)
+		            			{
+		            				ApplyAnimation(i, "PED", "FLOOR_hit_f", 4.1, 0, 1, 1, 0, 0, 1);
+		            				SendClientMessage(i, COLOR_LIGHTRED, "* You feel disoriented and stumble from Ketamine...");
+		            			}
+		            		}
+		            		case 7: // Methamphetamine: armor regen scaled by dose (0.1g -> +10% max, 0.2g -> +20% max, 0.3g -> +30% max per dose, capped at 50%)
+		            		{
+		            			new Float:methCap = (dose <= 0.15) ? (10.0) : ((dose <= 0.25) ? (20.0) : (30.0));
+		            			if(armour < 50.0)
+		            			{
+		            				new Float:newArmour = armour + (methCap / 10.0);
+		            				if(newArmour > 50.0) newArmour = 50.0;
+		            				SetPlayerArmourEx(i, newArmour);
+		            			}
+		            		}
+		            	}
+		            }
+
+		            if(PlayerData[i][pDrugDuration] <= 0)
+		            {
+		            	// Post-Meth Crash (Kelelahan setelah efek Methamphetamine habis)
+		            	if(PlayerData[i][pDrugEffects] == 7)
+		            	{
+		            		SendClientMessage(i, COLOR_LIGHTRED, "[METH CRASH] The adrenaline effect of Meth worn off. You feel exhausted...");
+		            		ApplyAnimation(i, "FAT", "IDLE_tired", 4.1, 0, 0, 0, 1, 0, 1);
+		            	}
+		            	else
+		            	{
+		            		GameTextForPlayer(i, "~r~Drug effect worn off.", 3000, 3);
+		            	}
+		            	ResetDrugBoost(i);
+		            }
+		            else
+		            {
+		            	if(health + 1.0 < MAX_DRUG_HEALTH)
+		                	SetPlayerHealthEx(i, health + 1.0);
+		            }
 		        }
-		        else
-		        {
-			        if(PlayerData[i][pDrugTick] == 4)
-			        {
-			            PlayerData[i][pDrugTick] = 0, PlayerData[i][pDrugBoost]--;
-
-		                SetPlayerHealthEx(i, health + 1.0);
-			        }
-				}
 			}
 			else ResetDrugBoost(i);
 		}
 	}
-	else
+	// Fentanyl Overdose natural recovery timer (1 second countdown per 4 ticks)
+	if(PlayerData[i][pOverdosing])
 	{
+		TogglePlayerControllable(i, 0);
+		if(GetPlayerAnimationIndex(i) != 363 && GetPlayerAnimationIndex(i) != 364 && GetPlayerAnimationIndex(i) != 362)
+		{
+			ApplyAnimation(i, "CRACK", "crckidle2", 4.1, 0, 0, 0, 1, 0, 1);
+		}
+
+		if(PlayerData[i][pOverdoseTimer] > 0)
+		{
+			PlayerData[i][pOverdoseTimer]--;
+			if(PlayerData[i][pOverdoseTimer] <= 0)
+			{
+				PlayerData[i][pOverdosing] = 0;
+				ClearAnimations(i);
+				TogglePlayerControllable(i, 1);
+
+				// Recover with 15.0 HP (weak state)
+				SetPlayerHealthEx(i, 15.0);
+				SendClientMessage(i, COLOR_GREEN, "[OVERDOSE RECOVERY] You slowly regained consciousness from the overdose... Your body feels weak (15 HP).");
+				GameTextForPlayer(i, "~g~RECOVERED~n~~w~Weak State (15 HP)", 4000, 3);
+			}
+		}
+	}
+
+	// High Tolerance Drug Withdrawal (Sakaw / Tremor ringan jika toleransi >= 80)
+		new maxTol = 0;
+		for(new d = 0; d < 10; d++)
+		{
+			if(PlayerData[i][pDrugTolerance][d] > maxTol) maxTol = PlayerData[i][pDrugTolerance][d];
+		}
+
+		if(maxTol >= 80 && random(120) == 0)
+		{
+			SetPlayerDrunkLevel(i, 3500);
+			SendClientMessage(i, COLOR_LIGHTRED, "[WITHDRAWAL] Your body is experiencing mild tremors due to high drug tolerance...");
+		}
+
+	// Hunger & Thirst Decay (Every 180s = -2% Hunger, Every 120s = -3% Thirst)
+	if(PlayerData[i][pPlayingSeconds] % 180 == 0)
+	{
+		if(PlayerData[i][pHunger] > 0)
+		{
+			PlayerData[i][pHunger] -= 2;
+			if(PlayerData[i][pHunger] < 0) PlayerData[i][pHunger] = 0;
+		}
+	}
+	if(PlayerData[i][pPlayingSeconds] % 120 == 0)
+	{
+		if(PlayerData[i][pThirst] > 0)
+		{
+			PlayerData[i][pThirst] -= 3;
+			if(PlayerData[i][pThirst] < 0) PlayerData[i][pThirst] = 0;
+		}
+	}
+
+	// Hunger & Thirst Warnings & Starvation Penalty
+	if(PlayerData[i][pHunger] <= 5 || PlayerData[i][pThirst] <= 5)
+	{
+		if(PlayerData[i][pPlayingSeconds] % 10 == 0)
+		{
+			new Float:pHP = PlayerData[i][pHealth];
+			if(pHP > 10.0)
+			{
+				SetPlayerHealthEx(i, pHP - 2.0);
+				SendClientMessage(i, COLOR_LIGHTRED, "[NEEDS] You are starving / severely dehydrated! (-2 HP)");
+			}
+		}
+	}
+	else if(PlayerData[i][pHunger] <= 20 || PlayerData[i][pThirst] <= 20)
+	{
+		if(PlayerData[i][pPlayingSeconds] % 120 == 0)
+		{
+			SendClientMessage(i, COLOR_YELLOW, "[NEEDS] You are feeling very hungry / thirsty! Find food or drink soon.");
+		}
+	}
+
 	    if(PlayerData[i][pDrugStamp] != 0) //drug withdrawal effects
 	    {
 	        if((timestamp - PlayerData[i][pDrugStamp]) > 5400)
@@ -338,7 +460,6 @@ ptask Players[1000](i)
 		        }
 			}
 	    }
-	}
 
 	//phone related stuff
 	if(PlayerData[i][pCellTime] > 0)
@@ -471,6 +592,7 @@ ptask Players[1000](i)
 
 				if(carid != -1)
 				{
+					CarData[carid][carFuel] = CoreVehicles[vehicleid][vehFuel];
 					CarData[carid][carMileage] += vehicleSpeed * 0.621371192 / 3600.0;
 					CarData[carid][carEngineL] -= 0.000016;
 					CarData[carid][carBatteryL] -= 0.000016;
@@ -850,7 +972,7 @@ ptask Players[1000](i)
 		}
   	}
 
-	if((timestamp - LastSpawn[i]) >= 10 && (timestamp - LastTeleport[i]) >= 3 && !PlayerData[i][pFreeze] && AFKTimer[i] > 0)
+	if((timestamp - LastSpawn[i]) >= 10 && (timestamp - LastTeleport[i]) >= 3 && !PlayerData[i][pFreeze] && AFKTimer[i] > 0 && !ViewingCCTV[i] && !PlayerData[i][pTutorialStep])
 	{
 		new specialAction = GetPlayerSpecialAction(i);
 
@@ -966,7 +1088,6 @@ PayDay()
 					PlayerData[i][pJobRank] = 0;
 			}
 
-			Tax += TaxValue;
 
 			PlayerData[i][pAccount] -= TaxValue;
 
@@ -1083,7 +1204,7 @@ PayDay()
 				}
 			}
 
-			if(PlayerData[i][pJob] == JOB_MECHANIC || PlayerData[i][pSideJob] == JOB_MECHANIC)
+			if(PlayerData[i][pJob] == JOB_MECHANIC)
 			{
 			    PlayerData[i][pPayCheck] += 1250;
 

@@ -84,17 +84,17 @@ export default async function AdminRecordsPage() {
             Dashboard
           </Link>
           <span className="text-zinc-650 text-xs">/</span>
-          <span className="text-xs text-zinc-500 font-medium">Admin Record</span>
+          <span className="text-xs text-zinc-500 font-medium">Sanction Records</span>
         </div>
 
         {/* Heading */}
         <div className="mb-8">
           <h2 className="text-2xl font-black text-white flex items-center gap-2">
             <ShieldAlert className="h-6 w-6 text-red-500" />
-            Catatan Pelanggaran (Admin Record)
+            Sanction & Violation Records
           </h2>
           <p className="text-xs text-zinc-400 mt-1">
-            Riwayat hukuman administrasi (Bans, Jails, dan Kicks) yang tercatat pada seluruh karakter di UCP ini.
+            Administrative sanction logs (Bans, Admin Jails, and Kicks) recorded for all characters under this UCP.
           </p>
         </div>
 
@@ -104,19 +104,19 @@ export default async function AdminRecordsPage() {
           <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
             <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2 text-red-500">
               <ShieldX className="h-4.5 w-4.5" />
-              Pemblokiran (Bans)
+              Ban Sanctions
             </h3>
             {bans.length === 0 ? (
-              <p className="text-xs text-zinc-500 py-2">Tidak ada catatan pemblokiran aktif/lampau.</p>
+              <p className="text-xs text-zinc-500 py-2">No active or past ban records.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-zinc-900 text-zinc-500 font-semibold uppercase tracking-wider">
-                      <th className="pb-3 pr-4">Karakter</th>
+                      <th className="pb-3 pr-4">Character</th>
                       <th className="pb-3 px-4">Administrator</th>
-                      <th className="pb-3 px-4">Alasan</th>
-                      <th className="pb-3 pl-4 text-right">Tanggal</th>
+                      <th className="pb-3 px-4">Reason</th>
+                      <th className="pb-3 pl-4 text-right">Date</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-900">
@@ -126,7 +126,7 @@ export default async function AdminRecordsPage() {
                         <td className="py-3 px-4 text-zinc-450">{ban.BannedBy}</td>
                         <td className="py-3 px-4 text-zinc-400 font-medium">{ban.Reason}</td>
                         <td className="py-3 pl-4 text-right text-zinc-550">
-                          {new Date(ban.Date).toLocaleDateString('id-ID', {
+                          {new Date(ban.Date).toLocaleDateString('en-US', {
                             day: 'numeric',
                             month: 'short',
                             year: 'numeric'
@@ -144,20 +144,20 @@ export default async function AdminRecordsPage() {
           <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
             <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2 text-amber-500">
               <Clock className="h-4.5 w-4.5" />
-              Penjara Admin (Jails)
+              Admin Jail Sanctions
             </h3>
             {jails.length === 0 ? (
-              <p className="text-xs text-zinc-500 py-2">Tidak ada catatan penahanan administrasi.</p>
+              <p className="text-xs text-zinc-500 py-2">No admin jail records.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-zinc-900 text-zinc-500 font-semibold uppercase tracking-wider">
-                      <th className="pb-3 pr-4">Karakter</th>
+                      <th className="pb-3 pr-4">Character</th>
                       <th className="pb-3 px-4">Administrator</th>
-                      <th className="pb-3 px-4">Alasan</th>
-                      <th className="pb-3 px-4">Durasi</th>
-                      <th className="pb-3 pl-4 text-right">Tanggal</th>
+                      <th className="pb-3 px-4">Reason</th>
+                      <th className="pb-3 px-4">Duration</th>
+                      <th className="pb-3 pl-4 text-right">Date</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-900">
@@ -166,9 +166,9 @@ export default async function AdminRecordsPage() {
                         <td className="py-3 pr-4 font-bold text-white">{jail.Character.replace('_', ' ')}</td>
                         <td className="py-3 px-4 text-zinc-450">{jail.JailedBy}</td>
                         <td className="py-3 px-4 text-zinc-400 font-medium">{jail.Reason}</td>
-                        <td className="py-3 px-4 text-amber-500 font-bold">{jail.Minutes} Menit</td>
+                        <td className="py-3 px-4 text-amber-500 font-bold">{jail.Minutes} Minutes</td>
                         <td className="py-3 pl-4 text-right text-zinc-550">
-                          {new Date(jail.Date).toLocaleDateString('id-ID', {
+                          {new Date(jail.Date).toLocaleDateString('en-US', {
                             day: 'numeric',
                             month: 'short',
                             year: 'numeric'
@@ -186,19 +186,19 @@ export default async function AdminRecordsPage() {
           <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
             <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2 text-zinc-400">
               <Info className="h-4.5 w-4.5" />
-              Tendangan (Kicks)
+              Kick Sanctions
             </h3>
             {kicks.length === 0 ? (
-              <p className="text-xs text-zinc-500 py-2">Tidak ada catatan pengeluaran paksa (kicks).</p>
+              <p className="text-xs text-zinc-500 py-2">No kick records.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-zinc-900 text-zinc-500 font-semibold uppercase tracking-wider">
-                      <th className="pb-3 pr-4">Karakter</th>
+                      <th className="pb-3 pr-4">Character</th>
                       <th className="pb-3 px-4">Administrator</th>
-                      <th className="pb-3 px-4">Alasan</th>
-                      <th className="pb-3 pl-4 text-right">Tanggal</th>
+                      <th className="pb-3 px-4">Reason</th>
+                      <th className="pb-3 pl-4 text-right">Date</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-900">
@@ -208,7 +208,7 @@ export default async function AdminRecordsPage() {
                         <td className="py-3 px-4 text-zinc-450">{kick.KickedBy}</td>
                         <td className="py-3 px-4 text-zinc-400 font-medium">{kick.Reason}</td>
                         <td className="py-3 pl-4 text-right text-zinc-550">
-                          {new Date(kick.Date).toLocaleDateString('id-ID', {
+                          {new Date(kick.Date).toLocaleDateString('en-US', {
                             day: 'numeric',
                             month: 'short',
                             year: 'numeric'

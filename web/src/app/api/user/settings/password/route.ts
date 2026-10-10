@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { whirlpool } from '@/lib/hash';
+import bcrypt from 'bcryptjs';
 import { RowDataPacket } from 'mysql2';
 
 export async function POST(request: Request) {
@@ -32,14 +33,23 @@ export async function POST(request: Request) {
     }
 
     const currentHashed = rows[0].Password;
-    const oldHashed = whirlpool(oldPassword);
+    let isOldPasswordValid = false;
+    const isBcrypt = currentHashed.startsWith('$2a$') || currentHashed.startsWith('$2y$') || currentHashed.startsWith('$2b$');
 
-    if (currentHashed.toUpperCase() !== oldHashed) {
+    if (isBcrypt) {
+      isOldPasswordValid = await bcrypt.compare(oldPassword, currentHashed);
+    } else {
+      const oldHashed = whirlpool(oldPassword);
+      isOldPasswordValid = (currentHashed.toUpperCase() === oldHashed);
+    }
+
+    if (!isOldPasswordValid) {
       return NextResponse.json({ error: 'Old password is incorrect' }, { status: 400 });
     }
 
-    // Hash new password and update
-    const newHashed = whirlpool(newPassword);
+    // Hash new password using Bcrypt
+    const salt = await bcrypt.genSalt(12);
+    const newHashed = await bcrypt.hash(newPassword, salt);
     await pool.execute(
       'UPDATE accounts SET Password = ? WHERE ID = ?',
       [newHashed, session.userId]

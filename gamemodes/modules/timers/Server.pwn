@@ -32,6 +32,18 @@ task Server[60000]()
 	FixHour(tmphour);
 	tmphour = shifthour;
 
+	foreach (new i : Player)
+	{
+		if(PlayerData[i][pJailed] == PUNISHMENT_TYPE_PRISON)
+		{
+			SetPlayerTime(i, 15, 0);
+		}
+		else
+		{
+			SetPlayerTime(i, tmphour, tmpminute);
+		}
+	}
+
 	if((tmphour > ghour) || (tmphour == 0 && ghour == 23))
 	{
 	    //TollsLocked = 0;
@@ -46,14 +58,6 @@ task Server[60000]()
 
 		SetWorldTime(tmphour);
 
-		foreach (new i : Player)
-		{
-			if(PlayerData[i][pJailed] == PUNISHMENT_TYPE_PRISON)
-			{
-				SetPlayerTime(i, 15, 0);
-			}
-		}
-
 		MDC_Global_Cache[PoliceCalls] = 0;
 		MDC_Global_Cache[Arrests] = 0;
 		MDC_Global_Cache[Fines] = 0;
@@ -66,7 +70,7 @@ task Server[60000]()
 
 	if(!gShipDeparture)
 	{
-		if((gettime() - gShipTime) > 7200000)
+		if((gettime() - gShipTime) > 7200)
 		{
 			RampsClosed();
 		}
@@ -74,30 +78,6 @@ task Server[60000]()
 
  	for(new i = 0; i < MAX_DROP_ITEMS; ++i)
 	{
-	    /*if(CORPSES[i][corpseSpawned])
-	    {
-            CORPSES[i][corpseMinutes] += 1;
-
-            if(CORPSES[i][corpseMinutes] >= 20)
-            {
-                new Float:playerPos[3];
-	 	    	GetActorPos(CORPSES[i][corpseActor], playerPos[0], playerPos[1], playerPos[2]);
-
-				foreach (new x : Player)
-				{
-			    	if(IsPlayerInRangeOfPoint(x, 20.0, playerPos[0], playerPos[1], playerPos[2]))
-			    	{
-						SendClientMessage(x, COLOR_PURPLE, "* (( The corpse was despawned. ))");
-			    	}
-				}
-
-                DestroyActor(CORPSES[i][corpseActor]);
-                CORPSES[i][corpseActor] = INVALID_PLAYER_ID;
-                CORPSES[i][corpseName][0] = EOS;
-                CORPSES[i][corpseMinutes] = 0;
-                CORPSES[i][corpseSpawned] = false;
-            }
-	    }*/
 
 	    if(DroppedWeapons[i][DropExists])
 	    {
@@ -109,6 +89,8 @@ task Server[60000]()
 		    }
 	    }
 	}
+
+	Farmer_PlotTick();
 }
 
 IndustryTime()
@@ -130,16 +112,6 @@ IndustryTime()
 
 task ServerDateTimer[1000]()
 {
-    new string[128], year, month, day, hours, minutes, seconds;
-    getdate(year, month, day);
-    gettime(hours, minutes, seconds);
-
-    // Adjust to GMT+7 (WIB)
-    hours = (hours + 7) % 24;
-
-    format(string, sizeof(string), "%02d/%02d/%d", day, month, year);
-    TextDrawSetString(TD_ServerDate, string);
-
-    format(string, sizeof(string), "%02d:%02d:%02d", hours, minutes, seconds);
-    TextDrawSetString(TD_ServerTime, string);
+    // Update HudV2 global date/time textdraws
+    UpdateHudV2Time();
 }

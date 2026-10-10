@@ -4,19 +4,19 @@
 
 // Variables
 
-static const g_arrIndItemNames[26][15] =
+new const g_arrIndItemNames[26][15] =
 {
 	"dyes","gunpowder","coins","scrap metal","wood logs","cotton","milk","beverages","meat","cereal","eggs","appliances","clothes",
 	"fuel","furniture","fruit","transformer","vehicles", "aggregate", "weapons", "steel shapes","paper", "bricks", "car parts", "meal", "malt"
 };
 
-static const g_arrIndItemProperNames[26][15] =
+new const g_arrIndItemProperNames[26][15] =
 {
 	"Dyes","Gunpowder","Coins","Scrap metal","Wood logs","Cotton","Milk","Beverages","Meat","Cereal","Eggs","Appliances","Clothes",
 	"Fuel","Furniture","Fruit","Transformer","Vehicles", "Aggregate", "Weapons", "Steel shapes","Paper", "Bricks", "Car parts", "Meal", "Malt"
 };
 
-static const g_arrIndustryNames[31][35] = 
+new const g_arrIndustryNames[31][35] = 
 {
 	"The Ship", "FleischBerg Distribution Hub", "Easter Bay Chemicals", "San Andreas Federal Mint", "Whetstone Scrap Yard", "The Panopticon Forest - West", "The Panopticon Forest - East",
 	"The Impounder's Farm", "The Farm On a Rock", "The Flint Range Farm", "The Beacon Hill Eggs", "EasterBoard Farm", "The Palomino Farm", "The Leafy Hollow Orchards", "The Hilltop Farm",
@@ -780,16 +780,23 @@ UpdateStorage(cargoid)
 	{
 		if(!IsValidDynamicPickup(StorageData[cargoid][in_pickup])) StorageData[cargoid][in_pickup] = CreateDynamicPickup(1318, 23, StorageData[cargoid][in_posx], StorageData[cargoid][in_posy], StorageData[cargoid][in_posz] + 0.3, 0, 0);
 
+		format(sgstr, sizeof(sgstr),
+			"[{A4D247}%s{FFFFFF}] - %s\nCommodity: {E5FF00}%s{FFFFFF}\nPrice: %s / unit\nStock: %d / %d\n{AAAAAA}[IndID: %d | StorageID: %d]",
+			g_arrIndustryNames[StorageData[cargoid][in_industryid]],
+			(StorageData[cargoid][in_trading_type] == 0) ? ("{A4D247}For Sale{FFFFFF}") : ("{CD324D}Wanted{FFFFFF}"),
+			g_arrIndItemProperNames[StorageData[cargoid][in_item]],
+			FormatNumber(StorageData[cargoid][in_price]),
+			StorageData[cargoid][in_stock], StorageData[cargoid][in_maximum],
+			StorageData[cargoid][in_industryid], StorageData[cargoid][in_id]
+		);
+
 		if(!IsValidDynamic3DTextLabel(StorageData[cargoid][in_label]))
 		{
-			format(sgstr, 128, "[{E5FF00}%s{FFFFFF}]\nStorage: %d / %d\nPrice: %s / unit", g_arrIndItemNames[StorageData[cargoid][in_item]], StorageData[cargoid][in_stock], StorageData[cargoid][in_maximum], FormatNumber(StorageData[cargoid][in_price]));
-			StorageData[cargoid][in_label] = CreateDynamic3DTextLabel(sgstr, -1, StorageData[cargoid][in_posx], StorageData[cargoid][in_posy], StorageData[cargoid][in_posz] + 0.3, 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, -1, -1, -1, 100.0);
-            return 1;
+			StorageData[cargoid][in_label] = CreateDynamic3DTextLabel(sgstr, COLOR_WHITE, StorageData[cargoid][in_posx], StorageData[cargoid][in_posy], StorageData[cargoid][in_posz] + 0.8, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+			return 1;
 		}
 
-		format(sgstr, 128, "[{E5FF00}%s{FFFFFF}]\nStorage: %d / %d\nPrice: %s / unit", g_arrIndItemNames[StorageData[cargoid][in_item]], StorageData[cargoid][in_stock], StorageData[cargoid][in_maximum], FormatNumber(StorageData[cargoid][in_price]));
-        UpdateDynamic3DTextLabelText(StorageData[cargoid][in_label], -1, sgstr);
-
+		UpdateDynamic3DTextLabelText(StorageData[cargoid][in_label], COLOR_WHITE, sgstr);
 	}
 	else
 	{
@@ -1121,3 +1128,299 @@ GetProductCargo(type)
 	}
 	return -1;
 }
+
+// --- Dynamic Industry Admin System ---
+
+forward OnIndustryCreated(slot);
+
+stock Storage_CreateInGame(slot)
+{
+    if(!StorageData[slot][in_id]) return 0;
+
+    if(StorageData[slot][in_pickup] != 0)
+    {
+        DestroyDynamicPickup(StorageData[slot][in_pickup]);
+        StorageData[slot][in_pickup] = 0;
+    }
+    if(IsValidDynamic3DTextLabel(StorageData[slot][in_label]))
+    {
+        DestroyDynamic3DTextLabel(StorageData[slot][in_label]);
+    }
+
+    StorageData[slot][in_pickup] = CreateDynamicPickup(1318, 23, StorageData[slot][in_posx], StorageData[slot][in_posy], StorageData[slot][in_posz], 0, 0);
+
+    new msg[256];
+    format(msg, sizeof(msg),
+        "[{A4D247}%s{FFFFFF}] - %s\nCommodity: {E5FF00}%s{FFFFFF}\nPrice: %s / unit\nStock: %d / %d\n{AAAAAA}[IndID: %d | StorageID: %d]",
+        g_arrIndustryNames[StorageData[slot][in_industryid]],
+        (StorageData[slot][in_trading_type] == 0) ? ("{A4D247}For Sale{FFFFFF}") : ("{CD324D}Wanted{FFFFFF}"),
+        g_arrIndItemProperNames[StorageData[slot][in_item]],
+        FormatNumber(StorageData[slot][in_price]),
+        StorageData[slot][in_stock], StorageData[slot][in_maximum],
+        StorageData[slot][in_industryid], StorageData[slot][in_id]
+    );
+
+    StorageData[slot][in_label] = CreateDynamic3DTextLabel(
+        msg, COLOR_WHITE,
+        StorageData[slot][in_posx], StorageData[slot][in_posy], StorageData[slot][in_posz] + 0.8,
+        15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0
+    );
+
+    return 1;
+}
+
+stock Storage_GetFreeSlot()
+{
+    for(new i = 0; i < MAX_ITEM_STORAGE; i++)
+    {
+        if(!StorageData[i][in_id]) return i;
+    }
+    return -1;
+}
+
+stock Storage_FindByDBID(dbid)
+{
+    foreach (new i : Industry)
+    {
+        if(StorageData[i][in_id] == dbid) return i;
+    }
+    return -1;
+}
+
+stock Storage_Add(industryid, trading_type, item, price, consumption, maximum, Float:x, Float:y, Float:z)
+{
+    new slot = Storage_GetFreeSlot();
+    if(slot == -1) return -1;
+
+    StorageData[slot][in_posx]         = x;
+    StorageData[slot][in_posy]         = y;
+    StorageData[slot][in_posz]         = z;
+    StorageData[slot][in_item]         = item;
+    StorageData[slot][in_industryid]   = industryid;
+    StorageData[slot][in_trading_type] = trading_type;
+    StorageData[slot][in_price]        = price;
+    StorageData[slot][in_consumption]  = consumption;
+    StorageData[slot][in_stock]        = 0;
+    StorageData[slot][in_maximum]      = maximum;
+
+    new query[300];
+    mysql_format(dbCon, query, sizeof(query),
+        "INSERT INTO `industry` (`posx`, `posy`, `posz`, `item`, `industryid`, `trading_type`, `price`, `consumption`, `stock`, `maximum`) VALUES (%.4f, %.4f, %.4f, %d, %d, %d, %d, %d, 0, %d)",
+        x, y, z, item, industryid, trading_type, price, consumption, maximum
+    );
+    mysql_tquery(dbCon, query, "OnIndustryCreated", "d", slot);
+
+    return slot;
+}
+
+public OnIndustryCreated(slot)
+{
+    StorageData[slot][in_id] = cache_insert_id();
+    Iter_Add(Industry, slot);
+    Storage_CreateInGame(slot);
+    return 1;
+}
+
+stock Storage_Remove(dbid)
+{
+    new slot = Storage_FindByDBID(dbid);
+    if(slot == -1) return 0;
+
+    new query[128];
+    mysql_format(dbCon, query, sizeof(query), "DELETE FROM `industry` WHERE `id` = %d LIMIT 1", dbid);
+    mysql_tquery(dbCon, query);
+
+    if(StorageData[slot][in_pickup] != 0)
+    {
+        DestroyDynamicPickup(StorageData[slot][in_pickup]);
+        StorageData[slot][in_pickup] = 0;
+    }
+    if(IsValidDynamic3DTextLabel(StorageData[slot][in_label]))
+    {
+        DestroyDynamic3DTextLabel(StorageData[slot][in_label]);
+    }
+
+    Iter_Remove(Industry, slot);
+    StorageData[slot][in_id] = 0;
+    return 1;
+}
+
+// Dialogs for Industry Wizard
+
+Dialog:IndWizardStep1(playerid, response, listitem, inputtext[])
+{
+    if(!response) return 1;
+
+    SetPVarInt(playerid, "IndWiz_IndustryID", listitem);
+
+    Dialog_Show(playerid, IndWizardStep2, DIALOG_STYLE_LIST, "Create Industry - Step 2: Select Trading Type", "For Sale (0) - Place where truckers BUY cargo\nWanted (1) - Place where truckers SELL cargo", "Select", "Back");
+    return 1;
+}
+
+Dialog:IndWizardStep2(playerid, response, listitem, inputtext[])
+{
+    if(!response) return 1;
+
+    SetPVarInt(playerid, "IndWiz_TradingType", listitem);
+
+    new listStr[1024];
+    listStr[0] = EOS;
+    for(new i = 0; i < sizeof(g_arrIndItemProperNames); i++)
+    {
+        format(listStr, sizeof(listStr), "%s[%d] %s (%s)\n", listStr, i, g_arrIndItemProperNames[i], ReturnCargoUnits(i));
+    }
+
+    Dialog_Show(playerid, IndWizardStep3, DIALOG_STYLE_LIST, "Create Industry - Step 3: Select Commodity", listStr, "Select", "Back");
+    return 1;
+}
+
+Dialog:IndWizardStep3(playerid, response, listitem, inputtext[])
+{
+    if(!response) return 1;
+
+    SetPVarInt(playerid, "IndWiz_ItemID", listitem);
+
+    new helpMsg[256];
+    format(helpMsg, sizeof(helpMsg),
+        "Enter price per unit, consumption/hour, and max stock capacity:\n\nFormat: [Price] [Consumption/Hour] [Max Stock]\nExample: 360 10 1000"
+    );
+
+    Dialog_Show(playerid, IndWizardStep4, DIALOG_STYLE_INPUT, "Create Industry - Step 4: Price & Capacity", helpMsg, "Create", "Back");
+    return 1;
+}
+
+Dialog:IndWizardStep4(playerid, response, listitem, inputtext[])
+{
+    if(!response) return 1;
+
+    new price, consumption, maxStock;
+    if(sscanf(inputtext, "ddd", price, consumption, maxStock) || price <= 0 || maxStock <= 0)
+    {
+        SendClientMessage(playerid, COLOR_LIGHTRED, "Invalid input! Format: [Price] [Consumption] [MaxStock] (e.g. 360 10 1000)");
+        Dialog_Show(playerid, IndWizardStep4, DIALOG_STYLE_INPUT, "Create Industry - Step 4: Price & Capacity", "Format: [Price] [Consumption/Hour] [Max Stock]\nExample: 360 10 1000", "Create", "Back");
+        return 1;
+    }
+
+    new indID = GetPVarInt(playerid, "IndWiz_IndustryID");
+    new tradingType = GetPVarInt(playerid, "IndWiz_TradingType");
+    new itemID = GetPVarInt(playerid, "IndWiz_ItemID");
+
+    new Float:x, Float:y, Float:z;
+    GetPlayerPos(playerid, x, y, z);
+
+    new slot = Storage_Add(indID, tradingType, itemID, price, consumption, maxStock, x, y, z);
+    if(slot == -1)
+        return SendClientMessageEx(playerid, COLOR_LIGHTRED, "Storage limit reached (%d max).", MAX_ITEM_STORAGE);
+
+    SendAdminAlert(COLOR_YELLOW, 3, "AdmWarn(3) %s created Industry Point for %s (%s - %s) at %.1f, %.1f, %.1f.",
+        ReturnName(playerid), g_arrIndustryNames[indID], g_arrIndItemProperNames[itemID],
+        (tradingType == 0) ? ("For Sale") : ("Wanted"), x, y, z
+    );
+    SendClientMessageEx(playerid, COLOR_WHITE, "Industry point successfully created for %s!", g_arrIndustryNames[indID]);
+
+    DeletePVar(playerid, "IndWiz_IndustryID");
+    DeletePVar(playerid, "IndWiz_TradingType");
+    DeletePVar(playerid, "IndWiz_ItemID");
+    return 1;
+}
+
+Dialog:IndustryListDialog(playerid, response, listitem, inputtext[])
+{
+    if(!response) return 1;
+
+    new count = 0;
+    foreach (new i : Industry)
+    {
+        if(count == listitem)
+        {
+            SetPlayerInterior(playerid, 0);
+            SetPlayerVirtualWorld(playerid, 0);
+            SetPlayerDynamicPos(playerid, StorageData[i][in_posx], StorageData[i][in_posy], StorageData[i][in_posz]);
+
+            SendClientMessageEx(playerid, COLOR_WHITE, "Teleported to Industry Point ID %d (%s - %s).",
+                StorageData[i][in_id], g_arrIndustryNames[StorageData[i][in_industryid]], g_arrIndItemProperNames[StorageData[i][in_item]]
+            );
+            return 1;
+        }
+        count++;
+    }
+    return 1;
+}
+
+Dialog:IndustryEditMenu(playerid, response, listitem, inputtext[])
+{
+    if(!response) return 1;
+
+    new dbid = GetPVarInt(playerid, "IndEdit_DBID");
+    new slot = Storage_FindByDBID(dbid);
+    if(slot == -1) return SendClientMessage(playerid, COLOR_LIGHTRED, "Industry point not found.");
+
+    switch(listitem)
+    {
+        case 0: // Move position
+        {
+            GetPlayerPos(playerid, StorageData[slot][in_posx], StorageData[slot][in_posy], StorageData[slot][in_posz]);
+            new query[256];
+            mysql_format(dbCon, query, sizeof(query), "UPDATE `industry` SET `posx` = %.4f, `posy` = %.4f, `posz` = %.4f WHERE `id` = %d", StorageData[slot][in_posx], StorageData[slot][in_posy], StorageData[slot][in_posz], dbid);
+            mysql_tquery(dbCon, query);
+
+            Storage_CreateInGame(slot);
+            SendClientMessageEx(playerid, COLOR_WHITE, "Industry Point ID %d position updated to your current location.", dbid);
+        }
+        case 1: // Change Price
+        {
+            Dialog_Show(playerid, IndEditPrice, DIALOG_STYLE_INPUT, "Edit Industry - Price", "Enter new price per unit ($):", "Save", "Cancel");
+        }
+        case 2: // Change Stock & Max
+        {
+            Dialog_Show(playerid, IndEditStock, DIALOG_STYLE_INPUT, "Edit Industry - Stock & Max Capacity", "Format: [Current Stock] [Max Stock]\nExample: 500 1000", "Save", "Cancel");
+        }
+    }
+    return 1;
+}
+
+Dialog:IndEditPrice(playerid, response, listitem, inputtext[])
+{
+    if(!response) return 1;
+
+    new price = strval(inputtext);
+    if(price <= 0) return SendClientMessage(playerid, COLOR_LIGHTRED, "Invalid price amount.");
+
+    new dbid = GetPVarInt(playerid, "IndEdit_DBID");
+    new slot = Storage_FindByDBID(dbid);
+    if(slot == -1) return SendClientMessage(playerid, COLOR_LIGHTRED, "Industry point not found.");
+
+    StorageData[slot][in_price] = price;
+    new query[128];
+    mysql_format(dbCon, query, sizeof(query), "UPDATE `industry` SET `price` = %d WHERE `id` = %d", price, dbid);
+    mysql_tquery(dbCon, query);
+
+    Storage_CreateInGame(slot);
+    SendClientMessageEx(playerid, COLOR_WHITE, "Industry Point ID %d price updated to $%d.", dbid, price);
+    return 1;
+}
+
+Dialog:IndEditStock(playerid, response, listitem, inputtext[])
+{
+    if(!response) return 1;
+
+    new stockVal, maxVal;
+    if(sscanf(inputtext, "dd", stockVal, maxVal) || maxVal <= 0)
+        return SendClientMessage(playerid, COLOR_LIGHTRED, "Invalid input! Format: [Current Stock] [Max Stock]");
+
+    new dbid = GetPVarInt(playerid, "IndEdit_DBID");
+    new slot = Storage_FindByDBID(dbid);
+    if(slot == -1) return SendClientMessage(playerid, COLOR_LIGHTRED, "Industry point not found.");
+
+    StorageData[slot][in_stock] = stockVal;
+    StorageData[slot][in_maximum] = maxVal;
+
+    new query[128];
+    mysql_format(dbCon, query, sizeof(query), "UPDATE `industry` SET `stock` = %d, `maximum` = %d WHERE `id` = %d", stockVal, maxVal, dbid);
+    mysql_tquery(dbCon, query);
+
+    Storage_CreateInGame(slot);
+    SendClientMessageEx(playerid, COLOR_WHITE, "Industry Point ID %d stock updated to %d/%d.", dbid, stockVal, maxVal);
+    return 1;
+}
+

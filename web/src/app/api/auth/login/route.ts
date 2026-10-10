@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { whirlpool } from '@/lib/hash';
 import { setSessionCookie } from '@/lib/auth';
+import bcrypt from 'bcryptjs';
 import { RowDataPacket } from 'mysql2';
 
 export async function POST(request: Request) {
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
 
     // Query database for user
     const [rows] = await pool.execute<RowDataPacket[]>(
-      'SELECT ID, Username, Password, Admin FROM accounts WHERE Username = ? LIMIT 1',
+      'SELECT ID, Username, Password, Admin, Email, EmailVerified FROM accounts WHERE Username = ? LIMIT 1',
       [username]
     );
 
@@ -29,13 +30,61 @@ export async function POST(request: Request) {
     }
 
     const account = rows[0];
-    const hashedPassword = whirlpool(password);
+    let isPasswordValid = false;
+    const isBcrypt = account.Password.startsWith('$2a$') || account.Password.startsWith('$2y$') || account.Password.startsWith('$2b$');
 
-    // Compare Whirlpool hashes
-    if (account.Password.toUpperCase() !== hashedPassword) {
+    if (isBcrypt) {
+      isPasswordValid = await bcrypt.compare(password, account.Password);
+    } else {
+      const hashedPassword = whirlpool(password);
+      isPasswordValid = (account.Password.toUpperCase() === hashedPassword);
+
+      // If legacy check is successful, upgrade to Bcrypt immediately
+      if (isPasswordValid) {
+        try {
+          const salt = await bcrypt.genSalt(12);
+          const newBcryptHash = await bcrypt.hash(password, salt);
+          await pool.execute(
+            'UPDATE accounts SET Password = ? WHERE ID = ?',
+            [newBcryptHash, account.ID]
+          );
+        } catch (upgradeError) {
+          console.error('Password hash upgrade failed:', upgradeError);
+        }
+      }
+    }
+
+    if (!isPasswordValid) {
       return NextResponse.json(
         { error: 'Invalid username or password' },
         { status: 401 }
+      );
+    }
+
+    // Check if account has a valid email address
+    const hasValidEmail = account.Email && account.Email.trim() !== '' && account.Email !== 'None' && account.Email.includes('@');
+
+    if (!hasValidEmail) {
+      return NextResponse.json(
+        {
+          error: 'Your account does not have a linked email address. Please enter an email address to receive your verification link.',
+          requireEmail: true,
+          accountId: account.ID,
+          username: account.Username,
+        },
+        { status: 403 }
+      );
+    }
+
+    // Check if email is verified
+    if (account.EmailVerified === 0) {
+      return NextResponse.json(
+        {
+          error: 'Please verify your email address before signing in. Check your inbox or request a new verification email.',
+          unverified: true,
+          email: account.Email,
+        },
+        { status: 403 }
       );
     }
 

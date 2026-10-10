@@ -1,8 +1,22 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { RowDataPacket } from 'mysql2';
-import { Server, Users, User, Shield, Compass, Sparkles, LogOut, LayoutDashboard } from 'lucide-react';
+import {
+  Server,
+  Users,
+  User,
+  Shield,
+  Compass,
+  Sparkles,
+  Play,
+  FileText,
+  ArrowRight,
+  BadgeCheck,
+  MessageSquare,
+  Clock3,
+} from 'lucide-react';
 
 import Navbar from '@/components/Navbar';
 
@@ -53,111 +67,205 @@ export default async function Home() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#09090b] pt-16">
+    <div className="min-h-screen bg-[#05070c] text-zinc-100">
       <Navbar session={session ? { username: session.username, email } : null} />
 
+      <main className="pt-24 sm:pt-28">
+        <section className="relative isolate overflow-hidden">
+          <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,_rgba(245,158,11,0.18),_transparent_35%),radial-gradient(circle_at_bottom_right,_rgba(251,191,36,0.16),_transparent_30%)]" />
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8 lg:py-28">
+            <div className="grid items-center gap-10 lg:grid-cols-[1.15fr_0.85fr]">
+              <div className="max-w-2xl">
+                <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-sm font-medium text-amber-300">
+                  <Sparkles className="h-4 w-4" />
+                  Modern roleplay with a polished community experience
+                </div>
 
-      {/* Hero Section */}
-      <section className="relative flex flex-col items-center justify-center overflow-hidden py-24 md:py-32">
-        {/* Glow accent */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-[120px] pointer-events-none" />
+                <h1 className="text-4xl font-black leading-[0.95] tracking-[-0.03em] text-white sm:text-5xl lg:text-7xl">
+                  A fresh city, a better roleplay journey.
+                </h1>
 
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/20 bg-amber-500/5 px-3 py-1 text-xs text-amber-400 font-medium mb-6">
-            <Sparkles className="h-3 w-3" />
-            Server Roleplay SA-MP Paling Asik & Modern
-          </div>
+                <p className="mt-5 max-w-xl text-base leading-8 text-zinc-400 sm:text-lg">
+                  Join Los Jawa Roleplay to build a life, run a business, grow friendships and experience one of the most immersive SA-MP communities in the region.
+                </p>
 
-          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white max-w-3xl mx-auto leading-none mb-6">
-            Petualangan Baru Menantimu di{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600">
-              Los Jawa Roleplay
-            </span>
-          </h1>
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                  <Link
+                    href={session ? '/dashboard' : '/register'}
+                    className="inline-flex items-center justify-center gap-2 rounded-full bg-amber-500 px-6 py-3.5 text-sm font-semibold text-black transition hover:bg-amber-400"
+                  >
+                    {session ? 'Open UCP dashboard' : 'Create your account'}
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <a
+                    href="samp://77.80.80.80:7777"
+                    className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
+                  >
+                    <Play className="h-4 w-4" />
+                    Connect to server
+                  </a>
+                  <Link
+                    href="/changelog"
+                    className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
+                  >
+                    <FileText className="h-4 w-4" />
+                    Changelog
+                  </Link>
+                </div>
 
-          <p className="text-zinc-400 max-w-xl mx-auto mb-10 text-base sm:text-lg">
-            Bergabunglah dengan ratusan pemain lainnya di kota Los Jawa. Wujudkan mimpimu, bangun bisnismu, cari relasimu, dan nikmati fitur roleplay berkualitas tinggi.
-          </p>
+                <div className="mt-8 flex flex-wrap gap-3 text-sm text-zinc-400">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2">
+                    <BadgeCheck className="h-4 w-4 text-amber-400" />
+                    Verified account access
+                  </span>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2">
+                    <Clock3 className="h-4 w-4 text-amber-400" />
+                    Active community events
+                  </span>
+                </div>
+              </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href={session ? "/dashboard" : "/register"}
-              className="w-full sm:w-auto rounded-xl bg-amber-500 px-8 py-3.5 font-bold text-black hover:bg-amber-400 shadow-lg shadow-amber-500/10 transition text-center"
-            >
-              {session ? "Buka Dashboard UCP" : "Daftar Akun UCP Sekarang"}
-            </Link>
-            <a
-              href="samp://77.80.80.80:7777" // Mocked link, user can replace with their actual IP
-              className="w-full sm:w-auto rounded-xl border border-zinc-800 bg-zinc-950 px-8 py-3.5 font-bold text-white hover:bg-zinc-900 transition text-center"
-            >
-              Main Langsung (SA-MP)
-            </a>
-          </div>
-        </div>
-      </section>
+              <div className="rounded-[2rem] border border-white/10 bg-zinc-950/75 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-7">
+                <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-amber-500/25 bg-amber-500/10">
+                    <Image src="/logo.png" alt="Los Jawa RP logo" width={36} height={36} priority />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-white">Los Jawa Roleplay</p>
+                    <p className="text-sm text-zinc-400">SA-MP server portal</p>
+                  </div>
+                </div>
 
-      {/* Stats Section */}
-      <section id="stats" className="border-t border-b border-zinc-800/80 bg-zinc-950/40 py-16">
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 text-center">
-            <div className="flex flex-col items-center p-6 rounded-2xl border border-zinc-800/60 bg-zinc-950/20">
-              <Users className="h-8 w-8 text-amber-500 mb-3" />
-              <span className="text-3xl font-black text-white">{stats.onlinePlayers} / {stats.maxPlayers}</span>
-              <span className="text-zinc-500 text-sm mt-1">Pemain Online</span>
-            </div>
-            <div className="flex flex-col items-center p-6 rounded-2xl border border-zinc-800/60 bg-zinc-950/20">
-              <User className="h-8 w-8 text-amber-500 mb-3" />
-              <span className="text-3xl font-black text-white">{stats.totalAccounts}</span>
-              <span className="text-zinc-500 text-sm mt-1">Akun Terdaftar</span>
-            </div>
-            <div className="flex flex-col items-center p-6 rounded-2xl border border-zinc-800/60 bg-zinc-950/20">
-              <Server className="h-8 w-8 text-amber-500 mb-3" />
-              <span className="text-3xl font-black text-white">{stats.totalCharacters}</span>
-              <span className="text-zinc-500 text-sm mt-1">Karakter Dibuat</span>
-            </div>
-          </div>
-        </div>
-      </section>
+                <div className="mt-6 grid gap-3">
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-zinc-400">Server status</span>
+                      <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold text-emerald-300">
+                        Online
+                      </span>
+                    </div>
+                    <p className="mt-3 text-3xl font-black text-white">{stats.onlinePlayers} / {stats.maxPlayers}</p>
+                    <p className="text-sm text-zinc-400">Players currently in-world</p>
+                  </div>
 
-      {/* Features Section */}
-      <section id="features" className="py-24">
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="text-center max-w-xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold text-white mb-4">Fitur Unggulan Kami</h2>
-            <p className="text-zinc-400">Kami menawarkan kenyamanan bermain dengan fitur script modern dan performa optimal.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="p-8 rounded-2xl border border-zinc-800 bg-zinc-950/50 hover:border-amber-500/20 hover:bg-zinc-950/80 transition duration-300">
-              <Shield className="h-10 w-10 text-amber-500 mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">Sistem Keamanan UCP</h3>
-              <p className="text-zinc-400 text-sm leading-relaxed">
-                Akun dilindungi dengan integrasi verifikasi email dan enkripsi Whirlpool untuk menjamin data Anda tetap aman.
-              </p>
-            </div>
-
-            <div className="p-8 rounded-2xl border border-zinc-800 bg-zinc-950/50 hover:border-amber-500/20 hover:bg-zinc-950/80 transition duration-300">
-              <Compass className="h-10 w-10 text-amber-500 mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">Peta Menarik & Unik</h3>
-              <p className="text-zinc-400 text-sm leading-relaxed">
-                Pemetaan lokasi yang detail dan eksklusif membuat suasana bermain terasa hidup, realistik, dan berkesan.
-              </p>
-            </div>
-
-            <div className="p-8 rounded-2xl border border-zinc-800 bg-zinc-950/50 hover:border-amber-500/20 hover:bg-zinc-950/80 transition duration-300">
-              <Sparkles className="h-10 w-10 text-amber-500 mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">Ekonomi Realistik</h3>
-              <p className="text-zinc-400 text-sm leading-relaxed">
-                Simulasi perekonomian seimbang dengan berbagai pilihan pekerjaan legal maupun ilegal, kepemilikan bisnis, properti, dan kendaraan pribadi.
-              </p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-2xl border border-white/10 bg-zinc-900/70 p-4">
+                      <p className="text-sm text-zinc-400">Registered accounts</p>
+                      <p className="mt-2 text-2xl font-black text-white">{stats.totalAccounts}</p>
+                    </div>
+                    <div className="rounded-2xl border border-white/10 bg-zinc-900/70 p-4">
+                      <p className="text-sm text-zinc-400">Characters created</p>
+                      <p className="mt-2 text-2xl font-black text-white">{stats.totalCharacters}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Footer */}
-      <footer className="mt-auto border-t border-zinc-900 bg-zinc-950 py-8">
-        <div className="container mx-auto px-4 text-center text-sm text-zinc-500">
+        <section id="stats" className="border-y border-white/10 bg-zinc-950/70 py-16 sm:py-20">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-6">
+                <Users className="mb-3 h-8 w-8 text-amber-400" />
+                <p className="text-3xl font-black text-white">{stats.onlinePlayers} / {stats.maxPlayers}</p>
+                <p className="mt-1 text-sm text-zinc-400">Players currently online</p>
+              </div>
+              <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-6">
+                <User className="mb-3 h-8 w-8 text-amber-400" />
+                <p className="text-3xl font-black text-white">{stats.totalAccounts}</p>
+                <p className="mt-1 text-sm text-zinc-400">Accounts registered</p>
+              </div>
+              <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-6">
+                <Server className="mb-3 h-8 w-8 text-amber-400" />
+                <p className="text-3xl font-black text-white">{stats.totalCharacters}</p>
+                <p className="mt-1 text-sm text-zinc-400">Characters created</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="features" className="py-20 sm:py-24">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <div className="mb-12 max-w-2xl">
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-amber-400">Why players stay</p>
+              <h2 className="mt-3 text-3xl font-black tracking-[-0.02em] text-white sm:text-4xl">
+                Designed for immersive roleplay and smooth daily play.
+              </h2>
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+              <div className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 p-7 sm:p-8">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/12 text-amber-400">
+                  <Shield className="h-6 w-6" />
+                </div>
+                <h3 className="mt-6 text-2xl font-bold text-white">Reliable systems, modern tools, and safe access</h3>
+                <p className="mt-3 text-base leading-8 text-zinc-400">
+                  From secure UCP access to polished account tools and responsive support, every part of the experience is built to feel clean and dependable.
+                </p>
+                <ul className="mt-6 space-y-3 text-sm text-zinc-300">
+                  <li className="flex items-start gap-2"><BadgeCheck className="mt-0.5 h-4 w-4 text-amber-400" /> Secure login and account management flow</li>
+                  <li className="flex items-start gap-2"><BadgeCheck className="mt-0.5 h-4 w-4 text-amber-400" /> Roleplay-friendly systems for factions and progression</li>
+                  <li className="flex items-start gap-2"><BadgeCheck className="mt-0.5 h-4 w-4 text-amber-400" /> Smooth experience across desktop and mobile devices</li>
+                </ul>
+              </div>
+
+              <div className="grid gap-6">
+                <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6">
+                  <Compass className="h-8 w-8 text-amber-400" />
+                  <h3 className="mt-4 text-xl font-semibold text-white">Vivid city life</h3>
+                  <p className="mt-2 text-sm leading-7 text-zinc-400">
+                    Explore locations, uncover stories, and interact with a city that feels active and alive.
+                  </p>
+                </div>
+                <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6">
+                  <MessageSquare className="h-8 w-8 text-amber-400" />
+                  <h3 className="mt-4 text-xl font-semibold text-white">Strong social layer</h3>
+                  <p className="mt-2 text-sm leading-7 text-zinc-400">
+                    Built for conversation, community activities, and roleplay that grows naturally over time.
+                  </p>
+                </div>
+                <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6">
+                  <Sparkles className="h-8 w-8 text-amber-400" />
+                  <h3 className="mt-4 text-xl font-semibold text-white">A more refined economy</h3>
+                  <p className="mt-2 text-sm leading-7 text-zinc-400">
+                    Create opportunities, manage property, and shape your path through a responsive economy.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="community" className="pb-20 sm:pb-24">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <div className="rounded-[2rem] border border-amber-500/20 bg-[linear-gradient(135deg,rgba(245,158,11,0.2),rgba(3,7,18,0.92))] p-8 shadow-[0_24px_80px_rgba(0,0,0,0.3)] sm:p-10">
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                <div className="max-w-2xl">
+                  <p className="text-sm font-semibold uppercase tracking-[0.3em] text-amber-300">Ready to step in</p>
+                  <h2 className="mt-3 text-3xl font-black tracking-[-0.02em] text-white sm:text-4xl">
+                    Start your story in Los Jawa today.
+                  </h2>
+                  <p className="mt-4 text-base leading-8 text-zinc-300">
+                    Whether you are joining for the first time or returning to the city, the experience is polished for both new players and long-term roleplayers.
+                  </p>
+                </div>
+                <Link
+                  href={session ? '/dashboard' : '/register'}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-100"
+                >
+                  {session ? 'Continue to dashboard' : 'Join the server'}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="border-t border-white/10 bg-zinc-950/80 py-8">
+        <div className="mx-auto max-w-6xl px-4 text-center text-sm text-zinc-500 sm:px-6 lg:px-8">
           <p>© {new Date().getFullYear()} Los Jawa Roleplay. All rights reserved.</p>
         </div>
       </footer>

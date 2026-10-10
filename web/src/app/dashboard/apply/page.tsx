@@ -43,17 +43,17 @@ export default async function ApplyPage() {
             Dashboard
           </Link>
           <span className="text-zinc-650 text-xs">/</span>
-          <span className="text-xs text-zinc-500 font-medium">Buat Karakter Baru</span>
+          <span className="text-xs text-zinc-500 font-medium">Create New Character</span>
         </div>
 
         {/* Heading */}
         <div className="mb-8">
           <h2 className="text-2xl font-black text-white flex items-center gap-2">
             <UserPlus className="h-6 w-6 text-amber-500" />
-            Pengajuan Karakter Baru
+            New Character Application
           </h2>
           <p className="text-xs text-zinc-400 mt-1">
-            Isi formulir latar belakang dan selesaikan kuis roleplay untuk mengajukan karakter baru ke dalam game server.
+            Fill out the identity & backstory form and complete the roleplay quiz to submit a new character.
           </p>
         </div>
 

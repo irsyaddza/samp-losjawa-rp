@@ -4,7 +4,7 @@ AddSimpleModel(-1, 19475, -1002, "object.dff", "playerlicense.txd");
 AddSimpleModel(-1, 19475, -1003, "idlewood.dff", "idlewood.txd");
 AddSimpleModel(-1, 19475, -1004, "alhambra_proj.dff", "alhambra_proj.txd");
 AddSimpleModel(-1, 19475, -1005, "alhambra_floor.dff", "alhambra_floor.txd");
-AddSimpleModel(-1, 19475, -1006, "alhambra_wall.dff", "alhambra_wall.txd"); 
+AddSimpleModel(-1, 19475, -1006, "alhambra_dinding.dff", "alhambra_dinding.txd");  
 AddSimpleModel(-1, 19475, -1007, "swattruck.dff", "swattruck.txd");
 AddSimpleModel(-1, 19475, -1008, "metrostat.dff", "metrostat.txd");
 AddSimpleModel(-1, 19475, -1009, "metroint1.dff", "metroint.txd");
@@ -22,6 +22,8 @@ AddSimpleModel(-1, 19475, -1408, "lssd7.dff", "lssd.txd");
 AddSimpleModel(-1, 19475, -1409, "lssd8.dff", "lssd.txd");
 AddSimpleModel(-1, 19475, -1401, "lssdtruck.dff", "lssd.txd");
 AddSimpleModel(-1, 19475, -1410, "logo.dff", "logo.txd");
+AddSimpleModel(-1, 19475, -1411, "cctvui.dff", "cctvui.txd");
+AddSimpleModel(-1, 19475, -1412, "dinding.dff", "dinding.txd");
 
 // Custom Skins
 AddCharModel(280, 20001, "lvpdpc2.dff", "lvpdpc2.txd");

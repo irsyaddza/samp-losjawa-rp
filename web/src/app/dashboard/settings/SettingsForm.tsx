@@ -52,13 +52,13 @@ export default function SettingsForm({
       });
       const data = await res.json();
       if (!res.ok) {
-        setEmailError(data.error || 'Gagal memperbarui email');
+        setEmailError(data.error || 'Failed to update email');
       } else {
-        setEmailSuccess('Email pemulihan berhasil diperbarui');
+        setEmailSuccess('Recovery email updated successfully');
         router.refresh();
       }
     } catch {
-      setEmailError('Koneksi internet bermasalah');
+      setEmailError('Network connection error');
     } finally {
       setEmailLoading(false);
     }
@@ -70,7 +70,7 @@ export default function SettingsForm({
     setPassSuccess('');
 
     if (newPassword !== confirmPassword) {
-      setPassError('Konfirmasi kata sandi tidak cocok');
+      setPassError('Password confirmation does not match');
       return;
     }
 
@@ -84,15 +84,15 @@ export default function SettingsForm({
       });
       const data = await res.json();
       if (!res.ok) {
-        setPassError(data.error || 'Gagal memperbarui kata sandi');
+        setPassError(data.error || 'Failed to update password');
       } else {
-        setPassSuccess('Kata sandi berhasil diperbarui');
+        setPassSuccess('Password updated successfully');
         setOldPassword('');
         setNewPassword('');
         setConfirmPassword('');
       }
     } catch {
-      setPassError('Koneksi internet bermasalah');
+      setPassError('Network connection error');
     } finally {
       setPassLoading(false);
     }
@@ -112,13 +112,13 @@ export default function SettingsForm({
       });
       const data = await res.json();
       if (!res.ok) {
-        setSecError(data.error || 'Gagal memperbarui info keamanan');
+        setSecError(data.error || 'Failed to update security credentials');
       } else {
-        setSecSuccess('Detail keamanan berhasil diperbarui');
+        setSecSuccess('Security credentials updated successfully');
         router.refresh();
       }
     } catch {
-      setSecError('Koneksi internet bermasalah');
+      setSecError('Network connection error');
     } finally {
       setSecLoading(false);
     }
@@ -132,10 +132,10 @@ export default function SettingsForm({
         <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6 relative">
           <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
             <Mail className="h-5 w-5 text-amber-500" />
-            Email Pemulihan
+            Recovery Email
           </h3>
           <p className="text-xs text-zinc-400 mb-6">
-            Alamat email ini digunakan jika Anda lupa password akun UCP Anda.
+            This email address is used if you forget your UCP account password.
           </p>
 
           {emailSuccess && (
@@ -155,7 +155,7 @@ export default function SettingsForm({
           <form onSubmit={handleEmailUpdate} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-zinc-400 mb-1.5" htmlFor="email-input">
-                Alamat Email
+                Email Address
               </label>
               <input
                 id="email-input"
@@ -163,7 +163,7 @@ export default function SettingsForm({
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Masukkan email pemulihan baru"
+                placeholder="Enter new recovery email"
                 className="w-full h-11 border border-zinc-805 rounded-xl px-4 text-xs font-medium focus:border-amber-500 focus:outline-none bg-zinc-900 text-white transition border-zinc-800"
               />
             </div>
@@ -172,7 +172,7 @@ export default function SettingsForm({
               disabled={emailLoading}
               className="h-10 px-5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-md transition flex items-center justify-center cursor-pointer disabled:opacity-50"
             >
-              {emailLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Simpan Email'}
+              {emailLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Email'}
             </button>
           </form>
         </div>
@@ -181,10 +181,10 @@ export default function SettingsForm({
         <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6 relative">
           <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
             <Shield className="h-5 w-5 text-amber-500" />
-            Kata Kunci Rahasia (Secret Word)
+            Secret Word Security
           </h3>
           <p className="text-xs text-zinc-400 mb-6">
-            Kunci pengaman tambahan di dalam game saat akun Anda terdeteksi menggunakan IP Address atau lokasi baru.
+            An extra layer of in-game security when your account logs in from a new IP or location.
           </p>
 
           {secSuccess && (
@@ -212,20 +212,20 @@ export default function SettingsForm({
                 required
                 value={secretWord}
                 onChange={(e) => setSecretWord(e.target.value)}
-                placeholder="Masukkan kata kunci pengaman baru"
+                placeholder="Enter new security word"
                 className="w-full h-11 border border-zinc-805 rounded-xl px-4 text-xs font-medium focus:border-amber-500 focus:outline-none bg-zinc-900 text-white transition border-zinc-800"
               />
             </div>
             <div>
               <label className="block text-xs font-semibold text-zinc-400 mb-1.5" htmlFor="sec-hint">
-                Pertanyaan Pengingat (Hint)
+                Hint Question / Prompt
               </label>
               <input
                 id="sec-hint"
                 type="text"
                 value={secretHint}
                 onChange={(e) => setSecretHint(e.target.value)}
-                placeholder="Contoh: Nama hewan peliharaan pertama saya"
+                placeholder="e.g. Name of my first pet"
                 className="w-full h-11 border border-zinc-805 rounded-xl px-4 text-xs font-medium focus:border-amber-500 focus:outline-none bg-zinc-900 text-white transition border-zinc-800"
               />
             </div>
@@ -234,7 +234,7 @@ export default function SettingsForm({
               disabled={secLoading}
               className="h-10 px-5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-md transition flex items-center justify-center cursor-pointer disabled:opacity-50"
             >
-              {secLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Simpan Kunci Keamanan'}
+              {secLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Security Word'}
             </button>
           </form>
         </div>
@@ -245,10 +245,10 @@ export default function SettingsForm({
         <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6 relative h-full">
           <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
             <Key className="h-5 w-5 text-amber-500" />
-            Ganti Kata Sandi
+            Change Password
           </h3>
           <p className="text-xs text-zinc-400 mb-6">
-            Ganti kata sandi secara berkala untuk menjaga akun Anda tetap aman.
+            Update your password periodically to keep your account safe.
           </p>
 
           {passSuccess && (
@@ -268,7 +268,7 @@ export default function SettingsForm({
           <form onSubmit={handlePasswordUpdate} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-zinc-400 mb-1.5" htmlFor="old-pass">
-                Kata Sandi Lama
+                Current Password
               </label>
               <input
                 id="old-pass"
@@ -276,13 +276,13 @@ export default function SettingsForm({
                 required
                 value={oldPassword}
                 onChange={(e) => setOldPassword(e.target.value)}
-                placeholder="Masukkan kata sandi lama Anda"
+                placeholder="Enter your current password"
                 className="w-full h-11 border border-zinc-805 rounded-xl px-4 text-xs font-medium focus:border-amber-500 focus:outline-none bg-zinc-900 text-white transition border-zinc-800"
               />
             </div>
             <div>
               <label className="block text-xs font-semibold text-zinc-400 mb-1.5" htmlFor="new-pass">
-                Kata Sandi Baru
+                New Password
               </label>
               <input
                 id="new-pass"
@@ -290,13 +290,13 @@ export default function SettingsForm({
                 required
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Min. 6 karakter"
+                placeholder="Min. 6 characters"
                 className="w-full h-11 border border-zinc-805 rounded-xl px-4 text-xs font-medium focus:border-amber-500 focus:outline-none bg-zinc-900 text-white transition border-zinc-800"
               />
             </div>
             <div>
               <label className="block text-xs font-semibold text-zinc-400 mb-1.5" htmlFor="confirm-pass">
-                Konfirmasi Kata Sandi Baru
+                Confirm New Password
               </label>
               <input
                 id="confirm-pass"
@@ -304,7 +304,7 @@ export default function SettingsForm({
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Ulangi kata sandi baru"
+                placeholder="Repeat new password"
                 className="w-full h-11 border border-zinc-805 rounded-xl px-4 text-xs font-medium focus:border-amber-500 focus:outline-none bg-zinc-900 text-white transition border-zinc-800"
               />
             </div>
@@ -313,7 +313,7 @@ export default function SettingsForm({
               disabled={passLoading}
               className="h-10 px-5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-md transition flex items-center justify-center cursor-pointer disabled:opacity-50"
             >
-              {passLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Perbarui Kata Sandi'}
+              {passLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Update Password'}
             </button>
           </form>
         </div>

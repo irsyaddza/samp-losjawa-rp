@@ -1,0 +1,17 @@
+* text=auto
+*.pwn text eol=lf
+*.inc text eol=lf
+*.json text eol=lf
+*.xml text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.md text eol=lf
+*.ts text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.sql text eol=lf
+*.sh text eol=lf
+*.env text eol=lf
+*.dockerignore text eol=lf
+*.gitignore text eol=lf

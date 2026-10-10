@@ -593,26 +593,6 @@
 	SetDynamicObjectMaterial(obj_mat, 1, 18646, "matcolours", "grey-70-percent", 0x00000000);	
 
 	// Tier Floor
-	/*obj_mat = CreateDynamicObject(19325, 1243.328735, 886.182434, 1163.599243, 0.000000, 90.000000, 0.000000, -1, -1, -1, 300.00, 300.00); 
-	SetDynamicObjectMaterial(obj_mat, 0, 10053, "slapart01sfe", "sl_brwnaprtwall1", 0x00000000);
-	obj_mat = CreateDynamicObject(19325, 1243.328735, 892.801635, 1163.599243, 0.000000, 90.000000, 0.000000, -1, -1, -1, 300.00, 300.00); 
-	SetDynamicObjectMaterial(obj_mat, 0, 10053, "slapart01sfe", "sl_brwnaprtwall1", 0x00000000);
-	obj_mat = CreateDynamicObject(19325, 1243.328735, 899.431884, 1163.599243, 0.000000, 90.000000, 0.000000, -1, -1, -1, 300.00, 300.00); 
-	SetDynamicObjectMaterial(obj_mat, 0, 10053, "slapart01sfe", "sl_brwnaprtwall1", 0x00000000);
-	obj_mat = CreateDynamicObject(19325, 1257.988159, 880.812438, 1163.599243, 0.000000, 90.000000, 90.000000, -1, -1, -1, 300.00, 300.00); 
-	SetDynamicObjectMaterial(obj_mat, 0, 10053, "slapart01sfe", "sl_brwnaprtwall1", 0x00000000);
-	obj_mat = CreateDynamicObject(19325, 1251.348876, 880.812438, 1163.599243, 0.000000, 90.000000, 90.000000, -1, -1, -1, 300.00, 300.00); 
-	SetDynamicObjectMaterial(obj_mat, 0, 10053, "slapart01sfe", "sl_brwnaprtwall1", 0x00000000);
-	obj_mat = CreateDynamicObject(19325, 1246.528198, 880.812438, 1163.599243, 0.000000, 90.000000, 90.000000, -1, -1, -1, 300.00, 300.00); 
-	SetDynamicObjectMaterial(obj_mat, 0, 10053, "slapart01sfe", "sl_brwnaprtwall1", 0x00000000);
-	obj_mat = CreateDynamicObject(19379, 1240.146240, 895.023864, 1163.514282, 0.000000, 90.000000, 0.200000, -1, -1, -1, 300.00, 300.00);
-	SetDynamicObjectMaterial(obj_mat, 0, 10053, "slapart01sfe", "sl_brwnaprtwall1", 0x00000000);
-	obj_mat = CreateDynamicObject(19379, 1240.154296, 875.790527, 1163.514282, 0.000000, 90.000000, 0.000000, -1, -1, -1, 300.00, 300.00);
-	SetDynamicObjectMaterial(obj_mat, 0, 10053, "slapart01sfe", "sl_brwnaprtwall1", 0x00000000);
-	obj_mat = CreateDynamicObject(19379, 1240.154174, 885.420898, 1163.514282, 0.000000, 90.000000, 0.000000, -1, -1, -1, 300.00, 300.00);
-	SetDynamicObjectMaterial(obj_mat, 0, 10053, "slapart01sfe", "sl_brwnaprtwall1", 0x00000000);	
-	obj_mat = CreateDynamicObject(19379, 1261.129638, 877.993652, 1163.514282, 0.000000, 90.000000, 0.000000, -1, -1, -1, 300.00, 300.00);
-	SetDynamicObjectMaterial(obj_mat, 0, 10053, "slapart01sfe", "sl_brwnaprtwall1", 0x00000000);*/
 
 	// Tier Cells Floor
 	obj_mat = CreateDynamicObject(19379, 1261.129638, 875.953002, 1163.514282, 0.000000, 90.000000, 0.000000, -1, -1, -1, 300.00, 300.00); 
@@ -711,14 +691,6 @@
 	CreatePrisonCell(obj_mat);	
 
 	// Roof
-	/*obj_mat = CreateDynamicObject(19379, 1248.473266, 895.223999, 1168.052124, 0.000000, 90.000000, 0.000000, -1, -1, -1, 300.00, 300.00); 
-	SetDynamicObjectMaterial(obj_mat, 0, 18022, "genintintfasta", "ceilingtile1_128", 0x00000000);
-	obj_mat = CreateDynamicObject(19379, 1248.473266, 885.594177, 1168.052124, 0.000000, 90.000000, 0.000000, -1, -1, -1, 300.00, 300.00); 
-	SetDynamicObjectMaterial(obj_mat, 0, 18022, "genintintfasta", "ceilingtile1_128", 0x00000000);
-	obj_mat = CreateDynamicObject(19379, 1258.973510, 895.223999, 1168.052124, 0.000000, 90.000000, 0.000000, -1, -1, -1, 300.00, 300.00); 
-	SetDynamicObjectMaterial(obj_mat, 0, 18022, "genintintfasta", "ceilingtile1_128", 0x00000000);
-	obj_mat = CreateDynamicObject(19379, 1258.973510, 885.594299, 1168.052124, 0.000000, 90.000000, 0.000000, -1, -1, -1, 300.00, 300.00); 
-	SetDynamicObjectMaterial(obj_mat, 0, 18022, "genintintfasta", "ceilingtile1_128", 0x00000000);*/	
 	obj_mat = CreateDynamicObject(18769, 1252.146728, 889.755554, 1167.317749, 0.000000, 0.000000, 0.000000, -1, -1, -1, 300.00, 300.00); 
 	SetDynamicObjectMaterial(obj_mat, 0, 14668, "711c", "gun_ceiling1128", 0x00000000);	
 
@@ -848,10 +820,6 @@
 	obj_mat = CreateDynamicObject(19366, 1269.463012, 898.246704, 1165.931518, 0.000000, 90.000000, 0.000000, -1, -1, -1, 300.00, 300.00); 
 	SetDynamicObjectMaterial(obj_mat, 0, 16640, "a51", "ws_metalpanel1", 0x00000000);
 
-	/*obj_mat = CreateDynamicObject(19379, 1263.701904, 891.943725, 1167.381103, 0.000000, 90.000000, 0.000000, -1, -1, -1, 300.00, 300.00); 
-	SetDynamicObjectMaterial(obj_mat, 0, 18022, "genintintfasta", "ceilingtile1_128", 0x00000000);
-	obj_mat = CreateDynamicObject(19379, 1274.163330, 891.943725, 1167.381103, 0.000000, 90.000000, 0.000000, -1, -1, -1, 300.00, 300.00); 
-	SetDynamicObjectMaterial(obj_mat, 0, 18022, "genintintfasta", "ceilingtile1_128", 0x00000000);*/	
 
 	// Barrier / Text
 	obj_mat = CreateDynamicObject(19482, 1261.256591, 880.856811, 1161.519042, 0.000000, 0.000000, 180.000000, -1, -1, -1, 300.00, 300.00); 
