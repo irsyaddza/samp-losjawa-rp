@@ -76,11 +76,11 @@ Optional plugins:
 	Me - sscanf2, fixes2, Whirlpool.
 */
 
-#include "..\..\YSI_Core\y_utils"
-#include "..\..\YSI_Data\y_bit"
-#include "..\..\YSI_Coding\y_malloc"
+#include "../../YSI_Core/y_utils"
+#include "../../YSI_Data/y_bit"
+#include "../../YSI_Coding/y_malloc"
 // Because having colours is always good...
-#include "..\..\YSI_Server\y_colours"
+#include "../../YSI_Server/y_colours"
 
 #if defined YSI_MALLOC_SECURE
 	#error y_bitmap does not (well) work with YSI_MALLOC_SECURE.

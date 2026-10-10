@@ -18,7 +18,7 @@ export async function POST(request: Request) {
 
     // Query database for user
     const [rows] = await pool.execute<RowDataPacket[]>(
-      'SELECT ID, Username, Password, Admin FROM accounts WHERE Username = ? LIMIT 1',
+      'SELECT ID, Username, Password, Admin, Email, EmailVerified FROM accounts WHERE Username = ? LIMIT 1',
       [username]
     );
 
@@ -58,6 +58,33 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: 'Invalid username or password' },
         { status: 401 }
+      );
+    }
+
+    // Check if account has a valid email address
+    const hasValidEmail = account.Email && account.Email.trim() !== '' && account.Email !== 'None' && account.Email.includes('@');
+
+    if (!hasValidEmail) {
+      return NextResponse.json(
+        {
+          error: 'Your account does not have a linked email address. Please enter an email address to receive your verification link.',
+          requireEmail: true,
+          accountId: account.ID,
+          username: account.Username,
+        },
+        { status: 403 }
+      );
+    }
+
+    // Check if email is verified
+    if (account.EmailVerified === 0) {
+      return NextResponse.json(
+        {
+          error: 'Please verify your email address before signing in. Check your inbox or request a new verification email.',
+          unverified: true,
+          email: account.Email,
+        },
+        { status: 403 }
       );
     }
 

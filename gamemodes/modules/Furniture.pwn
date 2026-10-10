@@ -1688,7 +1688,7 @@ Dialog:FurnitureEditMenu(playerid, response, listitem, inputtext[])
 						}
 					}
 
-					format(string, sizeof(string), "{A9C4E4}Category:{FFFF00} %s\n{FFFFFF}Sub.Category:{FFFF00} %s\n{FFFFFF}Item:{FFFF00} %s\n{FFFFFF}Name:{FFFF00} %s\n{FFFFFF}Model ID:{FFFF00} %d\n{FFFFFF}Price: %s\n\n", fCategory[category], fSubCategory[subcategory][subname], FurnitureItems[furnitureid][furnitureName], HouseFurniture[houseid][furnitureslot][fName], HouseFurniture[houseid][furnitureslot][fModel], FormatNumberEx(FurnitureItems[furnitureid][furniturePrice]));
+					format(string, sizeof(string), "{A9C4E4}Category:{FFFF00} %s\n{FFFFFF}Sub.Category:{FFFF00} %s\n{FFFFFF}Item:{FFFF00} %s\n{FFFFFF}Name:{FFFF00} %s\n{FFFFFF}Model ID:{FFFF00} %d\n{FFFFFF}Price: %s\n\n", fCategory[category], fSubCategory[subcategory][subname], FurnitureItems[furnitureid][furnitureName], HouseFurniture[houseid][furnitureslot][fName], HouseFurniture[houseid][furnitureslot][fModel], FormatNumber(FurnitureItems[furnitureid][furniturePrice]));
 
 			        new matModel, matTxd[32], matTexture[32], matColor;
 
@@ -1740,7 +1740,7 @@ Dialog:FurnitureEditMenu(playerid, response, listitem, inputtext[])
 						}
 					}
 
-					format(string, sizeof(string), "{A9C4E4}Category:{FFFF00} %s\n{FFFFFF}Sub.Category:{FFFF00} %s\n{FFFFFF}Item:{FFFF00} %s\n{FFFFFF}Name:{FFFF00} %s\n{FFFFFF}Model ID:{FFFF00} %d\n{FFFFFF}Price: %s\n\n", fCategory[category], fSubCategory[subcategory][subname], FurnitureItems[furnitureid][furnitureName], BizFurniture[houseid][furnitureslot][fName], BizFurniture[houseid][furnitureslot][fModel], FormatNumberEx(FurnitureItems[furnitureid][furniturePrice]));
+					format(string, sizeof(string), "{A9C4E4}Category:{FFFF00} %s\n{FFFFFF}Sub.Category:{FFFF00} %s\n{FFFFFF}Item:{FFFF00} %s\n{FFFFFF}Name:{FFFF00} %s\n{FFFFFF}Model ID:{FFFF00} %d\n{FFFFFF}Price: %s\n\n", fCategory[category], fSubCategory[subcategory][subname], FurnitureItems[furnitureid][furnitureName], BizFurniture[houseid][furnitureslot][fName], BizFurniture[houseid][furnitureslot][fModel], FormatNumber(FurnitureItems[furnitureid][furniturePrice]));
 
                     new matModel, matTxd[32], matTexture[32], matColor;
 
@@ -1828,7 +1828,7 @@ Dialog:FurnitureEditMenu(playerid, response, listitem, inputtext[])
 						}
 					}
 
-					format(string, sizeof(string), "{FFFFFF}Category:{FFFF00} %s\n{FFFFFF}Sub-Category:{FFFF00} %s\n{FFFFFF}Item:{FFFF00} %s\n{FFFFFF}Price: {A3A3A3}%s", fCategory[category], fSubCategory[subcategory][subname], FurnitureItems[furnitureid][furnitureName], FormatNumberEx(FurnitureItems[furnitureid][furniturePrice]));
+					format(string, sizeof(string), "{FFFFFF}Category:{FFFF00} %s\n{FFFFFF}Sub-Category:{FFFF00} %s\n{FFFFFF}Item:{FFFF00} %s\n{FFFFFF}Price: {A3A3A3}%s", fCategory[category], fSubCategory[subcategory][subname], FurnitureItems[furnitureid][furnitureName], FormatNumber(FurnitureItems[furnitureid][furniturePrice]));
 					Dialog_Show(playerid, HandleFurnitureSelling, DIALOG_STYLE_MSGBOX, "Are you Sure:?", string, "Sell", "<<");
 				}
 
@@ -1858,7 +1858,7 @@ Dialog:FurnitureEditMenu(playerid, response, listitem, inputtext[])
 						}
 					}
 
-					format(string, sizeof(string), "{FFFFFF}Category:{FFFF00} %s\n{FFFFFF}Sub-Category:{FFFF00} %s\n{FFFFFF}Item:{FFFF00} %s\n{FFFFFF}Price: {A3A3A3}%s", fCategory[category], fSubCategory[subcategory][subname], FurnitureItems[furnitureid][furnitureName], FormatNumberEx(FurnitureItems[furnitureid][furniturePrice]));
+					format(string, sizeof(string), "{FFFFFF}Category:{FFFF00} %s\n{FFFFFF}Sub-Category:{FFFF00} %s\n{FFFFFF}Item:{FFFF00} %s\n{FFFFFF}Price: {A3A3A3}%s", fCategory[category], fSubCategory[subcategory][subname], FurnitureItems[furnitureid][furnitureName], FormatNumber(FurnitureItems[furnitureid][furniturePrice]));
 					Dialog_Show(playerid, HandleFurnitureSelling, DIALOG_STYLE_MSGBOX, "Are you Sure:?", string, "Sell", "<<");
 
 				}
@@ -2012,12 +2012,7 @@ Dialog:HandleFurnitureRename(playerid, response, listitem, inputtext[])
 {
 	if(response)
 	{
-		if(strlen(inputtext) < 3 || strlen(inputtext) > 30)
-		    return Dialog_Show(playerid, HandleFurnitureRename, DIALOG_STYLE_INPUT, "Custom Naming:", "You can give your furniture a name\n\t- The letter must not be less than 3 characters\n\t- Characters must be at least 3 characters\n\t- Special characters can not be used", "Select", "<<");
-
-		new Regex:r = Regex_New("^[A-Za-z0-9 ]+$"), RegexMatch:m;
-
-		if(!Regex_Match(inputtext, r, m))
+		if(!IsAlnumSpace(inputtext, 3, 30))
 		    return Dialog_Show(playerid, HandleFurnitureRename, DIALOG_STYLE_INPUT, "Custom Naming:", "You can give your furniture a name\n\t- The letter must not be less than 3 characters\n\t- Characters must be at least 3 characters\n\t- Special characters can not be used", "Select", "<<");
 
         OnPlayerRenameFurniture(playerid, GetPVarInt(playerid, "ChosenFurnitureSlot"), inputtext);
@@ -2255,7 +2250,7 @@ Dialog:FurnitureBuyDialog(playerid, response, listitem, inputtext[])
 		SetPVarInt(playerid, "FurniturePriceBuying", FurnitureItems[furnitureid][furniturePrice]);
 		SetPVarString(playerid, "FurnitureNameBuying", FurnitureItems[furnitureid][furnitureName]);
 
-		format(string, sizeof(string), "{FFFFFF}Category:{FFFF00} %s\n{FFFFFF}Sub-Category:{FFFF00} %s\n{FFFFFF}Item:{FFFF00} %s\n{FFFFFF}Price: {A3A3A3}%s", fCategory[category], fSubCategory[subcategory][subname], FurnitureItems[furnitureid][furnitureName], FormatNumberEx(FurnitureItems[furnitureid][furniturePrice]));
+		format(string, sizeof(string), "{FFFFFF}Category:{FFFF00} %s\n{FFFFFF}Sub-Category:{FFFF00} %s\n{FFFFFF}Item:{FFFF00} %s\n{FFFFFF}Price: {A3A3A3}%s", fCategory[category], fSubCategory[subcategory][subname], FurnitureItems[furnitureid][furnitureName], FormatNumber(FurnitureItems[furnitureid][furniturePrice]));
 		Dialog_Show(playerid, HandleFurnitureBuying, DIALOG_STYLE_MSGBOX, "Are you Sure:?", string, "Buy", "<<");
 	}
 	else

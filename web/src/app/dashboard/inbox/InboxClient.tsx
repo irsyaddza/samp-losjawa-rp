@@ -56,7 +56,7 @@ export default function InboxClient({ initialNotifications }: InboxClientProps) 
 
   const deleteNotification = async (e: React.MouseEvent, id: number) => {
     e.stopPropagation(); // Prevent toggling expansion
-    if (!confirm('Apakah Anda yakin ingin menghapus pesan ini?')) return;
+    if (!confirm('Are you sure you want to delete this message?')) return;
 
     try {
       const res = await fetch(`/api/user/notifications?id=${id}`, {
@@ -68,11 +68,11 @@ export default function InboxClient({ initialNotifications }: InboxClientProps) 
           setExpandedId(null);
         }
       } else {
-        alert('Gagal menghapus pesan.');
+        alert('Failed to delete message.');
       }
     } catch (error) {
       console.error('Failed to delete notification:', error);
-      alert('Terjadi kesalahan jaringan.');
+      alert('A network error occurred.');
     }
   };
 
@@ -83,7 +83,7 @@ export default function InboxClient({ initialNotifications }: InboxClientProps) 
     setIsSending(true);
 
     if (!toUsername.trim() || !title.trim() || !body.trim()) {
-      setErrorMsg('Harap lengkapi semua bidang.');
+      setErrorMsg('Please fill in all fields.');
       setIsSending(false);
       return;
     }
@@ -98,7 +98,7 @@ export default function InboxClient({ initialNotifications }: InboxClientProps) 
       const data = await res.json();
 
       if (res.ok) {
-        setSuccessMsg('Pesan berhasil dikirim!');
+        setSuccessMsg('Message sent successfully!');
         setToUsername('');
         setTitle('');
         setBody('');
@@ -107,11 +107,11 @@ export default function InboxClient({ initialNotifications }: InboxClientProps) 
           setSuccessMsg('');
         }, 1500);
       } else {
-        setErrorMsg(data.error || 'Gagal mengirim pesan.');
+        setErrorMsg(data.error || 'Failed to send message.');
       }
     } catch (error) {
       console.error('Failed to send message:', error);
-      setErrorMsg('Terjadi kesalahan jaringan.');
+      setErrorMsg('A network error occurred.');
     } finally {
       setIsSending(false);
     }
@@ -129,7 +129,7 @@ export default function InboxClient({ initialNotifications }: InboxClientProps) 
           Dashboard
         </Link>
         <span className="text-zinc-650 text-xs">/</span>
-        <span className="text-xs text-zinc-500 font-medium">Kotak Pesan</span>
+        <span className="text-xs text-zinc-500 font-medium">Inbox</span>
       </div>
 
       {/* Heading */}
@@ -137,10 +137,10 @@ export default function InboxClient({ initialNotifications }: InboxClientProps) 
         <div>
           <h2 className="text-2xl font-black text-white flex items-center gap-2">
             <Mail className="h-6 w-6 text-amber-500" />
-            Kotak Pesan (Inbox)
+            Message Inbox
           </h2>
           <p className="text-xs text-zinc-400 mt-1">
-            Pemberitahuan, surat masuk, dan pesan dari sistem atau pemain lain.
+            Notifications, incoming letters, and messages from the system or other players.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -149,11 +149,11 @@ export default function InboxClient({ initialNotifications }: InboxClientProps) 
             className="flex items-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black px-4 py-2.5 text-xs font-bold transition shadow-sm cursor-pointer"
           >
             <Plus className="h-4 w-4" />
-            Tulis Pesan
+            Compose Message
           </button>
           <div className="bg-zinc-950 px-4 py-2.5 rounded-xl border border-zinc-800 flex items-center gap-2 text-xs h-[38px]">
             <span className="text-zinc-450 font-medium">
-              Belum Dibaca:{' '}
+              Unread:{' '}
               <strong className="text-amber-500 font-black">
                 {notifications.filter(n => !n.read).length}
               </strong>
@@ -169,7 +169,7 @@ export default function InboxClient({ initialNotifications }: InboxClientProps) 
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
                 <Send className="h-4.5 w-4.5 text-amber-500" />
-                Kirim Pesan Baru
+                Compose New Message
               </h3>
               <button
                 onClick={() => {
@@ -197,13 +197,13 @@ export default function InboxClient({ initialNotifications }: InboxClientProps) 
 
               <div>
                 <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">
-                  Nama Akun UCP Penerima
+                  Recipient UCP Account Name
                 </label>
                 <input
                   type="text"
                   value={toUsername}
                   onChange={e => setToUsername(e.target.value)}
-                  placeholder="Masukkan nama UCP tujuan (misal: Shikimura04)"
+                  placeholder="Enter target UCP username (e.g. JohnDoe)"
                   className="w-full rounded-xl bg-zinc-900 border border-zinc-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 px-4 py-3 text-xs text-white placeholder-zinc-650 transition outline-none font-semibold"
                   disabled={isSending}
                 />
@@ -211,13 +211,13 @@ export default function InboxClient({ initialNotifications }: InboxClientProps) 
 
               <div>
                 <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">
-                  Judul Pesan
+                  Message Subject / Title
                 </label>
                 <input
                   type="text"
                   value={title}
                   onChange={e => setTitle(e.target.value)}
-                  placeholder="Subjek atau judul pesan"
+                  placeholder="Subject or message title"
                   className="w-full rounded-xl bg-zinc-900 border border-zinc-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 px-4 py-3 text-xs text-white placeholder-zinc-650 transition outline-none font-semibold"
                   disabled={isSending}
                 />
@@ -225,12 +225,12 @@ export default function InboxClient({ initialNotifications }: InboxClientProps) 
 
               <div>
                 <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">
-                  Isi Pesan
+                  Message Body
                 </label>
                 <textarea
                   value={body}
                   onChange={e => setBody(e.target.value)}
-                  placeholder="Tulis pesan lengkap Anda di sini..."
+                  placeholder="Write your complete message here..."
                   rows={5}
                   className="w-full rounded-xl bg-zinc-900 border border-zinc-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 px-4 py-3 text-xs text-white placeholder-zinc-650 transition outline-none font-medium leading-relaxed"
                   disabled={isSending}
@@ -244,7 +244,7 @@ export default function InboxClient({ initialNotifications }: InboxClientProps) 
                   className="px-4 py-2.5 rounded-xl border border-zinc-850 hover:bg-zinc-900 text-zinc-400 hover:text-white text-xs font-bold transition"
                   disabled={isSending}
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button
                   type="submit"
@@ -252,7 +252,7 @@ export default function InboxClient({ initialNotifications }: InboxClientProps) 
                   disabled={isSending}
                 >
                   <Send className="h-3.5 w-3.5" />
-                  {isSending ? 'Mengirim...' : 'Kirim Pesan'}
+                  {isSending ? 'Sending...' : 'Send Message'}
                 </button>
               </div>
             </form>
@@ -264,9 +264,9 @@ export default function InboxClient({ initialNotifications }: InboxClientProps) 
       {notifications.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-zinc-850 bg-zinc-950/40 p-12 text-center">
           <MailOpen className="h-10 w-10 text-zinc-650 mx-auto mb-3" />
-          <h3 className="text-sm font-bold text-zinc-300">Kotak Pesan Kosong</h3>
+          <h3 className="text-sm font-bold text-zinc-300">Inbox is Empty</h3>
           <p className="text-xs text-zinc-500 mt-1">
-            Anda tidak memiliki pesan masuk saat ini. Klik "Tulis Pesan" untuk mengirim pesan ke pemain lain.
+            You have no incoming messages at this time. Click &quot;Compose Message&quot; to send a message to another player.
           </p>
         </div>
       ) : (
@@ -312,12 +312,12 @@ export default function InboxClient({ initialNotifications }: InboxClientProps) 
                       <div className="flex items-center gap-2 mt-1 text-[10px] text-zinc-500">
                         <span className="flex items-center gap-1 font-medium">
                           <User className="h-3 w-3 shrink-0" />
-                          Dari: {notification.sender}
+                          From: {notification.sender}
                         </span>
                         <span>•</span>
                         <span className="flex items-center gap-1">
                           <Calendar className="h-3 w-3 shrink-0" />
-                          {new Date(notification.time).toLocaleString('id-ID', {
+                          {new Date(notification.time).toLocaleString('en-US', {
                             day: 'numeric',
                             month: 'short',
                             hour: '2-digit',
@@ -332,7 +332,7 @@ export default function InboxClient({ initialNotifications }: InboxClientProps) 
                     <button
                       onClick={e => deleteNotification(e, notification.id)}
                       className="p-1.5 rounded-lg border border-transparent hover:border-red-500/20 hover:bg-red-500/10 text-zinc-500 hover:text-red-400 transition cursor-pointer"
-                      title="Hapus pesan"
+                      title="Delete message"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>

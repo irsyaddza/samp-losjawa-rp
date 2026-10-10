@@ -60,7 +60,7 @@ export default async function OnlinePlayersPage() {
             Dashboard
           </Link>
           <span className="text-zinc-650 text-xs">/</span>
-          <span className="text-xs text-zinc-500 font-medium">Pemain Online</span>
+          <span className="text-xs text-zinc-500 font-medium">Online Players</span>
         </div>
 
         {/* Heading */}
@@ -68,16 +68,16 @@ export default async function OnlinePlayersPage() {
           <div>
             <h2 className="text-2xl font-black text-white flex items-center gap-2">
               <Users className="h-6 w-6 text-amber-500" />
-              Pemain Online
+              Online Players List
             </h2>
             <p className="text-xs text-zinc-400 mt-1">
-              Daftar karakter yang sedang berada di dalam server saat ini.
+              List of characters currently connected to the server.
             </p>
           </div>
           <div className="bg-zinc-950 px-4 py-2 rounded-xl border border-zinc-800 flex items-center gap-2">
             <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-xs text-zinc-450 font-medium">
-              Total Online: <strong className="text-white">{players.length}</strong> Pemain
+              Total Online: <strong className="text-white">{players.length}</strong> Players
             </span>
           </div>
         </div>
@@ -86,9 +86,9 @@ export default async function OnlinePlayersPage() {
         {players.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-zinc-850 bg-zinc-950/40 p-12 text-center">
             <Users className="h-10 w-10 text-zinc-650 mx-auto mb-3" />
-            <h3 className="text-sm font-bold text-zinc-300">Server Sepi</h3>
+            <h3 className="text-sm font-bold text-zinc-300">No Players Online</h3>
             <p className="text-xs text-zinc-500 mt-1">
-              Tidak ada pemain yang online di dalam game saat ini. Silakan coba masuk ke game untuk meramaikan!
+              There are currently no active players connected to the server. Log in now to join the roleplay!
             </p>
           </div>
         ) : (

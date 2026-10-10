@@ -2390,9 +2390,7 @@ Dialog:AddContact(playerid, response, listitem, inputtext[])
 		if(strlen(inputtext) < 2 || strlen(inputtext) > 20)
 		    return Dialog_Show(playerid, AddContact, DIALOG_STYLE_INPUT, "Insert name", "Add a contact\n\n\t\tEnter contact name:\t\tErro: Contact must be long. 2-20 caracters", "Proceed", "Back");
 
-		new Regex:r = Regex_New("^[A-Za-z0-9 ]+$"), RegexMatch:m;
-
-		if(!Regex_Match(inputtext, r, m))
+	if(!IsAlnumSpace(inputtext, 2, 20))
 		    return Dialog_Show(playerid, AddContact, DIALOG_STYLE_INPUT, "Insert name", "Add a contact\n\n\t\tEnter contact name:\t\tErro: Invalid symbol detected.", "Proceed", "Back");
 
 		//[a-zA-Z0-9]+
@@ -2414,56 +2412,7 @@ Dialog:AddContactNum(playerid, response, listitem, inputtext[])
 		if(!IsNumeric(inputtext) || strlen(inputtext) > 10 || strlen(inputtext) <= 0)
 			return Dialog_Show(playerid, AddContactNum, DIALOG_STYLE_INPUT, "Insert number", "Add a contact\n\n\t\tEnter contact number:\t\tErro: The specified number is invalid.", "Proceed", "Back");
 
-		new count, con_max, exist = -1;
-
-		switch(PlayerData[playerid][pDonateRank])
-		{
-		    case 0: con_max = 16;
-		    case 1: con_max = 24;
-		    case 2: con_max = 32;
-		    case 3: con_max = 40;
-		}
-
-		for(new i = 0; i < 40; ++i)
-		{
-		    if(ContactData[playerid][i][contactNumber])
-			{
-                count++;
-		    }
-		    else
-		    {
-		        if(exist == -1)
-				{
-				    exist = i;
-				}
-		    }
-		}
-
-		if(count < con_max)
-		{
-			ContactData[playerid][exist][contactNumber] = strval(inputtext);
-			format(ContactData[playerid][exist][contactName], 24, name);
-
-	     	format(query, sizeof(query), "INSERT INTO `phone_contacts` (`contactAdded`, `contactAddee`, `contactName`) VALUES ('%d', '%d', '%s')", PlayerData[playerid][pPnumber], ContactData[playerid][exist][contactNumber], ContactData[playerid][exist][contactName]);
-			mysql_pquery(dbCon, query);
-
-			ContactData[playerid][exist][contactID] = cache_insert_id();
-
-           	ph_menuid[playerid] = 1;
-       		ph_sub_menuid[playerid] = 2;
-       		ph_page[playerid] = 0;
-       		ph_select_data[playerid]=exist;
-
-       		RenderPlayerPhone(playerid, ph_menuid[playerid], ph_sub_menuid[playerid]);
-		}
-		else
-		{
-           	ph_menuid[playerid] = 5;
-       		ph_sub_menuid[playerid] = 0;
-       		ph_page[playerid] = 0;
-
-       		RenderPlayerPhone(playerid, ph_menuid[playerid], ph_sub_menuid[playerid]);
-		}
+		Phone_StoreContact(playerid, strval(inputtext), name);
 	}
 	else
 	{
@@ -2618,6 +2567,60 @@ Dialog:DeleteSMS(playerid, response, listitem, inputtext[])
 	return true;
 }
 
+// Shared tail of every "add contact" flow: finds a free slot, stores the
+// contact, inserts it, and renders the resulting phone screen. Handles the
+// full-list case internally. Returns the slot index used (-1 = list was full).
+static Phone_StoreContact(playerid, number, const name[])
+{
+	new count, exist = -1;
+
+	for(new i = 0; i < 40; ++i)
+	{
+	    if(ContactData[playerid][i][contactNumber])
+			count++;
+	    else if(exist == -1)
+			exist = i;
+	}
+
+	if(count < Phone_ContactCap(playerid))
+	{
+	    new query[256];
+		ContactData[playerid][exist][contactNumber] = number;
+		format(ContactData[playerid][exist][contactName], 24, name);
+
+		format(query, sizeof(query), "INSERT INTO `phone_contacts` (`contactAdded`, `contactAddee`, `contactName`) VALUES ('%d', '%d', '%s')",
+		    PlayerData[playerid][pPnumber], ContactData[playerid][exist][contactNumber], ContactData[playerid][exist][contactName]);
+		mysql_pquery(dbCon, query);
+
+		ContactData[playerid][exist][contactID] = cache_insert_id();
+
+		ph_menuid[playerid] = 1;
+		ph_sub_menuid[playerid] = 2;
+		ph_page[playerid] = 0;
+		ph_select_data[playerid] = exist;
+	}
+	else
+	{
+		ph_menuid[playerid] = 5;
+		ph_sub_menuid[playerid] = 0;
+		ph_page[playerid] = 0;
+	}
+
+	RenderPlayerPhone(playerid, ph_menuid[playerid], ph_sub_menuid[playerid]);
+	return exist;
+}
+
+stock Phone_ContactCap(playerid)
+{
+	switch(PlayerData[playerid][pDonateRank])
+	{
+	    case 1: return 24;
+	    case 2: return 32;
+	    case 3: return 40;
+	}
+	return 16;
+}
+
 Dialog:AddHistoryContact(playerid, response, listitem, inputtext[])
 {
 	if(response)
@@ -2627,61 +2630,10 @@ Dialog:AddHistoryContact(playerid, response, listitem, inputtext[])
 		if(strlen(inputtext) < 2 || strlen(inputtext) > 20)
 		    return Dialog_Show(playerid, AddContact, DIALOG_STYLE_INPUT, "Insert name", "Add a contact\n\n\t\tEnter contact name:\t\tErro: Contact must be long. 2-20 caracters", "Proceed", "Back");
 
-		new Regex:r = Regex_New("^[A-Za-z0-9 ]+$"), RegexMatch:m;
-
-		if(!Regex_Match(inputtext, r, m))
+	if(!IsAlnumSpace(inputtext, 2, 20))
 		    return Dialog_Show(playerid, AddContact, DIALOG_STYLE_INPUT, "Insert name", "Add a contact\n\n\t\tEnter contact name:\t\tErro: Invalid symbol found.", "Proceed", "Back");
 
-		new count, con_max, exist = -1;
-
-		switch(PlayerData[playerid][pDonateRank])
-		{
-		    case 0: con_max = 16;
-		    case 1: con_max = 24;
-		    case 2: con_max = 32;
-		    case 3: con_max = 40;
-		}
-
-		for(new i = 0; i < 40; ++i)
-		{
-		    if(ContactData[playerid][i][contactNumber])
-			{
-                count++;
-		    }
-		    else
-		    {
-		        if(exist == -1)
-				{
-				    exist = i;
-				}
-		    }
-		}
-
-		if(count < con_max)
-		{
-			ContactData[playerid][exist][contactNumber] = CallHistory[playerid][id][chNumber];
-			format(ContactData[playerid][exist][contactName], 24, inputtext);
-
-	     	format(query,sizeof(query),"INSERT INTO `phone_contacts` (`contactAdded`, `contactAddee`, `contactName`) VALUES ('%d', '%d', '%s')", PlayerData[playerid][pPnumber], ContactData[playerid][exist][contactNumber], ContactData[playerid][exist][contactName]);
-			mysql_pquery(dbCon, query);
-
-			ContactData[playerid][exist][contactID] = cache_insert_id();
-
-           	ph_menuid[playerid] = 1;
-       		ph_sub_menuid[playerid]=2;
-       		ph_page[playerid] = 0;
-       		ph_select_data[playerid]=exist;
-
-       		RenderPlayerPhone(playerid, ph_menuid[playerid], ph_sub_menuid[playerid]);
-		}
-		else
-		{
-           	ph_menuid[playerid]=5;
-       		ph_sub_menuid[playerid] = 0;
-       		ph_page[playerid] = 0;
-
-       		RenderPlayerPhone(playerid, ph_menuid[playerid], ph_sub_menuid[playerid]);
-		}
+		Phone_StoreContact(playerid, CallHistory[playerid][id][chNumber], inputtext);
 	}
 	return true;
 }
@@ -2695,61 +2647,10 @@ Dialog:AddSMSContact(playerid, response, listitem, inputtext[])
 		if(strlen(inputtext) < 2 || strlen(inputtext) > 20)
 		    return Dialog_Show(playerid, AddContact, DIALOG_STYLE_INPUT, "Insert name", "Add a contact\n\n\t\tEnter contact name:\t\tErro: Contact must be long. 2-20 caracters", "Proceed", "Back");
 
-		new Regex:r = Regex_New("^[A-Za-z0-9 ]+$"), RegexMatch:m;
-
-		if(!Regex_Match(inputtext, r, m))
+	if(!IsAlnumSpace(inputtext, 2, 20))
 		    return Dialog_Show(playerid, AddContact, DIALOG_STYLE_INPUT, "Insert name", "Add a contact\n\n\t\tEnter contact name:\t\tErro: Invalid symbol found.", "Proceed", "Back");
 
-		new count, con_max, exist = -1;
-
-		switch(PlayerData[playerid][pDonateRank])
-		{
-		    case 0: con_max = 16;
-		    case 1: con_max = 24;
-		    case 2: con_max = 32;
-		    case 3: con_max = 40;
-		}
-
-		for(new i = 0; i < 40; ++i)
-		{
-		    if(ContactData[playerid][i][contactNumber])
-			{
-                count++;
-		    }
-		    else
-		    {
-		        if(exist == -1)
-				{
-				    exist = i;
-				}
-		    }
-		}
-
-		if(count < con_max)
-		{
-			ContactData[playerid][exist][contactNumber] = SmsData[playerid][id][smsOwner];
-			format(ContactData[playerid][exist][contactName], 24, inputtext);
-
-	     	format(query, sizeof(query), "INSERT INTO `phone_contacts` (`contactAdded`, `contactAddee`, `contactName`) VALUES ('%d', '%d', '%s')", PlayerData[playerid][pPnumber], ContactData[playerid][exist][contactNumber], ContactData[playerid][exist][contactName]);
-			mysql_pquery(dbCon, query);
-
-			ContactData[playerid][exist][contactID] = cache_insert_id();
-
-           	ph_menuid[playerid] = 1;
-       		ph_sub_menuid[playerid] = 2;
-       		ph_page[playerid] = 0;
-       		ph_select_data[playerid] = exist;
-
-       		RenderPlayerPhone(playerid, ph_menuid[playerid], ph_sub_menuid[playerid]);
-		}
-		else
-		{
-           	ph_menuid[playerid] = 5;
-       		ph_sub_menuid[playerid] = 0;
-       		ph_page[playerid] = 0;
-
-       		RenderPlayerPhone(playerid, ph_menuid[playerid], ph_sub_menuid[playerid]);
-		}
+		Phone_StoreContact(playerid, SmsData[playerid][id][smsOwner], inputtext);
 	}
 	return true;
 }

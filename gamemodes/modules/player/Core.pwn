@@ -54,7 +54,6 @@ enum E_PLAYER_DATA
 	pFireRank,
 	pFactionSpawn,
 	pJob,
-    pSideJob,
 	pFishes,
 	pCarLic,
 	pWepLic,
@@ -155,7 +154,9 @@ enum E_PLAYER_DATA
 	pBusJobDelay,
 	pSweeperJobDelay,
 	pHunger,
-	pThirst
+	pThirst,
+	pFarmerRank,
+	pFarmerExp
 };
 
 new PlayerData[MAX_PLAYERS][E_PLAYER_DATA];

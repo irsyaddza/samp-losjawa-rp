@@ -9,6 +9,15 @@ CMD:relog(playerid, params[])
 	if(IsBrutallyWounded(playerid))
 		return SendErrorMessage(playerid, "You cannot relog while critically injured.");
 
+	// Block relog during active sessions or restraints - prevents state
+	// carry-over into the next character and RP escape.
+	if(SideJob_IsPlayerBusy(playerid) || RentedHarvester[playerid] != INVALID_VEHICLE_ID
+	|| PlayerOnTrainJob[playerid]
+	|| TestingSkin[playerid]
+	|| GetPVarInt(playerid, "ME_EditSlot") > 0
+	|| IsCuffed{playerid} || IsTazed{playerid} || IsTied{playerid} || KnockedOut{playerid})
+		return SendErrorMessage(playerid, "Finish or cancel your current activity before using /relog.");
+
 	if(!PlayerData[playerid][pAdmin] && !PlayerData[playerid][pDonateRank])
 		return SendUnauthMessage(playerid, "This command is only available for Donators and Admins.");
 
@@ -51,8 +60,7 @@ CMD:stats(playerid, params[])
 	    return true;
 	}
 
-	if(PlayerData[playerid][pAdmin] < 1)
-		return SendUnauthMessage(playerid, "You're not authorized to use this command.");
+	UnauthGate(playerid, 1);
 
 	if(!IsPlayerConnected(userid))
 		return SendErrorMessage(playerid, "The player you specified isn't connected.");
@@ -102,15 +110,6 @@ CMD:me(playerid, params[])
 	return true;
 }
 
-stock AnnounceMeAction(playerid, const text[])
-{
-	if(strlen(text) > 80)
-	{
-		SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s %.80s ...", ReturnName(playerid, 0), text);
-		SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* ... %s (( %s ))", text[80], ReturnName(playerid, 0));
-	}
-	else SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s %s", ReturnName(playerid, 0), text);
-}
 
 CMD:lme(playerid, params[])
 {
@@ -298,7 +297,7 @@ CMD:l(playerid, params[])
 	new str[128];
 
 	if(isnull(params))
-	    return SendClientMessage(playerid, COLOR_GREY, "USAGE: (/l)ocal [local chat]");
+	    return SendSyntaxMessage(playerid, "(/l)ocal [local chat]");
 
 	if(strlen(params) > 80)
 	{
@@ -323,7 +322,7 @@ CMD:t(playerid, params[])
     new str[128];
 
 	if(isnull(params))
-	    return SendClientMessage(playerid, COLOR_GREY, "USAGE: (/t)ocal [t chat]");
+	    return SendSyntaxMessage(playerid, "(/t)ocal [t chat]");
 
     if(PlayerData[playerid][pInjured])
         return SendClientMessage(playerid, COLOR_GRAD1, "   you can't speak.");
@@ -496,7 +495,7 @@ YCMD:dshout(playerid, params[], help) = ds;
 CMD:ds(playerid, params[])
 {
 	if(isnull(params))
-	    return SendClientMessage(playerid, COLOR_GREY, "USAGE: (/ds)hout [local chat]");
+	    return SendSyntaxMessage(playerid, "(/ds)hout [local chat]");
 
     if(PlayerData[playerid][pInjured])
         return SendErrorMessage(playerid, "Can't use /me's in deathmode.");
@@ -770,18 +769,10 @@ CMD:w(playerid, params[])
 	new userid, text[128];
 
     if(sscanf(params, "us[128]", userid, text))
-	    return SendClientMessage(playerid, COLOR_GRAD2, "USAGE: (/w)hisper [playerid/Mask/PartOfName] [whisper text]");
+	    return SendSyntaxMessage(playerid, "(/w)hisper [playerid/Mask/PartOfName] [whisper text]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]{s[128]}", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "Invalid player specified.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "Invalid player specified.");
 	if(userid == playerid)
 	    return SendClientMessage(playerid, COLOR_LIGHTRED, "That's your ID");
 
@@ -1012,7 +1003,7 @@ CMD:pm(playerid, params[])
 	new userid, text[128];
 
     if(sscanf(params, "us[128]", userid, text))
-	    return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /pm [playerid/PON] text");
+	    return SendSyntaxMessage(playerid, "/pm [playerid/PON] text");
 
 	if(!IsPlayerConnected(userid))
 		return SendErrorMessage(playerid, "The player you specified isn't connected.");
@@ -1213,23 +1204,15 @@ CMD:greet(playerid, params[])
 
 	if(sscanf(params, "ud", userid, animslot))
 	{
-		SendClientMessage(playerid, COLOR_WHITE, "USAGE: /greet [id/Mask/PartofName] AnimSlot");
+		SendSyntaxMessage(playerid, "/greet [id/Mask/PartofName] AnimSlot");
 		SendClientMessage(playerid, COLOR_GREEN, "[ 1 ] Kiss   [ 2 ] Greet [ 3 ] Greet2 [ 4 ] Greet3");
 		SendClientMessage(playerid, COLOR_GREEN, "[ 5 ] Greet4  [ 6 ] Greet5 [ 7 ] Greet6 [ 8 ] Greet7");
 		SendClientMessage(playerid, COLOR_GREEN, "[ 9 ] Formal Handshake");
 		return true;
 	}
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(playerid == userid)
 	    return SendErrorMessage(playerid, "You can't greet yourself.");
 
@@ -1254,18 +1237,10 @@ CMD:acceptshake(playerid, params[])
 	new userid;
 
 	if(sscanf(params, "u", userid))
-		return SendClientMessage(playerid, COLOR_WHITE, "USAGE: /acceptshake [playerID]");
+		return SendSyntaxMessage(playerid, "/acceptshake [playerID]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(RequestedToShake[playerid][0] != userid)
 	    return SendClientMessage(playerid, COLOR_LIGHTRED, "Invalid request.");
 
@@ -1425,16 +1400,8 @@ CMD:convo(playerid, params[])
 	if(sscanf(params, "u", userid))
 		return SendSyntaxMessage(playerid, "/convo [playerid/PartOfName]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(userid == playerid)
 		return SendErrorMessage(playerid, "You can't pm yourself.");
 
@@ -1498,7 +1465,7 @@ CMD:blockpm(playerid, params[])
 	;
 
 	if(sscanf(params, "u", userid))
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /blockpm [PlayerID/PartOfName]");
+		return SendSyntaxMessage(playerid, "/blockpm [PlayerID/PartOfName]");
 
 	if(!IsPlayerConnected(userid))
 		return SendClientMessage(playerid, COLOR_LIGHTRED, "Playerid is not an active playerid.");
@@ -1521,131 +1488,75 @@ CMD:blockpm(playerid, params[])
 //general commands
 YCMD:getid(playerid, params[], help) = id;
 
-CMD:id(playerid, params[]) // This command was a hefty test. Can be commented out if need be.
+CMD:id(playerid, params[])
 {
 	if(isnull(params))
-		return SendSyntaxMessage(playerid, "/id [playerid/PartOfName]");
+		return SendSyntaxMessage(playerid, "/id [playerid/PartOf_Name]");
 
-	new
-		bool:inputID = false,
-		userid
-	;
+	new len = strlen(params);
 
-	for(new ix = 0, j = strlen(params); ix < j; ++ix)
+	// All-digits input -> direct player ID lookup
+	new bool:numeric = true;
+	for(new i = 0; i < len; ++i)
 	{
-		if(params[ix] > '9' || params[ix] < '0')
+		if(params[i] < '0' || params[i] > '9')
 		{
-			inputID = false;
+			numeric = false;
+			break;
 		}
-		else inputID = true;
 	}
 
-	if(inputID)
+	if(numeric)
 	{
-		userid = strval(params);
+		new userid = strval(params);
 
 		if(!IsPlayerConnected(userid))
 			return SendErrorMessage(playerid, "Playerid isn't a valid player ID.");
 
 		SendClientMessageEx(playerid, COLOR_GREY, "(ID %i) %s | Level: %i", userid, ReturnName(userid), PlayerData[userid][pLevel]);
+		return true;
 	}
-	else
+
+	if(len < 3)
+		return SendClientMessage(playerid, COLOR_LIGHTRED, "ERROR: Input too short.");
+
+	// Admins may look masked players up by their mask name
+	if(PlayerData[playerid][pAdmin])
 	{
-		if(strlen(params) < 3)
-	    	return SendClientMessage(playerid, COLOR_LIGHTRED, "ERROR: Input too short.");
+		new maskname[MAX_PLAYER_NAME];
+		sscanf(params, "s[24]", maskname);
 
-	    if(PlayerData[playerid][pAdmin])
-	    {
-			new maskid[MAX_PLAYER_NAME];
-			sscanf(params, "s[24]", maskid);
-			if((userid = GetPlayerMaskID(maskid)) != INVALID_PLAYER_ID)
-			{
-				return SendClientMessageEx(playerid, COLOR_GREY, "(ID %i) %s | Level: %i", userid, ReturnName(userid), PlayerData[userid][pLevel]);
-			}
-		}
+		new maskid;
+		if((maskid = GetPlayerMaskID(maskname)) != INVALID_PLAYER_ID)
+			return SendClientMessageEx(playerid, COLOR_GREY, "(ID %i) %s | Level: %i", maskid, ReturnName(maskid), PlayerData[maskid][pLevel]);
+	}
 
-		new
-			bool:matchFound = false,
-			bool:fullName = false,
-			countMatches = 0,
-			matchesFound[6],
-			string[128]
-		;
+	// Substring match against both raw (RP_) and underscore-stripped names
+	new matchesFound[5], countMatches, string[128];
 
-		for(new cc = 0; cc < 5; ++cc) { matchesFound[cc] = INVALID_PLAYER_ID; }
+	foreach(new i : Player)
+	{
+		if(strfind(ReturnName(i), params, true) == -1 && strfind(ReturnName(i, 0), params, true) == -1)
+			continue;
 
-		for(new i = 0, j = strlen(params); i < j; ++i)
+		if(countMatches < 5) matchesFound[countMatches] = i;
+		countMatches++;
+	}
+
+	if(!countMatches)
+		return SendClientMessageEx(playerid, COLOR_LIGHTRED, "%s not found.", params);
+
+	if(countMatches == 1)
+		return SendClientMessageEx(playerid, COLOR_GREY, "(ID %i) %s | Level: %i", matchesFound[0], ReturnName(matchesFound[0]), PlayerData[matchesFound[0]][pLevel]);
+
+	for(new l = 0; l < 5 && l < countMatches; ++l)
+	{
+		format(string, sizeof(string), "%s(ID %i) %s, ", string, matchesFound[l], ReturnName(matchesFound[l]));
+
+		if(l % 3 == 0 && l != 0 || l == 4)
 		{
-			if(params[i] != '_')
-			{
-				fullName = false;
-			}
-			else
-			{
-				fullName = true;
-			}
-		}
-
-		if(fullName)
-		{
-			foreach (new b : Player)
-			{
-				if(strfind(ReturnName(b), params, true) != -1)
-				{
-					SendClientMessageEx(playerid, COLOR_GREY, "(ID %i) %s | Level: %i", b, ReturnName(b), PlayerData[b][pLevel]);
-				}
-				else return SendClientMessageEx(playerid, COLOR_LIGHTRED, "%s not found.", params);
-			}
-		}
-		else
-		{
-			foreach (new a: Player)
-			{
-				if(strfind(ReturnName(a, 0), params, true) != -1)
-				{
-					matchFound = true;
-					countMatches ++;
-				}
-			}
-
-			if(matchFound)
-			{
-				for(new f = 0, g = GetPlayerPoolSize(), t = 0; f <= g; ++f)
-				{
-				    if(!IsPlayerConnected(f)) continue;
-
-					if(strfind(ReturnName(f, 0), params, true) != -1)
-					{
-						matchesFound[t] = f;
-
-						t++;
-
-						if(t >= 5) break;
-					}
-				}
-
-				if(countMatches != 0 && countMatches > 1)
-				{
-					for(new l = 0; l < sizeof(matchesFound); ++l)
-					{
-						if(matchesFound[l] == INVALID_PLAYER_ID)
-							continue;
-
-						format(string, sizeof(string), "%s(ID %i) %s, ", string, matchesFound[l], ReturnName(matchesFound[l]));
-
-						if(l % 3 == 0 && l != 0 || l == 5-1)
-						{
-							SendClientMessage(playerid, COLOR_GREY, string);
-							string[0] = 0;
-						}
-					}
-				}
-				else if(countMatches == 1)
-				{
-					SendClientMessageEx(playerid, COLOR_GREY, "(ID %i) %s | Level: %i", matchesFound[0], ReturnName(matchesFound[0]), PlayerData[matchesFound[0]][pLevel]);
-				}
-			}
-			else return SendClientMessageEx(playerid, COLOR_LIGHTRED, "%s not found.", params);
+			SendClientMessage(playerid, COLOR_GREY, string);
+			string[0] = EOS;
 		}
 	}
 	return true;
@@ -1764,7 +1675,7 @@ ShowHelpCategories(playerid)
 	strcat(gstr, "13\tBusiness & Enterprise Commands\n");
 	strcat(gstr, "14\tGarage Commands\n");
 	strcat(gstr, "15\tVIP & Donator Commands\n");
-	strcat(gstr, "16\tIllegal Weapon System");
+	strcat(gstr, "16\tIllegal Weapon System\n");
 
 	Dialog_Show(playerid, Help_Main, DIALOG_STYLE_TABLIST, "Help Categories", gstr, "Select", "Close");
 	return 1;
@@ -1907,7 +1818,7 @@ Dialog:Help_Main(playerid, response, listitem, inputtext[])
 			strcat(gstr, "{A9C4E4}/jobswitch / /leavejob / /leavesidejob{FFFFFF} - Switch or leave jobs\n\n");
 			strcat(gstr, "{7E98B6}Specific Job Commands:{FFFFFF}\n");
 			strcat(gstr, "• {A9C4E4}Mechanic:{FFFFFF} /mechanicjob\n");
-			strcat(gstr, "• {A9C4E4}Farmer:{FFFFFF} /farmerjob /harvest /stopharvest\n");
+			strcat(gstr, "• {A9C4E4}Farmer:{FFFFFF} /farm (plant, water, harvest, sell, buyseeds, info)\n");
 			strcat(gstr, "• {A9C4E4}Trucker:{FFFFFF} /truckerjob /cargo /trailer\n");
 			strcat(gstr, "• {A9C4E4}Fisherman:{FFFFFF} /gofishing /fish /stopfishing /unloadfish /myfish /fishhelp\n");
 			strcat(gstr, "• {A9C4E4}Taxi Driver:{FFFFFF} /taxi\n");
@@ -1925,7 +1836,8 @@ Dialog:Help_Main(playerid, response, listitem, inputtext[])
 			strcat(gstr, "{A9C4E4}/v buypark{FFFFFF} - Buy parking location\n");
 			strcat(gstr, "{A9C4E4}/v park{FFFFFF} - Park your vehicle\n");
 			strcat(gstr, "{A9C4E4}/hood / /trunk / /vehpackage{FFFFFF} - Vehicle hood, trunk & package\n");
-			strcat(gstr, "{A9C4E4}/fill / /fuel{FFFFFF} - Refuel vehicle at gas station\n");
+			strcat(gstr, "{A9C4E4}/fill{FFFFFF} - Refuel vehicle at gas station\n");
+			strcat(gstr, "{A9C4E4}/fuel{FFFFFF} - Check current fuel level\n");
 			strcat(gstr, "{A9C4E4}/rw / /rollwindow{FFFFFF} - Roll vehicle windows up/down\n");
 			strcat(gstr, "{A9C4E4}/vehiclename / /colorlist / /paintcar{FFFFFF} - Vehicle name & colors\n");
 			strcat(gstr, "{A9C4E4}/service / /checkcomponents / /setbuycomp / /buycomp{FFFFFF} - Repairs & components\n");
@@ -2120,7 +2032,8 @@ Dialog:Help_FactionList(playerid, response, listitem, inputtext[])
 			strcat(gstr, "{A9C4E4}/v buypark{FFFFFF} - Buy parking location\n");
 			strcat(gstr, "{A9C4E4}/v park{FFFFFF} - Park your vehicle\n");
 			strcat(gstr, "{A9C4E4}/hood / /trunk / /vehpackage{FFFFFF} - Vehicle hood, trunk & package\n");
-			strcat(gstr, "{A9C4E4}/fill / /fuel{FFFFFF} - Refuel vehicle at gas station\n");
+			strcat(gstr, "{A9C4E4}/fill{FFFFFF} - Refuel vehicle at gas station\n");
+			strcat(gstr, "{A9C4E4}/fuel{FFFFFF} - Check current fuel level\n");
 			strcat(gstr, "{A9C4E4}/rw / /rollwindow{FFFFFF} - Roll vehicle windows up/down\n");
 			strcat(gstr, "{A9C4E4}/vehiclename / /colorlist / /paintcar{FFFFFF} - Vehicle name & colors\n");
 			strcat(gstr, "{A9C4E4}/service / /checkcomponents / /setbuycomp / /buycomp{FFFFFF} - Repairs & components\n");
@@ -2455,7 +2368,7 @@ CMD:radiohelp(playerid, params[])
 
 CMD:note(playerid, params[])
 {
-	SendClientMessage(playerid, COLOR_YELLOW2, "USAGE: /note [action]");
+	SendSyntaxMessage(playerid, "/note [action]");
 	SendClientMessage(playerid, COLOR_YELLOW2, "[Show] /note show [noteID] [PlayerID / PartOfName]  (* You may not type in NoteID and PlayerID)");
 	SendClientMessage(playerid, COLOR_YELLOW2, "[Create] /note create [text]");
 	SendClientMessage(playerid, COLOR_YELLOW2, "[Delete] /note delete [number 1-5]");
@@ -2496,65 +2409,43 @@ CMD:licensehelp(playerid, params[])
 CMD:jobhelp(playerid, params[])
 {
     SendClientMessage(playerid, COLOR_GREEN, "_______________________________________");
-	SendClientMessage(playerid, COLOR_GRAD3, "Your current job is:");
-	SendClientMessageEx(playerid,COLOR_GRAD3, "%s", ReturnJobName(playerid, PlayerData[playerid][pJob]));
+	SendClientMessage(playerid, COLOR_GRAD3, "Your legal job:");
+	SendClientMessageEx(playerid, COLOR_GRAD3, "%s", ReturnJobName(playerid, PlayerData[playerid][pJob]));
 
-	if(PlayerData[playerid][pSideJob])
+	if(PlayerData[playerid][pJob] == JOB_MECHANIC)
 	{
-		SendClientMessage(playerid, COLOR_GREEN, "_______________________________________");
-		SendClientMessage(playerid, COLOR_GRAD3, "Your side job is:");
-		SendClientMessageEx(playerid,COLOR_GRAD3, "%s", ReturnJobName(playerid, PlayerData[playerid][pSideJob]));
-	}
-
-	if(PlayerData[playerid][pJob] == JOB_MECHANIC || PlayerData[playerid][pSideJob] == JOB_MECHANIC)
-	{
-		if(PlayerData[playerid][pSideJob] == JOB_MECHANIC) SendClientMessage(playerid,COLOR_LIGHTRED, "Car Mechanic Commands [SIDE JOB]");
-		else SendClientMessage(playerid, COLOR_LIGHTRED, "Car Mechanic Commands:");
-
+		SendClientMessage(playerid, COLOR_LIGHTRED, "Car Mechanic Commands:");
 		SendClientMessage(playerid, COLOR_WHITE, "/buycomp - /checkcomponents - /service - /paintcar");
 		SendClientMessage(playerid, COLOR_WHITE, "/colorlist - /attach - /detach");
 	}
 
-	if(PlayerData[playerid][pJob] == JOB_TAXI || PlayerData[playerid][pSideJob] == JOB_TAXI)
+	if(PlayerData[playerid][pJob] == JOB_TAXI)
 	{
-	    if(PlayerData[playerid][pSideJob] == JOB_TAXI) SendClientMessage(playerid, COLOR_LIGHTRED, "Taxi Driver Commands [SIDE JOB]");
-		else SendClientMessage(playerid, COLOR_LIGHTRED, "Taxi Driver Commands:");
-
+		SendClientMessage(playerid, COLOR_LIGHTRED, "Taxi Driver Commands:");
 		SendClientMessage(playerid, COLOR_WHITE, "/taxi [accept / duty / fare / start / stop]");
 	}
 
-	if(PlayerData[playerid][pJob] == JOB_WPDEALER)
-	{
-	    SendClientMessage(playerid, COLOR_GRAD1, "Commands:");
-		SendClientMessage(playerid, COLOR_GRAD1, "/sellweapon (/sw)");
-		SendClientMessage(playerid, COLOR_GRAD1, "/putweapon (/pw)");
-		SendClientMessage(playerid, COLOR_GRAD1, "/takeweapon (/tw)");
-		SendClientMessage(playerid, COLOR_GRAD1, "/putallweapons (/paw)");
-		SendClientMessage(playerid, COLOR_GRAD1, "/takeallweapons (/taw)");
-		SendClientMessage(playerid, COLOR_GRAD1, "/dealinghelp");
-		SendClientMessage(playerid, COLOR_GRAD1, "/mypackage");
-		SendClientMessage(playerid, COLOR_GRAD1, "/vehpackage");
 
-	}
-
-	if(PlayerData[playerid][pJob] == JOB_SUPPLIER)
+	if(pIllegalJob[playerid] == 1)
 	{
-		SendClientMessage(playerid, COLOR_WHITE, "/buyweapon - /sellpackage (/sp) - /putweapon (/pw) - /takeweapon (/tw)");
-		SendClientMessage(playerid, COLOR_WHITE, "/putallweapons (/paw) - /takeallweapons (/taw) - /mypackage - /vehpackage");
+		SendClientMessage(playerid, COLOR_LIGHTRED, "Weapon Supplier Commands:");
+		SendClientMessage(playerid, COLOR_WHITE, "/buymaterial [amount] - Buy materials at material supply points");
+		SendClientMessage(playerid, COLOR_WHITE, "/buyschematic - Buy weapon schematics at schematic shops");
+		SendClientMessage(playerid, COLOR_WHITE, "/gun create [weapon name] [ammo] - Craft a weapon from materials & schematics");
+		SendClientMessage(playerid, COLOR_WHITE, "/sellpackage, /putweapon, /takeweapon, /putallweapons, /takeallweapons, /mypackage, /vehpackage");
 	}
 
 	if(PlayerData[playerid][pJob] == JOB_FARMER)
 	{
 	    SendClientMessage(playerid, COLOR_LIGHTRED, "Farmer Commands:");
-		SendClientMessage(playerid, COLOR_WHITE, "/harvest");
-		SendClientMessage(playerid, COLOR_WHITE, "/stopharvest");
+		SendClientMessage(playerid, COLOR_WHITE, "/farm [plant / harvest / sell / buyseeds]");
 	}
 
 	if(PlayerData[playerid][pJob] == JOB_TRUCKER)
 	{
 		SendClientMessage(playerid, COLOR_GRAD1, "Read documentation on forums:");
 		SendClientMessage(playerid, COLOR_GRAD1, "Server Information -> Feature Documentation -> Trucker Career");
-		SendClientMessage(playerid, COLOR_GRAD1, "(http://forum.losjawa-rp.net)");
+		SendClientMessage(playerid, COLOR_GRAD1, "(http://forum.losjawa-rp.fun)");
 		SendClientMessage(playerid, COLOR_GRAD2, "You need to own a pickup, a van or a truck to perform this job.");
 
 		SendClientMessage(playerid, COLOR_YELLOW, "Commands:{FFFFFF} Use{FFFF00} /cargo{FFFFFF} to see a list of available actions.");
@@ -2566,7 +2457,7 @@ CMD:jobhelp(playerid, params[])
 		SendClientMessage(playerid, COLOR_GREEN, "_______________________________________");
 	}
 
-	if(PlayerData[playerid][pJob] == JOB_TRAIN_DRIVER || PlayerData[playerid][pSideJob] == JOB_TRAIN_DRIVER)
+	if(PlayerData[playerid][pJob] == JOB_TRAIN_DRIVER)
 	{
 		SendClientMessage(playerid, COLOR_LIGHTRED, "Train Driver Commands:");
 		SendClientMessage(playerid, COLOR_WHITE, "/trainjob [join / queue / leavequeue / leave / status / start]");
@@ -2988,14 +2879,6 @@ stock ReturnVehicleName(vehicleid)
 	return name;
 }
 
-stock isSmokable(drug)
-{
-	if(drug == 1)
-		return true;
-
-	return false;
-}
-
 stock ResetDrugBoost(playerid)
 {
 	PlayerData[playerid][pDrugBoost] = 0;
@@ -3036,7 +2919,7 @@ CMD:usedrug(playerid, params[])
 	new string[128];
 	new drugType = Player_Drugs[playerid][package - 1][dType];
 
-	if(isSmokable(drugType))
+	if(drugType == 1)
 	{
 		SetPlayerSpecialAction(playerid, SPECIAL_ACTION_SMOKE_CIGGY);
 		SendNoticeMessage(playerid, "You can pass the joint to another player with /passjoint!");
@@ -3240,16 +3123,8 @@ CMD:givedrug(playerid, params[])
 	if(sscanf(params, "ud", userid, package))
 	    return SendSyntaxMessage(playerid, "/givedrug [playerid/PartOfName] [package_id]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!IsPlayerNearPlayer(playerid, userid, 5.0))
 		return SendErrorMessage(playerid, "You aren't near that player.");
 
@@ -3343,16 +3218,8 @@ CMD:mypackage(playerid, params[])
 	if(sscanf(params, "u", userid))
 		return ShowPlayerWeapons(playerid, playerid);
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]{ds[128]}", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!IsPlayerNearPlayer(playerid, userid, 5.0))
 		return SendErrorMessage(playerid, "You aren't near that player.");
 
@@ -3560,7 +3427,7 @@ CMD:takeweapon(playerid, params[])
 
 	if(sscanf(params, "dS()[10]", vehslot, string))
 	{
-	    SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /takeweapon(/tw) [vehicle slot] ([slot])");
+	    SendSyntaxMessage(playerid, "/takeweapon(/tw) [vehicle slot] ([slot])");
 		SendClientMessage(playerid, COLOR_LIGHTRED, "HINT: If you don't input [slot] it will put contents of vehicle package's slot in your package's empty slot.");
 		return true;
 	}
@@ -3670,16 +3537,8 @@ CMD:giveallpackages(playerid, params[])
 	if(sscanf(params, "u", userid))
 	    return SendSyntaxMessage(playerid, "/giveallpackages [PlayerID/PartOfName/MaskID]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]{dS()[64]}", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(userid == playerid)
 		return SendServerMessage(playerid, "You are not allowed to sell to yourself.");
 
@@ -3754,16 +3613,8 @@ CMD:sellpackage(playerid, params[])
 	if(sscanf(params, "ud", userid, slot))
 	    return SendSyntaxMessage(playerid, "/sellpackage [playerid/PartOfName] [slot]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]{dS()[64]}", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(userid == playerid)
 		return SendServerMessage(playerid, "You are not allowed to sell to yourself.");
 
@@ -3985,19 +3836,7 @@ CMD:loudspeaker(playerid, params[])
 	return true;
 }
 
-/*CMD:passcall(playerid, params[])
-{
-    if(DeathMode{playerid} || PlayerData[playerid][pInjured] || GetPlayerSpecialAction(playerid) > 0)
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "You cannot use the phone at this time.");
 
-	if(ph_menuid[playerid] == 7 && ph_sub_menuid[playerid] == 2)
-	{		
-		if(PlayerData[playerid][pCallLine] != INVALID_PLAYER_ID && !PlayerData[playerid][pIncomingCall])
-	}
-	else SendErrorMessage(playerid, "You're not on a call.");
-
-	return true;
-}*/
 
 YCMD:pickup(playerid, params[], help) = p;
 
@@ -4145,7 +3984,7 @@ CMD:attributes(playerid, params[])
 {
 	if(isnull(params))
 	{
-	    SendClientMessage(playerid, COLOR_GRAD1, "USAGE: /attributes [description]");
+	    SendSyntaxMessage(playerid, "/attributes [description]");
 
 	    if(!isnull(PlayerData[playerid][pAttribute]) && strlen(PlayerData[playerid][pAttribute]))
 			SendClientMessageEx(playerid, COLOR_GRAD1, "Current: %s", PlayerData[playerid][pAttribute]);
@@ -4172,16 +4011,8 @@ CMD:examine(playerid, params[])
 	if(sscanf(params, "u", userid))
 		return SendSyntaxMessage(playerid, "/examine [playerid/PartOfName]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
  	format(sgstr, sizeof(sgstr), "%s%s%s", ReturnName(userid, 0), strlen(PlayerData[userid][pAttribute]) ? (" | ") : (""), PlayerData[userid][pAttribute]);
 	SetPlayerChatBubble(userid, sgstr, COLOR_PURPLE, 20.0, 6000);
 	return true;
@@ -4217,16 +4048,8 @@ CMD:pay(playerid, params[])
 	if(sscanf(params, "udS()[24]", userid, amount, emote))
 	    return SendSyntaxMessage(playerid, "/pay [playerid/name] [amount] [emote]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]{dS()[24]}", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!IsPlayerNearPlayer(playerid, userid, 5.0))
 	    return SendErrorMessage(playerid, "You aren't close enough to them.");
 
@@ -4296,187 +4119,6 @@ Dialog:BuyWeapon(playerid, response, listitem, inputtext[])
 	return true;
 }
 
-stock ReturnAmmoPrice(const weapon[])
-{
-	if(!strcmp(weapon, "knuckles", true)) return 200;
-	if(!strcmp(weapon, "knife", true)) return 300;
-	if(!strcmp(weapon, "poolcue", true)) return 200;
-	if(!strcmp(weapon, "dildo2", true)) return 100;
-	if(!strcmp(weapon, "flowers", true)) return 100;
-	if(!strcmp(weapon, "molotov", true)) return 2000;
-	if(!strcmp(weapon, "deagle", true)) return 15;
-	if(!strcmp(weapon, "mp5", true)) return 30;
-	if(!strcmp(weapon, "tec9", true)) return 30;
-	if(!strcmp(weapon, "fireex", true)) return 20;
-
-	if(!strcmp(weapon, "golfclub", true)) return 200;
-	if(!strcmp(weapon, "bat", true)) return 300;
-	if(!strcmp(weapon, "katana", true)) return 400;
-	if(!strcmp(weapon, "dildo3", true)) return 100;
-	if(!strcmp(weapon, "cane", true)) return 300;
-	if(!strcmp(weapon, "colt", true)) return 10;
-	if(!strcmp(weapon, "shotgun", true)) return 15;
-	if(!strcmp(weapon, "ak47", true)) return 30;
-	if(!strcmp(weapon, "rifle", true)) return 40;
-	if(!strcmp(weapon, "camera", true)) return 2000;
-
-	if(!strcmp(weapon, "nightstick", true)) return 200;
-	if(!strcmp(weapon, "shovel", true)) return 200;
-	if(!strcmp(weapon, "dildo1", true)) return 100;
-	if(!strcmp(weapon, "dildo4", true)) return 100;
-	if(!strcmp(weapon, "grenade", true)) return 2000;
-	if(!strcmp(weapon, "sdpistol", true)) return 10;
-	if(!strcmp(weapon, "mac10", true)) return 30;
-	if(!strcmp(weapon, "m4", true)) return 30;
-	if(!strcmp(weapon, "sprifle", true)) return 2500;
-	if(!strcmp(weapon, "parachute", true)) return 500;
-
-	return 0;
-}
-
-stock ReturnWeaponPrice(const weapon[])
-{
-	if(!strcmp(weapon, "knuckles", true)) return 200;
-	if(!strcmp(weapon, "knife", true)) return 300;
-	if(!strcmp(weapon, "poolcue", true)) return 200;
-	if(!strcmp(weapon, "dildo2", true)) return 100;
-	if(!strcmp(weapon, "flowers", true)) return 100;
-	if(!strcmp(weapon, "molotov", true)) return 6000;
-	if(!strcmp(weapon, "deagle", true)) return 7000;
-	if(!strcmp(weapon, "mp5", true)) return 13500;
-	if(!strcmp(weapon, "tec9", true)) return 8600;
-	if(!strcmp(weapon, "fireex", true)) return 2000;
-
-	if(!strcmp(weapon, "golfclub", true)) return 200;
-	if(!strcmp(weapon, "bat", true)) return 300;
-	if(!strcmp(weapon, "katana", true)) return 400;
-	if(!strcmp(weapon, "dildo3", true)) return 100;
-	if(!strcmp(weapon, "cane", true)) return 300;
-	if(!strcmp(weapon, "colt", true)) return 5000;
-	if(!strcmp(weapon, "shotgun", true)) return 7000;
-	if(!strcmp(weapon, "ak47", true)) return 15000;
-	if(!strcmp(weapon, "rifle", true)) return 15000;
-	if(!strcmp(weapon, "camera", true)) return 50;
-
-	if(!strcmp(weapon, "nightstick", true)) return 200;
-	if(!strcmp(weapon, "shovel", true)) return 200;
-	if(!strcmp(weapon, "dildo1", true)) return 100;
-	if(!strcmp(weapon, "dildo4", true)) return 100;
-	if(!strcmp(weapon, "grenade", true)) return 8000;
-	if(!strcmp(weapon, "sdpistol", true)) return 8000;
-	if(!strcmp(weapon, "mac10", true)) return 9500;
-	if(!strcmp(weapon, "m4", true)) return 17500;
-	if(!strcmp(weapon, "sprifle", true)) return 50000;
-	if(!strcmp(weapon, "parachute", true)) return 500;
-
-	return 0;
-}
-
-new WeaponName[48][32] =
-{
-	"Fists","knuckles","golfclub","nightstick","knife","baseball","shovel",
-	"poolcue","katana","Chainsaw","dildo1","dildo2","dildo3","dildo4","flowers","cane",
-	"grenade","teargas","molotov","","","","colt","sdpistol","deagle","shotgun","sawnoff","combat",
-	"uzi","mp5","ak47","m4","tec9","Rifle","sprifle","rocket","heat","flamethrower",
-	"minigun","satchel","detonator","spraycan","fireex","camera","nigtvision","goggles","parachute","armour"
-};
-
-stock GetWeaponIDFromName(const name[])
-{
-	for(new i = 0;i <= 46;++i)
-	{
-	    if(strfind(WeaponName[i], name, true) == -1) continue;
-
-		return i;
-	}
-
-	return -1;
-}
-
-CMD:buyweapon(playerid, params[])
-{
-	if(PlayerData[playerid][pJob] != JOB_SUPPLIER)
-	    return SendClientMessage(playerid, COLOR_LIGHTRED, "You are not a weapon supplier.");
-
-	new id = InBusiness[playerid];
-
-	if(id == -1 || BusinessData[id][bType] != 13)
-	    return SendClientMessage(playerid, COLOR_LIGHTRED, "You are not in any weapon factory.");
-
-	if(!BusinessData[id][bProducts])
-	    return SendClientMessage(playerid, COLOR_LIGHTRED, "This factory is out of stock.");
-
-	new weapon[32], ammo, slot;
-
-	if(sscanf(params, "s[32]dD(-1)", weapon, ammo, slot))
-	{
-		SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /buyweapon [weapon] [ammo] ([slot])");
-		SendClientMessage(playerid, COLOR_CYAN, "[ knuckles: $200; ammo: $200 ]  [ golfclub: $200; ammo: $200 ]  [ nightstick: $200; ammo: $200 ]");
-		SendClientMessage(playerid, COLOR_CYAN, "[ knife: $300; ammo: $300 ]  [ bat: $300; ammo: $300 ]  [ shovel: $200; ammo: $200 ]");
-		SendClientMessage(playerid, COLOR_CYAN, "[ poolcue: $200; ammo: $200 ]  [ katana: $400; ammo: $400 ]  [ dildo1: $100; ammo: $100 ]");
-		SendClientMessage(playerid, COLOR_CYAN, "[ dildo2: $100; ammo: $100 ]  [ dildo3: $100; ammo: $100 ]  [ dildo4: $100; ammo: $100 ]");
-		SendClientMessage(playerid, COLOR_CYAN, "[ flowers: $100; ammo: $100 ]  [ cane: $300; ammo: $300 ]  [ grenade: $8000; ammo: $2000 ]");
-		SendClientMessage(playerid, COLOR_CYAN, "[ molotov: $6000; ammo: $2000 ]  [ colt: $5000; ammo: $10 ]  [ sdpistol: $8000; ammo: $10 ]");
-		SendClientMessage(playerid, COLOR_CYAN, "[ deagle: $7000; ammo: $15 ]  [ shotgun: $7000; ammo: $15 ]  [ mac10: $9500; ammo: $30 ]");
-		SendClientMessage(playerid, COLOR_CYAN, "[ mp5: $13500; ammo: $30 ]  [ ak47: $15000; ammo: $30 ]  [ m4: $17500; ammo: $30 ]");
-		SendClientMessage(playerid, COLOR_CYAN, "[ tec9: $8600; ammo: $30 ]  [ rifle: $10000; ammo: $40 ]  [ sprifle: $50000; ammo: $2500 ]");
-		SendClientMessage(playerid, COLOR_CYAN, "[ fireex: $2000; ammo: $20 ]  [ camera: $500; ammo: $5 ]  [ parachute: $500; ammo: $500 ]");
-		return true;
-	}
-
-	new free_slot = -1;
-
-	if(slot == -1)
-	{
-		free_slot = FindFreePackageSlot(playerid);
-
-		if(free_slot == -1)
-			return SendClientMessage(playerid, COLOR_LIGHTRED, "Your package is full.");
-	}
-	else
-	{
-		if(slot < 1 || slot > MAX_PLAYER_WEAPON_PACKAGE)
-		    return SendClientMessageEx(playerid, COLOR_LIGHTRED, "Invalid package slot. Must be 1-%d.", MAX_PLAYER_WEAPON_PACKAGE);
-
-		slot--;
-
-	    if(PlayerData[playerid][pPackageWP][slot])
-	    	return SendErrorMessage(playerid, "That package slot is occupied.");
-
-	    free_slot = slot;
-	}
-
-	new weapon_price = ReturnWeaponPrice(weapon), ammo_price, price, weaponid;
-
-	weaponid = GetWeaponIDFromName(weapon);
-
-	if(!weapon_price || !weaponid)
-	    return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /buyweapon [weapon] [ammo] ([slot])");
-
-	new max_ammo = GetWeaponPackage(g_aWeaponSlots[weaponid]);
-
-	if(ammo < 1 || ammo > max_ammo)
-		return SendClientMessageEx(playerid, COLOR_LIGHTRED, "Ammo cannot be lower than 1 or more than %d.", max_ammo);
-
-	ammo_price = ReturnAmmoPrice(weapon);
-	price = weapon_price + (ammo * ammo_price);
-
-	if(PlayerData[playerid][pCash] < price)
-	    return SendClientMessage(playerid, COLOR_LIGHTRED, "You don't have enough money.");
-
-	TakePlayerMoney(playerid, price);
-
-	BusinessData[id][bProducts] -= 1;
-
-	PlayerData[playerid][pPackageWP][free_slot] = weaponid;
-	PlayerData[playerid][pPackageAmmo][free_slot] = ammo;
-
-	SendClientMessageEx(playerid, COLOR_GREEN, "[Package] You've bought %s and %d ammo and paid $%d", GetWeaponPackageName(weaponid), ammo, price);
-
-	SQL_LogAction(playerid, "Bought a %s with %d ammo from bizid %d price $%d", GetWeaponPackageName(weaponid), ammo, BusinessData[id][bID], price);
-	return true;
-}
-
 CMD:buygun(playerid, params[])
 {
 	ProccessBuyGunCommand(playerid, params);
@@ -4538,7 +4180,7 @@ ProccessBuyGunCommand(playerid, const params[])
 			weaponid = 47; price = 2000; ammo_price = 2000;
 		}
 
-		if(!weaponid || !price || !ammo_price) return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /buyweapon [weapon] [ammo]"); //[add(0/1)]
+		if(!weaponid || !price || !ammo_price) return SendSyntaxMessage(playerid, "/buyweapon [weapon] [ammo]"); //[add(0/1)]
 
 		if(weaponid == 47) ammo = 1;
 
@@ -4564,7 +4206,7 @@ ProccessBuyGunCommand(playerid, const params[])
 	price = GetPVarInt(playerid, "buygun_price");
 
 	if(!weaponid || !price)
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /buyweapon [weapon] [ammo]");
+		return SendSyntaxMessage(playerid, "/buyweapon [weapon] [ammo]");
 
 	if(PlayerData[playerid][pCash] < price)
 	    return SendClientMessage(playerid, COLOR_LIGHTRED, "You don't have enough money.");
@@ -4887,23 +4529,17 @@ CMD:clothing(playerid, params[])
 	return true;
 }
 
+forward FriskPlayer(playerid, userid);
+
 CMD:frisk(playerid, params[])
 {
 	new userid;
 
 	if(sscanf(params, "u", userid))
-		return SendClientMessage(playerid, COLOR_GREY, "USAGE: /frisk [playerid/PartOfName]");
+		return SendSyntaxMessage(playerid, "/frisk [playerid/PartOfName]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!IsPlayerNearPlayer(playerid, userid, 5.0))
 		return SendErrorMessage(playerid, "You aren't near that player.");
 
@@ -4927,16 +4563,8 @@ CMD:friskapprove(playerid, params[])
 	if(sscanf(params, "u", userid))
 		return SendSyntaxMessage(playerid, "/friskapprove [player/id]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "Not connected player.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "Not connected player.");
 	if(FriskApproved[playerid][userid])
 	    return SendServerMessage(playerid, "That player already has frisk approval from you.");
 
@@ -5007,6 +4635,11 @@ CMD:myproperty(playerid, params[])
 }
 
 Dialog:Player_Property_Dialog(playerid, response, listitem, inputtext[])
+{
+	return 1;
+}
+
+Dialog:Player_Inventory_Dialog(playerid, response, listitem, inputtext[])
 {
 	return 1;
 }
@@ -5163,6 +4796,23 @@ stock ShowPlayerInventoryDialog(playerid, targetid)
 		count++;
 	}
 
+	// Seeds & Produce (Farmer)
+	for(new c = 0; c < MAX_CROPS; c++)
+	{
+		if(pSeeds[targetid][c] > 0)
+		{
+			format(line, sizeof(line), "{A4D247}[SEEDS] %s Seeds\t{FFFFFF}%d Batch(es)\n", gCropName[c], pSeeds[targetid][c]);
+			strcat(body, line);
+			count++;
+		}
+		if(pProduce[targetid][c] > 0)
+		{
+			format(line, sizeof(line), "{A4D247}[PRODUCE] Harvested %s\t{FFFFFF}%d Units\n", gCropName[c], pProduce[targetid][c]);
+			strcat(body, line);
+			count++;
+		}
+	}
+
 	if(count == 0)
 	{
 		strcat(body, "{AAAAAA}(No items in inventory)\t{AAAAAA}Empty\n");
@@ -5171,11 +4821,6 @@ stock ShowPlayerInventoryDialog(playerid, targetid)
 	new title[64];
 	format(title, sizeof(title), "Inventory of %s (%d Items)", ReturnName(targetid, 0), count);
 	Dialog_Show(playerid, Player_Inventory_Dialog, DIALOG_STYLE_TABLIST_HEADERS, title, body, "Close", "");
-	return 1;
-}
-
-Dialog:Player_Inventory_Dialog(playerid, response, listitem, inputtext[])
-{
 	return 1;
 }
 
@@ -5363,27 +5008,7 @@ CMD:damages(playerid, params[])
 	return true;
 }
 
-/*CMD:corpse(playerid, params[])
-{
-	new Float:playerPos[3];
 
-	for(new i = 0; i < MAX_PLAYERS; ++i)
-	{
-	    if(CORPSES[i][corpseSpawned])
-	    {
-	    	GetActorPos(CORPSES[i][corpseActor], playerPos[0], playerPos[1], playerPos[2]);
-
-	    	if(IsPlayerInRangeOfPoint(playerid, 5.0, playerPos[0], playerPos[1], playerPos[2]))
-	    	{
-	    	    SendClientMessageEx(playerid, COLOR_ORANGE, "Here lies %s...", CORPSES[i][corpseName]);
-	    	    return true;
-	    	}
-		}
-	}
-
-	SendErrorMessage(playerid, "You're not near any corpse.");
-	return true;
-}*/
 
 CMD:respawnme(playerid, params[])
 {
@@ -5539,7 +5164,7 @@ CMD:bcast(playerid, params[])
         return SendErrorMessage(playerid, "You're not a news reporter.");
 
     if(isnull(params))
-        return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /bcast (/n)ews [broadcasting news]");
+        return SendSyntaxMessage(playerid, "/bcast (/n)ews [broadcasting news]");
 
     if(strlen(params) > 70)
     {
@@ -5758,16 +5383,8 @@ CMD:invite(playerid, params[])
 	if(sscanf(params, "u", userid))
 	    return SendSyntaxMessage(playerid, "/invite [ID/Mask/partofName]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!SQL_IsLogged(userid))
 		return SendErrorMessage(playerid, "The player you specified isn't logged in.");
 
@@ -5832,16 +5449,8 @@ CMD:uninvite(playerid, params[])
 	if(sscanf(params, "u", userid))
 	    return SendSyntaxMessage(playerid, "/uninvite [ID/Mask/partofName]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!SQL_IsLogged(userid))
 		return SendErrorMessage(playerid, "The player you specified isn't logged in.");
 
@@ -5889,16 +5498,8 @@ CMD:rank(playerid, params[])
 	    return SendSyntaxMessage(playerid, "/rank [playerid/PartOfName] [NewRankID]");
 	}
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]{d}", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!SQL_IsLogged(userid))
 		return SendErrorMessage(playerid, "The player you specified isn't logged in.");
 
@@ -5920,20 +5521,6 @@ CMD:rank(playerid, params[])
 	return true;
 }
 
-stock CanUseMDC(playerid, type)
-{
-	if(PlayerData[playerid][pAdmin]) return true;
-
-	switch(type)
-	{
-		case FACTION_POLICE, FACTION_SHERIFF:
-			return true;
-		default:
-			return false;
-	}
-
-	return false;
-}
 
 CMD:accept(playerid, params[])
 {
@@ -6298,7 +5885,7 @@ CMD:elevator(playerid, params[])
 	        }
 	        else
 			{
-				SetPlayerInterior(playerid, 0);
+				SetPlayerInteriorEx(playerid, EntranceData[i][insideInterior]);
 				SetPlayerVirtualWorldEx(playerid, EntranceData[i][insideWorld]);
 
 				DesyncPlayerInterior(playerid);
@@ -6321,7 +5908,7 @@ CMD:elevator(playerid, params[])
 	        }
 	        else
 			{
-				SetPlayerInterior(playerid, 0);
+				SetPlayerInteriorEx(playerid, EntranceData[i][outsideInterior]);
 				SetPlayerVirtualWorldEx(playerid, EntranceData[i][outsideWorld]);
 
 				DesyncPlayerInterior(playerid);
@@ -6604,7 +6191,7 @@ CMD:enter(playerid, params[])
 			        }
 			        else
 			        {
-			            LinkVehicleToInterior(vehicleid, 0);
+			            LinkVehicleToInterior(vehicleid, EntranceData[i][insideInterior]);
 			            SetVehicleVirtualWorld(vehicleid, EntranceData[i][insideWorld]);
 			        }
 				}
@@ -6624,7 +6211,7 @@ CMD:enter(playerid, params[])
 				        }
 				        else
 				        {
-				            LinkVehicleToInterior(vehicleid, 0);
+				            LinkVehicleToInterior(vehicleid, EntranceData[i][insideInterior]);
 				            SetVehicleVirtualWorld(vehicleid, EntranceData[i][insideWorld]);
 				        }
 				    }
@@ -6649,7 +6236,7 @@ CMD:enter(playerid, params[])
 	        }
 	        else
 			{
-				SetPlayerInterior(playerid, 0);
+				SetPlayerInteriorEx(playerid, EntranceData[i][insideInterior]);
 				SetPlayerVirtualWorldEx(playerid, EntranceData[i][insideWorld]);
 
 				DesyncPlayerInterior(playerid);
@@ -7151,7 +6738,7 @@ CMD:exit(playerid, params[])
 			        }
 			        else
 			        {
-			            LinkVehicleToInterior(vehicleid, 0);
+			            LinkVehicleToInterior(vehicleid, EntranceData[i][outsideInterior]);
 			            SetVehicleVirtualWorld(vehicleid, EntranceData[i][outsideWorld]);
 			        }
 				}
@@ -7171,7 +6758,7 @@ CMD:exit(playerid, params[])
 				        }
 				        else
 				        {
-				            LinkVehicleToInterior(vehicleid, 0);
+				            LinkVehicleToInterior(vehicleid, EntranceData[i][outsideInterior]);
 				            SetVehicleVirtualWorld(vehicleid, EntranceData[i][outsideWorld]);
 				        }
 				    }
@@ -7196,7 +6783,7 @@ CMD:exit(playerid, params[])
 	        }
 	        else
 			{
-				SetPlayerInterior(playerid, 0);
+				SetPlayerInteriorEx(playerid, EntranceData[i][outsideInterior]);
 				SetPlayerVirtualWorldEx(playerid, EntranceData[i][outsideWorld]);
 
 				DesyncPlayerInterior(playerid);
@@ -7564,7 +7151,7 @@ CMD:houseupgrade(playerid, params[])
 
 	if(sscanf(params, "s[24]D(-1)", option, itemnumb))
 	{
-		SendClientMessage(playerid, COLOR_WHITE, "USAGE: /houseupgrade [level]");
+		SendSyntaxMessage(playerid, "/houseupgrade [level]");
 		SendClientMessage(playerid, COLOR_GRAD1, "|Buy: To purchase new items </houseupgrade buy to see more details.>");
 		SendClientMessage(playerid, COLOR_GRAD1, "|Remove: To Remove current items </houseupgrade remove to see more details.>");
 		return true;
@@ -7574,7 +7161,7 @@ CMD:houseupgrade(playerid, params[])
 	{
  		if(itemnumb < 1 || itemnumb > 2)
 		{
-			SendClientMessage(playerid, COLOR_WHITE, "USAGE: /houseupgrade buy [itemid]");
+			SendSyntaxMessage(playerid, "/houseupgrade buy [itemid]");
 			SendClientMessage(playerid, COLOR_GRAD1, "|_______ Items to Buy _______|");
 			SendClientMessage(playerid, COLOR_GRAD1, "<item ID>- <Price> : <Name>");
 			SendClientMessage(playerid, COLOR_GRAD3, "1- $6125: Fridge");
@@ -7618,7 +7205,7 @@ CMD:houseupgrade(playerid, params[])
 	{
 		if(itemnumb < 0 || itemnumb > 3)
 		{
-		    SendClientMessage(playerid, COLOR_WHITE, "USAGE: /houseupgrade remove [item]");
+		    SendSyntaxMessage(playerid, "/houseupgrade remove [item]");
 			ShowHouseItemDetail(playerid, house);
 			return true;
 		}
@@ -7750,7 +7337,7 @@ CMD:myhouse(playerid, params[])
 	if(sscanf(params, "s[32]S()[32]S()[32]", oneString, secString, thirdString))
 	{
 		SendClientMessageEx(playerid, COLOR_GRAD1, "Your House address is %s, San Andreas", ReturnPropertyAddress(house));
-		SendClientMessage(playerid, COLOR_GRAD2, "USAGE: /myhouse [choice]");
+		SendSyntaxMessage(playerid, "/myhouse [choice]");
 		SendClientMessage(playerid, COLOR_GRAD2, "| Phone | Security");
 		SendClientMessage(playerid, COLOR_GRAD2, "| Items | Cash | Inform");
 		SendClientMessage(playerid, COLOR_GRAD3, "HINT: /houseupgrade for upgrading your house.");
@@ -7989,16 +7576,8 @@ CMD:grantbuild(playerid, params[])
 		if(sscanf(params, "u", userid))
 		    return SendSyntaxMessage(playerid, "/grantbuild [playerid/PartOfName]");
 
-		if(userid == INVALID_PLAYER_ID)
-		{
-			new maskid[MAX_PLAYER_NAME];
-			sscanf(params, "s[24]", maskid);
-			if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-			{
-				return SendErrorMessage(playerid, "The player you specified isn't connected.");
-			}
-		}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+		return SendErrorMessage(playerid, "The player you specified isn't connected.");
 		if(!SQL_IsLogged(userid))
 			return SendErrorMessage(playerid, "The player you specified isn't logged in.");
 
@@ -8034,16 +7613,8 @@ CMD:grantbuild(playerid, params[])
 		if(sscanf(params, "u", userid))
 		    return SendSyntaxMessage(playerid, "/grantbuild [playerid/PartOfName]");
 
-		if(userid == INVALID_PLAYER_ID)
-		{
-			new maskid[MAX_PLAYER_NAME];
-			sscanf(params, "s[24]", maskid);
-			if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-			{
-				return SendErrorMessage(playerid, "The player you specified isn't connected.");
-			}
-		}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+		return SendErrorMessage(playerid, "The player you specified isn't connected.");
 		if(!SQL_IsLogged(userid))
 			return SendErrorMessage(playerid, "The player you specified isn't logged in.");
 
@@ -8195,16 +7766,8 @@ CMD:operation(playerid, params[])
 	if(sscanf(params, "u", userid))
 		return SendSyntaxMessage(playerid, "/operation [playerid/PartOfName]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(userid == INVALID_PLAYER_ID)
 	    return SendClientMessage(playerid, COLOR_GRAD1, "The player is disconnected.");
 
@@ -8245,16 +7808,8 @@ CMD:putinambu(playerid, params[])
 	if(sscanf(params, "u", userid))
 		return SendSyntaxMessage(playerid, "/putinambu [playerid/PartOfName]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(userid == INVALID_PLAYER_ID || !IsPlayerNearPlayer(playerid, userid, 10.0))
 	    return SendClientMessage(playerid, COLOR_LIGHTRED, "The player is disconnected. Or not near you");
 
@@ -8342,7 +7897,7 @@ CMD:cc(playerid, params[])
 
 CMD:tpda(playerid, params[])
 {
-	if(PlayerData[playerid][pJob] != JOB_TRUCKER && PlayerData[playerid][pSideJob] != JOB_TRUCKER)
+	if(PlayerData[playerid][pJob] != JOB_TRUCKER)
 	    return SendClientMessage(playerid, COLOR_GRAD1, "You're not a Trucker.");
 
 	Dialog_Show(playerid, TruckerPDA, DIALOG_STYLE_LIST, "Trucker PDA", "{B4B5B7}Show{FFFFFF} All Industries\n{B4B5B7}Show{FFFFFF} Businesses Accepting Cargo\n{B4B5B7}Show{FFFFFF} Ship Information", "Select", "Exit");
@@ -8351,18 +7906,113 @@ CMD:tpda(playerid, params[])
 
 CMD:industry(playerid, params[])
 {
-	new i;
+    new subcmd[16], param1;
+    if(sscanf(params, "s[16]D(0)", subcmd, param1))
+    {
+        new i;
+        if((i = Industry_Nearest(playerid)) != -1)
+        {
+            ShowIndustry(playerid, StorageData[i][in_industryid]);
+            return 1;
+        }
 
-	if((i = Industry_Nearest(playerid)) != -1)
-	{
-		ShowIndustry(playerid, StorageData[i][in_industryid]);
-	}
-	return true;
+        if(PlayerData[playerid][pAdmin] >= 3)
+        {
+            SendClientMessage(playerid, COLOR_LIGHTRED, "Usage: /industry [create / list / edit / remove]");
+            SendClientMessage(playerid, COLOR_GRAD2, "Admin Subcommands: create (at pos), list (teleport), edit [id], remove [id]");
+            return 1;
+        }
+
+        return SendClientMessage(playerid, COLOR_LIGHTRED, "You are not near any industry.");
+    }
+
+    if(!strcmp(subcmd, "create", true) || !strcmp(subcmd, "add", true))
+    {
+        if(PlayerData[playerid][pAdmin] < 3)
+            return SendClientMessage(playerid, COLOR_LIGHTRED, "You are not authorized to use this command.");
+
+        new listStr[2048];
+        listStr[0] = EOS;
+        for(new idx = 0; idx < 31; idx++)
+        {
+            format(listStr, sizeof(listStr), "%s[%d] %s\n", listStr, idx, g_arrIndustryNames[idx]);
+        }
+        Dialog_Show(playerid, IndWizardStep1, DIALOG_STYLE_LIST, "Create Industry - Step 1: Select Complex", listStr, "Select", "Cancel");
+        return 1;
+    }
+    else if(!strcmp(subcmd, "list", true))
+    {
+        if(PlayerData[playerid][pAdmin] < 3)
+            return SendClientMessage(playerid, COLOR_LIGHTRED, "You are not authorized to use this command.");
+
+        new count = 0, listStr[2048];
+        listStr[0] = EOS;
+
+        foreach (new slot : Industry)
+        {
+            format(listStr, sizeof(listStr), "%s[IndID: %d] %s - %s (%s) - Stock: %d/%d\n",
+                listStr,
+                StorageData[slot][in_id],
+                g_arrIndustryNames[StorageData[slot][in_industryid]],
+                g_arrIndItemProperNames[StorageData[slot][in_item]],
+                (StorageData[slot][in_trading_type] == 0) ? ("For Sale") : ("Wanted"),
+                StorageData[slot][in_stock], StorageData[slot][in_maximum]
+            );
+            count++;
+        }
+
+        if(count == 0)
+            return SendClientMessage(playerid, COLOR_LIGHTRED, "No industry points currently exist.");
+
+        Dialog_Show(playerid, IndustryListDialog, DIALOG_STYLE_LIST, "Industry Points List (Click to Teleport)", listStr, "Teleport", "Close");
+        return 1;
+    }
+    else if(!strcmp(subcmd, "edit", true))
+    {
+        if(PlayerData[playerid][pAdmin] < 3)
+            return SendClientMessage(playerid, COLOR_LIGHTRED, "You are not authorized to use this command.");
+
+        if(param1 <= 0)
+            return SendClientMessage(playerid, COLOR_LIGHTRED, "Usage: /industry edit [industry point id]");
+
+        new slot = Storage_FindByDBID(param1);
+        if(slot == -1) return SendClientMessageEx(playerid, COLOR_LIGHTRED, "Industry point ID %d not found.", param1);
+
+        SetPVarInt(playerid, "IndEdit_DBID", param1);
+        Dialog_Show(playerid, IndustryEditMenu, DIALOG_STYLE_LIST, "Edit Industry Point", "1. Change Position to My Location\n2. Change Price ($)\n3. Change Stock & Maximum Capacity", "Select", "Cancel");
+        return 1;
+    }
+    else if(!strcmp(subcmd, "remove", true) || !strcmp(subcmd, "delete", true))
+    {
+        if(PlayerData[playerid][pAdmin] < 3)
+            return SendClientMessage(playerid, COLOR_LIGHTRED, "You are not authorized to use this command.");
+
+        if(param1 <= 0)
+            return SendClientMessage(playerid, COLOR_LIGHTRED, "Usage: /industry remove [industry point id]");
+
+        if(Storage_Remove(param1))
+        {
+            SendAdminAlert(COLOR_YELLOW, 3, "AdmWarn(3) %s has removed Industry Point ID %d.", ReturnName(playerid), param1);
+            SendClientMessageEx(playerid, COLOR_WHITE, "Industry Point ID %d successfully removed.", param1);
+        }
+        else
+        {
+            SendClientMessageEx(playerid, COLOR_LIGHTRED, "Industry Point ID %d not found.", param1);
+        }
+        return 1;
+    }
+    else
+    {
+        SendClientMessage(playerid, COLOR_LIGHTRED, "Usage: /industry [create / list / edit / remove]");
+    }
+    return 1;
 }
+
+
 
 CMD:cargo(playerid, params[])
 {
-	if(PlayerData[playerid][pJob] != JOB_TRUCKER && PlayerData[playerid][pSideJob] != JOB_TRUCKER)
+	if(PlayerData[playerid][pJob] != JOB_TRUCKER)
 	    return SendClientMessage(playerid, COLOR_GRAD1, "You're not a Trucker.");
 
 	new option[16], amount, id = -1;
@@ -9166,38 +8816,7 @@ CMD:seb(playerid, params[])
 	return true;
 }
 
-/*CMD:trace(playerid, params[])
-{
-	new
-		id,
-		//String[1024],
-		Float:FindFloats[3];
 
-	if(sscanf(params, "u", id)) return SendSyntaxMessage(playerid, "/trace [playerid]");
-		if(IsPolice(playerid))
-		{
-			 	if(id == playerid) return SendClientMessage(playerid, COLOR_GREY, "You aren't able to trace yourself.");
-				//else if(PhoneOnline[id] > 0) return SendClientMessageEx(playerid, COLOR_GREY, "kamu tidak dapat melacaknya karena Handphone tersangka dalam keadaan mati.");
-				else if(adTick[playerid] > 1) return SendClientMessage(playerid, COLOR_GREY, "Anda harus menunggu untuk melacak kembali");
-				else if(GetPlayerInterior(id) >= 1 || GetPlayerVirtualWorld(id) >= 1)
-					SendClientMessage(playerid, COLOR_GREY, "Player ini berada pada interior alternatif atau di dalam Virtual World.");
-				else if(AdminDuty{playerid})
-					SendClientMessage(playerid, COLOR_GREY, "You aren't able to trace.");
-				else
-				{
-				    new location[MAX_ZONE_NAME];
-					GetPlayerPos(id, FindFloats[0], FindFloats[1], FindFloats[2]);
-                    GetPlayer2DZone(id, location, MAX_ZONE_NAME);
-					//format(String, sizeof(String), "[SATELIT TRACKER]: ** Lokasi %s terlacak sedang berada di daerah %s **", GetPlayerName(id),location);
-					adTick[playerid] = 60;
-					//SendRadioMessage(1, DEPTRADIO, String);
-					//SendRadioMessage(6, DEPTRADIO, String);
-	            }
-	        
-			else SendClientMessage(playerid, COLOR_GREY, "Player yang di maksud tidak terhubung ke server atau tidak terdaftar.");
-	    }
-		return 1;
-}*/
 
 CMD:trace(playerid, params[])
 {
@@ -9601,16 +9220,8 @@ CMD:takedrugs(playerid, params[])
 	if(sscanf(params, "u", userid))
 	    return SendSyntaxMessage(playerid, "/takedrugs [playerid/partOfName]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!IsPlayerNearPlayer(playerid, userid, 2.5))
 		return SendErrorMessage(playerid, "You aren't near that player.");
 
@@ -9644,16 +9255,8 @@ CMD:tie(playerid, params[])
 	if(sscanf(params, "u", userid))
 	    return SendSyntaxMessage(playerid, "/tie [playerid/Mask/PartOfName]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(IsCuffed{playerid} || IsTied{playerid} || PlayerData[playerid][pInjured])
 		return SendErrorMessage(playerid, "You cannot perform this action right now.");	
 	
@@ -9691,16 +9294,8 @@ CMD:untie(playerid, params[])
 	if(sscanf(params, "u", userid))
 	    return SendSyntaxMessage(playerid, "/untie [playerid/Mask/PartOfName]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(IsCuffed{playerid} || IsTied{playerid} || PlayerData[playerid][pInjured])
 		return SendErrorMessage(playerid, "You cannot perform this action right now.");	
 
@@ -9731,16 +9326,8 @@ CMD:handcuff(playerid, params[])
 	if(sscanf(params, "u", userid))
 	    return SendSyntaxMessage(playerid, "/handcuff [playerid/partOfName]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!PlayerData[playerid][pHandCuffs] && !AdminDuty{playerid})
 	    return SendErrorMessage(playerid, "You don't have any handcuffs.");
 
@@ -9785,16 +9372,8 @@ CMD:passhandcuffs(playerid, params[])
 	if(sscanf(params, "u", userid))
 	    return SendSyntaxMessage(playerid, "/passhandcuffs [playerid/PoN]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!IsPlayerNearPlayer(playerid, userid, 5.0))
 		return SendErrorMessage(playerid, "You are not close enough to that player.");
 
@@ -9827,16 +9406,8 @@ CMD:unhandcuff(playerid, params[])
 	if(!IsPolice(playerid) && GetFactionType(playerid) != FACTION_CORRECTIONAL && !AdminDuty{playerid})
   		return SendUnauthMessage(playerid, "Unauthorized.");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!IsPlayerNearPlayer(playerid, userid, 5.0))
 		return SendErrorMessage(playerid, "You aren't near that player.");
 
@@ -9857,25 +9428,7 @@ CMD:unhandcuff(playerid, params[])
     return true;
 }
 
-/*CMD:tolls(playerid, params[])
-{
-	if(!IsPolice(playerid))
-		return SendErrorMessage(playerid, "You're not authorized to use this command.");
 
-	gstr[0] = EOS;
-
-	strcat(gstr, "{FFFFFF}Welcome to the toll booth management menu!\n\n");
-	strcat(gstr, "{FFFFFF}From this menu you can toggle the locked status of tolls\n");
-	strcat(gstr, "{FFFFFF}and view some information on a specific toll around San Andreas\n\n");
-	strcat(gstr, "{FFFFFF}This front screen will also display financial and statistical data \nof all tholl booth's including visits, taxatinns and payments made\n\for the past 60 minutes\n\n");
-	strcat(gstr, "{DDFF3F}Statistical Information:\n");
-
-	format(sgstr, sizeof(sgstr), "{FFFFFF}Booths Opened: %d        Payments: $%d        Taxed: $%d       Times Locked: %d", TollsOpenCount, TollsPayed, TollsTaxed, TollsLocked);
-	strcat(gstr, sgstr);
-
-	ShowPlayerDialog(playerid, TOLLS_DIALOG, DIALOG_STYLE_MSGBOX, "{FFFFFF}Toolbooth Management", gstr, "Proceed", "Exit");
-    return true;
-}*/
 
 CMD:graffiti(playerid, params[]) return ShowGraffitiDialog(playerid);
 
@@ -10190,16 +9743,8 @@ CMD:passgun(playerid, params[])
 	if(sscanf(params, "ui", userid, weaponid))
 		return SendSyntaxMessage(playerid, "/passgun [playerid/PoN] [weapon]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!SQL_IsLogged(userid))
 		return SendErrorMessage(playerid, "The player you specified isn't logged in.");
 
@@ -10329,16 +9874,8 @@ CMD:heal(playerid, params[])
 	    return true;
 	}
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(userid == INVALID_PLAYER_ID || !IsPlayerNearPlayer(playerid, userid, 10.0))
 	    return SendClientMessage(playerid, COLOR_LIGHTRED, "The player is disconnected. Or not near you");
 
@@ -10474,16 +10011,8 @@ CMD:detain(playerid, params[])
 	if(sscanf(params, "us[16]", userid, seat))
 	    return SendSyntaxMessage(playerid, "/detain [playerid / PoN ] [fr (frontright) / bl (backleft) / br (backright)]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]{s[128]}", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "Invalid player specified.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "Invalid player specified.");
 	if(IsABicycle(vehicleid) || IsABike(vehicleid))
 	    return SendErrorMessage(playerid, "You can't use this while in a bike.");
 
@@ -10538,16 +10067,8 @@ CMD:eject(playerid, params[])
 	if(sscanf(params, "u", userid))
 	    return SendSyntaxMessage(playerid, "/eject [playerid/PartOfName]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]{s[128]}", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "Invalid player specified.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "Invalid player specified.");
 	if(userid == playerid)
 	    return SendErrorMessage(playerid, "You can't eject yourself.");
 
@@ -11799,19 +11320,7 @@ CMD:lock(playerid, params[])
 	return true;
 }
 
-/*CMD:newspaper(playerid, params[])
-{
-	if(IsPlayerInRangeOfPoint(playerid, 2.0, 1663.4677, -2332.1433, -2.6797))
-	{
-	  	TogglePlayerControllable(playerid, false);
 
-  		ShowMenuForPlayer(Guide, playerid);
-		return true;
-	}
-	else SendClientMessage(playerid, COLOR_GREY, "** You are not near the newspaper.");
-
-	return true;
-}*/
 
 CMD:setbuycomp(playerid, params[])
 {
@@ -11837,9 +11346,17 @@ CMD:setbuycomp(playerid, params[])
 	{
 		StorageData[compid][in_pickup] = CreateDynamicPickup(1318, 23, x, y, z, 0, 0);
 
-		new msg[128];
-		format(msg, sizeof(msg), "[{E5FF00}%s{FFFFFF}]\nStorage: %d / %d\nPrice: %s / unit", GetBusinessCargoDesc(StorageData[compid][in_item]), StorageData[compid][in_stock], StorageData[compid][in_maximum], FormatNumber(StorageData[compid][in_price]));
-		StorageData[compid][in_label] = CreateDynamic3DTextLabel(msg, -1, x, y, z, 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, -1, -1, -1, 100.0);
+		new msg[256];
+		format(msg, sizeof(msg),
+			"[{A4D247}%s{FFFFFF}] - %s\nCommodity: {E5FF00}%s{FFFFFF}\nPrice: %s / unit\nStock: %d / %d\n{AAAAAA}[IndID: %d | StorageID: %d]",
+			g_arrIndustryNames[StorageData[compid][in_industryid]],
+			(StorageData[compid][in_trading_type] == 0) ? ("{A4D247}For Sale{FFFFFF}") : ("{CD324D}Wanted{FFFFFF}"),
+			g_arrIndItemProperNames[StorageData[compid][in_item]],
+			FormatNumber(StorageData[compid][in_price]),
+			StorageData[compid][in_stock], StorageData[compid][in_maximum],
+			StorageData[compid][in_industryid], StorageData[compid][in_id]
+		);
+		StorageData[compid][in_label] = CreateDynamic3DTextLabel(msg, COLOR_WHITE, x, y, z + 0.8, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
 	}
 
 	new query[256];
@@ -11854,7 +11371,7 @@ CMD:buycomp(playerid, params[])
 {
 	new compid = 60;
 
-	if(PlayerData[playerid][pJob] != JOB_MECHANIC && PlayerData[playerid][pSideJob] != JOB_MECHANIC)
+	if(PlayerData[playerid][pJob] != JOB_MECHANIC)
 	    return SendClientMessage(playerid, COLOR_GRAD2, "You are not a Car Mechanic");
 
 	if(!IsPlayerInRangeOfPoint(playerid, 5.0, StorageData[compid][in_posx], StorageData[compid][in_posy], StorageData[compid][in_posz]))
@@ -11927,7 +11444,7 @@ CMD:buycomp(playerid, params[])
 
 CMD:paintcar(playerid, params[])
 {
-	if(PlayerData[playerid][pJob] != JOB_MECHANIC && PlayerData[playerid][pSideJob] != JOB_MECHANIC)
+	if(PlayerData[playerid][pJob] != JOB_MECHANIC)
 	    return SendClientMessage(playerid, COLOR_GRAD2, "You are not a Car Mechanic");
 
 	new carid = -1, pcarid = -1;
@@ -11942,16 +11459,8 @@ CMD:paintcar(playerid, params[])
 		if(sscanf(params, "uddS()[16]", userid, color1, color2, confirm))
 			return SendSyntaxMessage(playerid, "/paintcar [playerid/PartOfName] [color 1] [color 2]");
 
-		if(userid == INVALID_PLAYER_ID)
-		{
-			new maskid[MAX_PLAYER_NAME];
-			sscanf(params, "s[24]{ddS()[16]}", maskid);
-			if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-			{
-				return SendErrorMessage(playerid, "The player you specified isn't connected.");
-			}
-		}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+		return SendErrorMessage(playerid, "The player you specified isn't connected.");
 		if(color1 > 255 || color2 > 255 || color1 < 0 || color2 < 0)
 			return SendClientMessage(playerid, COLOR_LIGHTRED, "Invalid color specified (0-255).");
 
@@ -12001,7 +11510,7 @@ CMD:paintcar(playerid, params[])
 
 CMD:service(playerid, params[])
 {
-	if(PlayerData[playerid][pJob] != JOB_MECHANIC && PlayerData[playerid][pSideJob] != JOB_MECHANIC)
+	if(PlayerData[playerid][pJob] != JOB_MECHANIC)
 	    return SendClientMessage(playerid, COLOR_GRAD2, "You're not a Car Mechanic");
 
 	new
@@ -12025,16 +11534,8 @@ CMD:service(playerid, params[])
 			return true;
 		}
 
-		if(userid == INVALID_PLAYER_ID)
-		{
-			new maskid[MAX_PLAYER_NAME];
-			sscanf(params, "s[24]{dS()[16]}", maskid);
-			if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-			{
-				return SendErrorMessage(playerid, "The player you specified isn't connected.");
-			}
-		}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+		return SendErrorMessage(playerid, "The player you specified isn't connected.");
 		if(userid == playerid)
 			return SendClientMessage(playerid, COLOR_GRAD1, "You cannot offer services to yourself.");
 
@@ -12120,7 +11621,7 @@ CMD:service(playerid, params[])
 
 CMD:checkcomponents(playerid, params[])
 {
-	if(PlayerData[playerid][pJob] != JOB_MECHANIC && PlayerData[playerid][pSideJob] != JOB_MECHANIC)
+	if(PlayerData[playerid][pJob] != JOB_MECHANIC)
 	    return SendClientMessage(playerid, COLOR_GRAD2, "You are not a Car Mechanic");
 
 	new slot = -1, vehicleid = GetPlayerVehicleID(playerid);
@@ -12144,7 +11645,7 @@ CMD:colorlist(playerid, params[])
 {
 	new id = -1;
 
-	if((PlayerData[playerid][pJob] == JOB_MECHANIC || PlayerData[playerid][pSideJob] == JOB_MECHANIC) || ((id = Business_Nearest(playerid)) != -1 && BusinessData[id][bType] == 4))
+	if((PlayerData[playerid][pJob] == JOB_MECHANIC) || ((id = Business_Nearest(playerid)) != -1 && BusinessData[id][bType] == 4))
 	{
 	    new
 			string[3344];
@@ -12223,24 +11724,7 @@ CMD:detach(playerid, params[])
 
 CMD:leavesidejob(playerid, params[])
 {
-	if(PlayerData[playerid][pSideJob] != 0)
-	{
-		if(PlayerData[playerid][pSideJob] == JOB_TAXI)
-		{
-			if(TaxiDuty{playerid})
-			{
-				TaxiDuty{playerid} = false;
-				TaxiMade[playerid] = 0;
-
-				SetPlayerToTeamColor(playerid);
-			}
-		}
-
-	    PlayerData[playerid][pSideJob] = 0;
-
-	    return SendClientMessage(playerid, COLOR_GRAD1, "You have left your sidejob.");
-	}
-	else return SendClientMessage(playerid, COLOR_LIGHTRED, "You don't have a sidejob.");
+	return SendClientMessage(playerid, COLOR_LIGHTRED, "Command /leavesidejob is deprecated. Use /leavejob to quit your main job.");
 }
 
 CMD:leavejob(playerid, params[])
@@ -12298,28 +11782,7 @@ CMD:leavejob(playerid, params[])
 
 CMD:jobswitch(playerid, params[])
 {
-    if(IsJobSide(PlayerData[playerid][pJob]))
-	{
-        if(PlayerData[playerid][pJob] != JOB_NONE || PlayerData[playerid][pSideJob] != JOB_NONE)
-        {
-            new sidejob = PlayerData[playerid][pSideJob];
-
-            PlayerData[playerid][pSideJob] = PlayerData[playerid][pJob];
-            PlayerData[playerid][pJob] = sidejob;
-
-            if(PlayerData[playerid][pSideJob] == JOB_NONE)
-				SendClientMessage(playerid, COLOR_LIGHTRED, "Your side job was set as your main job.");
-			else if(PlayerData[playerid][pJob] == JOB_NONE)
-				SendClientMessage(playerid, COLOR_LIGHTRED, "Your main job was set as your side job.");
-		}
-        else
-        {
-            SendClientMessage(playerid, COLOR_LIGHTRED, "You have to leave the job first (/leavejob or /leavesidejob)");
-        }
-    }
-    else SendClientMessage(playerid, COLOR_LIGHTRED, "You can only switch jobs as Taxi Driver or Car Mechanic.");
-
-	return true;
+	return SendClientMessage(playerid, COLOR_LIGHTRED, "Command /jobswitch is no longer used. You can hold 1 Legal Job (/job) and 1 Illegal Job (/illegaljob).");
 }
 
 CMD:mechanicjob(playerid, params[])
@@ -12331,162 +11794,25 @@ CMD:mechanicjob(playerid, params[])
 	        PlayerData[playerid][pJob] = JOB_MECHANIC;
 
 	        ShowPlayerFooter(playerid, "~r~Congratulations,~n~~w~You are now a ~y~Car Mechanic.~n~~w~/jobhelp.", 8000);
-
-			if(PlayerData[playerid][pSideJob] == JOB_NONE) SendClientMessage(playerid, COLOR_GRAD6, "/jobswitch to make it a sidejob.");
 		}
 		else
 		{
-		    if(PlayerData[playerid][pSideJob] == JOB_NONE)
-		    {
-		        PlayerData[playerid][pSideJob] = JOB_MECHANIC;
-
-		        ShowPlayerFooter(playerid, "~r~Congratulations,~n~~w~You are now a ~y~Car Mechanic.~n~~w~/jobhelp.", 8000);
-		    }
-		    else
-		    {
-		        SendClientMessage(playerid, COLOR_LIGHTRED, "    You already have a job and a side-job. Type /leavejob and or /leavesidejob to leave them.");
-		    }
+			SendClientMessage(playerid, COLOR_LIGHTRED, "You already have a job. Type /leavejob to leave your job first.");
 		}
-		return true;
 	}
-	else return SendClientMessage(playerid, COLOR_GRAD1, "You are not at the job site.");
+	return true;
 }
 
 CMD:farmerjob(playerid, params[])
 {
-
-
-	if(GetFactionType(playerid) != 0)
-	    return SendClientMessage(playerid, COLOR_WHITE, "Only civilians can have this job");
-
-	if(IsPlayerInRangeOfPoint(playerid, 3.0, -382.5893,-1426.3422,26.2217))
-	{
-	    if(PlayerData[playerid][pJob] != 0)
-			return SendClientMessage(playerid, COLOR_LIGHTRED, "   You already have a job. Type /leavejob to leave.");
-
-        PlayerData[playerid][pJob] = JOB_FARMER;
-
-        ShowPlayerFooter(playerid, "~r~Congratulations,~n~~w~You are now a ~y~Farmer.~n~~w~/jobhelp.", 8000);
-
-        SendClientMessage(playerid, COLOR_WHITE, "You're now a Farmer.");
-		return true;
-	}
-	else return SendClientMessage(playerid, COLOR_GRAD1, "You are not at the job site.");
-}
-
-/*CMD:dealerjob(playerid, params[])
-{
-	if(PlayerData[playerid][pJob] != 0)
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "   You already have a job. Type /leavejob to leave.");
-
-	if(GetFactionType(playerid) != 0)
-	    return SendClientMessage(playerid, COLOR_WHITE, "Only civilians can have this job");
-
-	if(IsAtBlackMarket(playerid))
-	{
-        PlayerData[playerid][pJob] = JOB_WPDEALER;
-
-        ShowPlayerFooter(playerid, "~r~Congratulations,~n~~w~You are now a ~y~WEAPONS DEALER.~n~~w~/jobhelp.", 8000);
-		return true;
-	}
-	else
-	{
-	    SendClientMessage(playerid, COLOR_GRAD1, "You are not on the dark side.");
-	}
-	return true;
-}
-
-CMD:supplierjob(playerid, params[])
-{
-	if(PlayerData[playerid][pJob] != 0)
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "   You already have a job. Type /leavejob to leave.");
-
-	if(GetFactionType(playerid) != 0 && GetFactionType(playerid) == FACTION_GANG)
-	{
-		if(IsAtBlackMarket(playerid))
-		{
-	        PlayerData[playerid][pJob] = JOB_SUPPLIER;
-
-	        ShowPlayerFooter(playerid, "~r~Congratulations,~n~~w~You are now a ~y~WEAPONS SUPPLIER.~n~~w~/jobhelp.", 8000);
-			return true;
-		}
-		else
-		{
-		    SendClientMessage(playerid, COLOR_GRAD1, "You are not on the dark side.");
-		}
-	}
-	else SendClientMessage(playerid, COLOR_WHITE, "This job is for gang members or official organizations only.");
-	return true;
-}*/
-
-CMD:truckerjob(playerid, params[])
-{
-	if(PlayerData[playerid][pJob] != 0)
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "   You already have a job. Type /leavejob to leave.");
-
-	if(GetFactionType(playerid) != 0)
-	    return SendClientMessage(playerid, COLOR_WHITE, "Only civilians can have this job");
-
-	if(IsPlayerInRangeOfPoint(playerid, 3.0, -78.0338,-1136.1221,1.0781))
-	{
-        PlayerData[playerid][pJob] = JOB_TRUCKER;
-
-        SendClientMessageEx(playerid, COLOR_WHITE, "You're now a %s.", ReturnJobName(playerid, JOB_TRUCKER));
-		return true;
-	}
-	else
-	{
-	    SetPlayerRaceCheckpointEx(playerid, 2, RCHECKPOINT_TRUCKERJOB, -78.0338,-1136.1221,1.0781);
-
-		SendClientMessage(playerid, COLOR_GREEN, "Trucker job location has been marked on map");
-	}
-	return true;
+	SendClientMessage(playerid, COLOR_YELLOW, "[FARMER] Farming is now open to everyone! Use /farm for all commands.");
+	return SendClientMessage(playerid, COLOR_WHITE, "Commands: /farm plant, /farm water, /farm harvest, /farm sell, /farm buyseeds, /farm info");
 }
 
 CMD:harvest(playerid, params[])
 {
-	if(PlayerData[playerid][pJob] != JOB_FARMER)
-	    return SendClientMessage(playerid, COLOR_GRAD2, "City boys can not do that!");
-
-
-
-	new vehicleid = GetPlayerVehicleID(playerid);
-
-	if(GetVehicleModel(vehicleid) != 532)
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "You are not sitting on Combine Harvester");
-
-	if(GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
-	 	return SendClientMessage(playerid, COLOR_LIGHTRED, "You do not sit at the driver's seat of the vehicle.");
-
-	if(IsPlayerInRangeOfPoint(playerid, 100.0, -377.8374,-1433.8853,25.7266))
-	{
-		if(far_start[playerid])
-			return SendClientMessage(playerid, COLOR_GRAD1, "   You have already begun to harvest.");
-
-		far_place[playerid] = 0;
-		far_start[playerid] = 1;
-		far_veh[playerid] = vehicleid;
-
-		SendClientMessage(playerid, COLOR_WHITE, "You have started to harvest the farmer.");
-
-		StartHarvesting(playerid);
-        return 1;
-	}
-	else if(IsPlayerInRangeOfPoint(playerid, 100.0, -53.5525,70.3079,4.0933))
-	{
-		if(far_start[playerid])
-			return SendClientMessage(playerid, COLOR_GRAD1, "   You have already begun to harvest.");
-
-		far_place[playerid] = 1;
-		far_start[playerid] = 1;
-		far_veh[playerid] = vehicleid;
-
-		SendClientMessage(playerid, COLOR_WHITE, "You have started to harvest the farmer.");
-
-		StartHarvesting(playerid);
-        return 1;
-	}
-	else return SendClientMessage(playerid, COLOR_GRAD1, "You are not at the farm");
+	// ponytail: redirected to /farm harvest (new full-cycle farmer system)
+	return Farmer_CmdHarvest(playerid);
 }
 
 CMD:stopharvest(playerid, params[])
@@ -12507,23 +11833,6 @@ CMD:stopharvest(playerid, params[])
 	else return SendClientMessage(playerid, COLOR_GRAD1, "   You have not started harvesting yet.");
 }
 // Libery Harvest
-stock StartHarvesting(playerid)
-{
-    new rand;
-	if(far_place[playerid])
-	{
-		rand = random(sizeof(BlueFarm));
-		SetPlayerCheckpointEx(playerid, BlueFarm[rand][0],BlueFarm[rand][1],BlueFarm[rand][2], 5.0, CHECKPOINT_FARMER, rand);
-	}
-	else
-	{
-		rand = random(sizeof(FlintFarm));
-		SetPlayerCheckpointEx(playerid, FlintFarm[rand][0],FlintFarm[rand][1],FlintFarm[rand][2], 5.0, CHECKPOINT_FARMER, rand);
-	}
-	return true;
-}
-
-YCMD:rw(playerid, params[], help) = rollwindow;
 
 CMD:rollwindow(playerid,params[])
 {
@@ -12726,7 +12035,7 @@ CMD:gofishing(playerid, params[])
 	new fishplace = strval(params);
 
 	if(isnull(params) && (fishplace != 1 && fishplace != 2))
-	    return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: {FFFFFF}/gofishing [1(on the ship)/2(From the bridge)]");
+	    return SendSyntaxMessage(playerid, "{FFFFFF}/gofishing [1(on the ship)/2(From the bridge)]");
 
 	if(PlayerData[playerid][pFishes])
 		return SendClientMessage(playerid, COLOR_LIGHTRED, "You can't go fishing if you have fish on you.");
@@ -13069,7 +12378,7 @@ CMD:bizbank(playerid, params[])
 	if(sscanf(params, "d", cashdeposit))
 	{
 	    SendClientMessageEx(playerid, COLOR_GRAD3, " You Have $40,500 in your till.", BusinessData[bouse][bTill]);
-		SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /bizbank [amount]");
+		SendSyntaxMessage(playerid, "/bizbank [amount]");
 		return true;
 	}
 
@@ -13238,7 +12547,7 @@ CMD:withdraw(playerid, params[])
 	{
 		if(sscanf(params, "d", cashdeposit))
 		{
-			SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /withdraw [amount]");
+			SendSyntaxMessage(playerid, "/withdraw [amount]");
 			SendClientMessageEx(playerid, COLOR_GRAD3, " You Have $%d in your account.", PlayerData[playerid][pAccount]);
 			return true;
 		}
@@ -13309,7 +12618,7 @@ CMD:bank(playerid, params[])
 	{
 		if(sscanf(params, "d", cashdeposit))
 		{
-			SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /bank [amount]");
+			SendSyntaxMessage(playerid, "/bank [amount]");
 			SendClientMessageEx(playerid, COLOR_GRAD3, " You Have $%d in your account.", PlayerData[playerid][pAccount]);
 			return true;
 		}
@@ -13419,7 +12728,7 @@ CMD:savings(playerid, params[])
 	        new savings = strval(params);
 
     		if(!savings)
-		    	return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE:{FFFFFF} To create a savings account /savings [amount]");
+		    	return SendSyntaxMessage(playerid, "{FFFFFF} To create a savings account /savings [amount]");
 
 			if(savings == 50000 || savings == 100000)
 			{
@@ -13447,7 +12756,7 @@ CMD:savings(playerid, params[])
 					}
 
 					SendNoticeMessage(playerid, "Your savings are left. %d/%d paydays (%d%s)", currently, paycheck, floatround(currently / float(paycheck) * 100), "%%");
-					SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: {FFFFFF} To withdraw your savings{FF6347}use /savings withdraw");*/
+					SendSyntaxMessage(playerid, "{FFFFFF} To withdraw your savings{FF6347}use /savings withdraw");*/
 				}
 				else SendClientMessage(playerid, COLOR_GRAD1, "You don't have enough money.");
 			}
@@ -13602,7 +12911,7 @@ CMD:towcar(playerid, params[])
 	;
 
 	if(sscanf(params, "d", vehicleid))
-		return SendNoticeMessage(playerid, "USAGE: /towcar [vehicleid]");
+		return SendSyntaxMessage(playerid, "/towcar [vehicleid]");
 
 	if(!IsValidVehicle(vehicleid))
 	{
@@ -13766,7 +13075,7 @@ YCMD:unscramble(playerid, params[], help) = uns;
 CMD:uns(playerid, params[])
 {
 	if(isnull(params))
-	    return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /(uns)cramble <unscrambled word>");
+	    return SendSyntaxMessage(playerid, "/(uns)cramble <unscrambled word>");
 
 	if(IsPlayerInAnyVehicle(playerid) && h_vid[playerid] != -1)
 	{
@@ -13952,11 +13261,7 @@ CMD:engine(playerid, params[])
 	{
 		if((id = Vehicle_GetID(vehicleid)) != -1)
 		{
-			if(vehicleVariables[id][vVehicleSideJob] == 1 && PlayerBusVehicle[playerid] == vehicleid)
-			{
-				canstart = true;
-			}
-			else if(vehicleVariables[id][vVehicleSideJob] == 2 && PlayerSweeperVehicle[playerid] == vehicleid)
+			if(SideJob_IsActiveVehicle(playerid, vehicleid))
 			{
 				canstart = true;
 			}
@@ -14187,7 +13492,7 @@ CMD:setslot(playerid, params[])
 	;
 
 	if(sscanf(params, "d", slot))
-		return SendClientMessage(playerid, COLOR_WHITE, "USAGE: /setslot [radio slot]");
+		return SendSyntaxMessage(playerid, "/setslot [radio slot]");
 
 	if(slot < 1 || slot > PlayerData[playerid][pRadio])
 		return SendClientMessage(playerid, COLOR_WHITE, "Your radio doesn't support that slot.");
@@ -14227,7 +13532,7 @@ CMD:setchannel(playerid, params[])
 	new slot, ch;
 
 	if(sscanf(params, "dd", slot, ch))
-		return SendClientMessage(playerid, COLOR_WHITE, "USAGE: /setchannel [radio slot] [channel number]");
+		return SendSyntaxMessage(playerid, "/setchannel [radio slot] [channel number]");
 
 	if(slot < 1 || slot > PlayerData[playerid][pRadio])
         return SendClientMessage(playerid, COLOR_WHITE, "Your radio doesn't support that slot.");
@@ -14781,7 +14086,7 @@ CMD:vehiclename(playerid, parmas[])
 
 	if(sscanf(parmas, "s[64]", vehiclename))
 	{
-		SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /vehiclename [Enter Custom Name]");
+		SendSyntaxMessage(playerid, "/vehiclename [Enter Custom Name]");
 		SendClientMessage(playerid, COLOR_YELLOW3, "SERVER: Do not include any periods at the end of your request.");
 		SendClientMessage(playerid, COLOR_YELLOW3, "SERVER: Your custom model name should include the model's year.");
 		SendClientMessage(playerid, COLOR_YELLOW3, "SERVER: Want to remove an existing custom name? /remove_vehiclename.");
@@ -14865,7 +14170,7 @@ CMD:v(playerid, params[])
 		new userid = INVALID_PLAYER_ID, price;
 
 		if(sscanf(params, "{s[24]}ud", userid, price))
-			return SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle sell [playerid/PartOfName] [price]");
+			return SendSyntaxMessage(playerid, "/(v)ehicle sell [playerid/PartOfName] [price]");
 
 		if(userid == INVALID_PLAYER_ID)
 		{
@@ -14931,7 +14236,7 @@ CMD:v(playerid, params[])
 		strmid(text, params, 6, strlen(params));
 
 		if(isnull(text))
-		    return SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle UItag [name]");
+		    return SendSyntaxMessage(playerid, "/(v)ehicle UItag [name]");
 
 	    if(strlen(text) < 3 || strlen(text) > 15)
 	        return SendErrorMessage(playerid, "Must be at least 3 characters and can't be longer than 15.");
@@ -14958,7 +14263,7 @@ CMD:v(playerid, params[])
 		;
 
 		if(sscanf(cf, "u", userid))
-			return SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle duplicatekey [playerid/PartOfName]");
+			return SendSyntaxMessage(playerid, "/(v)ehicle duplicatekey [playerid/PartOfName]");
 
 		if(userid == playerid)
 			return SendClientMessage(playerid, COLOR_LIGHTRED, "It can't be you.");
@@ -15026,7 +14331,7 @@ CMD:v(playerid, params[])
 		if(sscanf(cf, "d", keyid))
 		{
 		    SendClientMessage(playerid, COLOR_YELLOW3, "HINT: Use /(v)ehicle keys to get a list of the keys you have.");
-		    SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle dropkey [Key Slot]");
+		    SendSyntaxMessage(playerid, "/(v)ehicle dropkey [Key Slot]");
 		    return true;
 		}
 
@@ -15077,7 +14382,7 @@ CMD:v(playerid, params[])
 
 		        if(!strlen(cf))
 		        {
-	             	SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade [upgrade] [upgrade-level]");
+	             	SendSyntaxMessage(playerid, "/(v)ehicle upgrade [upgrade] [upgrade-level]");
 	                SendClientMessage(playerid, COLOR_YELLOW3, "[UPGRADES] lock, alarm, immob, insurance, armour");
 	                SendClientMessage(playerid, COLOR_YELLOW3, "[UPGRADES] battery, engine (( This option overwrites the original. ))");
 	         	}
@@ -15098,12 +14403,12 @@ CMD:v(playerid, params[])
 					    else
 					    {
 					        SendClientMessageEx(playerid, COLOR_YELLOW, "This operation requires %s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / VehicleUpgradeLock[uplevel-1][u_rate]) + VehicleUpgradeLock[uplevel-1][u_price]));
-					        SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade [upgrade] [upgrade-level] {FFFF00}yes");
+					        SendSyntaxMessage(playerid, "/(v)ehicle upgrade [upgrade] [upgrade-level] {FFFF00}yes");
 					    }
 					}
 					else
 					{
-		                SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade lock [lock-level]");
+		                SendSyntaxMessage(playerid, "/(v)ehicle upgrade lock [lock-level]");
 		                SendClientMessageEx(playerid, COLOR_YELLOW3, "Lock Level 1 - {33AA33}%s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / VehicleUpgradeLock[0][u_rate]) + VehicleUpgradeLock[0][u_price]));
 		                SendClientMessageEx(playerid, COLOR_YELLOW3, "Lock Level 2 - {33AA33}%s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / VehicleUpgradeLock[1][u_rate]) + VehicleUpgradeLock[1][u_price]));
 		                SendClientMessageEx(playerid, COLOR_YELLOW3, "Lock Level 3 - {33AA33}%s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / VehicleUpgradeLock[2][u_rate]) + VehicleUpgradeLock[2][u_price]));
@@ -15127,12 +14432,12 @@ CMD:v(playerid, params[])
 					    else
 					    {
 					        SendClientMessageEx(playerid, COLOR_YELLOW, "This operation requires %s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / VehicleUpgradeAlarm[uplevel-1][u_rate]) + VehicleUpgradeAlarm[uplevel-1][u_price]));
-					        SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade [upgrade] [upgrade-level] {FFFF00}yes");
+					        SendSyntaxMessage(playerid, "/(v)ehicle upgrade [upgrade] [upgrade-level] {FFFF00}yes");
 					    }
 					}
 					else
 					{
-		                SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade alarm [alarm-level]");
+		                SendSyntaxMessage(playerid, "/(v)ehicle upgrade alarm [alarm-level]");
 		                SendClientMessageEx(playerid, COLOR_YELLOW3, "Alarm Level 1 - {33AA33}%s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / VehicleUpgradeAlarm[0][u_rate]) + VehicleUpgradeAlarm[0][u_price]));
 		                SendClientMessageEx(playerid, COLOR_YELLOW3, "Alarm Level 2 - {33AA33}%s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / VehicleUpgradeAlarm[1][u_rate]) + VehicleUpgradeAlarm[1][u_price]));
 		                SendClientMessageEx(playerid, COLOR_YELLOW3, "Alarm Level 3 - {33AA33}%s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / VehicleUpgradeAlarm[2][u_rate]) + VehicleUpgradeAlarm[2][u_price]));
@@ -15156,12 +14461,12 @@ CMD:v(playerid, params[])
 					    else
 					    {
 					        SendClientMessageEx(playerid, COLOR_YELLOW, "This operation requires %s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / VehicleUpgradeImmob[uplevel-1][u_rate]) + VehicleUpgradeImmob[uplevel-1][u_price]));
-					        SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade [upgrade] [upgrade-level] {FFFF00}yes");
+					        SendSyntaxMessage(playerid, "/(v)ehicle upgrade [upgrade] [upgrade-level] {FFFF00}yes");
 					    }
 					}
 					else
 					{
-		                SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade immob [immob-level]");
+		                SendSyntaxMessage(playerid, "/(v)ehicle upgrade immob [immob-level]");
 		                SendClientMessageEx(playerid, COLOR_YELLOW3, "Immob Level 1 - {33AA33}%s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / VehicleUpgradeImmob[0][u_rate]) + VehicleUpgradeImmob[0][u_price]));
 		                SendClientMessageEx(playerid, COLOR_YELLOW3, "Immob Level 2 - {33AA33}%s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / VehicleUpgradeImmob[1][u_rate]) + VehicleUpgradeImmob[1][u_price]));
 		                SendClientMessageEx(playerid, COLOR_YELLOW3, "Immob Level 3 - {33AA33}%s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / VehicleUpgradeImmob[2][u_rate]) + VehicleUpgradeImmob[2][u_price]));
@@ -15185,12 +14490,12 @@ CMD:v(playerid, params[])
 					    else
 					    {
 					        SendClientMessageEx(playerid, COLOR_YELLOW, "This operation requires a %s", FormatNumber(((IsABike(vehicleid)) ? 1000 : 2500) *uplevel));
-							SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade [upgrade] [upgrade-level] {FFFF00}yes");
+							SendSyntaxMessage(playerid, "/(v)ehicle upgrade [upgrade] [upgrade-level] {FFFF00}yes");
 					    }
 					}
 					else
 					{
-		                SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade insurance [insurance-level]");
+		                SendSyntaxMessage(playerid, "/(v)ehicle upgrade insurance [insurance-level]");
 		                SendClientMessage(playerid, COLOR_YELLOW3, "Insurance 1st Level: Vehicle will always respawn with its max health.");
 						SendClientMessage(playerid, COLOR_YELLOW3, "Insurance 2nd Level: Protection against vehicle damage. Vehicle will re-spawn good as new.");
                         SendClientMessage(playerid, COLOR_YELLOW3, "Insurance 3rd Level: Vehicle modification coverage. We got your fancy layout and XM tunes covered!");
@@ -15217,12 +14522,12 @@ CMD:v(playerid, params[])
 					    else
 					    {
 					        SendClientMessageEx(playerid, COLOR_YELLOW, "This operation requires %s", FormatNumber(uplevel * GetVehicleDataArmourCost(CarData[carid][carModel])));
-					        SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade [upgrade] [upgrade-level] {FFFF00}yes");
+					        SendSyntaxMessage(playerid, "/(v)ehicle upgrade [upgrade] [upgrade-level] {FFFF00}yes");
 					    }
 					}
 					else
 					{
-		                SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade armour [amount]");
+		                SendSyntaxMessage(playerid, "/(v)ehicle upgrade armour [amount]");
 		                SendClientMessage(playerid, COLOR_YELLOW3, "AMOUNT: 10-250");
 		                SendClientMessageEx(playerid, COLOR_YELLOW3, "{33AA33}$%d{F0EA92} per Armour point.", GetVehicleDataArmourCost(CarData[carid][carModel]));
 					}
@@ -15242,7 +14547,7 @@ CMD:v(playerid, params[])
 					else
 					{
 					   	SendClientMessageEx(playerid, COLOR_YELLOW, "This operation requires %s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / 2.48) + floatround(VehicleData[CarData[carid][carModel] - 400][c_battery] * 13.0)));
-					  	SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade battery {FFFF00}yes");
+					  	SendSyntaxMessage(playerid, "/(v)ehicle upgrade battery {FFFF00}yes");
 					}
 				}
 				else if(!strcmp(cf, "engine", true))
@@ -15260,12 +14565,12 @@ CMD:v(playerid, params[])
 					else
 					{
 					   	SendClientMessageEx(playerid, COLOR_YELLOW, "This operation requires %s", FormatNumber(floatround(VehicleData[CarData[carid][carModel] - 400][c_price] / 1.72) + floatround(VehicleData[CarData[carid][carModel] - 400][c_engine] * 13.0)));
-					  	SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade engine {FFFF00}yes");
+					  	SendSyntaxMessage(playerid, "/(v)ehicle upgrade engine {FFFF00}yes");
 					}
 				}
 				else
 				{
-	             	SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle upgrade [upgrade] [upgrade-level]");
+	             	SendSyntaxMessage(playerid, "/(v)ehicle upgrade [upgrade] [upgrade-level]");
 	                SendClientMessage(playerid, COLOR_YELLOW3, "[UPGRADES] lock, alarm, immob, insurance, armour");
 	                SendClientMessage(playerid, COLOR_YELLOW3, "[UPGRADES] battery, engine (( This option overlaps the original. ))");
 				}
@@ -15298,7 +14603,7 @@ CMD:v(playerid, params[])
 			SendClientMessage(playerid, COLOR_YELLOW3, "SERVER: You have chosen to make the vehicle a debris.");
 			SendClientMessageEx(playerid, COLOR_YELLOW3, "SERVER: You will get just %s From the debris", FormatNumber(scrap_price));
 			SendClientMessage(playerid, COLOR_YELLOW3, "SERVER: When you destroy a debris the vehicle will be removed from the existing.");
-			SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle scrap yes");
+			SendSyntaxMessage(playerid, "/(v)ehicle scrap yes");
 		}
 	}
 	else if(!strcmp(type, "buy", true))
@@ -15349,7 +14654,7 @@ CMD:v(playerid, params[])
 			if(sscanf(cf, "d", keyid))
 			{
 				SendClientMessage(playerid, COLOR_YELLOW3, "You have multiple private vehicles spawned.");
-				SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle find vehicleid");
+				SendSyntaxMessage(playerid, "/(v)ehicle find vehicleid");
 
 				for(new i = 0; i < last + 1; ++i)
 				{
@@ -15650,7 +14955,7 @@ CMD:v(playerid, params[])
 			if(sscanf(cf, "d", keyid))
 			{
 				SendClientMessage(playerid, COLOR_YELLOW3, "You have multiple private vehicles spawned.");
-				SendClientMessage(playerid, COLOR_YELLOW3, "USAGE: /(v)ehicle tow vehicleid");
+				SendSyntaxMessage(playerid, "/(v)ehicle tow vehicleid");
 
 				for(new i = 0; i < last + 1; ++i)
 				{
@@ -15819,9 +15124,10 @@ public ShowPlayerVehicleList(playerid)
 		return SendServerMessage(playerid, "You don't have any vehicles.");
 	
 	static dialog_text[2048];
-	new model, color1, model_name[64], ui_tag[15];
+	new model, color1, model_name[64], ui_tag[15], plate[30], car_sql_id;
+	new Float:fuel;
 	
-	dialog_text[0] = EOS;
+	format(dialog_text, sizeof(dialog_text), "Slot\tModel Name\tLicense Plate\tStatus\tFuel\n");
 	PCarPage[playerid] = 1;
 	PCarType[playerid] = 0;
 
@@ -15832,20 +15138,46 @@ public ShowPlayerVehicleList(playerid)
 
 	for(new i = 0; i < rows && i < 50; ++i)
 	{
-		cache_get_value_name_int(i, "carID", VehicleCache[playerid][i]);
+		cache_get_value_name_int(i, "carID", car_sql_id);
+		VehicleCache[playerid][i] = car_sql_id;
 		cache_get_value_name_int(i, "carModel", model);
 		cache_get_value_name_int(i, "carColor1", color1);
 		cache_get_value_name(i, "carName", ui_tag, 15);
+		cache_get_value_name(i, "carPlate", plate, 30);
+		cache_get_value_name_float(i, "carFuel", fuel);
 		
 		if(strlen(ui_tag) >= 3)
 			format(model_name, sizeof(model_name), "%s", ui_tag);
 		else
 			format(model_name, sizeof(model_name), "%s", ReturnVehicleModelNameEx(model));
 		
-		format(dialog_text, sizeof(dialog_text), "%s%s\n", dialog_text, model_name);
+		new bool:isSpawned = false;
+		new Float:curFuel = fuel;
+		new Float:maxFuel = GetVehicleDataFuel(model);
+		foreach(new v : sv_playercar)
+		{
+			if(CarData[v][carID] == car_sql_id && IsValidVehicle(CarData[v][carVehicle]))
+			{
+				isSpawned = true;
+				curFuel = CoreVehicles[CarData[v][carVehicle]][vehFuel];
+				break;
+			}
+		}
+		new fuelPercent = (maxFuel > 0.0) ? floatround((curFuel / maxFuel) * 100.0) : 0;
+		if(fuelPercent < 0) fuelPercent = 0;
+		else if(fuelPercent > 100) fuelPercent = 100;
+		
+		format(dialog_text, sizeof(dialog_text), "%sSlot %d\t%s\t%s\t%s\t%d%%\n", 
+			dialog_text, 
+			i + 1, 
+			model_name, 
+			strlen(plate) > 0 ? plate : "None",
+			isSpawned ? "{00FF00}Spawned{FFFFFF}" : "{FF0000}Stored{FFFFFF}",
+			fuelPercent
+		);
 	}
 	
-	Dialog_Show(playerid, PlayerVehicles, DIALOG_STYLE_LIST, "My Vehicles", dialog_text, "Select", "Close");
+	Dialog_Show(playerid, PlayerVehicles, DIALOG_STYLE_TABLIST_HEADERS, "My Vehicles Garage", dialog_text, "Select", "Back");
 	return true;
 }
 
@@ -16386,16 +15718,8 @@ CMD:passbottle(playerid, params[])
 	if(sscanf(params, "uS()[64]", userid, emote))
 	    return SendClientMessage(playerid, COLOR_LIGHTRED, "Usage: /passbottle [playerid/partOfName] [optional: emote]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]{s[128]}", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!IsPlayerNearPlayer(playerid, userid, 5.0))
 	    return SendErrorMessage(playerid, "Not close enough.");
 
@@ -16852,7 +16176,7 @@ CMD:carsign(playerid, params[])
 		}
 		else
 		{
-			SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /remove_carsign {FFFFFF}- When you're done with it.");
+			SendSyntaxMessage(playerid, "/remove_carsign {FFFFFF}- When you're done with it.");
 
 			CoreVehicles[vehicleid][vehSignText] = Create3DTextLabel(params, COLOR_WHITE, 0.0, 0.0, 0.0, 25.0, 0, 0);
 			Attach3DTextLabelToVehicle(CoreVehicles[vehicleid][vehSignText], vehicleid, -0.7, -1.9, -0.3);
@@ -16877,7 +16201,7 @@ CMD:carsign(playerid, params[])
 				}
 				else
 				{
-					SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /remove_carsign {FFFFFF}- When you're done with it.");
+					SendSyntaxMessage(playerid, "/remove_carsign {FFFFFF}- When you're done with it.");
 
 					CoreVehicles[vehicleid][vehSignText] = Create3DTextLabel(params, 0x00B301FF, 0.0, 0.0, 0.0, 25.0, GetPlayerVirtualWorld(playerid), 0);
 					Attach3DTextLabelToVehicle(CoreVehicles[vehicleid][vehSignText], vehicleid, -0.7, -1.9, -0.3);
@@ -17011,7 +16335,7 @@ CMD:taxi(playerid, params[])
 
 	if(!strcmp(option, "duty", true))
 	{
-	    if(PlayerData[playerid][pSideJob] != JOB_TAXI && PlayerData[playerid][pJob] != JOB_TAXI)
+	    if(PlayerData[playerid][pJob] != JOB_TAXI)
 			return SendClientMessage(playerid, COLOR_WHITE, "You are not a Taxi Driver.");
 
 		if(GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
@@ -17039,7 +16363,7 @@ CMD:taxi(playerid, params[])
 	}
 	else if(!strcmp(option, "start", true))
 	{
-	    if(PlayerData[playerid][pSideJob] != JOB_TAXI && PlayerData[playerid][pJob] != JOB_TAXI)
+	    if(PlayerData[playerid][pJob] != JOB_TAXI)
 			return SendClientMessage(playerid, COLOR_WHITE, "You are not a Taxi Driver.");
 
 		if(GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
@@ -17063,7 +16387,7 @@ CMD:taxi(playerid, params[])
 	}
 	else if(!strcmp(option, "fare", true))
 	{
-	    if(PlayerData[playerid][pSideJob] != JOB_TAXI && PlayerData[playerid][pJob] != JOB_TAXI)
+	    if(PlayerData[playerid][pJob] != JOB_TAXI)
 			return SendClientMessage(playerid, COLOR_WHITE, "You are not a Taxi Driver.");
 
 		new fare;
@@ -17092,7 +16416,7 @@ CMD:taxi(playerid, params[])
 	}
 	else if(!strcmp(option, "accept", true))
 	{
-	    if(PlayerData[playerid][pSideJob] != JOB_TAXI && PlayerData[playerid][pJob] != JOB_TAXI)
+	    if(PlayerData[playerid][pJob] != JOB_TAXI)
 			return SendClientMessage(playerid, COLOR_WHITE, "You are not a Taxi Driver.");
 
 		new id = INVALID_PLAYER_ID, phid;
@@ -17146,7 +16470,7 @@ CMD:taxi(playerid, params[])
 	}
 	else if(!strcmp(option, "stop", true))
 	{
-	    if(PlayerData[playerid][pSideJob] != JOB_TAXI && PlayerData[playerid][pJob] != JOB_TAXI)
+	    if(PlayerData[playerid][pJob] != JOB_TAXI)
 			return SendClientMessage(playerid, COLOR_WHITE, "You are not a Taxi Driver.");
 
 		if(GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
@@ -17174,17 +16498,9 @@ CMD:taxi(playerid, params[])
 		if(sscanf(params,"{s[11]}d",id))
 			return SendSyntaxMessage(playerid, "/taxi check [playerid]");
 
-		if(id == INVALID_PLAYER_ID)
-		{
-			new maskid[MAX_PLAYER_NAME];
-			sscanf(params, "{s[11]}s[24]", maskid);
-			if((id = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-			{
-				return SendErrorMessage(playerid, "The player you specified isn't connected.");
-			}
-		}
-
-		if(PlayerData[id][pSideJob] != JOB_TAXI && PlayerData[id][pJob] != JOB_TAXI)
+if(id == INVALID_PLAYER_ID && (id = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+		return SendErrorMessage(playerid, "The player you specified isn't connected.");
+		if(PlayerData[id][pJob] != JOB_TAXI)
 			return SendClientMessage(playerid, COLOR_WHITE, "The player is not Taxi Driver.");
 
 		if(id == playerid)
@@ -17216,11 +16532,16 @@ CMD:licenseexam(playerid, params[])
 	}
 	else if(model == 438)
 	{
- 		if(PlayerData[playerid][pJob] == JOB_TAXI || PlayerData[playerid][pSideJob] == JOB_TAXI)
-			return SendClientMessage(playerid, COLOR_LIGHTRED, "You are already a Taxi Driver!");
-
-        if(PlayerData[playerid][pJob] != JOB_NONE && PlayerData[playerid][pSideJob] != JOB_NONE)
-			return SendClientMessage(playerid, COLOR_LIGHTRED, "You have to leave the job first (/leavejob or /leavesidejob)");
+ 		if(PlayerData[playerid][pJob] == JOB_TAXI)
+		{
+			SendClientMessage(playerid, COLOR_WHITE, "You are already a Taxi Driver.");
+			return true;
+		}
+        if(PlayerData[playerid][pJob] != JOB_NONE)
+        {
+            SendClientMessage(playerid, COLOR_LIGHTRED, "You have to leave your job first (/leavejob)");
+            return true;
+        }
 
 		SetPVarInt(playerid, "InDriveTest", 2);
 	}
@@ -17641,16 +16962,8 @@ CMD:arrestrecord(playerid, params[])
 	if(sscanf(params, "uD(0)", userid, forcearrest))
 	    return SendSyntaxMessage(playerid, "/arrestrecord [playerid/Mask/partofName]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!SQL_IsLogged(userid))
 		return SendErrorMessage(playerid, "The player you specified isn't logged in.");
 
@@ -18332,7 +17645,7 @@ CMD:apb(playerid, params[])
 	if(sscanf(params, "s[32]S()[32]", option, action))
 	{
 		SendClientMessage(playerid, COLOR_LIGHTRED, "___________________________________");
-		SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /apb [action] | ( ) means optional");
+		SendSyntaxMessage(playerid, "/apb [action] | ( ) means optional");
 		SendClientMessage(playerid, COLOR_LIGHTRED, "[Show] /apb show (page number)");
 		SendClientMessage(playerid, COLOR_LIGHTRED, "[Details] /apb details [number]");
 		SendClientMessage(playerid, COLOR_LIGHTRED, "[Clear] /apb clear [number]");
@@ -18346,7 +17659,7 @@ CMD:apb(playerid, params[])
 	if(!strcmp(option, "show", true))
 	{
 		if(isnull(action) || !IsNumeric(action))
-		    return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /apb show (page number)");
+		    return SendSyntaxMessage(playerid, "/apb show (page number)");
 
 		new currentpage = strval(action);
 
@@ -18405,7 +17718,7 @@ CMD:apb(playerid, params[])
 	else if(!strcmp(option, "details", true))
 	{
 		if(isnull(action) || !IsNumeric(action))
-		    return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /apb details [number]");
+		    return SendSyntaxMessage(playerid, "/apb details [number]");
 
 		new idx = strval(action);
 
@@ -18425,7 +17738,7 @@ CMD:apb(playerid, params[])
 	else if(!strcmp(option, "clear", true))
 	{
 		if(isnull(action) || !IsNumeric(action))
-		    return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /apb clear [number]");
+		    return SendSyntaxMessage(playerid, "/apb clear [number]");
 
 		new idx = strval(action);
 
@@ -18451,7 +17764,7 @@ CMD:apb(playerid, params[])
 	else if(!strcmp(option, "create", true))
 	{
 	    if(isnull(action))
-	        return SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /apb create [suspect] // [charges]");
+	        return SendSyntaxMessage(playerid, "/apb create [suspect] // [charges]");
 
 	    new idx = -1, pos;
 
@@ -18500,16 +17813,8 @@ CMD:fine(playerid, params[])
 	if(sscanf(params, "uds[128]", userid, amount, reason))
 		return SendClientMessage(playerid, COLOR_LIGHTRED, "Usage: /fine [playerid/Mask/PartOfName] [amount] [reason, 60 char max]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]{ds[60]}", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	/*if(userid == playerid)
 		return SendErrorMessage(playerid, "You can't fine yourself.");*/
 
@@ -18523,7 +17828,12 @@ CMD:fine(playerid, params[])
 		return SendErrorMessage(playerid, "You are too far away.");
 
 	format(sgstr, sizeof(sgstr), "writes a fine of $%d to %s for '%s'.", amount, ReturnName(userid, 0), reason);
-	AnnounceMeAction(playerid, sgstr);
+	if(strlen(sgstr) > 80)
+	{
+		SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s %.80s ...", ReturnName(playerid, 0), sgstr);
+		SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* ... %s (( %s ))", sgstr[80], ReturnName(playerid, 0));
+	}
+	else SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s %s", ReturnName(playerid, 0), sgstr);
 
     SendClientMessageEx(userid, COLOR_LIGHTRED, "[ ! ] You were fined by %s for '%s'. See /fines", ReturnName(playerid, 0), reason);
 
@@ -18557,88 +17867,14 @@ CMD:fines(playerid, params[])
 		if(!PlayerData[playerid][pOnDuty])
 			return SendErrorMessage(playerid, "You're not on duty.");
 
-		if(userid == INVALID_PLAYER_ID)
-		{
-			new maskid[MAX_PLAYER_NAME];
-			sscanf(params, "s[24]", maskid);
-			if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-			{
-				return SendErrorMessage(playerid, "The player you specified isn't connected.");
-			}
-		}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+		return SendErrorMessage(playerid, "The player you specified isn't connected.");
 		ListPlayerFines(playerid, userid);
 	}
 	return true;
 }
 
-/*CMD:vehiclefine(playerid, params[])
-{
-	if(!IsPolice(playerid))
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "For police officers only.");
 
-	if(!PlayerData[playerid][pOnDuty])
-		return SendErrorMessage(playerid, "You're not on duty.");
-
-	new vehicleid, amount, reason[64];
-
-	if(sscanf(params, "s[64]ds[64]", vehicleid, amount, reason))
-		return SendSyntaxMessage(playerid, "/vehiclefine [vehicleid] [amount] [reason]");
-
-	if(!IsValidVehicle(vehicleid))
-	    return SendClientMessage(playerid, COLOR_LIGHTRED, "Invalid vehicle specified.");
-
-	new carid = -1;
-
-	if((carid = Car_GetID(vehicleid)) == -1)
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "Personal cars only.");
-
-	if(amount <= 0)
-		return SendClientMessage(playerid, COLOR_GRAD1, "Fine must be greater than 0.");
-
-	SendNearbyMessage(playerid, 15.0, COLOR_PURPLE, "* %s tears a fine and puts it on the %s's windshield.", ReturnName(playerid, 0), g_arrVehicleNames[CarData[carid][carModel] - 400]);
-
-	PlaceVehicleFine(carid, playerid, amount, reason);
-	return true;
-}
-
-CMD:vehiclefines(playerid, params[])
-{
-	if(!IsPolice(playerid))
-	{
-		ViewVehicleFine(playerid, playerid);
-	}
-	else
-	{
-		new userid;
-
-		if(sscanf(params, "u", userid))
-			return SendSyntaxMessage(playerid, "/vehiclefines [vehicleid]");
-
-        if(userid == playerid)
-		{
-			ViewVehicleFine(playerid, playerid);
-        }
-        else
-		{
-            if(!PlayerData[playerid][pOnDuty])
-				return SendClientMessage(playerid, COLOR_GRAD1,"   You have not started to perform duties");
-
-			if(userid == INVALID_PLAYER_ID)
-			{
-				new maskid[MAX_PLAYER_NAME];
-				sscanf(params, "s[24]", maskid);
-				if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-				{
-					return SendErrorMessage(playerid, "The player you specified isn't connected.");
-				}
-			}
-
-			ViewVehicleFine(playerid, userid);
-		}
-	}
-	return true;
-}*/
 
 stock ReturnAdminRankName(level)
 {
@@ -18702,14 +17938,17 @@ CMD:fill(playerid, params[])
 		return SendClientMessage(playerid, COLOR_LIGHTRED, "You are not in a vehicle.");
 
 	new id, vehicleid = GetPlayerVehicleID(playerid);
+	new Float:px, Float:py, Float:pz;
+	GetPlayerPos(playerid, px, py, pz);
 
-	if((id = Car_GetID(vehicleid)) == -1)
-	    return SendClientMessage(playerid, COLOR_LIGHTRED, "You must be in a personal vehicle.");
+	// personal vehicles and your own faction's vehicles can be filled
+	if((id = Car_GetID(vehicleid)) == -1 && IsAFactionCar(vehicleid, PlayerData[playerid][pFaction]) == -1)
+	    return SendClientMessage(playerid, COLOR_LIGHTRED, "You can only fill personal or faction vehicles.");
 
-	if((id = Business_Nearest(playerid, 20.0)) != -1 && BusinessData[id][bType] == 1)
+	if((id = Business_NearestFill(px, py, pz)) != -1)
 	{
 		new string[256], Float:maxfuel = GetVehicleDataFuel(GetVehicleModel(vehicleid)), Float:fueladd = maxfuel - CoreVehicles[vehicleid][vehFuel];
-		format(string, sizeof(string), "{FFFFFF}Fuel Type:{FFFF00}%s\n\t{FFFFFF}Current Fuel:{FFFF00}%.6f{FFFFFF}/{FFFF00}%.6f{FFFFFF}( MAX )\n\tAmount Adding:{FFFF00}%.6f\n\t{FFFFFF}Price:{FFFF00}%s", (BusinessData[id][bsubType]) ? ("Diesel") : ("Petrol"), CoreVehicles[vehicleid][vehFuel], maxfuel, fueladd, FormatNumber(floatround(fueladd*float(BusinessData[id][bItems][0]), floatround_ceil)));
+		format(string, sizeof(string), "{FFFFFF}Fuel Type:{FFFF00}%s\n{FFFFFF}Current Fuel:{FFFF00}%.1f / %.1f gallons (max)\n{FFFFFF}Amount Adding:{FFFF00}%.1f gallons\n{FFFFFF}Price:{FFFF00}%s", (BusinessData[id][bsubType]) ? ("Diesel") : ("Petrol"), CoreVehicles[vehicleid][vehFuel], maxfuel, fueladd, FormatNumber(floatround(fueladd*float(BusinessData[id][bItems][0]), floatround_ceil)));
 		Dialog_Show(playerid, FuelRefill, DIALOG_STYLE_MSGBOX, "Fuel Purchase:", string, "Purchase", "Cancel");
 	}
 	else SendServerMessage(playerid, "You are not near a gas station.");
@@ -18725,7 +17964,10 @@ Dialog:FuelRefill(playerid, response, listitem, inputtext[])
 		{
 			new id = -1 , vehicleid = GetPlayerVehicleID(playerid);
 
-			if((id = Business_Nearest(playerid, 20.0)) != -1 && BusinessData[id][bType] == 1)
+			new Float:px, Float:py, Float:pz;
+			GetPlayerPos(playerid, px, py, pz);
+
+			if((id = Business_NearestFill(px, py, pz)) != -1)
 			{
 				if(!VehicleLabel[vehicleid][vLabelTime])
 				{
@@ -18744,7 +17986,7 @@ Dialog:FuelRefill(playerid, response, listitem, inputtext[])
 						SetVehicleLabel(vehicleid, VLT_TYPE_REFILL, time);
 						CoreVehicles[vehicleid][vOwnerID] = playerid;
 
-						SendClientMessageEx(playerid, COLOR_GREEN, "SERVER: This operation will require %d seconds. Amount:%.6f", time, fueladd);
+						SendClientMessageEx(playerid, COLOR_GREEN, "SERVER: This operation will require %d seconds. Amount: %.1f gallons", time, fueladd);
 					}
 					else SendClientMessage(playerid, COLOR_LIGHTRED, "You do not have this amount of money!");
 				}
@@ -18757,43 +17999,99 @@ Dialog:FuelRefill(playerid, response, listitem, inputtext[])
 	return true;
 }
 
-CMD:motd(playerid, params[]) return showServerMOTD(playerid);
+CMD:motd(playerid, params[]) return SendPlayerMOTD(playerid);
 
-forward OnLoadPlayerChangelog(playerid);
-public OnLoadPlayerChangelog(playerid)
-{
-	new rows;
-	cache_get_row_count(rows);
+// ── Changelog (versioned; managed via website) ──────────────────────────────
 
-	gstr[0] = EOS;
-	if(!rows)
-	{
-		strcat(gstr, "{FF0000}Changelog not updated yet.\n\nAdmin must use /addchangelog.");
-	}
-	else
-	{
-		strcat(gstr, "{FFFFFF}No. | Log Update | Updated By\n{A9C4E4}------------------------------------------------------------\n");
-		for(new i = 0; i < rows && i < 20; i++)
-		{
-			new entry[140], addedBy[24], addedDate[32], line[256];
-			cache_get_value_name(i, "entry", entry, sizeof(entry));
-			cache_get_value_name(i, "added_by", addedBy, sizeof(addedBy));
-			cache_get_value_name(i, "added_date", addedDate, sizeof(addedDate));
-
-			format(line, sizeof(line), "{FFBF00}%d. {FFFFFF}%s {7E98B6}(by %s - %s)\n", i + 1, entry, addedBy, addedDate);
-			strcat(gstr, line);
-		}
-	}
-
-	new title[64];
-	format(title, sizeof(title), "Server Changelogs | %s", gServerMode);
-	ShowPlayerDialog(playerid, DIALOG_CHANGELOG, DIALOG_STYLE_MSGBOX, title, gstr, "Close", "");
-	return 1;
-}
+#define MAX_CHANGELOG_VERSIONS   15
+new CLVersions[MAX_PLAYERS][MAX_CHANGELOG_VERSIONS][64];
+new CLVerCount[MAX_PLAYERS];
 
 CMD:changelog(playerid, params[])
 {
-	mysql_tquery(dbCon, "SELECT * FROM `server_changelogs` ORDER BY `id` DESC LIMIT 25", "OnLoadPlayerChangelog", "d", playerid);
+	mysql_tquery(dbCon,
+	    "SELECT `version`, COUNT(*) AS cnt FROM `server_changelogs` GROUP BY `version` ORDER BY MAX(`created_at`) DESC",
+	    "OnLoadChangelogVersions", "d", playerid);
+	return 1;
+}
+
+forward OnLoadChangelogVersions(playerid);
+public OnLoadChangelogVersions(playerid)
+{
+	new rows = cache_num_rows();
+	if(!rows)
+	    return SendErrorMessage(playerid, "No changelog entries have been published yet.");
+
+	CLVerCount[playerid] = 0;
+
+	new str[1024], line[128];
+	format(str, sizeof(str), "Version\tUpdates\n");
+
+	for(new i = 0; i < rows && i < MAX_CHANGELOG_VERSIONS; ++i)
+	{
+	    new ver[64], cnt;
+	    cache_get_value_name(i, "version", ver, sizeof(ver));
+	    cache_get_value_name_int(i, "cnt", cnt);
+
+	    format(CLVersions[playerid][CLVerCount[playerid]], 64, ver);
+
+	    format(line, sizeof(line), "%s\t%d update(s)\n", ver, cnt);
+	    strcat(str, line);
+
+	    CLVerCount[playerid]++;
+	}
+
+	Dialog_Show(playerid, ChangeLogList, DIALOG_STYLE_TABLIST_HEADERS, "Server Changelogs", str, "View", "Close");
+	return 1;
+}
+
+Dialog:ChangeLogList(playerid, response, listitem, inputtext[])
+{
+	if(!response || listitem >= CLVerCount[playerid]) return 1;
+
+	new q[256];
+	mysql_format(dbCon, q, sizeof(q),
+	    "SELECT `added_date`, `entry` FROM `server_changelogs` WHERE `version` = '%e' ORDER BY `id` DESC LIMIT 30",
+	    CLVersions[playerid][listitem]);
+
+	SetPVarString(playerid, "CL_Version", CLVersions[playerid][listitem]);
+	mysql_tquery(dbCon, q, "OnLoadChangelogEntries", "d", playerid);
+	return 1;
+}
+
+forward OnLoadChangelogEntries(playerid);
+public OnLoadChangelogEntries(playerid)
+{
+	new ver[64];
+	GetPVarString(playerid, "CL_Version", ver, sizeof(ver));
+
+	new rows = cache_num_rows();
+	gstr[0] = EOS;
+
+	for(new i = 0; i < rows; ++i)
+	{
+	    new entry[160], addedDate[32], line[256];
+	    cache_get_value_name(i, "entry", entry, sizeof(entry));
+	    cache_get_value_name(i, "added_date", addedDate, sizeof(addedDate));
+
+	    format(line, sizeof(line), "{FFBF00}[%s]{FFFFFF} %s\n", addedDate, entry);
+	    strcat(gstr, line);
+	}
+
+	if(!rows) strcat(gstr, "{FF0000}No entries.");
+
+	new title[80];
+	format(title, sizeof(title), "Changelog - %s", ver);
+	Dialog_Show(playerid, ChangeLogEntries, DIALOG_STYLE_MSGBOX, title, gstr, "Close", "< Back");
+	return 1;
+}
+
+Dialog:ChangeLogEntries(playerid, response, listitem, inputtext[])
+{
+	if(!response) // "< Back"
+	    mysql_tquery(dbCon,
+	        "SELECT `version`, COUNT(*) AS cnt FROM `server_changelogs` GROUP BY `version` ORDER BY MAX(`created_at`) DESC",
+	        "OnLoadChangelogVersions", "d", playerid);
 	return 1;
 }
 
@@ -18806,16 +18104,8 @@ CMD:licenses(playerid, params[])
 	if(sscanf(params, "u", userid))
 	    return SendSyntaxMessage(playerid, "/licenses [ID/partofName/MaskID]");
 
-	if(userid == INVALID_PLAYER_ID)
-	{
-		new maskid[MAX_PLAYER_NAME];
-		sscanf(params, "s[24]{s[128]}", maskid);
-		if((userid = GetPlayerMaskID(maskid)) == INVALID_PLAYER_ID)
-		{
-			return SendErrorMessage(playerid, "The player you specified isn't connected.");
-		}
-	}
-
+if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+	return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!IsPlayerNearPlayer(playerid, userid, 5.0))
 	    return SendErrorMessage(playerid, "You aren't near that player.");
 
@@ -18933,60 +18223,50 @@ stock ShowPlayerVehMainDialog(playerid)
 	if(IsBrutallyWounded(playerid))
 		return SendClientMessage(playerid, COLOR_LIGHTRED, "You're brutally wounded, or dead. No /vehicle right now.");
 
-	new string[1024], line[256];
+	new string[1024], title[128], line[256];
 	
-	// Option 0
-	strcat(string, "1. Manage Spawned Vehicles (Graphic GUI)\n");
-	
-	// Option 1
-	new nearest_veh = IsPlayerInAnyVehicle(playerid) ? GetPlayerVehicleID(playerid) : Car_Nearest(playerid);
-	new nearest_carid = (nearest_veh != -1 && nearest_veh != 0) ? Car_GetID(nearest_veh) : -1;
-		
-	if(nearest_carid != -1 && HasVehicleKey(playerid, nearest_carid, true))
-	{
-		format(line, sizeof(line), "2. Lock/Unlock: %s [State: %s]\n", ReturnVehicleModelName(CarData[nearest_carid][carModel]), CarData[nearest_carid][carLocked] ? "{FF0000}Locked{FFFFFF}" : "{00FF00}Unlocked{FFFFFF}");
-		strcat(string, line);
-	}
-	else
-	{
-		strcat(string, "2. Lock/Unlock nearest/current vehicle\n");
-	}
-	
-	// Option 2
+	// Live Current Vehicle Context Status Header in Dialog Title (if inside a vehicle)
 	new current_veh = GetPlayerVehicleID(playerid);
 	new current_carkey = GetVehicleKeyID(playerid, current_veh);
 	if(current_veh != 0 && current_carkey != -1)
 	{
-		strcat(string, "3. View Current Vehicle Stats\n");
+		new carid = PlayerData[playerid][pCarKeys][current_carkey];
+		new Float:vehHealth;
+		GetVehicleHealth(current_veh, vehHealth);
+		
+		format(title, sizeof(title), "Vehicle Menu - %s [Lock: %s | Fuel: %.0f gal | HP: %.0f]",
+			ReturnVehicleModelName(CarData[carid][carModel]),
+			CarData[carid][carLocked] ? "Locked" : "Unlocked",
+			CarData[carid][carFuel],
+			vehHealth
+		);
 	}
 	else
 	{
-		strcat(string, "{C0C0C0}3. View Current Vehicle Stats (Must be inside){FFFFFF}\n");
+		format(title, sizeof(title), "Vehicle System Dashboard");
 	}
+
+	// 6 Organized Categories (No Emojis, Perfect 1:1 Listitem Indexing)
+	strcat(string, "1. My Vehicles Garage\n");
 	
-	// Option 3
-	if(current_veh != 0 && current_carkey != -1)
+	new nearest_veh = IsPlayerInAnyVehicle(playerid) ? GetPlayerVehicleID(playerid) : Car_Nearest(playerid);
+	new nearest_carid = (nearest_veh != -1 && nearest_veh != 0) ? Car_GetID(nearest_veh) : -1;
+	if(nearest_carid != -1 && HasVehicleKey(playerid, nearest_carid, true))
 	{
-		strcat(string, "4. Park Current Vehicle\n");
+		format(line, sizeof(line), "2. Lock / Unlock Vehicle [%s]\n", CarData[nearest_carid][carLocked] ? "{FF0000}Locked{FFFFFF}" : "{00FF00}Unlocked{FFFFFF}");
+		strcat(string, line);
 	}
 	else
 	{
-		strcat(string, "{C0C0C0}4. Park Current Vehicle (Must be inside){FFFFFF}\n");
+		strcat(string, "2. Lock / Unlock Nearest Vehicle\n");
 	}
 	
-	// Option 4
-	strcat(string, "5. Locate Spawned Vehicles (GPS/Find)\n");
-	
-	// Option 5
-	strcat(string, "6. Vehicle Keys Administration\n");
-	
-	// Option 6
-	strcat(string, "7. Vehicle Settings (Lights, Name Tag)\n");
-	
-	// Option 7
-	strcat(string, "8. Sell or Scrap Vehicle");
-	
-	Dialog_Show(playerid, PlayerVehMain, DIALOG_STYLE_LIST, "Vehicle Menu", string, "Select", "Cancel");
+	strcat(string, "3. Key & Access Management\n");
+	strcat(string, "4. Parking, Towing & GPS\n");
+	strcat(string, "5. Upgrades, Tuning & Settings\n");
+	strcat(string, "6. Vehicle Commerce & Trading");
+
+	Dialog_Show(playerid, PlayerVehMain, DIALOG_STYLE_LIST, title, string, "Select", "Cancel");
 	return 1;
 }
 
@@ -18996,7 +18276,7 @@ Dialog:PlayerVehMain(playerid, response, listitem, inputtext[])
 	
 	switch(listitem)
 	{
-		case 0: // Manage Spawned Vehicles (Graphic GUI -> Dialog List)
+		case 0: // 1. My Vehicles Garage (/v list)
 		{
 			if(UsingMDC{playerid})
 				return SendServerMessage(playerid, "You can't do this right now.");
@@ -19005,10 +18285,10 @@ Dialog:PlayerVehMain(playerid, response, listitem, inputtext[])
 				return SendServerMessage(playerid, "You do not own any vehicles.");
 
 			new query[256];
-			mysql_format(dbCon, query, sizeof(query), "SELECT `carID`, `carModel`, `carColor1`, `carColor2`, `carName`, `carUItag` FROM `cars` WHERE `carOwner` = '%d' ORDER BY `carDate` ASC LIMIT 50", PlayerData[playerid][pID]);
+			mysql_format(dbCon, query, sizeof(query), "SELECT `carID`, `carModel`, `carColor1`, `carColor2`, `carName`, `carUItag`, `carPlate`, `carFuel`, `carHealth` FROM `cars` WHERE `carOwner` = '%d' ORDER BY `carDate` ASC LIMIT 50", PlayerData[playerid][pID]);
 			mysql_tquery(dbCon, query, "ShowPlayerVehicleList", "d", playerid);
 		}
-		case 1: // Lock/Unlock
+		case 1: // 2. Lock/Unlock
 		{
 			new vehicleid = IsPlayerInAnyVehicle(playerid) ? GetPlayerVehicleID(playerid) : Car_Nearest(playerid);
 			if(vehicleid != 0 && vehicleid != -1)
@@ -19045,7 +18325,6 @@ Dialog:PlayerVehMain(playerid, response, listitem, inputtext[])
 				}
 				else
 				{
-					// Temp/Non-player vehicle locking
 					new engine, lights, alarm, doors, bonnet, boot, objective;
 					GetVehicleParamsEx(vehicleid, engine, lights, alarm, doors, bonnet, boot, objective);
 					if(doors != 1)
@@ -19066,81 +18345,28 @@ Dialog:PlayerVehMain(playerid, response, listitem, inputtext[])
 			}
 			ShowPlayerVehMainDialog(playerid);
 		}
-		case 2: // View Current Vehicle Stats
+		case 2: // 3. Key & Access Management
+		{
+			Dialog_Show(playerid, PlayerVehKeysAdmin, DIALOG_STYLE_LIST, "Key & Access Management", 
+				"1. View My Spare Keys (/v keys)\n\
+				2. Give Spare Key Copy (/v dup)\n\
+				3. Drop Spare Key (/v dropkey)", 
+				"Select", "Back");
+		}
+		case 3: // 4. Parking, Towing & GPS
+		{
+			Dialog_Show(playerid, PlayerVehParkingMenu, DIALOG_STYLE_LIST, "Parking, Towing & GPS", 
+				"1. Locate Vehicle on GPS Checkpoint (/v find)\n\
+				2. Buy Current Location as Spawn Spot ($2,500 / Free) (/v buypark)\n\
+				3. Request Towing Service ($2,000) (/v tow)\n\
+				4. View All Vehicle Spawn Locations (/v location)", 
+				"Select", "Back");
+		}
+		case 4: // 5. Upgrades, Tuning & Settings
 		{
 			new vehicleid = GetPlayerVehicleID(playerid);
 			new carkey = GetVehicleKeyID(playerid, vehicleid);
-			if(vehicleid != 0 && carkey != -1)
-			{
-				new carid = PlayerData[playerid][pCarKeys][carkey];
-				Car_PrintStats(playerid, carid);
-			}
-			else
-			{
-				SendErrorMessage(playerid, "You must be inside your vehicle.");
-				ShowPlayerVehMainDialog(playerid);
-			}
-		}
-		case 3: // Park Current Vehicle
-		{
-			new vehicleid = GetPlayerVehicleID(playerid);
-			new carkey = GetVehicleKeyID(playerid, vehicleid);
-			if(vehicleid != 0 && carkey != -1)
-			{
-				new carid = PlayerData[playerid][pCarKeys][carkey];
-				if(IsPlayerInRangeOfPoint(playerid, 4.0, CarData[carid][carPos][0], CarData[carid][carPos][1], CarData[carid][carPos][2]))
-				{
-					SendClientMessage(playerid, COLOR_GREEN, "Vehicle parked.");
-					RemoveVehicleKey(playerid, carid);
-					SaveVehicleDamageID(carid);
-					Car_SaveID(carid);
-					Car_DespawnEx(carid);
-				}
-				else
-				{
-					SendClientMessage(playerid, COLOR_LIGHTRED, "You have to be at vehicle's parking place.");
-					SendClientMessage(playerid, 0xFF00FFFF, "Follow the marker.");
-					SetPlayerCheckpoint(playerid, CarData[carid][carPos][0], CarData[carid][carPos][1], CarData[carid][carPos][2], 4.0);
-					gPlayerCheckpointStatus[playerid] = CHECKPOINT_VEH;
-				}
-			}
-			else
-			{
-				SendErrorMessage(playerid, "You must be inside your vehicle.");
-				ShowPlayerVehMainDialog(playerid);
-			}
-		}
-		case 4: // Locate Spawned Vehicles (GPS/Find)
-		{
-			new string[512], count = 0;
-			new key[32];
-			for(new i = 0; i < MAX_VEHICLE_KEYS; ++i)
-			{
-				if(PlayerData[playerid][pCarKeys][i] != 9999)
-				{
-					new carid = PlayerData[playerid][pCarKeys][i];
-					format(string, sizeof(string), "%sSlot %d: %s (VehID: %d)\n", string, i + 1, ReturnVehicleModelName(CarData[carid][carModel]), CarData[carid][carVehicle]);
-					format(key, sizeof(key), "Vfind_KeyIdx_%d", count);
-					SetPVarInt(playerid, key, i);
-					count++;
-				}
-			}
-			if(!count)
-			{
-				SendErrorMessage(playerid, "You do not have any spawned vehicles.");
-				return ShowPlayerVehMainDialog(playerid);
-			}
-			Dialog_Show(playerid, PlayerVehGPS, DIALOG_STYLE_LIST, "Locate Spawned Vehicles", string, "Locate", "Back");
-		}
-		case 5: // Vehicle Keys Administration
-		{
-			Dialog_Show(playerid, PlayerVehKeysAdmin, DIALOG_STYLE_LIST, "Keys Administration", "1. View my spare keys\n2. Duplicate key (Give copy)\n3. Drop spare key", "Select", "Back");
-		}
-		case 6: // Vehicle Settings (Lights, Name Tag)
-		{
-			new vehicleid = GetPlayerVehicleID(playerid);
-			new carkey = GetVehicleKeyID(playerid, vehicleid);
-			new string[256];
+			new string[512];
 			
 			if(vehicleid != 0)
 			{
@@ -19156,21 +18382,27 @@ Dialog:PlayerVehMain(playerid, response, listitem, inputtext[])
 				new carid = PlayerData[playerid][pCarKeys][carkey];
 				if(strlen(CarData[carid][carUItag]) >= 3)
 				{
-					format(string, sizeof(string), "%s2. Remove Name Tag: '%s'\n", string, CarData[carid][carUItag]);
+					format(string, sizeof(string), "%s2. Remove Custom Name Tag: '%s'\n", string, CarData[carid][carUItag]);
 				}
 				else
 				{
-					strcat(string, "2. Set Custom Name Tag\n");
+					strcat(string, "2. Set Custom Name Tag (/v UItag)\n");
 				}
+				strcat(string, "3. Vehicle Upgrades & Mechanical Specs (/v upgrade)\n");
+				strcat(string, "4. Register License Plate ($100) (/v register)\n");
+				strcat(string, "5. Unregister Plate (Black Market) (/v unregister)");
 			}
 			else
 			{
 				strcat(string, "{C0C0C0}2. Set Custom Name Tag (Must be inside your vehicle){FFFFFF}\n");
+				strcat(string, "3. Vehicle Upgrades Info & Pricing (/v upgrade)\n");
+				strcat(string, "4. Register License Plate ($100) (/v register)\n");
+				strcat(string, "5. Unregister Plate (Black Market) (/v unregister)");
 			}
 			
-			Dialog_Show(playerid, PlayerVehSettings, DIALOG_STYLE_LIST, "Vehicle Settings", string, "Select", "Back");
+			Dialog_Show(playerid, PlayerVehSettings, DIALOG_STYLE_LIST, "Upgrades, Tuning & Settings", string, "Select", "Back");
 		}
-		case 7: // Sell or Scrap
+		case 5: // 6. Vehicle Commerce & Trading
 		{
 			new vehicleid = GetPlayerVehicleID(playerid);
 			new carkey = GetVehicleKeyID(playerid, vehicleid);
@@ -19185,16 +18417,17 @@ Dialog:PlayerVehMain(playerid, response, listitem, inputtext[])
 				}
 				else
 				{
-					strcat(string, "1. Sell to Player\n");
+					strcat(string, "1. Sell to Player (/v sell)\n");
 				}
-				strcat(string, "2. Scrap Vehicle (Sell to State)");
+				strcat(string, "2. Scrap Vehicle to Debris (/v scrap)");
 			}
 			else
 			{
-				strcat(string, "{C0C0C0}1. Sell to Player (Must be inside){FFFFFF}\n");
-				strcat(string, "{C0C0C0}2. Scrap Vehicle (Must be inside){FFFFFF}");
+				strcat(string, "{C0C0C0}1. Sell to Player (Must be inside vehicle){FFFFFF}\n");
+				strcat(string, "{C0C0C0}2. Scrap Vehicle to Debris (Must be inside vehicle){FFFFFF}");
 			}
-			Dialog_Show(playerid, PlayerVehSellScrap, DIALOG_STYLE_LIST, "Sell or Scrap Vehicle", string, "Select", "Back");
+			
+			Dialog_Show(playerid, PlayerVehSellScrap, DIALOG_STYLE_LIST, "Vehicle Commerce & Trading", string, "Select", "Back");
 		}
 	}
 	return 1;
@@ -19440,48 +18673,87 @@ Dialog:PlayerVehKeysDropList(playerid, response, listitem, inputtext[])
 	return 1;
 }
 
+Dialog:PlayerVehParkingMenu(playerid, response, listitem, inputtext[])
+{
+	if(!response) return ShowPlayerVehMainDialog(playerid);
+	switch(listitem)
+	{
+		case 0: // 1. Locate Vehicle on GPS Checkpoint (/v find)
+		{
+			Command_ReProcess(playerid, "v find", 0);
+		}
+		case 1: // 2. Buy Current Location as Spawn Spot ($2,500 / Free) (/v buypark)
+		{
+			Command_ReProcess(playerid, "v buypark yes", 0);
+		}
+		case 2: // 3. Request Towing Service ($2,000) (/v tow)
+		{
+			Command_ReProcess(playerid, "v tow", 0);
+		}
+		case 3: // 4. View All Vehicle Spawn Locations (/v location)
+		{
+			Command_ReProcess(playerid, "v location", 0);
+		}
+	}
+	return 1;
+}
+
 Dialog:PlayerVehSettings(playerid, response, listitem, inputtext[])
 {
 	if(!response) return ShowPlayerVehMainDialog(playerid);
 	
-	if(listitem == 0) // Toggle Lights
+	switch(listitem)
 	{
-		new vehicleid = GetPlayerVehicleID(playerid);
-		if(vehicleid == 0)
+		case 0: // Toggle Lights
 		{
-			SendErrorMessage(playerid, "You must be inside your vehicle.");
-			return ShowPlayerVehMainDialog(playerid);
-		}
-		if(!IsEngineVehicle(vehicleid))
-		{
-			SendErrorMessage(playerid, "This vehicle doesn't have lights.");
-			return ShowPlayerVehMainDialog(playerid);
-		}
-		SetLightStatus(vehicleid, !GetLightStatus(vehicleid));
-		SendClientMessage(playerid, COLOR_GREEN, "Vehicle lights toggled.");
-		ShowPlayerVehMainDialog(playerid);
-	}
-	else if(listitem == 1) // Name Tag
-	{
-		new vehicleid = GetPlayerVehicleID(playerid);
-		new carkey = GetVehicleKeyID(playerid, vehicleid);
-		if(vehicleid == 0 || carkey == -1)
-		{
-			SendErrorMessage(playerid, "You must be inside your vehicle.");
-			return ShowPlayerVehMainDialog(playerid);
-		}
-		
-		new carid = PlayerData[playerid][pCarKeys][carkey];
-		if(strlen(CarData[carid][carUItag]) >= 3)
-		{
-			SendClientMessageEx(playerid, COLOR_YELLOW3, "SERVER: Removed the tag '%s' from your %s.", CarData[carid][carUItag], ReturnVehicleName(vehicleid));
-			CarData[carid][carUItag][0] = EOS;
-			Car_SaveID(carid);
+			Command_ReProcess(playerid, "v lights", 0);
 			ShowPlayerVehMainDialog(playerid);
 		}
-		else
+		case 1: // Custom Name Tag
 		{
-			Dialog_Show(playerid, PlayerVehSetTag, DIALOG_STYLE_INPUT, "Set Custom Name Tag", "Enter a name tag for your vehicle (3-15 characters):\nThis tag will display on the vehicle menu GUI.", "Set", "Back");
+			new vehicleid = GetPlayerVehicleID(playerid);
+			new carkey = GetVehicleKeyID(playerid, vehicleid);
+			if(vehicleid == 0 || carkey == -1)
+			{
+				SendErrorMessage(playerid, "You must be inside your vehicle.");
+				return ShowPlayerVehMainDialog(playerid);
+			}
+			
+			new carid = PlayerData[playerid][pCarKeys][carkey];
+			if(strlen(CarData[carid][carUItag]) >= 3 || strlen(CarData[carid][carName]) >= 3)
+			{
+				SendClientMessageEx(playerid, COLOR_YELLOW3, "SERVER: Removed custom name '%s' from your %s.", strlen(CarData[carid][carUItag]) >= 3 ? CarData[carid][carUItag] : CarData[carid][carName], ReturnVehicleName(vehicleid));
+				CarData[carid][carUItag][0] = EOS;
+				CarData[carid][carName][0] = EOS;
+				Car_SaveID(carid);
+				ShowPlayerVehMainDialog(playerid);
+			}
+			else
+			{
+				Dialog_Show(playerid, PlayerVehSetTag, DIALOG_STYLE_INPUT, "Set Custom Name Tag", "Enter a custom name tag for your vehicle (3-15 characters):", "Set", "Back");
+			}
+		}
+		case 2: // Vehicle Upgrades & Mechanical Specs
+		{
+			new vehicleid = GetPlayerVehicleID(playerid);
+			new carkey = GetVehicleKeyID(playerid, vehicleid);
+			if(vehicleid != 0 && carkey != -1)
+			{
+				new carid = PlayerData[playerid][pCarKeys][carkey];
+				Car_PrintStats(playerid, carid);
+			}
+			else
+			{
+				Command_ReProcess(playerid, "v stats", 0);
+			}
+		}
+		case 3: // Register License Plate
+		{
+			Command_ReProcess(playerid, "v register", 0);
+		}
+		case 4: // Unregister Plate
+		{
+			Command_ReProcess(playerid, "v unregister", 0);
 		}
 	}
 	return 1;
@@ -19502,12 +18774,13 @@ Dialog:PlayerVehSetTag(playerid, response, listitem, inputtext[])
 	new carid = PlayerData[playerid][pCarKeys][carkey];
 	if(strlen(inputtext) < 3 || strlen(inputtext) > 15)
 	{
-		return Dialog_Show(playerid, PlayerVehSetTag, DIALOG_STYLE_INPUT, "Set Custom Name Tag", "{FF0000}Tag must be between 3 and 15 characters!{FFFFFF}\nEnter a name tag for your vehicle:", "Set", "Back");
+		return Dialog_Show(playerid, PlayerVehSetTag, DIALOG_STYLE_INPUT, "Set Custom Name Tag", "{FF0000}Tag must be between 3 and 15 characters!{FFFFFF}\nEnter a custom name tag for your vehicle:", "Set", "Back");
 	}
 	
 	format(CarData[carid][carUItag], 15, "%s", inputtext);
+	format(CarData[carid][carName], 15, "%s", inputtext);
 	Car_SaveID(carid);
-	SendClientMessageEx(playerid, COLOR_YELLOW3, "SERVER: Added tag '%s' to your %s. It'll appear in the /v get UI.", inputtext, ReturnVehicleName(vehicleid));
+	SendClientMessageEx(playerid, COLOR_YELLOW3, "SERVER: Vehicle custom name updated to '%s'.", inputtext);
 	ShowPlayerVehMainDialog(playerid);
 	return 1;
 }
@@ -19536,16 +18809,7 @@ Dialog:PlayerVehSellScrap(playerid, response, listitem, inputtext[])
 	}
 	else if(listitem == 1) // Scrap Vehicle
 	{
-		new scrap_price = VehicleData[GetVehicleModel(vehicleid) - 400][c_scrap];
-		if(!scrap_price)
-		{
-			SendErrorMessage(playerid, "Incorrect vehicle price, contact an administrator.");
-			return ShowPlayerVehMainDialog(playerid);
-		}
-		
-		new prompt[256];
-		format(prompt, sizeof(prompt), "Are you sure you want to scrap this vehicle?\nYou will receive %s from the debris.", FormatNumber(scrap_price));
-		Dialog_Show(playerid, PlayerVehScrapConfirm, DIALOG_STYLE_MSGBOX, "Scrap Vehicle", prompt, "Scrap", "Back");
+		Command_ReProcess(playerid, "v scrap yes", 0);
 	}
 	return 1;
 }

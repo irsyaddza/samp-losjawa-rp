@@ -62,17 +62,17 @@ export default async function MappingPortalPage() {
             Dashboard
           </Link>
           <span className="text-zinc-700 text-xs">/</span>
-          <span className="text-xs text-zinc-500 font-medium">Request Mapping Properti</span>
+          <span className="text-xs text-zinc-500 font-medium font-bold">Property Mapping Requests</span>
         </div>
 
         {/* Heading */}
         <div className="mb-8">
           <h2 className="text-2xl font-black text-white flex items-center gap-2">
             <Home className="h-6 w-6 text-amber-500" />
-            Request Mapping Properti
+            Property Mapping Requests
           </h2>
           <p className="text-xs text-zinc-400 mt-1">
-            Kustomisasi interior/eksterior rumah, bisnis, atau apartemen Anda dengan menempelkan kode MTA/Texture Studio.
+            Customize house, business, or apartment interiors/exteriors by submitting MTA or Texture Studio object code.
           </p>
         </div>
 
@@ -83,22 +83,22 @@ export default async function MappingPortalPage() {
               <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6 shadow-xl">
                 <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
                   <UploadCloud className="h-5 w-5 text-amber-500" />
-                  Kirim Request Baru
+                  Submit New Request
                 </h3>
                 <MappingForm />
               </div>
             ) : (
               <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-6 border-dashed flex flex-col items-center text-center">
                 <AlertCircle className="h-12 w-12 text-amber-500 mb-4" />
-                <h3 className="text-base font-bold text-white mb-2">Akses Terbatas Donator</h3>
+                <h3 className="text-base font-bold text-white mb-2">Donator Access Restricted</h3>
                 <p className="text-xs text-zinc-400 max-w-md leading-relaxed">
-                  Mohon maaf, fitur request mapping properti kustom hanya dapat diakses oleh akun dengan status donatur minimal **Silver (Level 2)**. Silakan lakukan donasi atau klaim donasi Anda di menu Donatur.
+                  Sorry, custom property mapping requests are restricted to accounts with at least **Silver (Level 2)** donator status. Please donate or claim your donator perks in the Donator menu.
                 </p>
                 <Link
                   href="/donator"
                   className="mt-6 rounded-xl bg-amber-500 hover:bg-amber-400 text-black px-5 py-2.5 text-xs font-bold transition shadow-sm"
                 >
-                  Lihat Donasi
+                  View Donator Perks
                 </Link>
               </div>
             )}
@@ -109,12 +109,12 @@ export default async function MappingPortalPage() {
             <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6 shadow-xl">
               <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2">
                 <History className="h-5 w-5 text-zinc-400" />
-                Riwayat Pengajuan
+                Submission History
               </h3>
 
               {requests.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-xs text-zinc-500">Belum ada pengajuan mapping.</p>
+                  <p className="text-xs text-zinc-500">No mapping submissions found.</p>
                 </div>
               ) : (
                 <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1">
@@ -130,8 +130,8 @@ export default async function MappingPortalPage() {
                           {req.property_type === 3 && <Building className="h-3.5 w-3.5 text-amber-400" />}
                           {req.property_type === 4 && <FileCode className="h-3.5 w-3.5 text-amber-400" />}
                           {req.property_type === 4
-                            ? `Kustom: ${req.custom_title || 'Tanpa Judul'}`
-                            : `${req.property_type === 1 ? 'Rumah' : req.property_type === 2 ? 'Bisnis' : 'Apartemen'} #${req.property_id}`}
+                            ? `Custom: ${req.custom_title || 'Untitled'}`
+                            : `${req.property_type === 1 ? 'House' : req.property_type === 2 ? 'Business' : 'Apartment'} #${req.property_id}`}
                         </span>
 
                         {req.status === 0 && (
@@ -155,7 +155,7 @@ export default async function MappingPortalPage() {
                       </div>
 
                       <div className="text-[10px] text-zinc-500">
-                        Diajukan: {new Date(req.created_at).toLocaleDateString('id-ID', {
+                        Submitted: {new Date(req.created_at).toLocaleDateString('en-US', {
                           day: 'numeric',
                           month: 'short',
                           year: 'numeric'
@@ -164,7 +164,7 @@ export default async function MappingPortalPage() {
 
                       {req.admin_note && (
                         <div className="text-xs p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 leading-relaxed">
-                          <span className="font-bold text-zinc-300 block mb-0.5">Catatan Admin:</span>
+                          <span className="font-bold text-zinc-300 block mb-0.5">Admin Note:</span>
                           {req.admin_note}
                         </div>
                       )}

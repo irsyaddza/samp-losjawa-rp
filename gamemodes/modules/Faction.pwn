@@ -72,7 +72,7 @@ stock UpdateFactionSpawnPickup(factionid, slot)
 
 		// Create 3D Text Label with Spawn Name
 		new labelStr[128];
-		format(labelStr, sizeof(labelStr), "[ %s ]\n{FFFFFF}Faction Spawn Point", FactionSpawns[factionid][slot][spawnName]);
+		format(labelStr, sizeof(labelStr), "[ %s ]\n{FFFFFF}Faction Spawn Point\n{FFFFFF}Use {FFFF00}/duty, /uniform {FFFFFF}to on duty or change uniform", FactionSpawns[factionid][slot][spawnName]);
 		FactionSpawns[factionid][slot][spawnText] = CreateDynamic3DTextLabel(labelStr, 0x7E98B6FF, x, y, z + 0.75, 12.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, vwid, intid);
 	}
 	return 1;
@@ -127,20 +127,6 @@ new SkinsLSPD[][e_FACTION_SKIN_DATA] =
 	{20133, "BMYSWAT1", "African American", "Male", true},
 	{20134, "BMYSWAT2", "African American", "Male", true},
 	{20135, "HMYSWAT1", "Hispanic", "Male", true}
-	/*{296, "UNDERCOVER1", "African American", "Male", true},
-	{311, "UNDERCOVER2", "African American", "Male", true},
-	{79, "UNDERCOVER3", "African American", "Male", true},
-	{307, "UNDERCOVER4", "Hispanic", "Male", true},
-	{184, "UNDERCOVER5", "Hispanic", "Male", true},
-	{114, "UNDERCOVER6", "Hispanic", "Male", true},
-	{29, "UNDERCOVER7", "Caucasian", "Male", true},
-	{242, "UNDERCOVER8", "Caucasian", "Male", true},
-	{308, "UNDERCOVER9", "Caucasian", "Male", true},
-	{308, "UNDERCOVER10", "Asian", "Male", true},
-	{170, "UNDERCOVER11", "Asian", "Male", true},
-	{215, "UNDERCOVER12", "African American", "Female", true},
-	{93, "UNDERCOVER13", "Caucasian", "Female", true},
-	{193, "UNDERCOVER14", "Asian", "Female", true}*/
 };
 
 new SkinsLSSD[][e_FACTION_SKIN_DATA] =
@@ -372,7 +358,7 @@ Faction_GetName(playerid)
 		factionid = PlayerData[playerid][pFaction],
 		name[32] = "None";
 
- 	if(factionid == -1)
+ 	if(factionid < 0 || factionid >= MAX_FACTIONS)
 	    return name;
 
 	if(!FactionData[factionid][factionExists])
@@ -413,8 +399,12 @@ Faction_GetRank(playerid)
 		factionid = PlayerData[playerid][pFaction],
 		rank[32] = "None";
 
- 	if(factionid == -1)
+ 	if(factionid < 0 || factionid >= MAX_FACTIONS || !FactionData[factionid][factionExists])
 	    return rank;
+
+	new prank = PlayerData[playerid][pFactionRank];
+	if(prank < 1 || prank > 15)
+		return rank;
 
 	if(GetFactionType(playerid) == FACTION_POLICE && PlayerData[playerid][pDBRank] > 0)
 	{
@@ -423,7 +413,7 @@ Faction_GetRank(playerid)
 			case 1: format(rank, 32, "Detective I");
 			case 2: format(rank, 32, "Detective II");
 			case 3: format(rank, 32, "Detective III");
-			default: format(rank, 32, FactionRanks[factionid][PlayerData[playerid][pFactionRank] - 1]);
+			default: format(rank, 32, FactionRanks[factionid][prank - 1]);
 		}
 		return rank;
 	}
@@ -436,7 +426,7 @@ Faction_GetRank(playerid)
 			case 1: format(rank, 32, "%s Operator", divName);
 			case 2: format(rank, 32, "%s Team Leader", divName);
 			case 3: format(rank, 32, "%s Commander", divName);
-			default: format(rank, 32, FactionRanks[factionid][PlayerData[playerid][pFactionRank] - 1]);
+			default: format(rank, 32, FactionRanks[factionid][prank - 1]);
 		}
 		return rank;
 	}
@@ -450,7 +440,7 @@ Faction_GetRank(playerid)
 				case 2: format(rank, 32, "Paramedic");
 				case 3: format(rank, 32, "Resident Doctor");
 				case 4: format(rank, 32, "Chief Medical Officer");
-				default: format(rank, 32, FactionRanks[factionid][PlayerData[playerid][pFactionRank] - 1]);
+				default: format(rank, 32, FactionRanks[factionid][prank - 1]);
 			}
 			return rank;
 		}
@@ -462,13 +452,13 @@ Faction_GetRank(playerid)
 				case 2: format(rank, 32, "Firefighter");
 				case 3: format(rank, 32, "Fire Lieutenant");
 				case 4: format(rank, 32, "Battalion Chief");
-				default: format(rank, 32, FactionRanks[factionid][PlayerData[playerid][pFactionRank] - 1]);
+				default: format(rank, 32, FactionRanks[factionid][prank - 1]);
 			}
 			return rank;
 		}
 	}
 
-	format(rank, 32, FactionRanks[factionid][PlayerData[playerid][pFactionRank] - 1]);
+	format(rank, 32, FactionRanks[factionid][prank - 1]);
 	return rank;
 }
 
@@ -477,7 +467,7 @@ ReturnRank(factionid, id)
     new
 		rank[32] = "None";
 
- 	if(factionid == -1)
+ 	if(factionid < 0 || factionid >= MAX_FACTIONS || id < 0 || id >= 15)
 	    return rank;
 
 	format(rank, 32, FactionRanks[factionid][id]);
@@ -896,7 +886,7 @@ AssignFactionPermissions(playerid)
 
 SetPlayerFaction(playerid)
 {
-	if(PlayerData[playerid][pFactionID] != -1)
+	if(PlayerData[playerid][pFactionID] > 0)
 	{
 		PlayerData[playerid][pFaction] = GetFactionByID(PlayerData[playerid][pFactionID]);
 
@@ -923,6 +913,10 @@ SetPlayerFaction(playerid)
 				cache_delete(cache);
 			}
 		}
+	}
+	else
+	{
+		ResetFaction(playerid, false);
 	}
 }
 

@@ -76,9 +76,9 @@ Optional plugins:
 	Me - sscanf2, fixes2, Whirlpool.
 */
 
-#include "..\..\YSI_Core\y_utils"
-#include "..\..\YSI_Data\y_iterate"
-#include "..\..\YSI_Coding\y_hooks"
+#include "../../YSI_Core/y_utils"
+#include "../../YSI_Data/y_iterate"
+#include "../../YSI_Coding/y_hooks"
 
 enum e_FLOOD_ACTION
 {

@@ -32,11 +32,11 @@ export default function MappingForm() {
           const data = await res.json();
           setProperties(data.properties || []);
         } else {
-          setError('Gagal memuat daftar properti Anda.');
+          setError('Failed to load your property list.');
         }
       } catch (error) {
         console.error('Error fetching properties:', error);
-        setError('Terjadi kesalahan saat menghubungi server.');
+        setError('An error occurred while contacting the server.');
       } finally {
         setFetching(false);
       }
@@ -50,24 +50,24 @@ export default function MappingForm() {
     setSuccess(null);
 
     if (!selectedPropIndex) {
-      setError('Silakan pilih salah satu properti terlebih dahulu.');
+      setError('Please select a property first.');
       return;
     }
     if (selectedPropIndex === 'custom') {
       if (customPropertyType === '4') {
         if (!customTitle.trim()) {
-          setError('Silakan isi nama/judul kustom mapping Anda.');
+          setError('Please enter a custom title for your mapping.');
           return;
         }
       } else {
         if (!customPropertyId.trim()) {
-          setError('Silakan isi ID properti Anda.');
+          setError('Please enter your property ID.');
           return;
         }
       }
     }
     if (!mappingCode.trim()) {
-      setError('Silakan isi kode mapping properti Anda.');
+      setError('Please enter your property mapping code.');
       return;
     }
 
@@ -105,16 +105,16 @@ export default function MappingForm() {
 
       const data = await res.json();
       if (res.ok) {
-        setSuccess('Permintaan mapping berhasil dikirim! Catatan riwayat status akan diupdate.');
+        setSuccess('Mapping request submitted successfully! Status history will be updated.');
         setMappingCode('');
         setCustomTitle('');
         router.refresh();
       } else {
-        setError(data.error || 'Gagal mengirim pengajuan.');
+        setError(data.error || 'Failed to submit request.');
       }
     } catch (error) {
       console.error('Error submitting form:', error);
-      setError('Terjadi kesalahan sistem saat memproses form.');
+      setError('A system error occurred while processing the form.');
     } finally {
       setLoading(false);
     }
@@ -146,20 +146,20 @@ export default function MappingForm() {
 
       <div>
         <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">
-          Pilih Properti Anda
+          Select Your Property
         </label>
         <select
           value={selectedPropIndex}
           onChange={(e) => setSelectedPropIndex(e.target.value)}
           className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm text-white focus:border-amber-500 focus:outline-none transition"
         >
-          <option value="">-- Pilih Properti --</option>
+          <option value="">-- Select Property --</option>
           {properties.map((prop, idx) => (
             <option key={idx} value={idx}>
               [{prop.typeLabel}] {prop.label}
             </option>
           ))}
-          <option value="custom">[Tulis Sendiri / Custom ID]</option>
+          <option value="custom">[Custom Entry / Custom ID]</option>
         </select>
       </div>
 
@@ -167,42 +167,42 @@ export default function MappingForm() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">
-              Tipe Properti Kustom
+              Custom Property Type
             </label>
             <select
               value={customPropertyType}
               onChange={(e) => setCustomPropertyType(e.target.value)}
               className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm text-white focus:border-amber-500 focus:outline-none transition"
             >
-              <option value="1">Rumah (House)</option>
-              <option value="2">Bisnis (Business)</option>
-              <option value="3">Apartemen (Apartment Unit)</option>
-              <option value="4">[Custom / Tulis Bebas]</option>
+              <option value="1">House</option>
+              <option value="2">Business</option>
+              <option value="3">Apartment Unit</option>
+              <option value="4">[Custom Object / Free Title]</option>
             </select>
           </div>
           {customPropertyType === '4' ? (
             <div>
               <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">
-                Nama / Judul Kustom
+                Custom Title
               </label>
               <input
                 type="text"
                 value={customTitle}
                 onChange={(e) => setCustomTitle(e.target.value)}
-                placeholder="Contoh: Interior Palomino Church"
+                placeholder="e.g. Palomino Church Interior"
                 className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm text-white focus:border-amber-500 focus:outline-none transition"
               />
             </div>
           ) : (
             <div>
               <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">
-                ID Properti Kustom
+                Custom Property ID
               </label>
               <input
                 type="number"
                 value={customPropertyId}
                 onChange={(e) => setCustomPropertyId(e.target.value)}
-                placeholder="Contoh: 12"
+                placeholder="e.g. 12"
                 className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm text-white focus:border-amber-500 focus:outline-none transition"
               />
             </div>
@@ -212,7 +212,7 @@ export default function MappingForm() {
 
       <div>
         <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">
-          Kode Mapping (CreateDynamicObject / CreateObject)
+          Mapping Code (CreateDynamicObject / CreateObject)
         </label>
         <textarea
           value={mappingCode}
@@ -222,12 +222,12 @@ export default function MappingForm() {
           className="w-full rounded-xl border border-zinc-800 bg-zinc-900 p-4 text-xs font-mono text-zinc-200 focus:border-amber-500 focus:outline-none transition leading-relaxed"
         />
         <div className="mt-2 rounded-lg bg-zinc-900 border border-zinc-800/80 p-3">
-          <span className="text-[10px] font-bold text-zinc-500 block uppercase mb-1">Panduan Pengisian:</span>
+          <span className="text-[10px] font-bold text-zinc-500 block uppercase mb-1">Guidelines:</span>
           <ul className="list-disc pl-4 space-y-1 text-[10px] text-zinc-400">
-            <li>Gunakan baris kode hasil ekspor peta MTA atau Texture Studio.</li>
-            <li>Hanya baris dengan sintaks <code className="font-mono text-zinc-200">CreateDynamicObject(...)</code> atau <code className="font-mono text-zinc-200">CreateObject(...)</code> yang akan diambil.</li>
-            <li>Dilarang menggunakan Object ID terlarang (seperti api dynamic, dinding transparan bermasalah, dsb.).</li>
-            <li>Setelah dikirim, ajukan pemeriksaan in-game menggunakan perintah admin agar ditinjau.</li>
+            <li>Use MTA map export or Texture Studio code lines.</li>
+            <li>Only lines matching <code className="font-mono text-zinc-200">CreateDynamicObject(...)</code> or <code className="font-mono text-zinc-200">CreateObject(...)</code> will be processed.</li>
+            <li>Restricted Object IDs (e.g. dynamic fire, bugged collision walls) are prohibited.</li>
+            <li>After submission, request in-game admin review to inspect and apply your mapping.</li>
           </ul>
         </div>
       </div>
@@ -240,12 +240,12 @@ export default function MappingForm() {
         {loading ? (
           <>
             <Loader2 className="h-4.5 w-4.5 animate-spin" />
-            Mengirim Pengajuan...
+            Submitting Request...
           </>
         ) : (
           <>
             <Home className="h-4.5 w-4.5" />
-            Kirim Pengajuan Mapping
+            Submit Mapping Request
           </>
         )}
       </button>

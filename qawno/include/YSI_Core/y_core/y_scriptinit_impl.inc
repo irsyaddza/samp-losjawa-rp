@@ -122,10 +122,10 @@ static
 
 #if defined _DEBUG
 	#if _DEBUG > 0
-		#tryinclude "..\..\amx\disasm"
-		#tryinclude <amx_assembly\disasm>
-		#tryinclude "..\..\amx_assembly\disasm"
-		#tryinclude "..\..\..\amx_assembly\disasm"
+		#tryinclude "../../amx/disasm"
+		#tryinclude <amx_assembly/disasm>
+		#tryinclude "../../amx_assembly/disasm"
+		#tryinclude "../../../amx_assembly/disasm"
 		#tryinclude "disasm"
 		#tryinclude <disasm>
 

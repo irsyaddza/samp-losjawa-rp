@@ -90,7 +90,7 @@ Optional plugins:
 	Me - sscanf2, fixes2, Whirlpool.
 */
 
-#include "..\..\YSI_Core\y_core\y_thirdpartyinclude"
+#include "../../YSI_Core/y_core/y_thirdpartyinclude"
 
 CHAIN_HOOK(CGen)
 #undef CHAIN_ORDER

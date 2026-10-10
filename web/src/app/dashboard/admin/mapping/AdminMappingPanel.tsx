@@ -32,7 +32,7 @@ export default function AdminMappingPanel({ initialRequests }: AdminMappingPanel
     setSuccess(null);
 
     if (action === 'reject' && !adminNote.trim()) {
-      setError('Harap berikan catatan/alasan penolakan agar player mengetahui apa yang harus diperbaiki.');
+      setError('Please provide a rejection note so the player knows what needs to be fixed.');
       return;
     }
 
@@ -51,17 +51,17 @@ export default function AdminMappingPanel({ initialRequests }: AdminMappingPanel
 
       const data = await res.json();
       if (res.ok) {
-        setSuccess(`Request mapping #${id} berhasil di-${action === 'approve' ? 'setujui' : 'tolak'}.`);
+        setSuccess(`Mapping request #${id} has been successfully ${action === 'approve' ? 'approved' : 'rejected'}.`);
         setRequests((prev) => prev.filter((r) => r.id !== id));
         setExpandedId(null);
         setAdminNote('');
         router.refresh();
       } else {
-        setError(data.error || 'Terjadi kesalahan saat memproses aksi.');
+        setError(data.error || 'An error occurred while processing the request.');
       }
     } catch (err) {
       console.error('Error handling admin mapping action:', err);
-      setError('Kesalahan sistem saat menghubungi API.');
+      setError('Network error while contacting the API.');
     } finally {
       setActionLoading(null);
     }
@@ -71,8 +71,8 @@ export default function AdminMappingPanel({ initialRequests }: AdminMappingPanel
     return (
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-12 text-center">
         <CheckCircle2 className="h-12 w-12 text-zinc-600 mx-auto mb-4" />
-        <h3 className="text-base font-bold text-white mb-1">Semua Bersih!</h3>
-        <p className="text-xs text-zinc-500">Tidak ada pengajuan mapping kustom yang berstatus PENDING saat ini.</p>
+        <h3 className="text-base font-bold text-white mb-1">All Clear!</h3>
+        <p className="text-xs text-zinc-500">There are currently no pending custom mapping requests.</p>
       </div>
     );
   }
@@ -123,13 +123,13 @@ export default function AdminMappingPanel({ initialRequests }: AdminMappingPanel
                       {req.property_type === 3 && <Building className="h-3.5 w-3.5" />}
                       {req.property_type === 4 && <FileCode className="h-3.5 w-3.5" />}
                       {req.property_type === 4 
-                        ? `Kustom: ${req.custom_title || 'Tanpa Judul'}`
-                        : `${req.property_type === 1 ? 'Rumah' : req.property_type === 2 ? 'Bisnis' : 'Apartemen'} #${req.property_id}`}
+                        ? `Custom: ${req.custom_title || 'Untitled'}`
+                        : `${req.property_type === 1 ? 'House' : req.property_type === 2 ? 'Business' : 'Apartment'} #${req.property_id}`}
                     </span>
                   </div>
                   <div className="text-[10px] text-zinc-500 flex items-center gap-1.5">
                     <Clock className="h-3 w-3" />
-                    Diajukan: {new Date(req.created_at).toLocaleDateString('id-ID', {
+                    Submitted: {new Date(req.created_at).toLocaleDateString('en-US', {
                       day: 'numeric',
                       month: 'long',
                       year: 'numeric',
@@ -143,12 +143,12 @@ export default function AdminMappingPanel({ initialRequests }: AdminMappingPanel
                   <button className="text-xs font-medium text-zinc-400 hover:text-white transition flex items-center gap-1">
                     {isExpanded ? (
                       <>
-                        Sembunyikan Detail
+                        Hide Details
                         <ChevronUp className="h-4 w-4 text-amber-500" />
                       </>
                     ) : (
                       <>
-                        Detail & Tinjau
+                        Review & Details
                         <ChevronDown className="h-4 w-4 text-zinc-450" />
                       </>
                     )}
@@ -163,7 +163,7 @@ export default function AdminMappingPanel({ initialRequests }: AdminMappingPanel
                   <div>
                     <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-2.5 flex items-center gap-1.5">
                       <FileCode className="h-4 w-4 text-amber-500" />
-                      Kode Mappingan Player:
+                      Player Mapping Code:
                     </span>
                     <div className="max-h-72 overflow-y-auto rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 font-mono text-[10px] text-zinc-300 leading-relaxed whitespace-pre select-all">
                       {req.mapping_code}
@@ -174,12 +174,12 @@ export default function AdminMappingPanel({ initialRequests }: AdminMappingPanel
                   <div className="space-y-4">
                     <div>
                       <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">
-                        Komentar / Alasan Penolakan (Wajib jika di-reject)
+                        Admin Note / Rejection Reason (Required when rejecting)
                       </label>
                       <textarea
                         value={adminNote}
                         onChange={(e) => setAdminNote(e.target.value)}
-                        placeholder="Contoh: Kode mapping sudah bagus dan sesuai, disetujui. ATAU Contoh: Ditolak, ada object ID terlarang (18688) di baris 4. Harap hapus api tersebut."
+                        placeholder="e.g. Approved. Code looks clean. OR Rejected. Contains restricted object ID 18688..."
                         rows={3}
                         className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-xs text-white focus:border-amber-500 focus:outline-none transition leading-relaxed"
                       />
@@ -196,7 +196,7 @@ export default function AdminMappingPanel({ initialRequests }: AdminMappingPanel
                         ) : (
                           <>
                             <Check className="h-4 w-4" />
-                            Setujui (Approve)
+                            Approve
                           </>
                         )}
                       </button>
@@ -210,7 +210,7 @@ export default function AdminMappingPanel({ initialRequests }: AdminMappingPanel
                         ) : (
                           <>
                             <Ban className="h-4 w-4" />
-                            Tolak (Reject)
+                            Reject
                           </>
                         )}
                       </button>

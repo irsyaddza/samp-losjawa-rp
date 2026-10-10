@@ -80,10 +80,10 @@ Optional plugins:
 	#define _YSI_SPECIAL_DEBUG
 #endif
 
-#include "..\..\YSI_Core\y_utils"
+#include "../../YSI_Core/y_utils"
 
 // Make sure this is included early.
-#include "..\..\YSI_Data\y_playerset"
+#include "../../YSI_Data/y_playerset"
 
 // Apparently I'd already written the internal code to support this and forgot!
 #define Y_TEXT_UNIQUE
@@ -160,9 +160,9 @@ Optional plugins:
 	// TODO: TextDraw hooks.
 #endif
 
-#include "..\..\YSI_Storage\y_xml"
-#include "..\..\YSI_Server\y_td"
-#include "..\..\YSI_Server\y_colours"
+#include "../../YSI_Storage/y_xml"
+#include "../../YSI_Server/y_td"
+#include "../../YSI_Server/y_colours"
 
 #include "y_text_styles"
 
@@ -185,22 +185,22 @@ Optional plugins:
 #endif
 
 //#include <a_samp>
-#include "..\..\YSI_Server\y_colours"
-#include "..\..\YSI_Data\y_hashmap"
-#include "..\..\YSI_Data\y_jaggedarray"
+#include "../../YSI_Server/y_colours"
+#include "../../YSI_Data/y_hashmap"
+#include "../../YSI_Data/y_jaggedarray"
 
 #include "y_text_load"
 
-#include "..\..\YSI_Coding\y_va"
+#include "../../YSI_Coding/y_va"
 
 #include "y_text_render"
 
-#include "..\..\YSI_Storage\y_ini"
-#include "..\..\YSI_Data\y_iterate"
-#include "..\..\YSI_Players\y_languages"
-#include "..\..\YSI_Visual\y_dialog"
-#include "..\..\YSI_Coding\y_inline"
-#include "..\..\YSI_Coding\y_hooks"
+#include "../../YSI_Storage/y_ini"
+#include "../../YSI_Data/y_iterate"
+#include "../../YSI_Players/y_languages"
+#include "../../YSI_Visual/y_dialog"
+#include "../../YSI_Coding/y_inline"
+#include "../../YSI_Coding/y_hooks"
 
 #include "y_text_impl"
 

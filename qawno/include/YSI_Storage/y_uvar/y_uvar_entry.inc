@@ -78,12 +78,12 @@ Optional plugins:
 
 // y_uvars
 
-#include "..\..\YSI_Core\y_utils"
+#include "../../YSI_Core/y_utils"
 
-#include "..\..\YSI_Players\y_users"
-#include "..\y_ini"
+#include "../../YSI_Players/y_users"
+#include "../y_ini"
 
-#include "..\..\YSI_Coding\y_hooks"
+#include "../../YSI_Coding/y_hooks"
 
 // Third "uvar" version.
 #define _YU@LE@E%0>

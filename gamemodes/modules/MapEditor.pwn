@@ -25,13 +25,29 @@ new
     MapObjectMaterial[MAX_MAP_OBJECTS][MAX_OBJECT_MAT_SLOT] // 0=none 1=tex 2=msg
 ;
 
+// Authoritative material-text params per slot/index (dialogs never read back
+// from GetDynamicObjectMaterialText - see notes above ME_EnsureTextCache).
+enum e_ME_TEXT
+{
+	t_text[256],
+	t_size,
+	t_font[32],
+	t_fsize,
+	t_bold,
+	t_fcolor,
+	t_bcolor,
+	t_align
+}
+new bool:METextHas[MAX_MAP_OBJECTS][MAX_OBJECT_MAT_SLOT];
+new METextData[MAX_MAP_OBJECTS][MAX_OBJECT_MAT_SLOT][e_ME_TEXT];
+
 // ── Dialog IDs ────────────────────────────────────────────────────────────────
 // Uses LJRP's Dialog: macro, so no manual ID needed.
 
 // ── Helper macros ─────────────────────────────────────────────────────────────
 #define ObjMsg(%0,%1)  SendClientMessageEx(%0, COLOR_GREEN,  "MAPEDIT: {FFFFFF}" %1)
 #define ObjErr(%0,%1)  SendClientMessageEx(%0, COLOR_RED,    "MAPEDIT ERROR: {FFFFFF}" %1)
-#define ObjCmd(%0,%1)  SendClientMessageEx(%0, COLOR_YELLOW, "USAGE: {FFFFFF}" %1)
+#define ObjCmd(%0,%1)  SendSyntaxMessage(%0, %1)
 
 // ── RGBAToHex (duplicate-safe) ────────────────────────────────────────────────
 #define ME_RGBAToHex(%0,%1,%2,%3) \
@@ -153,6 +169,7 @@ stock ME_CreateObject(model, Float:x, Float:y, Float:z,
     MapObjectGroup[slot]   = group;
     MapObjectEditor[slot]  = INVALID_PLAYER_ID;
     MapObjectDbId[slot]    = 0;
+    for(new mi; mi < MAX_OBJECT_MAT_SLOT; ++mi) METextHas[slot][mi] = false;
     Iter_Add(MapObjects, slot);
     ME_CreateLabel(slot, model, x, y, z, group);
     return slot;
@@ -195,7 +212,10 @@ stock ME_DestroyObject(slot)
     DestroyDynamic3DTextLabel(MapObjectLabel[slot]);
     DestroyDynamicObject(MapObject[slot]);
     for(new i = 0; i < MAX_OBJECT_MAT_SLOT; i++)
+    {
         MapObjectMaterial[slot][i] = OBJ_MAT_NONE;
+        METextHas[slot][i] = false;
+    }
     Iter_Remove(MapObjects, slot);
     return 1;
 }
@@ -282,22 +302,6 @@ stock ME_DeleteFromDb(slot)
     return 1;
 }
 
-// Helper: escape \n chars in material text for file export
-stock ME_EscapeNewline(const src[], dest[], len)
-{
-    new j = 0;
-    for(new i = 0; src[i] && j < len - 1; i++)
-    {
-        if(src[i] == '\n' && j < len - 2)
-        {
-            dest[j++] = '\\';
-            dest[j++] = 'n';
-        }
-        else dest[j++] = src[i];
-    }
-    dest[j] = EOS;
-}
-
 // Helper: replace \n literal (two chars) with real newline
 stock ME_UnescapeNewline(const src[], dest[], len)
 {
@@ -321,7 +325,7 @@ stock ME_IsAdmin(playerid)
 // =============================================================================
 //  Hooks
 // =============================================================================
-#include <YSI_Coding\y_hooks>
+#include <YSI_Coding/y_hooks>
 
 hook OnPlayerDisconnect(playerid, reason)
 {
@@ -336,6 +340,10 @@ hook OnPlayerDisconnect(playerid, reason)
 
 hook OnPlayerSpawn(playerid)
 {
+    // Map object labels start hidden each session; /obj label re-enables.
+    if(GetPVarType(playerid, "ME_HideLabels") == PLAYER_VARTYPE_NONE)
+        SetPVarInt(playerid, "ME_HideLabels", 1);
+
     new is_admin = ME_IsAdmin(playerid);
     new hide_pref = GetPVarInt(playerid, "ME_HideLabels");
 
@@ -498,7 +506,7 @@ CMD:obj(playerid, params[])
                 return ObjCmd(playerid, "/obj create [model id]"), 1;
 
             new model = strval(subparam);
-            if(model <= 0)
+            if(model == 0)
                 return ObjErr(playerid, "Invalid model ID."), 1;
 
             new Float:pos[3];
@@ -571,8 +579,8 @@ CMD:obj(playerid, params[])
                 else if(MapObjectMaterial[slot][i] == OBJ_MAT_MESSAGE)
                 {
                     new text[256], size, font[32], fsize, bold, fcolor, bcolor, alignment;
-                    GetDynamicObjectMaterialText(MapObject[slot], i, text, size, font, fsize, bold, fcolor, bcolor, alignment);
-                    SetDynamicObjectMaterialText(MapObject[copyslot], i, text, size, font, fsize, bold, fcolor, bcolor, alignment);
+	ME_TextLoad(slot, i, text, size, font, fsize, bold, fcolor, bcolor, alignment);
+                    ME_TextSave(copyslot, i, text, size, font, fsize, bold, fcolor, bcolor, alignment);
                     MapObjectMaterial[copyslot][i] = OBJ_MAT_MESSAGE;
                 }
             }
@@ -1028,6 +1036,93 @@ Dialog:ME_ListDialog(playerid, response, listitem, inputtext[])
     return 1;
 }
 
+// ── Material-text state cache ────────────────────────────────────────────────
+// GetDynamicObjectMaterialText returns corrupted colours on this server build;
+// re-applying them blanks the face. The dialogs therefore never read back from
+// the native: every apply goes through this authoritative cache.
+
+stock ME_EnsureTextCache(slot, index)
+{
+	if(slot < 0 || slot >= MAX_MAP_OBJECTS || index < 0 || index >= MAX_OBJECT_MAT_SLOT)
+	    return;
+
+	if(METextHas[slot][index]) return;
+
+	// Seed with sane defaults, then try the native once for existing text.
+	new text[256] = " ", size = OBJECT_MATERIAL_SIZE_256x128, font[32], fsize = 24, bold = 0,
+	    fcolor = 0xFFFFFFFF, bcolor = 0xFF000000, alignment = 0;
+	format(font, sizeof font, "Arial");
+
+	GetDynamicObjectMaterialText(MapObject[slot], index, text, size, font, fsize, bold, fcolor, bcolor, alignment);
+
+	if(!strlen(text)) format(text, sizeof text, " ");
+	if(!strlen(font)) format(font, sizeof font, "Arial");
+	if(fsize < 1) fsize = 24;
+	if(size < OBJECT_MATERIAL_SIZE_32x32 || size > OBJECT_MATERIAL_SIZE_512x512 || size % 10)
+	    size = OBJECT_MATERIAL_SIZE_256x128;   // material size is an enum (10..140), not pixels
+	// Heal alpha-less colours the native may hand back.
+	if(((fcolor >>> 24) & 0xFF) == 0 && fcolor != 0) fcolor |= (0xFF << 24);
+	if(((bcolor >>> 24) & 0xFF) == 0 && bcolor != 0) bcolor |= (0xFF << 24);
+
+	format(METextData[slot][index][t_text], 256, text);
+	METextData[slot][index][t_size]   = size;
+	format(METextData[slot][index][t_font], 32, font);
+	METextData[slot][index][t_fsize]  = fsize;
+	METextData[slot][index][t_bold]   = bold;
+	METextData[slot][index][t_fcolor] = fcolor;
+	METextData[slot][index][t_bcolor] = bcolor;
+	METextData[slot][index][t_align]  = alignment;
+	METextHas[slot][index] = true;
+}
+
+stock ME_TextLoad(slot, index, text[], &size, font[], &fsize, &bold, &fcolor, &bcolor, &alignment)
+{
+	// Out-of-range target -> hand back safe defaults instead of touching memory.
+	if(slot < 0 || slot >= MAX_MAP_OBJECTS || index < 0 || index >= MAX_OBJECT_MAT_SLOT)
+	{
+	    format(text, 256, " ");
+	    size   = OBJECT_MATERIAL_SIZE_256x128;
+	    format(font, 32, "Arial");
+	    fsize = 24; bold = 0;
+	    fcolor = 0xFFFFFFFF; bcolor = 0xFF000000; alignment = 0;
+	    return;
+	}
+
+	ME_EnsureTextCache(slot, index);
+	format(text, 256, METextData[slot][index][t_text]);
+	size        = METextData[slot][index][t_size];
+	format(font, 32, METextData[slot][index][t_font]);
+	fsize       = METextData[slot][index][t_fsize];
+	bold        = METextData[slot][index][t_bold];
+	fcolor      = METextData[slot][index][t_fcolor];
+	bcolor      = METextData[slot][index][t_bcolor];
+	alignment   = METextData[slot][index][t_align];
+}
+
+stock ME_TextSave(slot, index, const text[], size, const font[], fsize, bold, fcolor, bcolor, alignment)
+{
+	if(slot < 0 || slot >= MAX_MAP_OBJECTS || index < 0 || index >= MAX_OBJECT_MAT_SLOT)
+	    return;
+
+	format(METextData[slot][index][t_text], 256, text);
+	METextData[slot][index][t_size]   = size;
+	format(METextData[slot][index][t_font], 32, font);
+	METextData[slot][index][t_fsize]  = fsize;
+	METextData[slot][index][t_bold]   = bold;
+	METextData[slot][index][t_fcolor] = fcolor;
+	METextData[slot][index][t_bcolor] = bcolor;
+	METextData[slot][index][t_align]  = alignment;
+
+	SetDynamicObjectMaterialText(MapObject[slot], index, text, size, font, fsize, bold, fcolor, bcolor, alignment);
+}
+
+#define ME_TEXT_MENU_LIST "Set Text\nResolution\nFont\nFont Size\nToggle Bold\nFont Color\nBG Color\nAlignment\nReset"
+
+static ME_TextMenuReshow(playerid)
+{
+	Dialog_Show(playerid, ME_TextMenu, DIALOG_STYLE_LIST, "Material Text", ME_TEXT_MENU_LIST, "Select", "Close");
+}
+
 Dialog:ME_TextMenu(playerid, response, listitem, inputtext[])
 {
     new slot  = GetPVarInt(playerid, "ME_EditSlot");
@@ -1054,10 +1149,9 @@ Dialog:ME_TextMenu(playerid, response, listitem, inputtext[])
         {
             // Toggle bold
             new text[256], size, font[32], fsize, bold, fcolor, bcolor, alignment;
-            GetDynamicObjectMaterialText(MapObject[slot], index, text, size, font, fsize, bold, fcolor, bcolor, alignment);
-            SetDynamicObjectMaterialText(MapObject[slot], index, text, size, font, fsize, bold ? 0 : 1, fcolor, bcolor, alignment);
-            Dialog_Show(playerid, ME_TextMenu, DIALOG_STYLE_LIST, "Material Text",
-                "Set Text\nResolution\nFont\nFont Size\nToggle Bold\nFont Color\nBG Color\nAlignment\nReset", "Select", "Close");
+            ME_TextLoad(slot, index, text, size, font, fsize, bold, fcolor, bcolor, alignment);
+            ME_TextSave(slot, index, text, size, font, fsize, bold ? 0 : 1, fcolor, bcolor, alignment);
+            ME_TextMenuReshow(playerid);
         }
         case 5: Dialog_Show(playerid, ME_TextSetFColor, DIALOG_STYLE_INPUT, "Set Font Color",  "Enter RGBA: ex {FF0000}255 0 0 255", "Set", "Back");
         case 6: Dialog_Show(playerid, ME_TextSetBColor, DIALOG_STYLE_INPUT, "Set BG Color",    "Enter RGBA: ex {000000}0 0 0 255", "Set", "Back");
@@ -1066,6 +1160,7 @@ Dialog:ME_TextMenu(playerid, response, listitem, inputtext[])
         {
             // Reset text material
             MapObjectMaterial[slot][index] = OBJ_MAT_NONE;
+            METextHas[slot][index] = false;
             new Float:pos[3];
             GetDynamicObjectPos(MapObject[slot], pos[0], pos[1], pos[2]);
             new model = Streamer_GetIntData(STREAMER_TYPE_OBJECT, MapObject[slot], E_STREAMER_MODEL_ID);
@@ -1088,12 +1183,11 @@ Dialog:ME_TextSetMsg(playerid, response, listitem, inputtext[])
     if(response && !IsNull(inputtext))
     {
         new text[256], size, font[32], fsize, bold, fcolor, bcolor, alignment, conv[256];
-        GetDynamicObjectMaterialText(MapObject[slot], index, text, size, font, fsize, bold, fcolor, bcolor, alignment);
+        ME_TextLoad(slot, index, text, size, font, fsize, bold, fcolor, bcolor, alignment);
         ME_UnescapeNewline(inputtext, conv, sizeof(conv));
-        SetDynamicObjectMaterialText(MapObject[slot], index, conv, size, font, fsize, bold, fcolor, bcolor, alignment);
+        ME_TextSave(slot, index, conv, size, font, fsize, bold, fcolor, bcolor, alignment);
     }
-    Dialog_Show(playerid, ME_TextMenu, DIALOG_STYLE_LIST, "Material Text",
-        "Set Text\nResolution\nFont\nFont Size\nToggle Bold\nFont Color\nBG Color\nAlignment\nReset", "Select", "Close");
+    ME_TextMenuReshow(playerid);
     return 1;
 }
 
@@ -1103,14 +1197,21 @@ Dialog:ME_TextSetRes(playerid, response, listitem, inputtext[])
     new index = GetPVarInt(playerid, "ME_EditIndex");
     if(response)
     {
-        new sizes[] = {32, 64, 64, 128, 128, 128, 256, 256, 256, 256, 512, 512, 512, 512};
+        static const sizes[] = {
+            OBJECT_MATERIAL_SIZE_32x32,   OBJECT_MATERIAL_SIZE_64x32,
+            OBJECT_MATERIAL_SIZE_64x64,   OBJECT_MATERIAL_SIZE_128x32,
+            OBJECT_MATERIAL_SIZE_128x64,  OBJECT_MATERIAL_SIZE_128x128,
+            OBJECT_MATERIAL_SIZE_256x32,  OBJECT_MATERIAL_SIZE_256x64,
+            OBJECT_MATERIAL_SIZE_256x128, OBJECT_MATERIAL_SIZE_256x256,
+            OBJECT_MATERIAL_SIZE_512x64,  OBJECT_MATERIAL_SIZE_512x128,
+            OBJECT_MATERIAL_SIZE_512x256, OBJECT_MATERIAL_SIZE_512x512
+        };
         new text[256], size, font[32], fsize, bold, fcolor, bcolor, alignment;
-        GetDynamicObjectMaterialText(MapObject[slot], index, text, size, font, fsize, bold, fcolor, bcolor, alignment);
-        size = (listitem < sizeof(sizes)) ? sizes[listitem] : 256;
-        SetDynamicObjectMaterialText(MapObject[slot], index, text, size, font, fsize, bold, fcolor, bcolor, alignment);
+	ME_TextLoad(slot, index, text, size, font, fsize, bold, fcolor, bcolor, alignment);
+        size = (listitem < sizeof(sizes)) ? sizes[listitem] : OBJECT_MATERIAL_SIZE_256x128;
+        ME_TextSave(slot, index, text, size, font, fsize, bold, fcolor, bcolor, alignment);
     }
-    Dialog_Show(playerid, ME_TextMenu, DIALOG_STYLE_LIST, "Material Text",
-        "Set Text\nResolution\nFont\nFont Size\nToggle Bold\nFont Color\nBG Color\nAlignment\nReset", "Select", "Close");
+    ME_TextMenuReshow(playerid);
     return 1;
 }
 
@@ -1126,8 +1227,8 @@ Dialog:ME_TextSetFont(playerid, response, listitem, inputtext[])
         if(listitem < sizeof(fontList))
         {
             new text[256], size, font[32], fsize, bold, fcolor, bcolor, alignment;
-            GetDynamicObjectMaterialText(MapObject[slot], index, text, size, font, fsize, bold, fcolor, bcolor, alignment);
-            SetDynamicObjectMaterialText(MapObject[slot], index, text, size, fontList[listitem], fsize, bold, fcolor, bcolor, alignment);
+	ME_TextLoad(slot, index, text, size, font, fsize, bold, fcolor, bcolor, alignment);
+            ME_TextSave(slot, index, text, size, fontList[listitem], fsize, bold, fcolor, bcolor, alignment);
         }
         else
         {
@@ -1135,8 +1236,7 @@ Dialog:ME_TextSetFont(playerid, response, listitem, inputtext[])
             return 1;
         }
     }
-    Dialog_Show(playerid, ME_TextMenu, DIALOG_STYLE_LIST, "Material Text",
-        "Set Text\nResolution\nFont\nFont Size\nToggle Bold\nFont Color\nBG Color\nAlignment\nReset", "Select", "Close");
+    ME_TextMenuReshow(playerid);
     return 1;
 }
 
@@ -1147,11 +1247,10 @@ Dialog:ME_TextSetCustomFont(playerid, response, listitem, inputtext[])
     if(response && !IsNull(inputtext))
     {
         new text[256], size, font[32], fsize, bold, fcolor, bcolor, alignment;
-        GetDynamicObjectMaterialText(MapObject[slot], index, text, size, font, fsize, bold, fcolor, bcolor, alignment);
-        SetDynamicObjectMaterialText(MapObject[slot], index, text, size, inputtext, fsize, bold, fcolor, bcolor, alignment);
+	ME_TextLoad(slot, index, text, size, font, fsize, bold, fcolor, bcolor, alignment);
+        ME_TextSave(slot, index, text, size, inputtext, fsize, bold, fcolor, bcolor, alignment);
     }
-    Dialog_Show(playerid, ME_TextMenu, DIALOG_STYLE_LIST, "Material Text",
-        "Set Text\nResolution\nFont\nFont Size\nToggle Bold\nFont Color\nBG Color\nAlignment\nReset", "Select", "Close");
+    ME_TextMenuReshow(playerid);
     return 1;
 }
 
@@ -1162,11 +1261,10 @@ Dialog:ME_TextSetFSize(playerid, response, listitem, inputtext[])
     if(response && !IsNull(inputtext))
     {
         new text[256], size, font[32], fsize, bold, fcolor, bcolor, alignment;
-        GetDynamicObjectMaterialText(MapObject[slot], index, text, size, font, fsize, bold, fcolor, bcolor, alignment);
-        SetDynamicObjectMaterialText(MapObject[slot], index, text, size, font, strval(inputtext), bold, fcolor, bcolor, alignment);
+	ME_TextLoad(slot, index, text, size, font, fsize, bold, fcolor, bcolor, alignment);
+        ME_TextSave(slot, index, text, size, font, strval(inputtext), bold, fcolor, bcolor, alignment);
     }
-    Dialog_Show(playerid, ME_TextMenu, DIALOG_STYLE_LIST, "Material Text",
-        "Set Text\nResolution\nFont\nFont Size\nToggle Bold\nFont Color\nBG Color\nAlignment\nReset", "Select", "Close");
+    ME_TextMenuReshow(playerid);
     return 1;
 }
 
@@ -1180,12 +1278,11 @@ Dialog:ME_TextSetFColor(playerid, response, listitem, inputtext[])
         if(!sscanf(inputtext, "dddd", r, g, b, a))
         {
             new text[256], size, font[32], fsize, bold, fcolor, bcolor, alignment;
-            GetDynamicObjectMaterialText(MapObject[slot], index, text, size, font, fsize, bold, fcolor, bcolor, alignment);
-            SetDynamicObjectMaterialText(MapObject[slot], index, text, size, font, fsize, bold, ME_RGBAToHex(a, r, g, b), bcolor, alignment);
+	ME_TextLoad(slot, index, text, size, font, fsize, bold, fcolor, bcolor, alignment);
+            ME_TextSave(slot, index, text, size, font, fsize, bold, ME_RGBAToHex(a, r, g, b), bcolor, alignment);
         }
     }
-    Dialog_Show(playerid, ME_TextMenu, DIALOG_STYLE_LIST, "Material Text",
-        "Set Text\nResolution\nFont\nFont Size\nToggle Bold\nFont Color\nBG Color\nAlignment\nReset", "Select", "Close");
+    ME_TextMenuReshow(playerid);
     return 1;
 }
 
@@ -1199,12 +1296,11 @@ Dialog:ME_TextSetBColor(playerid, response, listitem, inputtext[])
         if(!sscanf(inputtext, "dddd", r, g, b, a))
         {
             new text[256], size, font[32], fsize, bold, fcolor, bcolor, alignment;
-            GetDynamicObjectMaterialText(MapObject[slot], index, text, size, font, fsize, bold, fcolor, bcolor, alignment);
-            SetDynamicObjectMaterialText(MapObject[slot], index, text, size, font, fsize, bold, fcolor, ME_RGBAToHex(a, r, g, b), alignment);
+	ME_TextLoad(slot, index, text, size, font, fsize, bold, fcolor, bcolor, alignment);
+            ME_TextSave(slot, index, text, size, font, fsize, bold, fcolor, ME_RGBAToHex(a, r, g, b), alignment);
         }
     }
-    Dialog_Show(playerid, ME_TextMenu, DIALOG_STYLE_LIST, "Material Text",
-        "Set Text\nResolution\nFont\nFont Size\nToggle Bold\nFont Color\nBG Color\nAlignment\nReset", "Select", "Close");
+    ME_TextMenuReshow(playerid);
     return 1;
 }
 
@@ -1215,10 +1311,9 @@ Dialog:ME_TextSetAlign(playerid, response, listitem, inputtext[])
     if(response)
     {
         new text[256], size, font[32], fsize, bold, fcolor, bcolor, alignment;
-        GetDynamicObjectMaterialText(MapObject[slot], index, text, size, font, fsize, bold, fcolor, bcolor, alignment);
-        SetDynamicObjectMaterialText(MapObject[slot], index, text, size, font, fsize, bold, fcolor, bcolor, listitem);
+	ME_TextLoad(slot, index, text, size, font, fsize, bold, fcolor, bcolor, alignment);
+        ME_TextSave(slot, index, text, size, font, fsize, bold, fcolor, bcolor, listitem);
     }
-    Dialog_Show(playerid, ME_TextMenu, DIALOG_STYLE_LIST, "Material Text",
-        "Set Text\nResolution\nFont\nFont Size\nToggle Bold\nFont Color\nBG Color\nAlignment\nReset", "Select", "Close");
+    ME_TextMenuReshow(playerid);
     return 1;
 }

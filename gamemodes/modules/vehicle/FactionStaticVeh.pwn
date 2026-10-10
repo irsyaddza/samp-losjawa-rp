@@ -4,7 +4,7 @@
  * faction members spawn/despawn them on demand from spawn pickups.
  */
 
-#include <YSI_Coding\y_hooks>
+#include <YSI_Coding/y_hooks>
 
 #define MAX_STATIC_SPAWNS 20
 

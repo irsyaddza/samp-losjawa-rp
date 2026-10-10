@@ -76,7 +76,7 @@ Optional plugins:
 	Me - sscanf2, fixes2, Whirlpool.
 */
 
-#include "..\..\YSI_Core\y_utils"
+#include "../../YSI_Core/y_utils"
 
 #define MAX_COMMAND_LENGTH              (FUNCTION_LENGTH)
 
@@ -87,10 +87,10 @@ Optional plugins:
 #endif
 
 // Misc includes.
-#include "..\..\YSI_Data\y_hashmap"
-#include "..\..\YSI_Data\y_iterate"
-#include "..\..\YSI_Data\y_playerarray"
-#include "..\..\YSI_Server\y_punycode"
+#include "../../YSI_Data/y_hashmap"
+#include "../../YSI_Data/y_iterate"
+#include "../../YSI_Data/y_playerarray"
+#include "../../YSI_Server/y_punycode"
 
 // Include the group functions (maybe).
 #define Y_COMMANDS_GROUP_NAME<%0...%1> %0YCMD%1
@@ -99,7 +99,7 @@ Optional plugins:
 
 // The one external function that we need to rename
 #define YCMD_SetPlayer Command_SetPlayer
-#include "..\..\YSI_Players\y_groups\y_groups__include"
+#include "../../YSI_Players/y_groups/y_groups__include"
 
 // Redefine the new names back to the old names.
 #define Command_InitialiseFromGroups YCMD_InitialiseFromGroups
@@ -127,7 +127,7 @@ Optional plugins:
 // Set commands as master 51.
 #define MASTER 51
 #define YSIM_U_DISABLE
-#include "..\..\YSI_Core\y_master"
+#include "../../YSI_Core/y_master"
 
 #if defined YSI_TESTS
 	#if !defined Y_COMMANDS_NO_IPC
@@ -135,7 +135,7 @@ Optional plugins:
 	#endif
 #endif
 
-#include "..\..\YSI_Coding\y_hooks"
+#include "../../YSI_Coding/y_hooks"
 
 // Include the main implementation.
 #include "y_commands_impl"
@@ -148,5 +148,5 @@ Optional plugins:
 //#undef _GROUP_MAKE_LIMIT
 //#undef _GROUP_MAKE_NAME
 
-#include "..\..\YSI_Core\y_master"
+#include "../../YSI_Core/y_master"
 

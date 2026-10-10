@@ -1,6 +1,6 @@
 // ponytail: Full AI NPC system integrated with pawn-requests (Southclaws) & OpenRouter API
 
-#include <YSI_Coding\y_hooks>
+#include <YSI_Coding/y_hooks>
 
 #define MAX_AI_NPC (30)
 
@@ -336,7 +336,7 @@ CMD:npc(playerid, params[])
 	new option[24], extra[64];
 	if(sscanf(params, "s[24]S()[64]", option, extra))
 	{
-		SendClientMessage(playerid, COLOR_LIGHTRED, "USAGE: /npc [create/list/delete]");
+		SendSyntaxMessage(playerid, "/npc [create/list/delete]");
 		return 1;
 	}
 
@@ -362,7 +362,7 @@ CMD:npc(playerid, params[])
 	{
 		new slot = strval(extra);
 		if(isnull(extra) || !Iter_Contains(AiNpc, slot))
-			return SendErrorMessage(playerid, "USAGE: /npc delete [npc_id]");
+			return SendSyntaxMessage(playerid, "/npc delete [npc_id]");
 
 		if(DestroyAiNpc(slot))
 		{
@@ -416,7 +416,7 @@ Dialog:AiNpcStep3_Gender(playerid, response, listitem, inputtext[])
 {
 	if(!response) return Dialog_Show(playerid, AiNpcStep2_Age, DIALOG_STYLE_INPUT, "Create AI NPC (Step 2/7): Age", "Enter NPC Age (18 - 80):", "Next", "Back");
 	format(AiNpcTempGender[playerid], 12, "%s", (listitem == 0) ? ("Male") : ("Female"));
-	Dialog_Show(playerid, AiNpcStep4_Skin, DIALOG_STYLE_INPUT, "Create AI NPC (Step 4/7): Skin ID", "Enter SA-MP Skin Model ID (1 - 311):", "Next", "Back");
+	Dialog_Show(playerid, AiNpcStep4_Skin, DIALOG_STYLE_INPUT, "Create AI NPC (Step 4/7): Skin ID", "Enter SA-MP Skin Model ID (1 - 20300):", "Next", "Back");
 	return 1;
 }
 
@@ -424,7 +424,7 @@ Dialog:AiNpcStep4_Skin(playerid, response, listitem, inputtext[])
 {
 	if(!response) return Dialog_Show(playerid, AiNpcStep3_Gender, DIALOG_STYLE_LIST, "Create AI NPC (Step 3/7): Gender", "Male\nFemale", "Next", "Back");
 	new skin = strval(inputtext);
-	if(skin < 1 || skin > 311)
+	if(skin < 1 || skin > 20300)
 		return Dialog_Show(playerid, AiNpcStep4_Skin, DIALOG_STYLE_INPUT, "Create AI NPC (Step 4/7): Skin ID", "Enter SA-MP Skin Model ID (1 - 311):\n{FF0000}Invalid skin ID!", "Next", "Back");
 
 	AiNpcTempSkin[playerid] = skin;

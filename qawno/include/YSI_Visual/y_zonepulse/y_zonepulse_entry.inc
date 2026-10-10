@@ -85,9 +85,9 @@ native GangZoneStopPulseForPlayer(playerid, zone);
 native GangZoneStopPulseForAll(zone);
 */
 
-#include "..\..\YSI_Core\y_utils"
-#include "..\..\YSI_Data\y_playerset"
-#include "..\..\YSI_Data\y_iterate"
+#include "../../YSI_Core/y_utils"
+#include "../../YSI_Data/y_playerset"
+#include "../../YSI_Data/y_iterate"
 
 #if !defined ZONE_PULSE_STAGE_TIME
 	#define ZONE_PULSE_STAGE_TIME (50)

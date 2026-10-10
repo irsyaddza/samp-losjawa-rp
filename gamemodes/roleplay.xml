@@ -1405,6 +1405,31 @@
 			<member name="C:E_ITER_YIELD_RETURN" value="10">
 			</member>
 		</member>
+		<member name="T:E_IWS_PICKUP" value="9">
+			<tagname value="E_IWS_PICKUP"/>
+			<member name="C:iws_Type" value="0">
+			</member>
+			<member name="C:iws_Pickup" value="1">
+			</member>
+			<member name="C:iws_Label" value="2">
+				<tagname value="Text3D"/>
+			</member>
+			<member name="C:iws_MatPrice" value="3">
+			</member>
+			<member name="C:iws_MatStock" value="4">
+			</member>
+			<member name="C:iws_SchPrice" value="5">
+			</member>
+			<member name="C:iws_X" value="6">
+				<tagname value="Float"/>
+			</member>
+			<member name="C:iws_Y" value="7">
+				<tagname value="Float"/>
+			</member>
+			<member name="C:iws_Z" value="8">
+				<tagname value="Float"/>
+			</member>
+		</member>
 		<member name="T:E_MAP_ZONE_AREA_DATA" value="7">
 			<tagname value="E_MAP_ZONE_AREA_DATA"/>
 			<member name="C:E_MAP_ZONE_AREA_ID" value="0">
@@ -3470,7 +3495,7 @@
 			<referrer name="MDC_OnNameFound"/>
 		</member>
 		<member name="C:DIALOG_CHANGELOG" value="14">
-			<referrer name="@_yCchangelog"/>
+			<referrer name="OnLoadPlayerChangelog"/>
 		</member>
 		<member name="C:DIALOG_CONFIRM_SYS" value="1">
 			<referrer name="DR_OnDialogResponse"/>
@@ -3548,6 +3573,8 @@
 			<referrer name="RenderPlayerPhone"/>
 			<referrer name="MDC_OnNameFound"/>
 			<referrer name="ResetMDCData"/>
+			<referrer name="IWS_LoadPickups"/>
+			<referrer name="IWS_SavePlayer"/>
 			<referrer name="@_yCpm"/>
 			<referrer name="ShowHelpCategories"/>
 			<referrer name="dialog_Help_Main"/>
@@ -3566,6 +3593,7 @@
 			<referrer name="ShowAdvertisementList"/>
 			<referrer name="@_yCremove_carsign"/>
 			<referrer name="@_yCapb"/>
+			<referrer name="OnLoadPlayerChangelog"/>
 			<referrer name="dialog_PlayerVehSettings"/>
 			<referrer name="@_yCarecord"/>
 			<referrer name="DeleteReport"/>
@@ -3726,6 +3754,8 @@
 			<referrer name="@_yCdr"/>
 			<referrer name="dialog_MakeAdminDialog"/>
 			<referrer name="@_yCmaketester"/>
+			<referrer name="@_yCwebedit"/>
+			<referrer name="@_yCgmx"/>
 			<referrer name="@_yCeditsignal"/>
 			<referrer name="@_yCp2p"/>
 			<referrer name="@_yCp2v"/>
@@ -3919,7 +3949,7 @@
 			<referrer name="Script_GetCompilerVersion"/>
 			<referrer name="Script_GetCompilerString"/>
 		</member>
-		<member name="C:__line" value="18063">
+		<member name="C:__line" value="18079">
 			<referrer name="DateToTimestamp"/>
 			<referrer name="dialog_Drug_Amount"/>
 			<referrer name="dialog_Drug_RefundAmount"/>
@@ -3972,7 +4002,6 @@
 			<referrer name="@_yCexamine"/>
 			<referrer name="@_yCcharity"/>
 			<referrer name="@_yCpay"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="@_yCbuy"/>
 			<referrer name="@_yCclothing"/>
@@ -4056,6 +4085,10 @@
 			<referrer name="dialog_PlayerVehKeysDupTarget"/>
 			<referrer name="dialog_PlayerVehSellPlayer"/>
 			<referrer name="@_yChealth"/>
+			<referrer name="@_yCillegaljob"/>
+			<referrer name="@_yCweaponsupplier"/>
+			<referrer name="@_yCbuymaterial"/>
+			<referrer name="@_yCgun"/>
 			<referrer name="@_yCcreatecar"/>
 			<referrer name="@_yCkick"/>
 			<referrer name="@_yCban"/>
@@ -4078,6 +4111,10 @@
 			<referrer name="@_yCeditgraffiti"/>
 			<referrer name="@_yCmakeadmin"/>
 			<referrer name="@_yCmaketester"/>
+			<referrer name="@_yCwebedit"/>
+			<referrer name="@_yCversionedit"/>
+			<referrer name="@_yCaddchangelog"/>
+			<referrer name="@_yCgmx"/>
 			<referrer name="@_yCforceunmask"/>
 			<referrer name="@_yCvehiclerequests"/>
 			<referrer name="@_yCwatchradio"/>
@@ -4657,6 +4694,11 @@
 			<referrer name="@_yCgotocell"/>
 			<referrer name="CreatePrisonCell"/>
 			<referrer name="OpenPrisonCell"/>
+			<referrer name="IWS_ResetPlayer"/>
+			<referrer name="IWS_OnPickup"/>
+			<referrer name="IWS_CraftTick"/>
+			<referrer name="IWS_CraftCancel"/>
+			<referrer name="IWS_CraftFinish"/>
 			<referrer name="@_yCamy"/>
 			<referrer name="AnnounceMyAction"/>
 			<referrer name="ShoutCommand"/>
@@ -5191,7 +5233,6 @@
 			<referrer name="Tuning_ExitDisplay"/>
 			<referrer name="Tuning_SetDisplay"/>
 			<referrer name="@_yCrentharvester"/>
-			<referrer name="ELM_Init"/>
 			<referrer name="ToggleEmergencyLights"/>
 			<referrer name="OnVehicleSirenStateChange"/>
 			<referrer name="ShowCargoShip"/>
@@ -5451,6 +5492,10 @@
 			<referrer name="CreatePrisonCell"/>
 			<referrer name="OpenPrisonCell"/>
 			<referrer name="ClosePrisonCell"/>
+			<referrer name="IWS_NameToCraftIdx"/>
+			<referrer name="IWS_OnPickup"/>
+			<referrer name="dialog_IWS_CraftConfirm"/>
+			<referrer name="IWS_CraftTick"/>
 			<referrer name="@_yCrelog"/>
 			<referrer name="@_yCtogmusic"/>
 			<referrer name="@_yCstats"/>
@@ -5568,7 +5613,6 @@
 			<referrer name="ReturnAmmoPrice"/>
 			<referrer name="ReturnWeaponPrice"/>
 			<referrer name="GetWeaponIDFromName"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="@_yCbuygun"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="OnPlayerPruchaseWeapon"/>
@@ -5822,6 +5866,9 @@
 			<referrer name="PrintLicenses"/>
 			<referrer name="ShowPlayerVehMainDialog"/>
 			<referrer name="dialog_PlayerVehMain"/>
+			<referrer name="@_yCillegaljob"/>
+			<referrer name="@_yCweaponsupplier"/>
+			<referrer name="@_yCgun"/>
 			<referrer name="@_yCrespawnrental"/>
 			<referrer name="@_yCcreatecar"/>
 			<referrer name="@_yCadminduty"/>
@@ -5857,6 +5904,11 @@
 			<referrer name="@_yCdestroygraffiti"/>
 			<referrer name="@_yCmakeadmin"/>
 			<referrer name="@_yCmaketester"/>
+			<referrer name="@_yCwebedit"/>
+			<referrer name="@_yCversionedit"/>
+			<referrer name="@_yCaddchangelog"/>
+			<referrer name="@_yCclearchangelog"/>
+			<referrer name="@_yCgmx"/>
 			<referrer name="@_yCupdatemotd"/>
 			<referrer name="@_yCforceunmask"/>
 			<referrer name="@_yCvehiclerequests"/>
@@ -6630,7 +6682,6 @@
 			<referrer name="@yC_examine"/>
 			<referrer name="@yC_charity"/>
 			<referrer name="@yC_pay"/>
-			<referrer name="@yC_buyweapon"/>
 			<referrer name="@yC_buygun"/>
 			<referrer name="@yC_buy"/>
 			<referrer name="@yC_clothing"/>
@@ -6860,6 +6911,12 @@
 			<referrer name="@yC_changelog"/>
 			<referrer name="@yC_licenses"/>
 			<referrer name="@yC_health"/>
+			<referrer name="@yC_illegaljob"/>
+			<referrer name="@yC_weaponsupplier"/>
+			<referrer name="@yC_buymaterial"/>
+			<referrer name="@yC_buyschematic"/>
+			<referrer name="@yC_gun"/>
+			<referrer name="@yC_delays"/>
 			<referrer name="@yC_respawnrental"/>
 			<referrer name="@yC_createcar"/>
 			<referrer name="@yC_aduty"/>
@@ -6901,6 +6958,11 @@
 			<referrer name="@yC_destroygraffiti"/>
 			<referrer name="@yC_makeadmin"/>
 			<referrer name="@yC_maketester"/>
+			<referrer name="@yC_webedit"/>
+			<referrer name="@yC_versionedit"/>
+			<referrer name="@yC_addchangelog"/>
+			<referrer name="@yC_clearchangelog"/>
+			<referrer name="@yC_gmx"/>
 			<referrer name="@yC_updatemotd"/>
 			<referrer name="@yC_forceunmask"/>
 			<referrer name="@yC_vehiclerequests"/>
@@ -7286,7 +7348,6 @@
 			<referrer name="@yC_editsidejobveh"/>
 			<referrer name="@yC_busroute"/>
 			<referrer name="@yC_spawn"/>
-			<referrer name="@yC_delays"/>
 			<referrer name="@yC_sweeperroute"/>
 			<referrer name="@yC_advertisement"/>
 			<referrer name="@yC_proposepoint"/>
@@ -7943,7 +8004,6 @@
 			<referrer name="OnPlayerPurchaseItem"/>
 			<referrer name="Vehicles"/>
 			<referrer name="@_yCknock"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="@_yCbuy"/>
 			<referrer name="@_yCmyproperty"/>
@@ -8587,6 +8647,11 @@
 			<referrer name="IsAdminSpawned"/>
 			<referrer name="StopCarBoomBox"/>
 			<referrer name="dialog_xmSetStationDialog"/>
+		</member>
+		<member name="F:CraftTimer">
+			<referrer name="dialog_IWS_CraftConfirm"/>
+			<referrer name="IWS_CraftTick"/>
+			<referrer name="ResetStatistics"/>
 		</member>
 		<member name="F:CrateInfo">
 			<referrer name="PutdownCrate"/>
@@ -9766,6 +9831,31 @@
 			<referrer name="Indirect_Callvoid"/>
 			<referrer name="Indirect_Array"/>
 		</member>
+		<member name="F:IWSPickup">
+			<referrer name="IWS_UpdatePickupLabel"/>
+			<referrer name="IWS_CreatePickup"/>
+			<referrer name="IWS_FindPickupSlot"/>
+			<referrer name="IWS_SavePickups"/>
+			<referrer name="IWS_LoadPickups"/>
+			<referrer name="dialog_IWS_DeleteDialog"/>
+			<referrer name="dialog_IWS_SchematicDialog"/>
+			<referrer name="@_yCillegaljob"/>
+			<referrer name="@_yCweaponsupplier"/>
+			<referrer name="@_yCbuymaterial"/>
+			<referrer name="@_yCbuyschematic"/>
+		</member>
+		<member name="F:IWSPickupCount">
+			<referrer name="IWS_CreatePickup"/>
+			<referrer name="IWS_FindPickupSlot"/>
+			<referrer name="IWS_SavePickups"/>
+			<referrer name="IWS_LoadPickups"/>
+			<referrer name="dialog_IWS_DeleteDialog"/>
+			<referrer name="dialog_IWS_SchematicDialog"/>
+			<referrer name="@_yCillegaljob"/>
+			<referrer name="@_yCweaponsupplier"/>
+			<referrer name="@_yCbuymaterial"/>
+			<referrer name="@_yCbuyschematic"/>
+		</member>
 		<member name="F:Imused">
 		</member>
 		<member name="F:InApartment">
@@ -9820,7 +9910,6 @@
 			<referrer name="OnPlayerRenameFurniture"/>
 			<referrer name="OnPlayerPurchaseItem"/>
 			<referrer name="@_yCknock"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="@_yCbuy"/>
 			<referrer name="@_yCdoor"/>
@@ -10444,6 +10533,7 @@
 			<referrer name="@_yCadminduty"/>
 			<referrer name="@_yCajailed"/>
 			<referrer name="@_yCreports"/>
+			<referrer name="OnGMXCountdownTimer"/>
 			<referrer name="@_yCforceunmask"/>
 			<referrer name="@_yCbackup"/>
 			<referrer name="@_yCcheckafk"/>
@@ -11749,6 +11839,11 @@
 			<referrer name="ReleaseFromPrison"/>
 			<referrer name="FindNearestCell"/>
 			<referrer name="@_yCpaccess"/>
+			<referrer name="IWS_SavePlayer"/>
+			<referrer name="IWS_LoadPlayer"/>
+			<referrer name="dialog_IWS_SchematicDialog"/>
+			<referrer name="dialog_IWS_CraftConfirm"/>
+			<referrer name="IWS_CraftFinish"/>
 			<referrer name="@_yCrelog"/>
 			<referrer name="@_yCtogmusic"/>
 			<referrer name="@_yCstats"/>
@@ -11805,7 +11900,6 @@
 			<referrer name="@_yCattributes"/>
 			<referrer name="@_yCexamine"/>
 			<referrer name="@_yCpay"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="@_yCbuy"/>
 			<referrer name="@_yCclothing"/>
@@ -12005,6 +12099,10 @@
 			<referrer name="dialog_PlayerVehSellPlayer"/>
 			<referrer name="dialog_PlayerVehScrapConfirm"/>
 			<referrer name="@_yChealth"/>
+			<referrer name="@_yCillegaljob"/>
+			<referrer name="@_yCweaponsupplier"/>
+			<referrer name="@_yCbuymaterial"/>
+			<referrer name="@_yCdelays"/>
 			<referrer name="@_yCrespawnrental"/>
 			<referrer name="@_yCcreatecar"/>
 			<referrer name="@_yCadminduty"/>
@@ -12039,6 +12137,11 @@
 			<referrer name="@_yCmakeadmin"/>
 			<referrer name="dialog_MakeAdminDialog"/>
 			<referrer name="@_yCmaketester"/>
+			<referrer name="@_yCwebedit"/>
+			<referrer name="@_yCversionedit"/>
+			<referrer name="@_yCaddchangelog"/>
+			<referrer name="@_yCclearchangelog"/>
+			<referrer name="@_yCgmx"/>
 			<referrer name="@_yCupdatemotd"/>
 			<referrer name="@_yCforceunmask"/>
 			<referrer name="@_yCvehiclerequests"/>
@@ -12427,7 +12530,6 @@
 			<referrer name="@_yCbusroute"/>
 			<referrer name="dialog_BusSpawnMenu"/>
 			<referrer name="@yH_OnPlayerEnterCheckpoint@011"/>
-			<referrer name="@_yCdelays"/>
 			<referrer name="@_yCsweeperroute"/>
 			<referrer name="dialog_SweeperSpawnMenu"/>
 			<referrer name="@yH_OnPlayerEnterCheckpoint@012"/>
@@ -15207,6 +15309,10 @@
 			<referrer name="@_yCeditgraffiti"/>
 			<referrer name="@_yCmakeadmin"/>
 			<referrer name="@_yCmaketester"/>
+			<referrer name="@_yCwebedit"/>
+			<referrer name="@_yCversionedit"/>
+			<referrer name="@_yCaddchangelog"/>
+			<referrer name="@_yCgmx"/>
 			<referrer name="@_yCforceunmask"/>
 			<referrer name="@_yCvehiclerequests"/>
 			<referrer name="@_yCwatchradio"/>
@@ -15355,7 +15461,6 @@
 			<referrer name="@_yCexamine"/>
 			<referrer name="@_yCcharity"/>
 			<referrer name="@_yCpay"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="@_yCbuy"/>
 			<referrer name="@_yCclothing"/>
@@ -15439,6 +15544,12 @@
 			<referrer name="dialog_PlayerVehKeysDupTarget"/>
 			<referrer name="dialog_PlayerVehSellPlayer"/>
 			<referrer name="@_yChealth"/>
+			<referrer name="@_yCillegaljob"/>
+			<referrer name="@_yCweaponsupplier"/>
+			<referrer name="@_yCbuymaterial"/>
+			<referrer name="@_yCgun"/>
+		</member>
+		<member name="F:__file">
 		</member>
 		<member name="F:__file">
 			<referrer name="@_yCpaccess"/>
@@ -16130,6 +16241,34 @@
 			<referrer name="HasCooldown"/>
 			<referrer name="GetCooldownLevel"/>
 		</member>
+		<member name="F:craft_base_mat">
+			<referrer name="IWS_GunCreateParsed"/>
+		</member>
+		<member name="F:craft_mafia_only">
+			<referrer name="dialog_IWS_SchematicDialog"/>
+			<referrer name="IWS_GunCreateParsed"/>
+			<referrer name="@_yCbuyschematic"/>
+		</member>
+		<member name="F:craft_mat_per_ammo">
+			<referrer name="IWS_GunCreateParsed"/>
+		</member>
+		<member name="F:craft_max_ammo">
+			<referrer name="IWS_GunCreateParsed"/>
+		</member>
+		<member name="F:craft_sch_idx">
+			<referrer name="dialog_IWS_SchematicDialog"/>
+			<referrer name="IWS_GunCreateParsed"/>
+			<referrer name="IWS_CraftFinish"/>
+			<referrer name="@_yCbuyschematic"/>
+		</member>
+		<member name="F:craft_time_sec">
+			<referrer name="IWS_GunCreateParsed"/>
+			<referrer name="dialog_IWS_CraftConfirm"/>
+		</member>
+		<member name="F:craft_weapon_id">
+			<referrer name="IWS_WeaponToCraftIdx"/>
+			<referrer name="dialog_IWS_CraftConfirm"/>
+		</member>
 		<member name="F:d_DATA">
 			<referrer name="ReturnStorageCapacity"/>
 			<referrer name="DecayDrugs"/>
@@ -16284,6 +16423,8 @@
 			<referrer name="Players"/>
 			<referrer name="Vehicles"/>
 			<referrer name="ReleaseFromPrison"/>
+			<referrer name="IWS_SavePlayer"/>
+			<referrer name="IWS_LoadPlayer"/>
 			<referrer name="@_yCusedrug"/>
 			<referrer name="@_yCdropcell"/>
 			<referrer name="@_yCattributes"/>
@@ -16314,6 +16455,7 @@
 			<referrer name="@_yCsetstyle"/>
 			<referrer name="@_yCjail"/>
 			<referrer name="@_yCprison"/>
+			<referrer name="@_yCchangelog"/>
 			<referrer name="dialog_PlayerVehMain"/>
 			<referrer name="dialog_PlayerVehKeysAdmin"/>
 			<referrer name="dialog_PlayerVehKeysDropList"/>
@@ -16328,6 +16470,10 @@
 			<referrer name="AddPointToFile"/>
 			<referrer name="dialog_MakeAdminDialog"/>
 			<referrer name="@_yCmaketester"/>
+			<referrer name="@_yCwebedit"/>
+			<referrer name="@_yCversionedit"/>
+			<referrer name="@_yCaddchangelog"/>
+			<referrer name="@_yCclearchangelog"/>
 			<referrer name="@_yCremovebusiness"/>
 			<referrer name="@_yCasellbusiness"/>
 			<referrer name="@_yCbusinessenter"/>
@@ -16399,6 +16545,7 @@
 			<referrer name="SaveVehicleAsPermanent"/>
 			<referrer name="dialog_MvehDeleteConfirm"/>
 			<referrer name="SQL_Connect"/>
+			<referrer name="OnServerSettingsTableInit"/>
 			<referrer name="OnAiNpcTableInit"/>
 			<referrer name="SQL_CheckAccount"/>
 			<referrer name="SQL_CheckBanAccount"/>
@@ -16700,11 +16847,23 @@
 			<referrer name="AddPlayerToTrainQueue"/>
 			<referrer name="TrainSystemTimer"/>
 		</member>
+		<member name="F:gELMTimer">
+			<referrer name="ELM_FlashTimer"/>
+			<referrer name="ToggleEmergencyLights"/>
+		</member>
 		<member name="F:gFakeMatcher">
 			<referrer name="CodeScanFindOneFastPattern2"/>
 			<referrer name="CodeScanRunFast"/>
 			<referrer name="CodeScanRun"/>
 			<library>amx_assembly codescan</library>
+		</member>
+		<member name="F:gGMXCountdown">
+			<referrer name="OnGMXCountdownTimer"/>
+			<referrer name="@_yCgmx"/>
+		</member>
+		<member name="F:gGMXTimerID">
+			<referrer name="OnGMXCountdownTimer"/>
+			<referrer name="@_yCgmx"/>
 		</member>
 		<member name="F:gHdr">
 			<referrer name="CodeScanAddSwitchTarget"/>
@@ -16874,6 +17033,21 @@
 			<referrer name="Get2DPosZone"/>
 			<referrer name="ReturnLocationPos"/>
 		</member>
+		<member name="F:gServerMode">
+			<referrer name="OnLoadPlayerChangelog"/>
+			<referrer name="@_yCversionedit"/>
+			<referrer name="LoadServerSettings"/>
+			<referrer name="Indirection_OnGameModeInit"/>
+		</member>
+		<member name="F:gServerRestarting">
+			<tagname value="bool"/>
+		</member>
+		<member name="F:gServerSite">
+			<referrer name="OnQueryFinished"/>
+			<referrer name="@_yCwebedit"/>
+			<referrer name="LoadServerSettings"/>
+			<referrer name="Indirection_OnGameModeInit"/>
+		</member>
 		<member name="F:gShipDeparture">
 			<referrer name="UpdateShipStorage"/>
 			<referrer name="Server"/>
@@ -16994,7 +17168,6 @@
 			<referrer name="GetVehicleInfo"/>
 			<referrer name="RestorePlayerWeapons"/>
 			<referrer name="ShowPlayerWeapons"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="@_yCgivegun"/>
 			<referrer name="@_yCsetwpackage"/>
@@ -17304,7 +17477,7 @@
 			<referrer name="@_yCcheck"/>
 			<referrer name="@_yCsetspawn"/>
 			<referrer name="ShowAdvertisementList"/>
-			<referrer name="@_yCchangelog"/>
+			<referrer name="OnLoadPlayerChangelog"/>
 			<referrer name="@_yCarecord"/>
 			<referrer name="ShowVehicleRequests"/>
 			<referrer name="ShowVehicleRequestDetails"/>
@@ -17460,11 +17633,57 @@
 			<referrer name="@yH_OnGameModeInit@015"/>
 			<referrer name="SendAiNpcQuery"/>
 		</member>
+		<member name="F:pCrafting">
+			<tagname value="bool"/>
+			<referrer name="IWS_ResetPlayer"/>
+			<referrer name="IWS_GunCreateParsed"/>
+			<referrer name="dialog_IWS_CraftConfirm"/>
+			<referrer name="IWS_CraftTick"/>
+			<referrer name="IWS_CraftCancel"/>
+			<referrer name="IWS_CraftFinish"/>
+			<referrer name="ResetStatistics"/>
+		</member>
+		<member name="F:pGunCraftDelay">
+			<referrer name="IWS_SavePlayer"/>
+			<referrer name="IWS_OnPlayerLoaded"/>
+			<referrer name="IWS_ResetPlayer"/>
+			<referrer name="IWS_GunCreateParsed"/>
+			<referrer name="IWS_CraftFinish"/>
+			<referrer name="IWS_GetDelayLine"/>
+		</member>
+		<member name="F:pIllegalJob">
+			<referrer name="IWS_IsSupplier"/>
+			<referrer name="IWS_SavePlayer"/>
+			<referrer name="IWS_OnPlayerLoaded"/>
+			<referrer name="IWS_ResetPlayer"/>
+			<referrer name="@_yCjobhelp"/>
+			<referrer name="@_yCillegaljob"/>
+			<referrer name="ShowStatistics"/>
+		</member>
+		<member name="F:pMaterials">
+			<referrer name="IWS_SavePlayer"/>
+			<referrer name="IWS_OnPlayerLoaded"/>
+			<referrer name="IWS_ResetPlayer"/>
+			<referrer name="IWS_GunCreateParsed"/>
+			<referrer name="dialog_IWS_CraftConfirm"/>
+			<referrer name="IWS_CraftCancel"/>
+			<referrer name="ShowPlayerInventoryDialog"/>
+			<referrer name="@_yCbuymaterial"/>
+		</member>
 		<member name="F:pPT_Footer">
 			<tagname value="PlayerText"/>
 			<referrer name="CreateTextdraws"/>
 			<referrer name="ShowPlayerFooter"/>
 			<referrer name="HidePlayerFooter"/>
+		</member>
+		<member name="F:pSchematics">
+			<referrer name="IWS_SavePlayer"/>
+			<referrer name="IWS_OnPlayerLoaded"/>
+			<referrer name="IWS_ResetPlayer"/>
+			<referrer name="dialog_IWS_SchematicDialog"/>
+			<referrer name="IWS_GunCreateParsed"/>
+			<referrer name="ShowPlayerInventoryDialog"/>
+			<referrer name="@_yCbuyschematic"/>
 		</member>
 		<member name="F:pToAccept">
 			<referrer name="@_yCofferrent"/>
@@ -17723,6 +17942,13 @@
 			<referrer name="@_yCplacealldrugs"/>
 			<referrer name="@_yCplacedrug"/>
 			<referrer name="@_yCgivedrug"/>
+		</member>
+		<member name="F:schematic_names">
+			<referrer name="dialog_IWS_SchematicDialog"/>
+			<referrer name="IWS_GunCreateParsed"/>
+			<referrer name="IWS_CraftFinish"/>
+			<referrer name="ShowPlayerInventoryDialog"/>
+			<referrer name="@_yCbuyschematic"/>
 		</member>
 		<member name="F:selfie_timer">
 			<referrer name="OnPhoneClick_Selfie"/>
@@ -18529,6 +18755,8 @@
 			<referrer name="Players"/>
 			<referrer name="Vehicles"/>
 			<referrer name="OnPlayerSpeedHack"/>
+			<referrer name="IWS_CreatePickup"/>
+			<referrer name="IWS_LoadPickups"/>
 			<referrer name="@_yCusedrug"/>
 			<referrer name="@_yCmeal"/>
 			<referrer name="@_yCdb"/>
@@ -18596,6 +18824,7 @@
 			<referrer name="Players"/>
 			<referrer name="PayDay"/>
 			<referrer name="Vehicles"/>
+			<referrer name="IWS_CraftTick"/>
 			<referrer name="@_yCservice"/>
 			<referrer name="@_yCsavings"/>
 			<referrer name="@_yCsiren"/>
@@ -18651,6 +18880,7 @@
 			<referrer name="PayDay"/>
 			<referrer name="Vehicles"/>
 			<referrer name="OnPlayerSpeedHack"/>
+			<referrer name="IWS_CraftTick"/>
 			<referrer name="@_yCmeal"/>
 			<referrer name="@_yCservice"/>
 			<referrer name="@_yCsavings"/>
@@ -18781,6 +19011,7 @@
 			<referrer name="GetPhoneSignal"/>
 			<referrer name="UpdateCCTVEditCamera"/>
 			<referrer name="Players"/>
+			<referrer name="IWS_CraftTick"/>
 			<referrer name="ShowVehicleDrugs"/>
 			<referrer name="@_yCtakealldrugs"/>
 			<referrer name="@_yCusedrug"/>
@@ -18928,6 +19159,7 @@
 			<referrer name="@_yCcctv"/>
 			<referrer name="Players"/>
 			<referrer name="FindNearestCell"/>
+			<referrer name="IWS_CraftTick"/>
 			<referrer name="@_yCusedrug"/>
 			<referrer name="@_yCgates"/>
 			<referrer name="@_yCdoor"/>
@@ -19798,6 +20030,7 @@
 			<referrer name="@_yCajailed"/>
 			<referrer name="@_yCreports"/>
 			<referrer name="@_yCpoints"/>
+			<referrer name="OnGMXCountdownTimer"/>
 			<referrer name="@_yCforceunmask"/>
 			<referrer name="@_yCicv"/>
 			<referrer name="@_yCbackup"/>
@@ -20485,6 +20718,31 @@
 			<dependency name="Dialog_Open"/>
 			<dependency name="PlayerData"/>
 			<dependency name="SendClientMessageEx"/>
+			<dependency name="pAdmin"/>
+			<dependency name="true"/>
+			<param name="playerid">
+			</param>
+			<param name="params">
+				<paraminfo> [] </paraminfo>
+			</param>
+			<param name="__help">
+			</param>
+		</member>
+		<member name="M:@_yCaddchangelog" syntax="@_yCaddchangelog(playerid, params[], __help)">
+			<attribute name="public"/>
+			<stacksize value="842"/>
+			<referrer name="@yC_addchangelog"/>
+			<dependency name="AccountName"/>
+			<dependency name="PlayerData"/>
+			<dependency name="ReturnSiteDate"/>
+			<dependency name="SSCANF__"/>
+			<dependency name="SendClientMessageEx"/>
+			<dependency name="__file"/>
+			<dependency name="__line"/>
+			<dependency name="dbCon"/>
+			<dependency name="format"/>
+			<dependency name="mysql_format"/>
+			<dependency name="mysql_tquery"/>
 			<dependency name="pAdmin"/>
 			<dependency name="true"/>
 			<param name="playerid">
@@ -22896,6 +23154,78 @@
 			<param name="__help">
 			</param>
 		</member>
+		<member name="M:@_yCbuymaterial" syntax="@_yCbuymaterial(playerid, params[], __help)">
+			<attribute name="public"/>
+			<stacksize value="15"/>
+			<referrer name="@yC_buymaterial"/>
+			<dependency name="GetPlayerPos"/>
+			<dependency name="IWSPickup"/>
+			<dependency name="IWSPickup"/>
+			<dependency name="IWSPickupCount"/>
+			<dependency name="IWS_IsSupplier"/>
+			<dependency name="IWS_SavePickups"/>
+			<dependency name="IWS_SavePlayer"/>
+			<dependency name="IWS_UpdatePickupLabel"/>
+			<dependency name="IsPlayerInRangeOfPoint"/>
+			<dependency name="PlayerData"/>
+			<dependency name="PlayerData"/>
+			<dependency name="SQL_LogAction"/>
+			<dependency name="SSCANF__"/>
+			<dependency name="SendClientMessageEx"/>
+			<dependency name="TakePlayerMoney"/>
+			<dependency name="__file"/>
+			<dependency name="__line"/>
+			<dependency name="iws_MatPrice"/>
+			<dependency name="iws_MatStock"/>
+			<dependency name="iws_Type"/>
+			<dependency name="iws_X"/>
+			<dependency name="iws_Y"/>
+			<dependency name="iws_Z"/>
+			<dependency name="pCash"/>
+			<dependency name="pMaterials"/>
+			<param name="playerid">
+			</param>
+			<param name="params">
+				<paraminfo> [] </paraminfo>
+			</param>
+			<param name="__help">
+			</param>
+		</member>
+		<member name="M:@_yCbuyschematic" syntax="@_yCbuyschematic(playerid, params[], __help)">
+			<attribute name="public"/>
+			<stacksize value="625"/>
+			<referrer name="@yC_buyschematic"/>
+			<dependency name="Dialog_Open"/>
+			<dependency name="GetPlayerPos"/>
+			<dependency name="IWSPickup"/>
+			<dependency name="IWSPickup"/>
+			<dependency name="IWSPickupCount"/>
+			<dependency name="IWS_IsMafia"/>
+			<dependency name="IWS_IsSupplier"/>
+			<dependency name="IsPlayerInRangeOfPoint"/>
+			<dependency name="SendClientMessageEx"/>
+			<dependency name="SetPVarInt"/>
+			<dependency name="craft_mafia_only"/>
+			<dependency name="craft_sch_idx"/>
+			<dependency name="format"/>
+			<dependency name="iws_SchPrice"/>
+			<dependency name="iws_Type"/>
+			<dependency name="iws_X"/>
+			<dependency name="iws_Y"/>
+			<dependency name="iws_Z"/>
+			<dependency name="pSchematics"/>
+			<dependency name="schematic_names"/>
+			<dependency name="schematic_names"/>
+			<dependency name="strcat"/>
+			<dependency name="strlen"/>
+			<param name="playerid">
+			</param>
+			<param name="params">
+				<paraminfo> [] </paraminfo>
+			</param>
+			<param name="__help">
+			</param>
+		</member>
 		<member name="M:@_yCbuyticket" syntax="@_yCbuyticket(playerid, params[], __help)">
 			<attribute name="public"/>
 			<stacksize value="10"/>
@@ -22915,46 +23245,6 @@
 			<dependency name="tsX"/>
 			<dependency name="tsY"/>
 			<dependency name="tsZ"/>
-			<param name="playerid">
-			</param>
-			<param name="params">
-				<paraminfo> [] </paraminfo>
-			</param>
-			<param name="__help">
-			</param>
-		</member>
-		<member name="M:@_yCbuyweapon" syntax="@_yCbuyweapon(playerid, params[], __help)">
-			<attribute name="public"/>
-			<stacksize value="74"/>
-			<referrer name="@yC_buyweapon"/>
-			<dependency name="BusinessData"/>
-			<dependency name="BusinessData"/>
-			<dependency name="FindFreePackageSlot"/>
-			<dependency name="GetWeaponIDFromName"/>
-			<dependency name="GetWeaponPackage"/>
-			<dependency name="GetWeaponPackageName"/>
-			<dependency name="GetWeaponPackageName"/>
-			<dependency name="InBusiness"/>
-			<dependency name="PlayerData"/>
-			<dependency name="PlayerData"/>
-			<dependency name="ReturnAmmoPrice"/>
-			<dependency name="ReturnWeaponPrice"/>
-			<dependency name="SQL_LogAction"/>
-			<dependency name="SSCANF__"/>
-			<dependency name="SendClientMessage"/>
-			<dependency name="SendClientMessageEx"/>
-			<dependency name="TakePlayerMoney"/>
-			<dependency name="__file"/>
-			<dependency name="__line"/>
-			<dependency name="bID"/>
-			<dependency name="bProducts"/>
-			<dependency name="bType"/>
-			<dependency name="g_aWeaponSlots"/>
-			<dependency name="pCash"/>
-			<dependency name="pJob"/>
-			<dependency name="pPackageAmmo"/>
-			<dependency name="pPackageWP"/>
-			<dependency name="true"/>
 			<param name="playerid">
 			</param>
 			<param name="params">
@@ -23498,12 +23788,10 @@
 		</member>
 		<member name="M:@_yCchangelog" syntax="@_yCchangelog(playerid, params[], __help)">
 			<attribute name="public"/>
-			<stacksize value="9"/>
+			<stacksize value="7"/>
 			<referrer name="@yC_changelog"/>
-			<dependency name="DIALOG_CHANGELOG"/>
-			<dependency name="ShowPlayerDialog"/>
-			<dependency name="format"/>
-			<dependency name="gstr"/>
+			<dependency name="dbCon"/>
+			<dependency name="mysql_tquery"/>
 			<param name="playerid">
 			</param>
 			<param name="params">
@@ -23922,6 +24210,24 @@
 			<dependency name="PlayerData"/>
 			<dependency name="SendClientMessageEx"/>
 			<dependency name="SendClientMessageToAll"/>
+			<dependency name="pAdmin"/>
+			<dependency name="true"/>
+			<param name="playerid">
+			</param>
+			<param name="params">
+				<paraminfo> [] </paraminfo>
+			</param>
+			<param name="__help">
+			</param>
+		</member>
+		<member name="M:@_yCclearchangelog" syntax="@_yCclearchangelog(playerid, params[], __help)">
+			<attribute name="public"/>
+			<stacksize value="6"/>
+			<referrer name="@yC_clearchangelog"/>
+			<dependency name="PlayerData"/>
+			<dependency name="SendClientMessageEx"/>
+			<dependency name="dbCon"/>
+			<dependency name="mysql_tquery"/>
 			<dependency name="pAdmin"/>
 			<dependency name="true"/>
 			<param name="playerid">
@@ -25381,9 +25687,10 @@
 		</member>
 		<member name="M:@_yCdelays" syntax="@_yCdelays(playerid, params[], __help)">
 			<attribute name="public"/>
-			<stacksize value="652"/>
+			<stacksize value="653"/>
 			<referrer name="@yC_delays"/>
 			<dependency name="Dialog_Open"/>
+			<dependency name="IWS_GetDelayLine"/>
 			<dependency name="PlayerData"/>
 			<dependency name="PlayerTrainJobDelay"/>
 			<dependency name="format"/>
@@ -29180,6 +29487,33 @@
 			<param name="__help">
 			</param>
 		</member>
+		<member name="M:@_yCgmx" syntax="@_yCgmx(playerid, params[], __help)">
+			<attribute name="public"/>
+			<stacksize value="35"/>
+			<referrer name="@yC_gmx"/>
+			<dependency name="JUNIOR_ADMINS"/>
+			<dependency name="PlayerData"/>
+			<dependency name="ReturnName"/>
+			<dependency name="ReturnName"/>
+			<dependency name="SSCANF__"/>
+			<dependency name="SendAdminAlert"/>
+			<dependency name="SendClientMessageEx"/>
+			<dependency name="SendClientMessageToAllEx"/>
+			<dependency name="SetTimer"/>
+			<dependency name="__file"/>
+			<dependency name="__line"/>
+			<dependency name="gGMXCountdown"/>
+			<dependency name="gGMXTimerID"/>
+			<dependency name="pAdmin"/>
+			<dependency name="true"/>
+			<param name="playerid">
+			</param>
+			<param name="params">
+				<paraminfo> [] </paraminfo>
+			</param>
+			<param name="__help">
+			</param>
+		</member>
 		<member name="M:@_yCgocp" syntax="@_yCgocp(playerid, params[], __help)">
 			<attribute name="public"/>
 			<stacksize value="7"/>
@@ -29943,6 +30277,26 @@
 			<param name="__help">
 			</param>
 		</member>
+		<member name="M:@_yCgun" syntax="@_yCgun(playerid, params[], __help)">
+			<attribute name="public"/>
+			<stacksize value="58"/>
+			<referrer name="@yC_gun"/>
+			<dependency name="IWS_GunCreateParsed"/>
+			<dependency name="SSCANF__"/>
+			<dependency name="SendClientMessageEx"/>
+			<dependency name="__file"/>
+			<dependency name="__line"/>
+			<dependency name="printf"/>
+			<dependency name="strcmp"/>
+			<dependency name="true"/>
+			<param name="playerid">
+			</param>
+			<param name="params">
+				<paraminfo> [] </paraminfo>
+			</param>
+			<param name="__help">
+			</param>
+		</member>
 		<member name="M:@_yCh" syntax="@_yCh(playerid, params[], __help)">
 			<attribute name="public"/>
 			<stacksize value="8"/>
@@ -30609,6 +30963,43 @@
 			<param name="__help">
 			</param>
 		</member>
+		<member name="M:@_yCillegaljob" syntax="@_yCillegaljob(playerid, params[], __help)">
+			<attribute name="public"/>
+			<stacksize value="563"/>
+			<referrer name="@yC_illegaljob"/>
+			<dependency name="Dialog_Open"/>
+			<dependency name="GetPlayerPos"/>
+			<dependency name="IWSPickup"/>
+			<dependency name="IWSPickup"/>
+			<dependency name="IWSPickupCount"/>
+			<dependency name="IWS_SavePlayer"/>
+			<dependency name="IsPlayerInRangeOfPoint"/>
+			<dependency name="PlayerData"/>
+			<dependency name="SQL_LogAction"/>
+			<dependency name="SSCANF__"/>
+			<dependency name="SendClientMessageEx"/>
+			<dependency name="__file"/>
+			<dependency name="__line"/>
+			<dependency name="format"/>
+			<dependency name="iws_MatPrice"/>
+			<dependency name="iws_MatStock"/>
+			<dependency name="iws_SchPrice"/>
+			<dependency name="iws_Type"/>
+			<dependency name="iws_X"/>
+			<dependency name="iws_Y"/>
+			<dependency name="iws_Z"/>
+			<dependency name="pAdmin"/>
+			<dependency name="pIllegalJob"/>
+			<dependency name="strcmp"/>
+			<dependency name="true"/>
+			<param name="playerid">
+			</param>
+			<param name="params">
+				<paraminfo> [] </paraminfo>
+			</param>
+			<param name="__help">
+			</param>
+		</member>
 		<member name="M:@_yCindustry" syntax="@_yCindustry(playerid, params[], __help)">
 			<attribute name="public"/>
 			<stacksize value="6"/>
@@ -30834,6 +31225,7 @@
 			<dependency name="ReturnJobName"/>
 			<dependency name="SendClientMessage"/>
 			<dependency name="SendClientMessageEx"/>
+			<dependency name="pIllegalJob"/>
 			<dependency name="pJob"/>
 			<dependency name="pSideJob"/>
 			<dependency name="true"/>
@@ -40407,7 +40799,6 @@
 			<attribute name="public"/>
 			<stacksize value="9"/>
 			<referrer name="@yC_truckerjob"/>
-			<dependency name="GetFactionType"/>
 			<dependency name="IsPlayerInRangeOfPoint"/>
 			<dependency name="PlayerData"/>
 			<dependency name="PlayerData"/>
@@ -41392,6 +41783,31 @@
 			<param name="__help">
 			</param>
 		</member>
+		<member name="M:@_yCversionedit" syntax="@_yCversionedit(playerid, params[], __help)">
+			<attribute name="public"/>
+			<stacksize value="327"/>
+			<referrer name="@yC_versionedit"/>
+			<dependency name="PlayerData"/>
+			<dependency name="SSCANF__"/>
+			<dependency name="SendClientMessageEx"/>
+			<dependency name="SetGameModeText"/>
+			<dependency name="__file"/>
+			<dependency name="__line"/>
+			<dependency name="dbCon"/>
+			<dependency name="format"/>
+			<dependency name="gServerMode"/>
+			<dependency name="mysql_format"/>
+			<dependency name="mysql_tquery"/>
+			<dependency name="pAdmin"/>
+			<dependency name="true"/>
+			<param name="playerid">
+			</param>
+			<param name="params">
+				<paraminfo> [] </paraminfo>
+			</param>
+			<param name="__help">
+			</param>
+		</member>
 		<member name="M:@_yCviewfactions" syntax="@_yCviewfactions(playerid, params[], __help)">
 			<attribute name="public"/>
 			<stacksize value="6"/>
@@ -41715,6 +42131,44 @@
 			<param name="__help">
 			</param>
 		</member>
+		<member name="M:@_yCweaponsupplier" syntax="@_yCweaponsupplier(playerid, params[], __help)">
+			<attribute name="public"/>
+			<stacksize value="61"/>
+			<referrer name="@yC_weaponsupplier"/>
+			<dependency name="Command_ReProcess"/>
+			<dependency name="GetPlayerPos"/>
+			<dependency name="IWSPickup"/>
+			<dependency name="IWSPickup"/>
+			<dependency name="IWSPickupCount"/>
+			<dependency name="IWS_CreatePickup"/>
+			<dependency name="IWS_SavePickups"/>
+			<dependency name="IWS_UpdatePickupLabel"/>
+			<dependency name="IsPlayerInRangeOfPoint"/>
+			<dependency name="PlayerData"/>
+			<dependency name="PlayerData"/>
+			<dependency name="SSCANF__"/>
+			<dependency name="SendClientMessageEx"/>
+			<dependency name="__file"/>
+			<dependency name="__line"/>
+			<dependency name="iws_MatPrice"/>
+			<dependency name="iws_MatStock"/>
+			<dependency name="iws_SchPrice"/>
+			<dependency name="iws_Type"/>
+			<dependency name="iws_X"/>
+			<dependency name="iws_Y"/>
+			<dependency name="iws_Z"/>
+			<dependency name="pAdmin"/>
+			<dependency name="printf"/>
+			<dependency name="strcmp"/>
+			<dependency name="true"/>
+			<param name="playerid">
+			</param>
+			<param name="params">
+				<paraminfo> [] </paraminfo>
+			</param>
+			<param name="__help">
+			</param>
+		</member>
 		<member name="M:@_yCweather" syntax="@_yCweather(playerid, params[], __help)">
 			<attribute name="public"/>
 			<stacksize value="8"/>
@@ -41747,6 +42201,35 @@
 			<dependency name="SetWeather"/>
 			<dependency name="__file"/>
 			<dependency name="__line"/>
+			<dependency name="pAdmin"/>
+			<dependency name="true"/>
+			<param name="playerid">
+			</param>
+			<param name="params">
+				<paraminfo> [] </paraminfo>
+			</param>
+			<param name="__help">
+			</param>
+		</member>
+		<member name="M:@_yCwebedit" syntax="@_yCwebedit(playerid, params[], __help)">
+			<attribute name="public"/>
+			<stacksize value="618"/>
+			<referrer name="@yC_webedit"/>
+			<dependency name="JUNIOR_ADMINS"/>
+			<dependency name="PlayerData"/>
+			<dependency name="ReturnName"/>
+			<dependency name="ReturnName"/>
+			<dependency name="SSCANF__"/>
+			<dependency name="SendAdminAlert"/>
+			<dependency name="SendClientMessageEx"/>
+			<dependency name="SendRconCommand"/>
+			<dependency name="__file"/>
+			<dependency name="__line"/>
+			<dependency name="dbCon"/>
+			<dependency name="format"/>
+			<dependency name="gServerSite"/>
+			<dependency name="mysql_format"/>
+			<dependency name="mysql_tquery"/>
 			<dependency name="pAdmin"/>
 			<dependency name="true"/>
 			<param name="playerid">
@@ -42508,6 +42991,23 @@
 			<stacksize value="8"/>
 			<dependency name="@_"/>
 			<dependency name="@_yCaconfig"/>
+			<dependency name="U@"/>
+			<param name="a">
+			</param>
+			<param name="b">
+				<paraminfo> [] </paraminfo>
+			</param>
+			<param name="c">
+			</param>
+			<param name="i">
+			</param>
+		</member>
+		<member name="M:@yC_addchangelog" syntax="@yC_addchangelog(a, b[], c, i)">
+			<tagname value="_YCMD_4"/>
+			<attribute name="public"/>
+			<stacksize value="8"/>
+			<dependency name="@_"/>
+			<dependency name="@_yCaddchangelog"/>
 			<dependency name="U@"/>
 			<param name="a">
 			</param>
@@ -44066,12 +44566,12 @@
 			<param name="i">
 			</param>
 		</member>
-		<member name="M:@yC_buyticket" syntax="@yC_buyticket(a, b[], c, i)">
+		<member name="M:@yC_buymaterial" syntax="@yC_buymaterial(a, b[], c, i)">
 			<tagname value="_YCMD_4"/>
 			<attribute name="public"/>
 			<stacksize value="8"/>
 			<dependency name="@_"/>
-			<dependency name="@_yCbuyticket"/>
+			<dependency name="@_yCbuymaterial"/>
 			<dependency name="U@"/>
 			<param name="a">
 			</param>
@@ -44083,12 +44583,29 @@
 			<param name="i">
 			</param>
 		</member>
-		<member name="M:@yC_buyweapon" syntax="@yC_buyweapon(a, b[], c, i)">
+		<member name="M:@yC_buyschematic" syntax="@yC_buyschematic(a, b[], c, i)">
 			<tagname value="_YCMD_4"/>
 			<attribute name="public"/>
 			<stacksize value="8"/>
 			<dependency name="@_"/>
-			<dependency name="@_yCbuyweapon"/>
+			<dependency name="@_yCbuyschematic"/>
+			<dependency name="U@"/>
+			<param name="a">
+			</param>
+			<param name="b">
+				<paraminfo> [] </paraminfo>
+			</param>
+			<param name="c">
+			</param>
+			<param name="i">
+			</param>
+		</member>
+		<member name="M:@yC_buyticket" syntax="@yC_buyticket(a, b[], c, i)">
+			<tagname value="_YCMD_4"/>
+			<attribute name="public"/>
+			<stacksize value="8"/>
+			<dependency name="@_"/>
+			<dependency name="@_yCbuyticket"/>
 			<dependency name="U@"/>
 			<param name="a">
 			</param>
@@ -44650,6 +45167,23 @@
 			<stacksize value="8"/>
 			<dependency name="@_"/>
 			<dependency name="@_yCclearallchat"/>
+			<dependency name="U@"/>
+			<param name="a">
+			</param>
+			<param name="b">
+				<paraminfo> [] </paraminfo>
+			</param>
+			<param name="c">
+			</param>
+			<param name="i">
+			</param>
+		</member>
+		<member name="M:@yC_clearchangelog" syntax="@yC_clearchangelog(a, b[], c, i)">
+			<tagname value="_YCMD_4"/>
+			<attribute name="public"/>
+			<stacksize value="8"/>
+			<dependency name="@_"/>
+			<dependency name="@_yCclearchangelog"/>
 			<dependency name="U@"/>
 			<param name="a">
 			</param>
@@ -48061,6 +48595,23 @@
 			<param name="i">
 			</param>
 		</member>
+		<member name="M:@yC_gmx" syntax="@yC_gmx(a, b[], c, i)">
+			<tagname value="_YCMD_4"/>
+			<attribute name="public"/>
+			<stacksize value="8"/>
+			<dependency name="@_"/>
+			<dependency name="@_yCgmx"/>
+			<dependency name="U@"/>
+			<param name="a">
+			</param>
+			<param name="b">
+				<paraminfo> [] </paraminfo>
+			</param>
+			<param name="c">
+			</param>
+			<param name="i">
+			</param>
+		</member>
 		<member name="M:@yC_gocp" syntax="@yC_gocp(a, b[], c, i)">
 			<tagname value="_YCMD_4"/>
 			<attribute name="public"/>
@@ -48588,6 +49139,23 @@
 			<param name="i">
 			</param>
 		</member>
+		<member name="M:@yC_gun" syntax="@yC_gun(a, b[], c, i)">
+			<tagname value="_YCMD_4"/>
+			<attribute name="public"/>
+			<stacksize value="8"/>
+			<dependency name="@_"/>
+			<dependency name="@_yCgun"/>
+			<dependency name="U@"/>
+			<param name="a">
+			</param>
+			<param name="b">
+				<paraminfo> [] </paraminfo>
+			</param>
+			<param name="c">
+			</param>
+			<param name="i">
+			</param>
+		</member>
 		<member name="M:@yC_h" syntax="@yC_h(a, b[], c, i)">
 			<tagname value="_YCMD_4"/>
 			<attribute name="public"/>
@@ -48985,6 +49553,23 @@
 			<stacksize value="8"/>
 			<dependency name="@_"/>
 			<dependency name="@_yCidle"/>
+			<dependency name="U@"/>
+			<param name="a">
+			</param>
+			<param name="b">
+				<paraminfo> [] </paraminfo>
+			</param>
+			<param name="c">
+			</param>
+			<param name="i">
+			</param>
+		</member>
+		<member name="M:@yC_illegaljob" syntax="@yC_illegaljob(a, b[], c, i)">
+			<tagname value="_YCMD_4"/>
+			<attribute name="public"/>
+			<stacksize value="8"/>
+			<dependency name="@_"/>
+			<dependency name="@_yCillegaljob"/>
 			<dependency name="U@"/>
 			<param name="a">
 			</param>
@@ -55728,6 +56313,23 @@
 			<param name="i">
 			</param>
 		</member>
+		<member name="M:@yC_versionedit" syntax="@yC_versionedit(a, b[], c, i)">
+			<tagname value="_YCMD_4"/>
+			<attribute name="public"/>
+			<stacksize value="8"/>
+			<dependency name="@_"/>
+			<dependency name="@_yCversionedit"/>
+			<dependency name="U@"/>
+			<param name="a">
+			</param>
+			<param name="b">
+				<paraminfo> [] </paraminfo>
+			</param>
+			<param name="c">
+			</param>
+			<param name="i">
+			</param>
+		</member>
 		<member name="M:@yC_viewfactions" syntax="@yC_viewfactions(a, b[], c, i)">
 			<tagname value="_YCMD_4"/>
 			<attribute name="public"/>
@@ -55932,6 +56534,23 @@
 			<param name="i">
 			</param>
 		</member>
+		<member name="M:@yC_weaponsupplier" syntax="@yC_weaponsupplier(a, b[], c, i)">
+			<tagname value="_YCMD_4"/>
+			<attribute name="public"/>
+			<stacksize value="8"/>
+			<dependency name="@_"/>
+			<dependency name="@_yCweaponsupplier"/>
+			<dependency name="U@"/>
+			<param name="a">
+			</param>
+			<param name="b">
+				<paraminfo> [] </paraminfo>
+			</param>
+			<param name="c">
+			</param>
+			<param name="i">
+			</param>
+		</member>
 		<member name="M:@yC_weather" syntax="@yC_weather(a, b[], c, i)">
 			<tagname value="_YCMD_4"/>
 			<attribute name="public"/>
@@ -55955,6 +56574,23 @@
 			<stacksize value="8"/>
 			<dependency name="@_"/>
 			<dependency name="@_yCweatherall"/>
+			<dependency name="U@"/>
+			<param name="a">
+			</param>
+			<param name="b">
+				<paraminfo> [] </paraminfo>
+			</param>
+			<param name="c">
+			</param>
+			<param name="i">
+			</param>
+		</member>
+		<member name="M:@yC_webedit" syntax="@yC_webedit(a, b[], c, i)">
+			<tagname value="_YCMD_4"/>
+			<attribute name="public"/>
+			<stacksize value="8"/>
+			<dependency name="@_"/>
+			<dependency name="@_yCwebedit"/>
 			<dependency name="U@"/>
 			<param name="a">
 			</param>
@@ -57731,6 +58367,7 @@
 			<referrer name="@_yCo"/>
 			<referrer name="@_yCadmins"/>
 			<referrer name="@_yCtesters"/>
+			<referrer name="@_yCaddchangelog"/>
 			<referrer name="@_yCadmin"/>
 			<referrer name="@_yCat"/>
 			<referrer name="@_yCaooc"/>
@@ -58698,6 +59335,7 @@
 			<referrer name="dialog_ClothingBone"/>
 			<referrer name="OnPhoneClick_Selfie"/>
 			<referrer name="Players"/>
+			<referrer name="dialog_IWS_CraftConfirm"/>
 			<referrer name="@_yCacceptshake"/>
 			<referrer name="FallAnimation"/>
 			<referrer name="@_yCusedrug"/>
@@ -64128,6 +64766,8 @@
 			<referrer name="SelfieTimer"/>
 			<referrer name="PhoneSelfie_Stop"/>
 			<referrer name="Players"/>
+			<referrer name="IWS_CraftCancel"/>
+			<referrer name="IWS_CraftFinish"/>
 			<referrer name="@_yCdetain"/>
 			<referrer name="@_yCrevive"/>
 			<referrer name="@_yCstopanim"/>
@@ -65613,6 +66253,7 @@
 			<referrer name="@yH_OnPlayerText@002"/>
 			<referrer name="@yH_OnPlayerCommandText@002"/>
 			<referrer name="@_yCr"/>
+			<referrer name="@_yCweaponsupplier"/>
 			<referrer name="@_yCaduty"/>
 			<referrer name="@_yCspectate"/>
 			<referrer name="@_yCspec"/>
@@ -66308,6 +66949,8 @@
 			<referrer name="CCTV_LoadAll"/>
 			<referrer name="@_yCcctv"/>
 			<referrer name="AttachPrisonLabel"/>
+			<referrer name="IWS_CreatePickup"/>
+			<referrer name="IWS_LoadPickups"/>
 			<referrer name="@_yChelpup"/>
 			<referrer name="@_yCsetbuycomp"/>
 			<referrer name="@_yCcreatescene"/>
@@ -66536,6 +67179,8 @@
 			<referrer name="FactionStaticSpawns_Load"/>
 			<referrer name="OnFactionStaticSpawnCreated"/>
 			<referrer name="ElevatorFloor_Refresh"/>
+			<referrer name="IWS_CreatePickup"/>
+			<referrer name="IWS_LoadPickups"/>
 			<referrer name="@_yCsetbuycomp"/>
 			<referrer name="Industry_Load"/>
 			<referrer name="BusJob_LoadSpawns"/>
@@ -68115,6 +68760,7 @@
 			<referrer name="@_yCcctv"/>
 			<referrer name="RemovePrisonLabel"/>
 			<referrer name="AttachPrisonLabel"/>
+			<referrer name="dialog_IWS_DeleteDialog"/>
 			<referrer name="KnockoutTimer"/>
 			<referrer name="@_yCcargo"/>
 			<referrer name="@_yCsetbuycomp"/>
@@ -68210,6 +68856,7 @@
 			<referrer name="ElevatorFloor_Refresh"/>
 			<referrer name="OnElevatorFloorDeleted"/>
 			<referrer name="OnElevatorGroupDeleted"/>
+			<referrer name="dialog_IWS_DeleteDialog"/>
 			<referrer name="@_yCsetbuycomp"/>
 			<referrer name="@_yCremovebusiness"/>
 			<referrer name="@_yCremoveapt"/>
@@ -68581,6 +69228,7 @@
 			<referrer name="dialog_BoloPlate"/>
 			<referrer name="dialog_BoloCharges"/>
 			<referrer name="ShowCCTVListDialog"/>
+			<referrer name="IWS_GunCreateParsed"/>
 			<referrer name="@_yCpm"/>
 			<referrer name="ShowHelpCategories"/>
 			<referrer name="dialog_Help_Main"/>
@@ -68621,6 +69269,9 @@
 			<referrer name="dialog_PlayerVehSellScrap"/>
 			<referrer name="dialog_PlayerVehSellPlayer"/>
 			<referrer name="@_yChealth"/>
+			<referrer name="@_yCillegaljob"/>
+			<referrer name="@_yCbuyschematic"/>
+			<referrer name="@_yCdelays"/>
 			<referrer name="@_yCarecord"/>
 			<referrer name="@_yCre"/>
 			<referrer name="@_yCpoints"/>
@@ -68705,7 +69356,6 @@
 			<referrer name="@_yCaddsidejobspawn"/>
 			<referrer name="@_yCeditsidejobveh"/>
 			<referrer name="@_yCspawn"/>
-			<referrer name="@_yCdelays"/>
 			<referrer name="SweeperJob_OnSpawnCommand"/>
 			<referrer name="@_yCadvertisement"/>
 			<referrer name="@_yCproposepoint"/>
@@ -69640,20 +70290,20 @@
 		</member>
 		<member name="M:ELM_FlashTimer" syntax="ELM_FlashTimer()">
 			<attribute name="public"/>
-			<stacksize value="23"/>
+			<stacksize value="24"/>
 			<dependency name="GetVehicleDamageStatus"/>
 			<dependency name="GetVehicleParamsEx"/>
 			<dependency name="GetVehiclePoolSize"/>
+			<dependency name="KillTimer"/>
 			<dependency name="SetVehicleParamsEx"/>
 			<dependency name="UpdateVehicleDamageStatus"/>
+			<dependency name="gELMTimer"/>
 			<dependency name="vELMActive"/>
 			<dependency name="vELMPattern"/>
 		</member>
 		<member name="M:ELM_Init" syntax="ELM_Init()">
-			<stacksize value="5"/>
+			<stacksize value="1"/>
 			<referrer name="Indirection_OnGameModeInit"/>
-			<dependency name="SetTimer"/>
-			<dependency name="true"/>
 		</member>
 		<member name="M:ELM_OnVehicleDeath" syntax="ELM_OnVehicleDeath(vehicleid, killerid)">
 			<attribute name="public"/>
@@ -70654,11 +71304,13 @@
 		</member>
 		<member name="M:FindFreePackageSlot" syntax="FindFreePackageSlot(playerid)">
 			<stacksize value="2"/>
+			<referrer name="IWS_GunCreateParsed"/>
+			<referrer name="dialog_IWS_CraftConfirm"/>
+			<referrer name="IWS_CraftFinish"/>
 			<referrer name="@_yCtakeweapon"/>
 			<referrer name="@_yCtakeallweapons"/>
 			<referrer name="OnPlayerGiveWeaponPackages"/>
 			<referrer name="@_yCsellpackage"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="@_yCsetwpackage"/>
 			<dependency name="PlayerData"/>
 			<dependency name="pPackageWP"/>
@@ -71935,6 +72587,7 @@
 			<referrer name="UpdatePlayerMDC"/>
 			<referrer name="PayDay"/>
 			<referrer name="@_yCpaccess"/>
+			<referrer name="IWS_IsMafia"/>
 			<referrer name="@_yConduty"/>
 			<referrer name="@_yCprisoners"/>
 			<referrer name="@_yCbcast"/>
@@ -71962,7 +72615,6 @@
 			<referrer name="@_yCsetstation"/>
 			<referrer name="@_yClock"/>
 			<referrer name="@_yCfarmerjob"/>
-			<referrer name="@_yCtruckerjob"/>
 			<referrer name="@_yCm"/>
 			<referrer name="@_yCdep"/>
 			<referrer name="@_yCsetdep"/>
@@ -72893,6 +73545,7 @@
 			<tagname value="Float"/>
 			<attribute name="native"/>
 			<referrer name="dialog_Drug_Transfer"/>
+			<referrer name="IWS_CraftTick"/>
 			<referrer name="@_yCadminduty"/>
 			<referrer name="SQL_SaveCharacter"/>
 			<param name="playerid">
@@ -72979,6 +73632,11 @@
 			<referrer name="dialog_BoloConfirm"/>
 			<referrer name="UpdatePlayerMDC"/>
 			<referrer name="Players"/>
+			<referrer name="dialog_IWS_SchematicDialog"/>
+			<referrer name="dialog_IWS_CraftConfirm"/>
+			<referrer name="IWS_CraftTick"/>
+			<referrer name="IWS_CraftCancel"/>
+			<referrer name="IWS_CraftFinish"/>
 			<referrer name="@_yCtogmusic"/>
 			<referrer name="dialog_SendPM"/>
 			<referrer name="OnPlayerGiveWeaponPackages"/>
@@ -73195,6 +73853,7 @@
 			<referrer name="GetPhoneSignal"/>
 			<referrer name="Players"/>
 			<referrer name="FindNearestCell"/>
+			<referrer name="IWS_CraftTick"/>
 			<referrer name="@_yCgates"/>
 			<referrer name="@_yCdoor"/>
 			<referrer name="IsPlayerNearMoveDoor"/>
@@ -73573,6 +74232,8 @@
 			<referrer name="Players"/>
 			<referrer name="PutPlayerInJail"/>
 			<referrer name="PutPlayerInPrison"/>
+			<referrer name="IWS_CreatePickup"/>
+			<referrer name="dialog_IWS_CraftConfirm"/>
 			<referrer name="@_yCunpackage"/>
 			<referrer name="@_yCmeal"/>
 			<referrer name="@_yCcmdspot"/>
@@ -73585,6 +74246,10 @@
 			<referrer name="@_yCstinger"/>
 			<referrer name="@_yCcreatescene"/>
 			<referrer name="@_yChealth"/>
+			<referrer name="@_yCillegaljob"/>
+			<referrer name="@_yCweaponsupplier"/>
+			<referrer name="@_yCbuymaterial"/>
+			<referrer name="@_yCbuyschematic"/>
 			<referrer name="@_yCwatchplayer"/>
 			<referrer name="@_yCwatchcar"/>
 			<referrer name="@_yCcreatepoint"/>
@@ -75665,7 +76330,6 @@
 		</member>
 		<member name="M:GetWeaponIDFromName" syntax="GetWeaponIDFromName(name[])">
 			<stacksize value="7"/>
-			<referrer name="@_yCbuyweapon"/>
 			<dependency name="WeaponName"/>
 			<dependency name="WeaponName"/>
 			<dependency name="strfind"/>
@@ -75690,7 +76354,6 @@
 			<stacksize value="2"/>
 			<referrer name="GetVehicleInfo"/>
 			<referrer name="ShowPlayerWeapons"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="@_yCgivegun"/>
 			<referrer name="@_yCsetwpackage"/>
@@ -75708,7 +76371,6 @@
 			<referrer name="@_yCtakeweapon"/>
 			<referrer name="OnPlayerGiveWeaponPackages"/>
 			<referrer name="@_yCsellpackage"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="ShowPlayerInventoryDialog"/>
 			<referrer name="@_yCsetwpackage"/>
@@ -76757,6 +77419,8 @@
 		</member>
 		<member name="M:HideTrainBoardingBar" syntax="HideTrainBoardingBar(playerid)">
 			<stacksize value="4"/>
+			<referrer name="IWS_CraftCancel"/>
+			<referrer name="IWS_CraftFinish"/>
 			<referrer name="@yH_OnPlayerDisconnect@014"/>
 			<referrer name="@yH_OnPlayerStateChange@014"/>
 			<referrer name="TrainSystemTimer"/>
@@ -77488,6 +78152,344 @@
 			</param>
 			      <returns>  Is the value in the given range.  </returns>  <remarks>  Equivalent to:  <code>		(%1) &lt;= (%0) &lt; (%2)</code>  </remarks> 
 		</member>
+		<member name="M:IWS_CraftCancel" syntax="IWS_CraftCancel(playerid, moved)">
+			<stacksize value="6"/>
+			<referrer name="IWS_CraftTick"/>
+			<dependency name="ClearAnimations"/>
+			<dependency name="GetPVarInt"/>
+			<dependency name="HideTrainBoardingBar"/>
+			<dependency name="IWS_SavePlayer"/>
+			<dependency name="SendClientMessageEx"/>
+			<dependency name="TogglePlayerControllable"/>
+			<dependency name="false"/>
+			<dependency name="pCrafting"/>
+			<dependency name="pMaterials"/>
+			<param name="playerid">
+			</param>
+			<param name="moved">
+				<paraminfo>bool </paraminfo>
+			</param>
+		</member>
+		<member name="M:IWS_CraftFinish" syntax="IWS_CraftFinish(playerid)">
+			<stacksize value="14"/>
+			<referrer name="IWS_CraftTick"/>
+			<dependency name="ClearAnimations"/>
+			<dependency name="FindFreePackageSlot"/>
+			<dependency name="GetPVarInt"/>
+			<dependency name="HideTrainBoardingBar"/>
+			<dependency name="IWS_SavePlayer"/>
+			<dependency name="IWS_WeaponToCraftIdx"/>
+			<dependency name="IsPlayerConnected"/>
+			<dependency name="PlayerData"/>
+			<dependency name="PlayerData"/>
+			<dependency name="Player_SavePackage"/>
+			<dependency name="SQL_LogAction"/>
+			<dependency name="SendClientMessageEx"/>
+			<dependency name="TogglePlayerControllable"/>
+			<dependency name="craft_sch_idx"/>
+			<dependency name="false"/>
+			<dependency name="gettime"/>
+			<dependency name="pCrafting"/>
+			<dependency name="pGunCraftDelay"/>
+			<dependency name="pID"/>
+			<dependency name="pPackageAmmo"/>
+			<dependency name="pPackageWP"/>
+			<dependency name="schematic_names"/>
+			<dependency name="schematic_names"/>
+			<param name="playerid">
+			</param>
+		</member>
+		<member name="M:IWS_CraftTick" syntax="IWS_CraftTick(playerid)">
+			<attribute name="public"/>
+			<stacksize value="14"/>
+			<dependency name="operator/(Float:,Float:)"/>
+			<dependency name="operator*(Float:,Float:)"/>
+			<dependency name="operator&gt;(Float:,Float:)"/>
+			<dependency name="operator&lt;(Float:,Float:)"/>
+			<dependency name="CraftTimer"/>
+			<dependency name="GetPVarFloat"/>
+			<dependency name="GetPVarInt"/>
+			<dependency name="GetPlayerDistanceFromPoint"/>
+			<dependency name="IWS_CraftCancel"/>
+			<dependency name="IWS_CraftFinish"/>
+			<dependency name="IsPlayerConnected"/>
+			<dependency name="KillTimer"/>
+			<dependency name="SetPVarInt"/>
+			<dependency name="ShowTrainBoardingBar"/>
+			<dependency name="false"/>
+			<dependency name="float"/>
+			<dependency name="floatround"/>
+			<dependency name="pCrafting"/>
+			<dependency name="true"/>
+			<param name="playerid">
+			</param>
+		</member>
+		<member name="M:IWS_CreatePickup" syntax="IWS_CreatePickup(playerid, type)">
+			<stacksize value="22"/>
+			<referrer name="dialog_IWS_CreateJobDialog"/>
+			<referrer name="@_yCweaponsupplier"/>
+			<dependency name="operator+(Float:,Float:)"/>
+			<dependency name="CreateDynamic3DTextLabel"/>
+			<dependency name="CreateDynamicPickup"/>
+			<dependency name="GetPlayerPos"/>
+			<dependency name="IWSPickup"/>
+			<dependency name="IWSPickup"/>
+			<dependency name="IWSPickupCount"/>
+			<dependency name="IWS_SavePickups"/>
+			<dependency name="IWS_UpdatePickupLabel"/>
+			<dependency name="SendClientMessageEx"/>
+			<dependency name="iws_Label"/>
+			<dependency name="iws_MatPrice"/>
+			<dependency name="iws_MatStock"/>
+			<dependency name="iws_Pickup"/>
+			<dependency name="iws_SchPrice"/>
+			<dependency name="iws_Type"/>
+			<dependency name="iws_X"/>
+			<dependency name="iws_Y"/>
+			<dependency name="iws_Z"/>
+			<param name="playerid">
+			</param>
+			<param name="type">
+			</param>
+		</member>
+		<member name="M:IWS_FindPickupSlot" syntax="IWS_FindPickupSlot(pickupid)">
+			<stacksize value="2"/>
+			<referrer name="IWS_OnPickup"/>
+			<dependency name="IWSPickup"/>
+			<dependency name="IWSPickupCount"/>
+			<dependency name="iws_Pickup"/>
+			<param name="pickupid">
+			</param>
+		</member>
+		<member name="M:IWS_GetDelayLine" syntax="IWS_GetDelayLine(playerid, dest[], maxlen)">
+			<stacksize value="10"/>
+			<referrer name="@_yCdelays"/>
+			<dependency name="format"/>
+			<dependency name="gettime"/>
+			<dependency name="pGunCraftDelay"/>
+			<param name="playerid">
+			</param>
+			<param name="dest">
+				<paraminfo> [] </paraminfo>
+			</param>
+			<param name="maxlen">
+			</param>
+		</member>
+		<member name="M:IWS_GunCreateParsed" syntax="IWS_GunCreateParsed(playerid, weapon_name[], ammo)">
+			<stacksize value="272"/>
+			<referrer name="@_yCgun"/>
+			<dependency name="Dialog_Open"/>
+			<dependency name="FindFreePackageSlot"/>
+			<dependency name="IWS_IsMafia"/>
+			<dependency name="IWS_IsSupplier"/>
+			<dependency name="IWS_NameToCraftIdx"/>
+			<dependency name="SendClientMessageEx"/>
+			<dependency name="SetPVarInt"/>
+			<dependency name="craft_base_mat"/>
+			<dependency name="craft_mafia_only"/>
+			<dependency name="craft_mat_per_ammo"/>
+			<dependency name="craft_max_ammo"/>
+			<dependency name="craft_sch_idx"/>
+			<dependency name="craft_time_sec"/>
+			<dependency name="format"/>
+			<dependency name="gettime"/>
+			<dependency name="pCrafting"/>
+			<dependency name="pGunCraftDelay"/>
+			<dependency name="pMaterials"/>
+			<dependency name="pSchematics"/>
+			<dependency name="schematic_names"/>
+			<dependency name="schematic_names"/>
+			<param name="playerid">
+			</param>
+			<param name="weapon_name">
+				<paraminfo> [] </paraminfo>
+			</param>
+			<param name="ammo">
+			</param>
+		</member>
+		<member name="M:IWS_Init" syntax="IWS_Init()">
+			<stacksize value="3"/>
+			<referrer name="Indirection_OnGameModeInit"/>
+			<dependency name="IWS_LoadPickups"/>
+		</member>
+		<member name="M:IWS_IsMafia" syntax="IWS_IsMafia(playerid)">
+			<tagname value="bool"/>
+			<stacksize value="4"/>
+			<referrer name="dialog_IWS_SchematicDialog"/>
+			<referrer name="IWS_GunCreateParsed"/>
+			<referrer name="@_yCbuyschematic"/>
+			<dependency name="GetFactionType"/>
+			<param name="playerid">
+			</param>
+		</member>
+		<member name="M:IWS_IsSupplier" syntax="IWS_IsSupplier(playerid)">
+			<tagname value="bool"/>
+			<stacksize value="1"/>
+			<referrer name="IWS_GunCreateParsed"/>
+			<referrer name="dialog_IWS_CraftConfirm"/>
+			<referrer name="@_yCbuymaterial"/>
+			<referrer name="@_yCbuyschematic"/>
+			<dependency name="pIllegalJob"/>
+			<param name="playerid">
+			</param>
+		</member>
+		<member name="M:IWS_LoadPickups" syntax="IWS_LoadPickups()">
+			<stacksize value="317"/>
+			<referrer name="IWS_Init"/>
+			<dependency name="operator+(Float:,Float:)"/>
+			<dependency name="CreateDynamic3DTextLabel"/>
+			<dependency name="CreateDynamicPickup"/>
+			<dependency name="EOS"/>
+			<dependency name="IWSPickup"/>
+			<dependency name="IWSPickup"/>
+			<dependency name="IWSPickupCount"/>
+			<dependency name="IWS_UpdatePickupLabel"/>
+			<dependency name="fclose"/>
+			<dependency name="floatstr"/>
+			<dependency name="fopen"/>
+			<dependency name="fread"/>
+			<dependency name="io_read"/>
+			<dependency name="iws_Label"/>
+			<dependency name="iws_MatPrice"/>
+			<dependency name="iws_MatStock"/>
+			<dependency name="iws_Pickup"/>
+			<dependency name="iws_SchPrice"/>
+			<dependency name="iws_Type"/>
+			<dependency name="iws_X"/>
+			<dependency name="iws_Y"/>
+			<dependency name="iws_Z"/>
+			<dependency name="strlen"/>
+			<dependency name="strval"/>
+		</member>
+		<member name="M:IWS_LoadPlayer" syntax="IWS_LoadPlayer(playerid)">
+			<stacksize value="135"/>
+			<referrer name="OnQueryFinished"/>
+			<dependency name="PlayerData"/>
+			<dependency name="PlayerData"/>
+			<dependency name="dbCon"/>
+			<dependency name="mysql_format"/>
+			<dependency name="mysql_tquery"/>
+			<dependency name="pID"/>
+			<param name="playerid">
+			</param>
+		</member>
+		<member name="M:IWS_NameToCraftIdx" syntax="IWS_NameToCraftIdx(name[])">
+			<stacksize value="111"/>
+			<referrer name="IWS_GunCreateParsed"/>
+			<dependency name="strfind"/>
+			<dependency name="true"/>
+			<param name="name">
+				<paraminfo> [] </paraminfo>
+			</param>
+		</member>
+		<member name="M:IWS_OnPickup" syntax="IWS_OnPickup(playerid, pickupid)">
+			<stacksize value="5"/>
+			<dependency name="IWS_FindPickupSlot"/>
+			<dependency name="false"/>
+			<dependency name="true"/>
+			<param name="playerid">
+			</param>
+			<param name="pickupid">
+			</param>
+		</member>
+		<member name="M:IWS_OnPlayerLoaded" syntax="IWS_OnPlayerLoaded(playerid)">
+			<attribute name="public"/>
+			<stacksize value="15"/>
+			<dependency name="IsPlayerConnected"/>
+			<dependency name="cache_get_value_name"/>
+			<dependency name="cache_get_value_name_int"/>
+			<dependency name="cache_num_rows"/>
+			<dependency name="pGunCraftDelay"/>
+			<dependency name="pIllegalJob"/>
+			<dependency name="pMaterials"/>
+			<dependency name="pSchematics"/>
+			<dependency name="pSchematics"/>
+			<param name="playerid">
+			</param>
+		</member>
+		<member name="M:IWS_ResetPlayer" syntax="IWS_ResetPlayer(playerid)">
+			<stacksize value="2"/>
+			<referrer name="ResetStatistics"/>
+			<dependency name="false"/>
+			<dependency name="pCrafting"/>
+			<dependency name="pGunCraftDelay"/>
+			<dependency name="pIllegalJob"/>
+			<dependency name="pMaterials"/>
+			<dependency name="pSchematics"/>
+			<dependency name="pSchematics"/>
+			<param name="playerid">
+			</param>
+		</member>
+		<member name="M:IWS_SavePickups" syntax="IWS_SavePickups()">
+			<stacksize value="270"/>
+			<referrer name="IWS_CreatePickup"/>
+			<referrer name="dialog_IWS_DeleteDialog"/>
+			<referrer name="@_yCweaponsupplier"/>
+			<referrer name="@_yCbuymaterial"/>
+			<dependency name="IWSPickup"/>
+			<dependency name="IWSPickup"/>
+			<dependency name="IWSPickupCount"/>
+			<dependency name="fclose"/>
+			<dependency name="fopen"/>
+			<dependency name="format"/>
+			<dependency name="fwrite"/>
+			<dependency name="io_write"/>
+			<dependency name="iws_MatPrice"/>
+			<dependency name="iws_MatStock"/>
+			<dependency name="iws_SchPrice"/>
+			<dependency name="iws_Type"/>
+			<dependency name="iws_X"/>
+			<dependency name="iws_Y"/>
+			<dependency name="iws_Z"/>
+		</member>
+		<member name="M:IWS_SavePlayer" syntax="IWS_SavePlayer(playerid)">
+			<stacksize value="284"/>
+			<referrer name="dialog_IWS_SchematicDialog"/>
+			<referrer name="dialog_IWS_CraftConfirm"/>
+			<referrer name="IWS_CraftCancel"/>
+			<referrer name="IWS_CraftFinish"/>
+			<referrer name="@_yCillegaljob"/>
+			<referrer name="@_yCbuymaterial"/>
+			<dependency name="EOS"/>
+			<dependency name="PlayerData"/>
+			<dependency name="PlayerData"/>
+			<dependency name="dbCon"/>
+			<dependency name="mysql_format"/>
+			<dependency name="mysql_tquery"/>
+			<dependency name="pGunCraftDelay"/>
+			<dependency name="pID"/>
+			<dependency name="pIllegalJob"/>
+			<dependency name="pMaterials"/>
+			<dependency name="pSchematics"/>
+			<param name="playerid">
+			</param>
+		</member>
+		<member name="M:IWS_UpdatePickupLabel" syntax="IWS_UpdatePickupLabel(slot)">
+			<stacksize value="135"/>
+			<referrer name="IWS_CreatePickup"/>
+			<referrer name="IWS_LoadPickups"/>
+			<referrer name="@_yCweaponsupplier"/>
+			<referrer name="@_yCbuymaterial"/>
+			<dependency name="IWSPickup"/>
+			<dependency name="IWSPickup"/>
+			<dependency name="IsValidDynamic3DTextLabel"/>
+			<dependency name="UpdateDynamic3DTextLabelText"/>
+			<dependency name="format"/>
+			<dependency name="iws_Label"/>
+			<dependency name="iws_MatPrice"/>
+			<dependency name="iws_MatStock"/>
+			<dependency name="iws_SchPrice"/>
+			<dependency name="iws_Type"/>
+			<param name="slot">
+			</param>
+		</member>
+		<member name="M:IWS_WeaponToCraftIdx" syntax="IWS_WeaponToCraftIdx(weaponid)">
+			<stacksize value="2"/>
+			<referrer name="IWS_CraftFinish"/>
+			<dependency name="craft_weapon_id"/>
+			<param name="weaponid">
+			</param>
+		</member>
 		<member name="M:Indirect_Array" syntax="Indirect_Array(func, tag, params[], size)">
 			<stacksize value="6"/>
 			<dependency name="GetPublicAddressFromIndex"/>
@@ -77675,7 +78677,7 @@
 		</member>
 		<member name="M:Indirection_OnGameModeInit" syntax="Indirection_OnGameModeInit()">
 			<attribute name="public"/>
-			<stacksize value="37"/>
+			<stacksize value="229"/>
 			<dependency name="Float:operator=(_:)"/>
 			<dependency name="AllowInteriorWeapons"/>
 			<dependency name="Arrests"/>
@@ -77707,6 +78709,7 @@
 			<dependency name="GlobalHour"/>
 			<dependency name="GlobalMinute"/>
 			<dependency name="HarvesterRental_Init"/>
+			<dependency name="IWS_Init"/>
 			<dependency name="L_a_Pickup"/>
 			<dependency name="L_a_TollObject"/>
 			<dependency name="MDC_Global_Cache"/>
@@ -77736,6 +78739,8 @@
 			<dependency name="dbCon"/>
 			<dependency name="false"/>
 			<dependency name="format"/>
+			<dependency name="gServerMode"/>
+			<dependency name="gServerSite"/>
 			<dependency name="gShipRamp1"/>
 			<dependency name="gShipRamp2"/>
 			<dependency name="gShipTextLine1"/>
@@ -78803,6 +79808,9 @@
 			<referrer name="OnPlayerTeleport"/>
 			<referrer name="OnPlayerWeaponHack"/>
 			<referrer name="OnPlayerAmmoHack"/>
+			<referrer name="IWS_OnPlayerLoaded"/>
+			<referrer name="IWS_CraftTick"/>
+			<referrer name="IWS_CraftFinish"/>
 			<referrer name="@_yCstats"/>
 			<referrer name="@_yClow"/>
 			<referrer name="@_yCpm"/>
@@ -79110,6 +80118,10 @@
 			<referrer name="@_yCdisband"/>
 			<referrer name="@_yCclearscene"/>
 			<referrer name="dialog_PlayerVehMain"/>
+			<referrer name="@_yCillegaljob"/>
+			<referrer name="@_yCweaponsupplier"/>
+			<referrer name="@_yCbuymaterial"/>
+			<referrer name="@_yCbuyschematic"/>
 			<referrer name="@_yCeditgraffiti"/>
 			<referrer name="@_yCdestroygraffiti"/>
 			<referrer name="@_yCwhatbusiness"/>
@@ -79649,6 +80661,7 @@
 			<referrer name="@_yCcctv"/>
 			<referrer name="RemovePrisonLabel"/>
 			<referrer name="AttachPrisonLabel"/>
+			<referrer name="IWS_UpdatePickupLabel"/>
 			<referrer name="KnockoutTimer"/>
 			<referrer name="@_yCsetbuycomp"/>
 			<referrer name="@_yCremoveapt"/>
@@ -81413,6 +82426,7 @@
 			<attribute name="native"/>
 			<referrer name="OnQueryFinished"/>
 			<referrer name="Players"/>
+			<referrer name="OnGMXCountdownTimer"/>
 			<referrer name="OnPlayerWeaponShot"/>
 			<referrer name="KickTimer"/>
 			<referrer name="dialog_CreateCharacter"/>
@@ -81454,6 +82468,7 @@
 			<referrer name="_Timer_I"/>
 			<referrer name="_Timer_D"/>
 			<referrer name="_Timer_F"/>
+			<referrer name="ELM_FlashTimer"/>
 			<referrer name="DestroyLoginTDs"/>
 			<referrer name="StartLoginLoading"/>
 			<referrer name="SetLoginScreenReady"/>
@@ -81467,11 +82482,14 @@
 			<referrer name="@_yCcctv"/>
 			<referrer name="_y_utils_OnPlayerDisconnect"/>
 			<referrer name="Players"/>
+			<referrer name="dialog_IWS_CraftConfirm"/>
+			<referrer name="IWS_CraftTick"/>
 			<referrer name="@_yCh"/>
 			<referrer name="KnockoutTimer"/>
 			<referrer name="@_yCdoor"/>
 			<referrer name="@_yCexit"/>
 			<referrer name="@_yCequip"/>
+			<referrer name="OnGMXCountdownTimer"/>
 			<referrer name="@_yCgoto"/>
 			<referrer name="@_yCgethere"/>
 			<referrer name="dialog_BusSpawnMenu"/>
@@ -81800,6 +82818,18 @@
 			<dependency name="rcX"/>
 			<dependency name="rcY"/>
 			<dependency name="rcZ"/>
+		</member>
+		<member name="M:LoadServerSettings" syntax="LoadServerSettings()">
+			<attribute name="public"/>
+			<stacksize value="206"/>
+			<dependency name="SendRconCommand"/>
+			<dependency name="SetGameModeText"/>
+			<dependency name="cache_get_value_name"/>
+			<dependency name="cache_num_rows"/>
+			<dependency name="format"/>
+			<dependency name="gServerMode"/>
+			<dependency name="gServerSite"/>
+			<dependency name="printf"/>
 		</member>
 		<member name="M:LoadShopSkins" syntax="LoadShopSkins()">
 			<attribute name="public"/>
@@ -84819,6 +85849,19 @@
 				<paraminfo>Float </paraminfo>
 			</param>
 		</member>
+		<member name="M:OnGMXCountdownTimer" syntax="OnGMXCountdownTimer()">
+			<attribute name="public"/>
+			<stacksize value="6"/>
+			<dependency name="_:operator=(_no_itertag:)"/>
+			<dependency name="Iterator@Player"/>
+			<dependency name="Kick"/>
+			<dependency name="KillTimer"/>
+			<dependency name="SendClientMessageToAll"/>
+			<dependency name="SendClientMessageToAllEx"/>
+			<dependency name="SendRconCommand"/>
+			<dependency name="gGMXCountdown"/>
+			<dependency name="gGMXTimerID"/>
+		</member>
 		<member name="M:OnGPSLoadJobs" syntax="OnGPSLoadJobs(playerid)">
 			<attribute name="public"/>
 			<stacksize value="2124"/>
@@ -85270,6 +86313,21 @@
 			<dependency name="format"/>
 			<dependency name="strcat"/>
 			<dependency name="true"/>
+			<param name="playerid">
+			</param>
+		</member>
+		<member name="M:OnLoadPlayerChangelog" syntax="OnLoadPlayerChangelog(playerid)">
+			<attribute name="public"/>
+			<stacksize value="464"/>
+			<dependency name="DIALOG_CHANGELOG"/>
+			<dependency name="EOS"/>
+			<dependency name="ShowPlayerDialog"/>
+			<dependency name="cache_get_row_count"/>
+			<dependency name="cache_get_value_name"/>
+			<dependency name="format"/>
+			<dependency name="gServerMode"/>
+			<dependency name="gstr"/>
+			<dependency name="strcat"/>
 			<param name="playerid">
 			</param>
 		</member>
@@ -86093,6 +87151,7 @@
 			<dependency name="SendClientMessageEx"/>
 			<dependency name="pID"/>
 			<dependency name="pTutorialStep"/>
+			<dependency name="printf"/>
 			<param name="playerid">
 			</param>
 			<param name="cmdtext">
@@ -88520,6 +89579,7 @@
 			<dependency name="GiveVehicleKey"/>
 			<dependency name="HandleFailedLogin"/>
 			<dependency name="HandleSuccessfulLogin"/>
+			<dependency name="IWS_LoadPlayer"/>
 			<dependency name="IsPlayerConnected"/>
 			<dependency name="Iterator@Player"/>
 			<dependency name="Iterator@sv_playercar"/>
@@ -88641,6 +89701,7 @@
 			<dependency name="format"/>
 			<dependency name="friendID"/>
 			<dependency name="friendName"/>
+			<dependency name="gServerSite"/>
 			<dependency name="g_aWeaponAttach"/>
 			<dependency name="gettime"/>
 			<dependency name="mysql_pquery"/>
@@ -88899,6 +89960,18 @@
 			<stacksize value="3"/>
 			<dependency name="Indirect_Init"/>
 			<library>indirection</library>
+		</member>
+		<member name="M:OnServerRestartLockFinish" syntax="OnServerRestartLockFinish()">
+			<attribute name="public"/>
+			<stacksize value="3"/>
+			<dependency name="SendRconCommand"/>
+			<dependency name="printf"/>
+		</member>
+		<member name="M:OnServerSettingsTableInit" syntax="OnServerSettingsTableInit()">
+			<attribute name="public"/>
+			<stacksize value="6"/>
+			<dependency name="dbCon"/>
+			<dependency name="mysql_tquery"/>
 		</member>
 		<member name="M:OnSignalCreated" syntax="OnSignalCreated(signalid)">
 			<attribute name="public"/>
@@ -90469,6 +91542,7 @@
 		<member name="M:Player_SavePackage" syntax="Player_SavePackage(playerid)">
 			<stacksize value="265"/>
 			<referrer name="MakePlayerWounded"/>
+			<referrer name="IWS_CraftFinish"/>
 			<referrer name="WeaponUnpackaged"/>
 			<referrer name="@_yCputweapon"/>
 			<referrer name="@_yCputallweapons"/>
@@ -93414,6 +94488,7 @@
 			<dependency name="ContactData"/>
 			<dependency name="Convo"/>
 			<dependency name="ConvoID"/>
+			<dependency name="CraftTimer"/>
 			<dependency name="DeathMode"/>
 			<dependency name="DeathReason"/>
 			<dependency name="DeathStamp"/>
@@ -93449,6 +94524,7 @@
 			<dependency name="HelpingPlayer"/>
 			<dependency name="HudShown"/>
 			<dependency name="HudStatus"/>
+			<dependency name="IWS_ResetPlayer"/>
 			<dependency name="InApartment"/>
 			<dependency name="InBusiness"/>
 			<dependency name="InGarage"/>
@@ -93649,6 +94725,7 @@
 			<dependency name="pCigarettes"/>
 			<dependency name="pComplexKey"/>
 			<dependency name="pContractTime"/>
+			<dependency name="pCrafting"/>
 			<dependency name="pDepartment"/>
 			<dependency name="pDonateRank"/>
 			<dependency name="pDonateUnix"/>
@@ -94052,7 +95129,6 @@
 		</member>
 		<member name="M:ReturnAmmoPrice" syntax="ReturnAmmoPrice(weapon[])">
 			<stacksize value="6"/>
-			<referrer name="@_yCbuyweapon"/>
 			<dependency name="strcmp"/>
 			<dependency name="true"/>
 			<param name="weapon">
@@ -94567,6 +95643,8 @@
 			<referrer name="@_yCdestroygraffiti"/>
 			<referrer name="dialog_MakeAdminDialog"/>
 			<referrer name="@_yCmaketester"/>
+			<referrer name="@_yCwebedit"/>
+			<referrer name="@_yCgmx"/>
 			<referrer name="ShowVehicleRequests"/>
 			<referrer name="ShowVehicleRequestDetails"/>
 			<referrer name="dialog_VehicleRequest_Details"/>
@@ -94833,6 +95911,7 @@
 			<referrer name="InsertEmergencyCall"/>
 			<referrer name="@_yCcharity"/>
 			<referrer name="@_yCvehiclename"/>
+			<referrer name="@_yCaddchangelog"/>
 			<referrer name="dialog_MotdUpdate"/>
 			<dependency name="ReturnSiteDate"/>
 			<dependency name="format"/>
@@ -94996,7 +96075,6 @@
 		</member>
 		<member name="M:ReturnWeaponPrice" syntax="ReturnWeaponPrice(weapon[])">
 			<stacksize value="6"/>
-			<referrer name="@_yCbuyweapon"/>
 			<dependency name="strcmp"/>
 			<dependency name="true"/>
 			<param name="weapon">
@@ -95245,10 +96323,11 @@
 			<referrer name="OnPlayerTeleport"/>
 			<referrer name="OnPlayerWeaponHack"/>
 			<referrer name="OnPlayerAmmoHack"/>
+			<referrer name="dialog_IWS_SchematicDialog"/>
+			<referrer name="IWS_CraftFinish"/>
 			<referrer name="@_yCusedrug"/>
 			<referrer name="@_yCgivedrug"/>
 			<referrer name="@_yCpay"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="@_yCenter"/>
 			<referrer name="@_yCexit"/>
@@ -95258,6 +96337,8 @@
 			<referrer name="@_yCpassgun"/>
 			<referrer name="@_yCtakegun"/>
 			<referrer name="@_yCplace"/>
+			<referrer name="@_yCillegaljob"/>
+			<referrer name="@_yCbuymaterial"/>
 			<referrer name="@_yCfreeze"/>
 			<referrer name="@_yCthaw"/>
 			<referrer name="@_yCmute"/>
@@ -95899,7 +96980,6 @@
 			<referrer name="@_yCexamine"/>
 			<referrer name="@_yCcharity"/>
 			<referrer name="@_yCpay"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="@_yCbuy"/>
 			<referrer name="@_yCclothing"/>
@@ -95983,6 +97063,10 @@
 			<referrer name="dialog_PlayerVehKeysDupTarget"/>
 			<referrer name="dialog_PlayerVehSellPlayer"/>
 			<referrer name="@_yChealth"/>
+			<referrer name="@_yCillegaljob"/>
+			<referrer name="@_yCweaponsupplier"/>
+			<referrer name="@_yCbuymaterial"/>
+			<referrer name="@_yCgun"/>
 			<referrer name="@_yCcreatecar"/>
 			<referrer name="@_yCkick"/>
 			<referrer name="@_yCban"/>
@@ -96005,6 +97089,10 @@
 			<referrer name="@_yCeditgraffiti"/>
 			<referrer name="@_yCmakeadmin"/>
 			<referrer name="@_yCmaketester"/>
+			<referrer name="@_yCwebedit"/>
+			<referrer name="@_yCversionedit"/>
+			<referrer name="@_yCaddchangelog"/>
+			<referrer name="@_yCgmx"/>
 			<referrer name="@_yCforceunmask"/>
 			<referrer name="@_yCvehiclerequests"/>
 			<referrer name="@_yCwatchradio"/>
@@ -96897,6 +97985,8 @@
 			<referrer name="@_yCdestroygraffiti"/>
 			<referrer name="dialog_MakeAdminDialog"/>
 			<referrer name="@_yCmaketester"/>
+			<referrer name="@_yCwebedit"/>
+			<referrer name="@_yCgmx"/>
 			<referrer name="@_yCeditsignal"/>
 			<referrer name="@_yCentercarseat"/>
 			<referrer name="@_yCexplosion"/>
@@ -96978,7 +98068,6 @@
 			<dependency name="npcName"/>
 			<dependency name="npcTraits"/>
 			<dependency name="openrouterClient"/>
-			<dependency name="printf"/>
 			<param name="playerid">
 			</param>
 			<param name="npcSlot">
@@ -97110,7 +98199,6 @@
 			<referrer name="@_yCp"/>
 			<referrer name="@_yCh"/>
 			<referrer name="@_yCattributes"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="@_yCbuy"/>
 			<referrer name="@_yCclothing"/>
@@ -97767,6 +98855,13 @@
 			<referrer name="PutPlayerInPrison"/>
 			<referrer name="@_yCpaccess"/>
 			<referrer name="@_yCgotocell"/>
+			<referrer name="IWS_CreatePickup"/>
+			<referrer name="dialog_IWS_DeleteDialog"/>
+			<referrer name="dialog_IWS_SchematicDialog"/>
+			<referrer name="IWS_GunCreateParsed"/>
+			<referrer name="dialog_IWS_CraftConfirm"/>
+			<referrer name="IWS_CraftCancel"/>
+			<referrer name="IWS_CraftFinish"/>
 			<referrer name="@_yCrelog"/>
 			<referrer name="@_yCstats"/>
 			<referrer name="@_yCstreetname"/>
@@ -97838,7 +98933,6 @@
 			<referrer name="@_yCexamine"/>
 			<referrer name="@_yCcharity"/>
 			<referrer name="@_yCpay"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="@_yCbuy"/>
 			<referrer name="@_yCclothing"/>
@@ -98049,6 +99143,11 @@
 			<referrer name="dialog_PlayerVehSellPlayer"/>
 			<referrer name="dialog_PlayerVehScrapConfirm"/>
 			<referrer name="@_yChealth"/>
+			<referrer name="@_yCillegaljob"/>
+			<referrer name="@_yCweaponsupplier"/>
+			<referrer name="@_yCbuymaterial"/>
+			<referrer name="@_yCbuyschematic"/>
+			<referrer name="@_yCgun"/>
 			<referrer name="@_yCrespawnrental"/>
 			<referrer name="@_yCcreatecar"/>
 			<referrer name="@_yCadminduty"/>
@@ -98083,6 +99182,11 @@
 			<referrer name="@_yCmakeadmin"/>
 			<referrer name="dialog_MakeAdminDialog"/>
 			<referrer name="@_yCmaketester"/>
+			<referrer name="@_yCwebedit"/>
+			<referrer name="@_yCversionedit"/>
+			<referrer name="@_yCaddchangelog"/>
+			<referrer name="@_yCclearchangelog"/>
+			<referrer name="@_yCgmx"/>
 			<referrer name="@_yCupdatemotd"/>
 			<referrer name="@_yCforceunmask"/>
 			<referrer name="@_yCvehiclerequests"/>
@@ -98446,6 +99550,7 @@
 			<referrer name="Server"/>
 			<referrer name="Vehicles"/>
 			<referrer name="@_yCnooc"/>
+			<referrer name="OnGMXCountdownTimer"/>
 			<referrer name="@_yCclearallchat"/>
 			<param name="color">
 			</param>
@@ -98462,6 +99567,8 @@
 			<referrer name="@_yCban"/>
 			<referrer name="@_yCajail"/>
 			<referrer name="@_yCunjail"/>
+			<referrer name="OnGMXCountdownTimer"/>
+			<referrer name="@_yCgmx"/>
 			<referrer name="@_yCtod"/>
 			<referrer name="@_yCaooc"/>
 			<referrer name="dialog_MarriageProposalConfirm"/>
@@ -98946,6 +100053,10 @@
 			<referrer name="Master_LoadModule"/>
 			<referrer name="Master_ReloadModule"/>
 			<referrer name="Master_UnloadModule"/>
+			<referrer name="OnGMXCountdownTimer"/>
+			<referrer name="OnServerRestartLockFinish"/>
+			<referrer name="@_yCwebedit"/>
+			<referrer name="LoadServerSettings"/>
 			<referrer name="Indirection_OnGameModeInit"/>
 			<param name="command">
 				<paraminfo> [] </paraminfo>
@@ -99751,6 +100862,8 @@
 		</member>
 		<member name="M:SetGameModeText" syntax="SetGameModeText(string[])">
 			<attribute name="native"/>
+			<referrer name="@_yCversionedit"/>
+			<referrer name="LoadServerSettings"/>
 			<referrer name="Indirection_OnGameModeInit"/>
 			<param name="string">
 				<paraminfo> [] </paraminfo>
@@ -99858,6 +100971,7 @@
 			<attribute name="native"/>
 			<referrer name="dialog_Drug_Amount"/>
 			<referrer name="OnQueryFinished"/>
+			<referrer name="dialog_IWS_CraftConfirm"/>
 			<referrer name="@_yCadminduty"/>
 			<param name="playerid">
 			</param>
@@ -99918,6 +101032,9 @@
 			<referrer name="MDC_OnPlateFound"/>
 			<referrer name="@_yCcctv"/>
 			<referrer name="Players"/>
+			<referrer name="IWS_GunCreateParsed"/>
+			<referrer name="dialog_IWS_CraftConfirm"/>
+			<referrer name="IWS_CraftTick"/>
 			<referrer name="@_yCtogmusic"/>
 			<referrer name="@_yCpm"/>
 			<referrer name="@_yCtransferdrug"/>
@@ -99935,6 +101052,7 @@
 			<referrer name="@_yCtaser"/>
 			<referrer name="dialog_PlayerVehMain"/>
 			<referrer name="dialog_PlayerVehKeysAdmin"/>
+			<referrer name="@_yCbuyschematic"/>
 			<referrer name="@_yCpoints"/>
 			<referrer name="dialog_AdminPointsList"/>
 			<referrer name="@_yCeditpoint"/>
@@ -101351,8 +102469,9 @@
 		</member>
 		<member name="M:SetTimer" syntax="SetTimer(funcname[], interval, repeating)">
 			<attribute name="native"/>
-			<referrer name="ELM_Init"/>
+			<referrer name="ToggleEmergencyLights"/>
 			<referrer name="UpdateShipStorage"/>
+			<referrer name="@_yCgmx"/>
 			<referrer name="Indirection_OnGameModeInit"/>
 			<referrer name="RampsClosed"/>
 			<param name="funcname">
@@ -101376,6 +102495,7 @@
 			<referrer name="CallNumber"/>
 			<referrer name="CCTV_ShowUI"/>
 			<referrer name="@_yCcctv"/>
+			<referrer name="dialog_IWS_CraftConfirm"/>
 			<referrer name="@_yCunpackage"/>
 			<referrer name="@_yChelpup"/>
 			<referrer name="@_yCgates"/>
@@ -102954,7 +104074,7 @@
 			<referrer name="Dialog_Open"/>
 			<referrer name="@_yCrules"/>
 			<referrer name="@_yCmysalary"/>
-			<referrer name="@_yCchangelog"/>
+			<referrer name="OnLoadPlayerChangelog"/>
 			<referrer name="OnLoadPendingMappings"/>
 			<referrer name="OnLoadApprovedMappingsList"/>
 			<referrer name="OnLoadSavedMappingsList"/>
@@ -103120,7 +104240,7 @@
 			</param>
 		</member>
 		<member name="M:ShowPlayerInventoryDialog" syntax="ShowPlayerInventoryDialog(playerid, targetid)">
-			<stacksize value="2275"/>
+			<stacksize value="2312"/>
 			<referrer name="@_yCitems"/>
 			<referrer name="FriskPlayer"/>
 			<dependency name="operator&gt;(Float:,Float:)"/>
@@ -103152,6 +104272,7 @@
 			<dependency name="pFishes"/>
 			<dependency name="pGasCan"/>
 			<dependency name="pHandCuffs"/>
+			<dependency name="pMaterials"/>
 			<dependency name="pMedkits"/>
 			<dependency name="pNarcan"/>
 			<dependency name="pPackageAmmo"/>
@@ -103159,8 +104280,12 @@
 			<dependency name="pPnumber"/>
 			<dependency name="pRSlot"/>
 			<dependency name="pRadio"/>
+			<dependency name="pSchematics"/>
 			<dependency name="pWeapon"/>
+			<dependency name="schematic_names"/>
+			<dependency name="schematic_names"/>
 			<dependency name="strcat"/>
+			<dependency name="strlen"/>
 			<param name="playerid">
 			</param>
 			<param name="targetid">
@@ -103458,7 +104583,7 @@
 			</param>
 		</member>
 		<member name="M:ShowStatistics" syntax="ShowStatistics(playerid, targetid)">
-			<stacksize value="3035"/>
+			<stacksize value="3036"/>
 			<referrer name="@_yCstats"/>
 			<dependency name="AccountData"/>
 			<dependency name="AccountData"/>
@@ -103504,6 +104629,7 @@
 			<dependency name="pFaction"/>
 			<dependency name="pHealth"/>
 			<dependency name="pID"/>
+			<dependency name="pIllegalJob"/>
 			<dependency name="pJob"/>
 			<dependency name="pMarriedTo"/>
 			<dependency name="pModel"/>
@@ -103554,6 +104680,8 @@
 		</member>
 		<member name="M:ShowTrainBoardingBar" syntax="ShowTrainBoardingBar(playerid, headerText[], barWidth, barColor)">
 			<stacksize value="6"/>
+			<referrer name="dialog_IWS_CraftConfirm"/>
+			<referrer name="IWS_CraftTick"/>
 			<referrer name="TrainSystemTimer"/>
 			<dependency name="CreateTrainPlayerTextDraws"/>
 			<dependency name="PlayerTextDrawColor"/>
@@ -104989,10 +106117,10 @@
 			<referrer name="SendPlayerSMS"/>
 			<referrer name="Players"/>
 			<referrer name="Vehicles"/>
+			<referrer name="dialog_IWS_SchematicDialog"/>
 			<referrer name="@_yCbuycell"/>
 			<referrer name="@_yCcharity"/>
 			<referrer name="@_yCpay"/>
-			<referrer name="@_yCbuyweapon"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="@_yCbuy"/>
 			<referrer name="@_yCenter"/>
@@ -105013,6 +106141,7 @@
 			<referrer name="@_yCadvert"/>
 			<referrer name="@_yCcad"/>
 			<referrer name="dialog_PlayerVehKeysDupTarget"/>
+			<referrer name="@_yCbuymaterial"/>
 			<referrer name="@_yCtakemoney"/>
 			<referrer name="OnPlayerEnterCheckpoint"/>
 			<referrer name="OnPlayerEditAttachedObject"/>
@@ -105522,9 +106651,11 @@
 			<referrer name="@_yCsiren"/>
 			<dependency name="GetVehicleDamageStatus"/>
 			<dependency name="GetVehicleParamsEx"/>
+			<dependency name="SetTimer"/>
 			<dependency name="SetVehicleParamsEx"/>
 			<dependency name="UpdateVehicleDamageStatus"/>
 			<dependency name="false"/>
+			<dependency name="gELMTimer"/>
 			<dependency name="true"/>
 			<dependency name="vELMActive"/>
 			<dependency name="vELMOriginalLights"/>
@@ -105564,6 +106695,9 @@
 			<referrer name="ExitCCTVView"/>
 			<referrer name="@_yCskintest"/>
 			<referrer name="Players"/>
+			<referrer name="dialog_IWS_CraftConfirm"/>
+			<referrer name="IWS_CraftCancel"/>
+			<referrer name="IWS_CraftFinish"/>
 			<referrer name="@_yCusedrug"/>
 			<referrer name="KnockoutTimer"/>
 			<referrer name="@_yCrespawnme"/>
@@ -106253,7 +107387,6 @@
 			<referrer name="@yC_examine"/>
 			<referrer name="@yC_charity"/>
 			<referrer name="@yC_pay"/>
-			<referrer name="@yC_buyweapon"/>
 			<referrer name="@yC_buygun"/>
 			<referrer name="@yC_buy"/>
 			<referrer name="@yC_clothing"/>
@@ -106483,6 +107616,12 @@
 			<referrer name="@yC_changelog"/>
 			<referrer name="@yC_licenses"/>
 			<referrer name="@yC_health"/>
+			<referrer name="@yC_illegaljob"/>
+			<referrer name="@yC_weaponsupplier"/>
+			<referrer name="@yC_buymaterial"/>
+			<referrer name="@yC_buyschematic"/>
+			<referrer name="@yC_gun"/>
+			<referrer name="@yC_delays"/>
 			<referrer name="@yC_respawnrental"/>
 			<referrer name="@yC_createcar"/>
 			<referrer name="@yC_aduty"/>
@@ -106524,6 +107663,11 @@
 			<referrer name="@yC_destroygraffiti"/>
 			<referrer name="@yC_makeadmin"/>
 			<referrer name="@yC_maketester"/>
+			<referrer name="@yC_webedit"/>
+			<referrer name="@yC_versionedit"/>
+			<referrer name="@yC_addchangelog"/>
+			<referrer name="@yC_clearchangelog"/>
+			<referrer name="@yC_gmx"/>
 			<referrer name="@yC_updatemotd"/>
 			<referrer name="@yC_forceunmask"/>
 			<referrer name="@yC_vehiclerequests"/>
@@ -106909,7 +108053,6 @@
 			<referrer name="@yC_editsidejobveh"/>
 			<referrer name="@yC_busroute"/>
 			<referrer name="@yC_spawn"/>
-			<referrer name="@yC_delays"/>
 			<referrer name="@yC_sweeperroute"/>
 			<referrer name="@yC_advertisement"/>
 			<referrer name="@yC_proposepoint"/>
@@ -107115,6 +108258,7 @@
 			<referrer name="Complex_Refresh"/>
 			<referrer name="UpdateStorage"/>
 			<referrer name="Vehicles"/>
+			<referrer name="IWS_UpdatePickupLabel"/>
 			<referrer name="KnockoutTimer"/>
 			<param name="id">
 				<paraminfo>Text3D </paraminfo>
@@ -109572,6 +110716,7 @@
 			<referrer name="MapEditor_Load"/>
 			<referrer name="Graffitis_Load"/>
 			<referrer name="@_yCv"/>
+			<referrer name="OnLoadPlayerChangelog"/>
 			<referrer name="dialog_PlayerVehKeysAdmin"/>
 			<referrer name="dialog_PlayerVehKeysDropList"/>
 			<referrer name="Faction_Load"/>
@@ -109676,9 +110821,11 @@
 			<referrer name="MDC_OnNameFound"/>
 			<referrer name="MDC_OnPlateFound"/>
 			<referrer name="CCTV_LoadAll"/>
+			<referrer name="IWS_OnPlayerLoaded"/>
 			<referrer name="@_yCv"/>
 			<referrer name="ShowPlayerVehicleList"/>
 			<referrer name="@_yCcheque"/>
+			<referrer name="OnLoadPlayerChangelog"/>
 			<referrer name="dialog_PlayerVehKeysAdmin"/>
 			<referrer name="dialog_PlayerVehKeysDropList"/>
 			<referrer name="@_yCarecord"/>
@@ -109686,6 +110833,7 @@
 			<referrer name="SprayLogsResult"/>
 			<referrer name="@_yClog"/>
 			<referrer name="SearchLogsResult"/>
+			<referrer name="LoadServerSettings"/>
 			<referrer name="Faction_Load"/>
 			<referrer name="FactionSpawn_Load"/>
 			<referrer name="Bizz_Load"/>
@@ -109821,6 +110969,7 @@
 			<referrer name="MDC_OnNameFound"/>
 			<referrer name="MDC_OnPlateFound"/>
 			<referrer name="CCTV_LoadAll"/>
+			<referrer name="IWS_OnPlayerLoaded"/>
 			<referrer name="@_yCv"/>
 			<referrer name="ShowPlayerVehicleList"/>
 			<referrer name="@_yCcheque"/>
@@ -109972,6 +111121,7 @@
 			<referrer name="MDC_OnNameFound"/>
 			<referrer name="MDC_OnPlateFound"/>
 			<referrer name="CCTV_LoadAll"/>
+			<referrer name="IWS_OnPlayerLoaded"/>
 			<referrer name="ShowPlayerVehicleList"/>
 			<referrer name="@_yCcheque"/>
 			<referrer name="@_yCjail"/>
@@ -109983,6 +111133,7 @@
 			<referrer name="SprayLogsResult"/>
 			<referrer name="@_yClog"/>
 			<referrer name="SearchLogsResult"/>
+			<referrer name="LoadServerSettings"/>
 			<referrer name="FactionSpawn_Load"/>
 			<referrer name="LoadATMS"/>
 			<referrer name="House_Load"/>
@@ -114191,6 +115342,107 @@
 				<paraminfo> [] </paraminfo>
 			</param>
 		</member>
+		<member name="M:dialog_IWS_CraftConfirm" syntax="dialog_IWS_CraftConfirm(playerid, response, listitem, inputtext[])">
+			<attribute name="public"/>
+			<stacksize value="16"/>
+			<dependency name="ApplyAnimation"/>
+			<dependency name="CraftTimer"/>
+			<dependency name="FindFreePackageSlot"/>
+			<dependency name="GetPVarInt"/>
+			<dependency name="GetPlayerPos"/>
+			<dependency name="IWS_IsSupplier"/>
+			<dependency name="IWS_SavePlayer"/>
+			<dependency name="KillTimer"/>
+			<dependency name="PlayerData"/>
+			<dependency name="PlayerData"/>
+			<dependency name="SendClientMessageEx"/>
+			<dependency name="SetPVarFloat"/>
+			<dependency name="SetPVarInt"/>
+			<dependency name="SetTimerEx"/>
+			<dependency name="ShowTrainBoardingBar"/>
+			<dependency name="TogglePlayerControllable"/>
+			<dependency name="craft_time_sec"/>
+			<dependency name="craft_weapon_id"/>
+			<dependency name="pCrafting"/>
+			<dependency name="pID"/>
+			<dependency name="pMaterials"/>
+			<dependency name="true"/>
+			<param name="playerid">
+			</param>
+			<param name="response">
+			</param>
+			<param name="listitem">
+			</param>
+			<param name="inputtext">
+				<paraminfo> [] </paraminfo>
+			</param>
+		</member>
+		<member name="M:dialog_IWS_CreateJobDialog" syntax="dialog_IWS_CreateJobDialog(playerid, response, listitem, inputtext[])">
+			<attribute name="public"/>
+			<stacksize value="5"/>
+			<dependency name="IWS_CreatePickup"/>
+			<param name="playerid">
+			</param>
+			<param name="response">
+			</param>
+			<param name="listitem">
+			</param>
+			<param name="inputtext">
+				<paraminfo> [] </paraminfo>
+			</param>
+		</member>
+		<member name="M:dialog_IWS_DeleteDialog" syntax="dialog_IWS_DeleteDialog(playerid, response, listitem, inputtext[])">
+			<attribute name="public"/>
+			<stacksize value="7"/>
+			<dependency name="DestroyDynamic3DTextLabel"/>
+			<dependency name="DestroyDynamicPickup"/>
+			<dependency name="IWSPickup"/>
+			<dependency name="IWSPickup"/>
+			<dependency name="IWSPickupCount"/>
+			<dependency name="IWS_SavePickups"/>
+			<dependency name="SendClientMessageEx"/>
+			<dependency name="iws_Label"/>
+			<dependency name="iws_Pickup"/>
+			<param name="playerid">
+			</param>
+			<param name="response">
+			</param>
+			<param name="listitem">
+			</param>
+			<param name="inputtext">
+				<paraminfo> [] </paraminfo>
+			</param>
+		</member>
+		<member name="M:dialog_IWS_SchematicDialog" syntax="dialog_IWS_SchematicDialog(playerid, response, listitem, inputtext[])">
+			<attribute name="public"/>
+			<stacksize value="21"/>
+			<dependency name="GetPVarInt"/>
+			<dependency name="IWSPickup"/>
+			<dependency name="IWSPickupCount"/>
+			<dependency name="IWS_IsMafia"/>
+			<dependency name="IWS_SavePlayer"/>
+			<dependency name="PlayerData"/>
+			<dependency name="SQL_LogAction"/>
+			<dependency name="SendClientMessageEx"/>
+			<dependency name="TakePlayerMoney"/>
+			<dependency name="craft_mafia_only"/>
+			<dependency name="craft_sch_idx"/>
+			<dependency name="iws_SchPrice"/>
+			<dependency name="pCash"/>
+			<dependency name="pSchematics"/>
+			<dependency name="pSchematics"/>
+			<dependency name="schematic_names"/>
+			<dependency name="schematic_names"/>
+			<param name="playerid">
+			</param>
+			<param name="response">
+			</param>
+			<param name="listitem">
+			</param>
+			<param name="inputtext">
+				<paraminfo> [] </paraminfo>
+			</param>
+		</member>
 		<member name="M:dialog_IssueLicenseSuspension" syntax="dialog_IssueLicenseSuspension(playerid, response, listitem, inputtext[])">
 			<attribute name="public"/>
 			<stacksize value="6"/>
@@ -118372,6 +119624,8 @@
 			<referrer name="DisasmWrite"/>
 			<referrer name="DumpAMX_Write"/>
 			<referrer name="@_yCobj"/>
+			<referrer name="IWS_SavePickups"/>
+			<referrer name="IWS_LoadPickups"/>
 			<referrer name="LoadAiConfig"/>
 			<param name="handle">
 				<paraminfo>File </paraminfo>
@@ -118429,6 +119683,7 @@
 			<referrer name="dialog_HandleFurnitureSelling"/>
 			<referrer name="PayDay"/>
 			<referrer name="Vehicles"/>
+			<referrer name="IWS_CraftTick"/>
 			<referrer name="@_yCsavings"/>
 			<referrer name="@_yCv"/>
 			<referrer name="@_yCfill"/>
@@ -118591,6 +119846,7 @@
 			<referrer name="Players"/>
 			<referrer name="PayDay"/>
 			<referrer name="Vehicles"/>
+			<referrer name="IWS_CraftTick"/>
 			<referrer name="@_yCusedrug"/>
 			<referrer name="ProccessBuyGunCommand"/>
 			<referrer name="@_yCservice"/>
@@ -118670,6 +119926,7 @@
 			<tagname value="Float"/>
 			<attribute name="native"/>
 			<referrer name="GetVehicleModelInfoAsFloat"/>
+			<referrer name="IWS_LoadPickups"/>
 			<referrer name="@_yCeditgate"/>
 			<referrer name="@_yCeditmovedoor"/>
 			<referrer name="dialog_MgateEditSpeed"/>
@@ -118718,6 +119975,8 @@
 			<referrer name="DisasmWrite"/>
 			<referrer name="DumpAMX_Write"/>
 			<referrer name="@_yCobj"/>
+			<referrer name="IWS_SavePickups"/>
+			<referrer name="IWS_LoadPickups"/>
 			<referrer name="LoadAiConfig"/>
 			<param name="name">
 				<paraminfo> [] </paraminfo>
@@ -118990,6 +120249,10 @@
 			<referrer name="Vehicles"/>
 			<referrer name="AttachPrisonLabel"/>
 			<referrer name="@_yCpaccess"/>
+			<referrer name="IWS_UpdatePickupLabel"/>
+			<referrer name="IWS_SavePickups"/>
+			<referrer name="IWS_GunCreateParsed"/>
+			<referrer name="IWS_GetDelayLine"/>
 			<referrer name="Annotation"/>
 			<referrer name="@_yCamy"/>
 			<referrer name="AnnounceMyAction"/>
@@ -119096,7 +120359,7 @@
 			<referrer name="@_yCapb"/>
 			<referrer name="@_yCfine"/>
 			<referrer name="@_yCfill"/>
-			<referrer name="@_yCchangelog"/>
+			<referrer name="OnLoadPlayerChangelog"/>
 			<referrer name="ShowLicensesUI"/>
 			<referrer name="ShowPlayerVehMainDialog"/>
 			<referrer name="dialog_PlayerVehMain"/>
@@ -119108,6 +120371,9 @@
 			<referrer name="dialog_PlayerVehSellScrap"/>
 			<referrer name="dialog_PlayerVehSellPlayer"/>
 			<referrer name="@_yChealth"/>
+			<referrer name="@_yCillegaljob"/>
+			<referrer name="@_yCbuyschematic"/>
+			<referrer name="@_yCdelays"/>
 			<referrer name="@_yCaduty"/>
 			<referrer name="@_yCban"/>
 			<referrer name="@_yCarecord"/>
@@ -119123,6 +120389,9 @@
 			<referrer name="@_yCcreatepoint"/>
 			<referrer name="@_yCpoints"/>
 			<referrer name="dialog_AdminPointsList"/>
+			<referrer name="@_yCwebedit"/>
+			<referrer name="@_yCversionedit"/>
+			<referrer name="@_yCaddchangelog"/>
 			<referrer name="ShowVehicleRequests"/>
 			<referrer name="ShowVehicleRequestDetails"/>
 			<referrer name="dialog_VehicleRequest_Details"/>
@@ -119197,6 +120466,7 @@
 			<referrer name="dialog_AdminHelpDetail"/>
 			<referrer name="@_yCz"/>
 			<referrer name="OnQueryError"/>
+			<referrer name="LoadServerSettings"/>
 			<referrer name="SQL_CheckBanAccount"/>
 			<referrer name="Faction_Load"/>
 			<referrer name="Bizz_Load"/>
@@ -119221,7 +120491,6 @@
 			<referrer name="@_yCbusroute"/>
 			<referrer name="OnPlayerBusStopCountdown"/>
 			<referrer name="@_yCspawn"/>
-			<referrer name="@_yCdelays"/>
 			<referrer name="SweeperJob_LoadSpawns"/>
 			<referrer name="SweeperJob_GetSpawnList"/>
 			<referrer name="@_yCsweeperroute"/>
@@ -119374,6 +120643,7 @@
 			<attribute name="native"/>
 			<referrer name="ScriptInit_PurgeTemporaries"/>
 			<referrer name="@_yCobj"/>
+			<referrer name="IWS_LoadPickups"/>
 			<referrer name="LoadAiConfig"/>
 			<param name="handle">
 				<paraminfo>File </paraminfo>
@@ -119509,6 +120779,7 @@
 			<referrer name="DisasmWriteDataRowHex"/>
 			<referrer name="DisasmWriteData"/>
 			<referrer name="va_fprintf"/>
+			<referrer name="IWS_SavePickups"/>
 			<referrer name="LoadAiConfig"/>
 			<param name="handle">
 				<paraminfo>File </paraminfo>
@@ -119640,6 +120911,9 @@
 			<referrer name="OnPlayerTeleport"/>
 			<referrer name="OnPlayerWeaponHack"/>
 			<referrer name="OnPlayerAmmoHack"/>
+			<referrer name="IWS_GunCreateParsed"/>
+			<referrer name="IWS_CraftFinish"/>
+			<referrer name="IWS_GetDelayLine"/>
 			<referrer name="Annotation"/>
 			<referrer name="@_yCtime"/>
 			<referrer name="@_yCservertime"/>
@@ -119654,6 +120928,7 @@
 			<referrer name="@_yCstinger"/>
 			<referrer name="@_yCalprlog"/>
 			<referrer name="@_yCapb"/>
+			<referrer name="@_yCdelays"/>
 			<referrer name="@_yCmakedonator"/>
 			<referrer name="@_yCar"/>
 			<referrer name="@_yCicv"/>
@@ -119726,7 +121001,6 @@
 			<referrer name="PlacePlayerFine"/>
 			<referrer name="dialog_BusSpawnMenu"/>
 			<referrer name="@yH_OnPlayerEnterCheckpoint@011"/>
-			<referrer name="@_yCdelays"/>
 			<referrer name="dialog_SweeperSpawnMenu"/>
 			<referrer name="@yH_OnPlayerEnterCheckpoint@012"/>
 			<referrer name="@yH_OnPlayerKeyStateChange@014"/>
@@ -120257,6 +121531,8 @@
 			<referrer name="Players"/>
 			<referrer name="Vehicles"/>
 			<referrer name="ReleaseFromPrison"/>
+			<referrer name="IWS_SavePlayer"/>
+			<referrer name="IWS_LoadPlayer"/>
 			<referrer name="@_yCusedrug"/>
 			<referrer name="@_yCattributes"/>
 			<referrer name="@_yCclothing"/>
@@ -120290,6 +121566,9 @@
 			<referrer name="AddPointToFile"/>
 			<referrer name="dialog_MakeAdminDialog"/>
 			<referrer name="@_yCmaketester"/>
+			<referrer name="@_yCwebedit"/>
+			<referrer name="@_yCversionedit"/>
+			<referrer name="@_yCaddchangelog"/>
 			<referrer name="@_yCremovebusiness"/>
 			<referrer name="@_yCasellbusiness"/>
 			<referrer name="@_yCbusinessenter"/>
@@ -120690,6 +121969,8 @@
 			<referrer name="@_yCcctv"/>
 			<referrer name="Players"/>
 			<referrer name="Vehicles"/>
+			<referrer name="IWS_SavePlayer"/>
+			<referrer name="IWS_LoadPlayer"/>
 			<referrer name="@_yCusedrug"/>
 			<referrer name="@_yCaccept"/>
 			<referrer name="@_yChouseupgrade"/>
@@ -120703,11 +121984,16 @@
 			<referrer name="@_yCpart"/>
 			<referrer name="@_yCsetchannel"/>
 			<referrer name="@_yCv"/>
+			<referrer name="@_yCchangelog"/>
 			<referrer name="dialog_PlayerVehMain"/>
 			<referrer name="dialog_PlayerVehScrapConfirm"/>
 			<referrer name="@_yCunban"/>
 			<referrer name="@_yCunbanip"/>
 			<referrer name="AddPointToFile"/>
+			<referrer name="@_yCwebedit"/>
+			<referrer name="@_yCversionedit"/>
+			<referrer name="@_yCaddchangelog"/>
+			<referrer name="@_yCclearchangelog"/>
 			<referrer name="@_yCremovebusiness"/>
 			<referrer name="@_yCasellbusiness"/>
 			<referrer name="@_yCbusinessex1"/>
@@ -120762,6 +122048,7 @@
 			<referrer name="dialog_MgateDeleteConfirm"/>
 			<referrer name="dialog_MvehDeleteConfirm"/>
 			<referrer name="SQL_Connect"/>
+			<referrer name="OnServerSettingsTableInit"/>
 			<referrer name="OnAiNpcTableInit"/>
 			<referrer name="SQL_CheckAccount"/>
 			<referrer name="SQL_CheckBanAccount"/>
@@ -120915,9 +122202,13 @@
 			<referrer name="Graffitis_Load"/>
 			<referrer name="CCTV_LoadAll"/>
 			<referrer name="CreatePrisonCell"/>
+			<referrer name="@_yCweaponsupplier"/>
+			<referrer name="@_yCgun"/>
+			<referrer name="OnServerRestartLockFinish"/>
 			<referrer name="@_yCveh"/>
 			<referrer name="OnQueryError"/>
 			<referrer name="SQL_Connect"/>
+			<referrer name="LoadServerSettings"/>
 			<referrer name="Faction_Load"/>
 			<referrer name="FactionSpawn_Load"/>
 			<referrer name="Bizz_Load"/>
@@ -120953,10 +122244,10 @@
 			<referrer name="OnMedicinePointsLoaded"/>
 			<referrer name="LoadAiConfig"/>
 			<referrer name="OnLoadAiNpcs"/>
-			<referrer name="SendAiNpcQuery"/>
 			<referrer name="OnAiNpcRawResponse"/>
 			<referrer name="OnRequestFailure"/>
 			<referrer name="CCTV_OnPlayerDisconnect"/>
+			<referrer name="OnPlayerCommandReceived"/>
 			<referrer name="ELM_OnVehicleDeath"/>
 			<param name="format">
 				<paraminfo> [] </paraminfo>
@@ -121414,8 +122705,11 @@
 			<referrer name="ShowPlayerInventoryDialog"/>
 			<referrer name="@_yCdrugstore"/>
 			<referrer name="@_yCmysalary"/>
+			<referrer name="OnLoadPlayerChangelog"/>
 			<referrer name="ShowPlayerVehMainDialog"/>
 			<referrer name="dialog_PlayerVehMain"/>
+			<referrer name="@_yCbuyschematic"/>
+			<referrer name="@_yCdelays"/>
 			<referrer name="@_yCarecord"/>
 			<referrer name="@_yCre"/>
 			<referrer name="@_yCmakeadmin"/>
@@ -121435,7 +122729,6 @@
 			<referrer name="OnLoadDeleteMappingsList"/>
 			<referrer name="dialog_EditSidejobVehMenu"/>
 			<referrer name="@_yCspawn"/>
-			<referrer name="@_yCdelays"/>
 			<referrer name="SweeperJob_GetSpawnList"/>
 			<referrer name="SweeperJob_OnSpawnCommand"/>
 			<referrer name="LoadAiConfig"/>
@@ -121529,6 +122822,9 @@
 			<referrer name="CheckCallsign"/>
 			<referrer name="@_yCtaxi"/>
 			<referrer name="@_yCapb"/>
+			<referrer name="@_yCillegaljob"/>
+			<referrer name="@_yCweaponsupplier"/>
+			<referrer name="@_yCgun"/>
 			<referrer name="@_yCparticlegun"/>
 			<referrer name="@_yCeditsignal"/>
 			<referrer name="dialog_ApartmentInterior"/>
@@ -121626,6 +122922,7 @@
 			<referrer name="IsForbiddenText"/>
 			<referrer name="dialog_Graffiti_PickCustomText"/>
 			<referrer name="MDCFilterCharges"/>
+			<referrer name="IWS_NameToCraftIdx"/>
 			<referrer name="@_yCid"/>
 			<referrer name="dialog_DrugInfo_Overview"/>
 			<referrer name="GetWeaponIDFromName"/>
@@ -121796,6 +123093,7 @@
 			<referrer name="ShowEmergencyCalls"/>
 			<referrer name="UpdatePlayerMDC"/>
 			<referrer name="Vehicles"/>
+			<referrer name="IWS_LoadPickups"/>
 			<referrer name="@_yCtogmusic"/>
 			<referrer name="@_yCme"/>
 			<referrer name="AnnounceMeAction"/>
@@ -121827,6 +123125,7 @@
 			<referrer name="@_yCattributes"/>
 			<referrer name="@_yCexamine"/>
 			<referrer name="@_yCpay"/>
+			<referrer name="ShowPlayerInventoryDialog"/>
 			<referrer name="@_yClostitems"/>
 			<referrer name="@_yCbcast"/>
 			<referrer name="@_yCgovernment"/>
@@ -121854,6 +123153,7 @@
 			<referrer name="dialog_PlayerVehMain"/>
 			<referrer name="dialog_PlayerVehSettings"/>
 			<referrer name="dialog_PlayerVehSetTag"/>
+			<referrer name="@_yCbuyschematic"/>
 			<referrer name="@_yCkick"/>
 			<referrer name="@_yCban"/>
 			<referrer name="@_yCunban"/>
@@ -122108,6 +123408,7 @@
 			<referrer name="CallNumber"/>
 			<referrer name="dialog_IssueLicenseSuspension"/>
 			<referrer name="@_yCgotocell"/>
+			<referrer name="IWS_LoadPickups"/>
 			<referrer name="@_yCid"/>
 			<referrer name="@_yCbuy"/>
 			<referrer name="@_yCequip"/>

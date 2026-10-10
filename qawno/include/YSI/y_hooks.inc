@@ -86,19 +86,19 @@ Optional plugins:
 #endif
 
 #if !defined _Y_UNIQUE_INCLUDED
-	#tryinclude "..\YSI-Coding\y_unique\y_unique_entry"
+	#tryinclude "../YSI-Coding/y_unique/y_unique_entry"
 #endif
 #if !defined _Y_UNIQUE_INCLUDED
-	#tryinclude "YSI-Coding\y_unique\y_unique_entry"
+	#tryinclude "YSI-Coding/y_unique/y_unique_entry"
 #endif
 #if !defined _Y_UNIQUE_INCLUDED
-	#tryinclude "YSI\YSI-Coding\y_unique\y_unique_entry"
+	#tryinclude "YSI/YSI-Coding/y_unique/y_unique_entry"
 #endif
 #if !defined _Y_UNIQUE_INCLUDED
-	#tryinclude <YSI-Coding\y_unique\y_unique_entry>
+	#tryinclude <YSI-Coding/y_unique/y_unique_entry>
 #endif
 #if !defined _Y_UNIQUE_INCLUDED
-	#tryinclude <YSI\YSI-Coding\y_unique\y_unique_entry>
+	#tryinclude <YSI/YSI-Coding/y_unique/y_unique_entry>
 #endif
 #if defined _Y_UNIQUE_INCLUDED
 	#undef _Y_UNIQUE_INCLUDED
@@ -107,19 +107,19 @@ Optional plugins:
 #endif
 
 #if !defined _INC_y_hooks
-	#tryinclude "y_hooks\y_hooks_entry"
+	#tryinclude "y_hooks/y_hooks_entry"
 #endif
 #if !defined _INC_y_hooks
-	#tryinclude "YSI-Coding\y_hooks\y_hooks_entry"
+	#tryinclude "YSI-Coding/y_hooks/y_hooks_entry"
 #endif
 #if !defined _INC_y_hooks
-	#tryinclude "YSI\YSI-Coding\y_hooks\y_hooks_entry"
+	#tryinclude "YSI/YSI-Coding/y_hooks/y_hooks_entry"
 #endif
 #if !defined _INC_y_hooks
-	#tryinclude <YSI-Coding\y_hooks\y_hooks_entry>
+	#tryinclude <YSI-Coding/y_hooks/y_hooks_entry>
 #endif
 #if !defined _INC_y_hooks
-	#tryinclude <YSI\YSI-Coding\y_hooks\y_hooks_entry>
+	#tryinclude <YSI/YSI-Coding/y_hooks/y_hooks_entry>
 #endif
 #if !defined _INC_y_hooks
 	#error Could not find y_hooks

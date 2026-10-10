@@ -14,7 +14,6 @@
 #define MEDIUM_SKILL	2
 #define FULL_SKILL		3
 
-#define MAX_SERVER_TIMERS 3
 #define MAX_SERVER_HEALTH (200.0)
 #define MAX_SCENES 50
 #define MAX_COOLDOWNS 3
@@ -30,7 +29,6 @@
 #define MAX_TRUCKER_ITEMS 26
 #define MAX_CRATE 60
 #define MAX_AD_QUEUE 5
-#define MAX_PLAYER_TICKETS 10
 #define MAX_PLAYER_WEAPON_PACKAGE 12
 #define MAX_CAR_WEAPON_PACKAGE 20
 #define MAX_MOVEDOORS 100
@@ -38,7 +36,6 @@
 #define MAX_ATTACH_WEAPON 17
 
 #define COOLDOWN_CLOTHES  	0
-#define COOLDOWN_ENGINE  	1
 
 /* Checkpoint */
 #define CHECKPOINT_NONE 			0
@@ -54,14 +51,10 @@
 #define CHECKPOINT_APARTMENT        15
 
 /* Race Checkpoint */
-#define RCHECKPOINT_NONE 			0
 #define RCHECKPOINT_TRUCKER 		1
 #define RCHECKPOINT_TRUCKERJOB 		2
 
 // Server values
-#define levelcost 25000
-#define levelexp 3
-#define multiplyexp 1
 #define deathcost 500
 #define cchargetime 30
 #define callcost 10
@@ -84,7 +77,6 @@
 
 // Tolls configuration
 #define MAX_TOLLS (5) // Amount of tolls
-#define INVALID_TOLL_ID (-1)
 #define RichmanToll (0)
 #define FlintToll (1)
 #define LVToll (2)
@@ -98,8 +90,6 @@
 #define JOB_MECHANIC        3
 #define JOB_TAXI        	4
 #define JOB_GUIDE        	5
-#define JOB_WPDEALER		6
-#define JOB_SUPPLIER  	    7
 #define JOB_TRAIN_DRIVER	8
 
 new bool:PlayerOnTrainJob[MAX_PLAYERS];
@@ -120,6 +110,44 @@ enum enum_SalaryHistory
 
 new SalaryHistory[MAX_PLAYERS][MAX_SALARY_HISTORY][enum_SalaryHistory];
 new SalaryHistoryCount[MAX_PLAYERS];
+
+// Plain-Pawn validators replacing pawnregex.so calls (that plugin
+// segfaults on this server build). Semantics identical to the regexes.
+
+// Equivalent of ^[A-Za-z0-9 ]+$ within a length window.
+stock IsAlnumSpace(const s[], minlen, maxlen)
+{
+	new len = strlen(s);
+	if(len < minlen || len > maxlen) return 0;
+
+	for(new i = 0; i < len; ++i)
+	{
+		new c = s[i];
+		if(c != ' ' && (c < '0' || c > '9') && (c < 'A' || c > 'Z') && (c < 'a' || c > 'z'))
+		    return 0;
+	}
+	return 1;
+}
+
+// Equivalent of ^\d{1,3}(\.\d{1,3}){3}$ — a plain dotted quad.
+stock IsIPv4Like(const s[])
+{
+	new i = 0, groups = 0;
+
+	while(s[i])
+	{
+		new dig = 0;
+		while(s[i] >= '0' && s[i] <= '9') { i++; dig++; }
+
+		if(dig < 1 || dig > 3) return 0;
+		groups++;
+
+		if(s[i] == '.') { i++; continue; }
+		if(!s[i]) break;
+		return 0;
+	}
+	return (groups == 4);
+}
 
 stock AddSalaryHistory(playerid, amount, const sourceStr[])
 {

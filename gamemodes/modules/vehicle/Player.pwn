@@ -591,6 +591,7 @@ Car_DespawnEx(carid)
 {
     if(Iter_Contains(sv_playercar, carid))
 	{
+		Car_SaveID(carid);
 	    CoreVehicles[CarData[carid][carVehicle]][vehicleCarID] = -1;
 
 		for(new x = 0; x != MAX_CAR_WEAPONS; ++x)
@@ -928,7 +929,10 @@ Car_SaveID(carid)
 
 	if(carid != -1)
 	{
-        CarData[carid][carFuel] = CoreVehicles[CarData[carid][carVehicle]][vehFuel];
+		if(CarData[carid][carVehicle] != 0)
+		{
+			CarData[carid][carFuel] = CoreVehicles[CarData[carid][carVehicle]][vehFuel];
+		}
 
 		SaveSlotVehicleDamage(carid);
 
@@ -1008,34 +1012,27 @@ Car_SaveID(carid)
 	return false;
 }
 
-SaveVehicleDamage(vehicleid)
-{
-	new slot = -1;
+// panels, doors, lights, tires + health snapshot helpers (one body each)
 
-	if((slot = Car_GetID(vehicleid)) != -1)
-	{
-	    // panels, doors, lights, tires
-		GetVehicleDamageStatus(vehicleid, CarData[slot][carDamage][0], CarData[slot][carDamage][1], CarData[slot][carDamage][2], CarData[slot][carDamage][3]);
-		GetVehicleHealth(vehicleid, CarData[slot][carHealth]);
-	}
+SaveSlotVehicleDamage(slot)
+{
+	GetVehicleDamageStatus(CarData[slot][carVehicle], CarData[slot][carDamage][0], CarData[slot][carDamage][1], CarData[slot][carDamage][2], CarData[slot][carDamage][3]);
+	GetVehicleHealth(CarData[slot][carVehicle], CarData[slot][carHealth]);
 }
 
 SaveVehicleDamageID(slot)
 {
 	if(slot == -1) return true;
 
-	new vehicleid = CarData[slot][carVehicle];
-
-	// panels, doors, lights, tires
-	GetVehicleDamageStatus(vehicleid, CarData[slot][carDamage][0], CarData[slot][carDamage][1], CarData[slot][carDamage][2], CarData[slot][carDamage][3]);
-	GetVehicleHealth(vehicleid, CarData[slot][carHealth]);
+	SaveSlotVehicleDamage(slot);
 	return true;
 }
 
-SaveSlotVehicleDamage(slot)
+SaveVehicleDamage(vehicleid)
 {
-	GetVehicleDamageStatus(CarData[slot][carVehicle], CarData[slot][carDamage][0], CarData[slot][carDamage][1], CarData[slot][carDamage][2], CarData[slot][carDamage][3]);
-	GetVehicleHealth(CarData[slot][carVehicle], CarData[slot][carHealth]);
+	new slot = Car_GetID(vehicleid);
+
+	if(slot != -1) SaveSlotVehicleDamage(slot);
 }
 
 PutPlayerSettingVehicle(playerid, model, price)
@@ -1067,13 +1064,20 @@ PutPlayerSettingVehicle(playerid, model, price)
 	{
 		if(model == 420 || model == 438) // Taxi & Cabbie
 		{
-			if(PlayerData[playerid][pJob] != JOB_TAXI && PlayerData[playerid][pSideJob] != JOB_TAXI)
+			if(PlayerData[playerid][pJob] != JOB_TAXI)
 				return SendErrorMessage(playerid, "You must be a Taxi Driver to purchase this vehicle.");
 		}
-		else if(model == 499 || model == 414 || model == 456 || model == 455 || model == 443 || model == 403 || model == 515 || model == 514) // Benson, Mule, Yankee, Flatbed, Packer, Linerunner, Roadtrain, Petrol
+		else
 		{
-			if(PlayerData[playerid][pJob] != JOB_TRUCKER && PlayerData[playerid][pSideJob] != JOB_TRUCKER)
-				return SendErrorMessage(playerid, "You must be a Trucker to purchase this vehicle.");
+			new reqRank = GetRequiredTruckerRank(model);
+			if(reqRank != -1)
+			{
+				if(PlayerData[playerid][pJob] != JOB_TRUCKER)
+					return SendErrorMessage(playerid, "You must be a Trucker to purchase this vehicle.");
+
+				if(PlayerData[playerid][pJobRank] < reqRank)
+					return SendErrorMessage(playerid, "Your Trucker rank is not high enough for this vehicle (Required: Rank %d, Yours: Rank %d).", reqRank, PlayerData[playerid][pJobRank]);
+			}
 		}
 	}
 
@@ -1174,6 +1178,23 @@ PutPlayerSettingVehicle(playerid, model, price)
 	return true;
 }
 
+// Per-level upgrade blurbs shown on the dealership info dialog
+static const g_aLockLevelText[4][] =
+{
+	"{33AA33}+{FFFFFF}500 second wait time protection against\n\tprying break-in method.\n\t{33AA33}+{FFFFFF}Stronger armor- better defense against\n\tphysical attack breaching. -Fist & melee",
+	"{33AA33}+{FFFFFF}750 second wait time protection against\n\tprying break-in method.\n\t{33AA33}+{FFFFFF}Special armor- better defense x2 against\n\tmelee attack breaching.",
+	"{33AA33}+{FFFFFF}750 second wait time protection against\n\tprying break-in method.\n\t{33AA33}+{FFFFFF}Special armor- better defense x2 against\n\tmelee attack breaching.\n\t{33AA33}+{FFFFFF}Special armor protection blocks physical\n\tattack breaching. -Fist",
+	"{33AA33}+{FFFFFF}1,250 second wait time protection against\n\tprying break-in method.\n\t{33AA33}+{FFFFFF}Special armor protection blocks all types\n\tof physical attack breaching."
+};
+
+static const g_aAlarmLevelText[4][] =
+{
+	"{FF6347}+{FFFFFF}Loud Vehicle Alarm",
+	"{FF6347}+{FFFFFF}Loud Vehicle Alarm\n\t{FF6347}+{FFFFFF}Vehicle alerts the owner of a possible breach.",
+	"{FF6347}+{FFFFFF}Loud Vehicle Alarm\n\t{FF6347}+{FFFFFF}Vehicle alerts the owner of a possible breach.\n\t{FF6347}+{FFFFFF}Vehicle alerts the local police department of a\n\tpossible breach.",
+	"{FF6347}+{FFFFFF}Loud Vehicle Alarm\n\t{FF6347}+{FFFFFF}Vehicle alerts the owner of a possible breach.\n\t{FF6347}+{FFFFFF}Vehicle alerts the local police department of a\n\tpossible breach.\n\t{FF6347}+{FFFFFF}Vehicle blip will appear on the law enforcement's\n\tradar"
+};
+
 ShowPlayerDealercarDialog(playerid)
 {
 	new model = GetVehicleModel(VDealerVehicle[playerid]), price = VDealerPrice[playerid], string[64], string2[1024];
@@ -1189,25 +1210,7 @@ ShowPlayerDealercarDialog(playerid)
 		format(string2, sizeof(string2), "%s\n{FFFF00}Lock:\t\t{B4B5B7} level %d\t{FFFFFF}%s", string2,
 		VDealerLock[playerid] + 1, FormatNumber(floatround(VDealerPrice[playerid] / VehicleUpgradeLock[id][u_rate]) + VehicleUpgradeLock[id][u_price]));
 
-		switch(VDealerLock[playerid])
-		{
-		    case 1:
-			{
-		        format(string2, sizeof(string2), "%s\n\t{33AA33}+{FFFFFF}500 second wait time protection against\n\tprying break-in method.\n\t{33AA33}+{FFFFFF}Stronger armor- better defense against\n\tphysical attack breaching. -Fist & melee", string2);
-		    }
-		    case 2:
-			{
-		        format(string2, sizeof(string2), "%s\n\t{33AA33}+{FFFFFF}750 second wait time protection against\n\tprying break-in method.\n\t{33AA33}+{FFFFFF}Special armor- better defense x2 against\n\tmelee attack breaching.", string2);
-		    }
-		    case 3:
-			{
-		        format(string2, sizeof(string2), "%s\n\t{33AA33}+{FFFFFF}750 second wait time protection against\n\tprying break-in method.\n\t{33AA33}+{FFFFFF}Special armor- better defense x2 against\n\tmelee attack breaching.\n\t{33AA33}+{FFFFFF}Special armor protection blocks physical\n\tattack breaching. -Fist", string2);
-		    }
-		    case 4:
-			{
-		        format(string2, sizeof(string2), "%s\n\t{33AA33}+{FFFFFF}1,250 second wait time protection against\n\tprying break-in method.\n\t{33AA33}+{FFFFFF}Special armor protection blocks all types\n\tof physical attack breaching.", string2);
-		    }
-		}
+		format(string2, sizeof(string2), "%s\n\t%s", string2, g_aLockLevelText[VDealerLock[playerid] - 1]);
 	}
 	if(VDealerAlarm[playerid])
 	{
@@ -1215,25 +1218,7 @@ ShowPlayerDealercarDialog(playerid)
 		format(string2, sizeof(string2), "%s\n{FFFF00}Alarm:\t\t{B4B5B7} level %d\t{FFFFFF}%s", string2,
 		VDealerAlarm[playerid], FormatNumber(floatround(VDealerPrice[playerid] / VehicleUpgradeAlarm[id][u_rate]) + VehicleUpgradeAlarm[id][u_price]));
 
-		switch(VDealerAlarm[playerid])
-		{
-		    case 1:
-			{
-		        format(string2, sizeof(string2), "%s\n\t{FF6347}+{FFFFFF}Loud Vehicle Alarm", string2);
-		    }
-		    case 2:
-			{
-		        format(string2, sizeof(string2), "%s\n\t{FF6347}+{FFFFFF}Loud Vehicle Alarm\n\t{FF6347}+{FFFFFF}Vehicle alerts the owner of a possible breach.", string2);
-		    }
-		    case 3:
-			{
-		        format(string2, sizeof(string2), "%s\n\t{FF6347}+{FFFFFF}Loud Vehicle Alarm\n\t{FF6347}+{FFFFFF}Vehicle alerts the owner of a possible breach.\n\t{FF6347}+{FFFFFF}Vehicle alerts the local police department of a\n\tpossible breach.", string2);
-		    }
-		    case 4:
-			{
-		        format(string2, sizeof(string2), "%s\n\t{FF6347}+{FFFFFF}Loud Vehicle Alarm\n\t{FF6347}+{FFFFFF}Vehicle alerts the owner of a possible breach.\n\t{FF6347}+{FFFFFF}Vehicle alerts the local police department of a\n\tpossible breach.\n\t{FF6347}+{FFFFFF}Vehicle blip will appear on the law enforcement's\n\tradar", string2);
-		    }
-		}
+		format(string2, sizeof(string2), "%s\n\t%s", string2, g_aAlarmLevelText[VDealerAlarm[playerid] - 1]);
 	}
 
 	if(VDealerImmob[playerid])
@@ -1424,18 +1409,27 @@ Dialog:DealercarConfirm(playerid, response, listitem, inputtext[])
 			{
 				if(model == 420 || model == 438) // Taxi & Cabbie
 				{
-					if(PlayerData[playerid][pJob] != JOB_TAXI && PlayerData[playerid][pSideJob] != JOB_TAXI)
+					if(PlayerData[playerid][pJob] != JOB_TAXI)
 					{
 						ExitSettingVehicle(playerid);
 						return SendErrorMessage(playerid, "You must be a Taxi Driver to purchase this vehicle.");
 					}
 				}
-				else if(model == 499 || model == 414 || model == 456 || model == 455 || model == 443 || model == 403 || model == 515 || model == 514) // Benson, Mule, Yankee, Flatbed, Packer, Linerunner, Roadtrain, Petrol
+				else
 				{
-					if(PlayerData[playerid][pJob] != JOB_TRUCKER && PlayerData[playerid][pSideJob] != JOB_TRUCKER)
+					new reqRank = GetRequiredTruckerRank(model);
+					if(reqRank != -1)
 					{
-						ExitSettingVehicle(playerid);
-						return SendErrorMessage(playerid, "You must be a Trucker to purchase this vehicle.");
+						if(PlayerData[playerid][pJob] != JOB_TRUCKER)
+						{
+							ExitSettingVehicle(playerid);
+							return SendErrorMessage(playerid, "You must be a Trucker to purchase this vehicle.");
+						}
+						if(PlayerData[playerid][pJobRank] < reqRank)
+						{
+							ExitSettingVehicle(playerid);
+							return SendErrorMessage(playerid, "Your Trucker rank is not high enough for this vehicle (Required: Rank %d, Yours: Rank %d).", reqRank, PlayerData[playerid][pJobRank]);
+						}
 					}
 				}
 			}
@@ -2303,22 +2297,15 @@ Car_GetID(vehicleid)
 SetSlotVehicleDamage(slot)
 {
     SetVehicleDamageStatus(CarData[slot][carVehicle],CarData[slot][carDamage][0],CarData[slot][carDamage][1],CarData[slot][carDamage][2],CarData[slot][carDamage][3]);
-	//UpdateVehicleDamageStatus(CarData[slot][carVehicle],CarData[slot][carDamage][0],CarData[slot][carDamage][1],CarData[slot][carDamage][2],CarData[slot][carDamage][3]);
 	if(CarData[slot][carHealth] > 249) SetVehicleHealth(CarData[slot][carVehicle],CarData[slot][carHealth]);
 	else SetVehicleHealth(CarData[slot][carVehicle],250);
 }
 
 SetVehicleDamage(vehicleid)
 {
-	new slot = -1;
+	new slot = Car_GetID(vehicleid);
 
-	if((slot = Car_GetID(vehicleid)) != -1)
-	{
-	    SetVehicleDamageStatus(CarData[slot][carVehicle],CarData[slot][carDamage][0],CarData[slot][carDamage][1],CarData[slot][carDamage][2],CarData[slot][carDamage][3]);
-		//UpdateVehicleDamageStatus(CarData[slot][carVehicle],CarData[slot][carDamage][0],CarData[slot][carDamage][1],CarData[slot][carDamage][2],CarData[slot][carDamage][3]);
-		if(CarData[slot][carHealth] > 249) SetVehicleHealth(CarData[slot][carVehicle],CarData[slot][carHealth]);
-		else SetVehicleHealth(CarData[slot][carVehicle],250);
-	}
+	if(slot != -1) SetSlotVehicleDamage(slot);
 }
 
 RenderPlayerCarMenu(playerid, page, caramount, const data[][], const header[] = "", dealership = 0)
@@ -3094,6 +3081,15 @@ FUNX::OnPlayerVehicleSpawn(playerid)
 			cache_get_value_name_float(0, "carPosY", CarData[i][carPos][1]);
 			cache_get_value_name_float(0, "carPosZ", CarData[i][carPos][2]);
 			cache_get_value_name_float(0, "carPosR", CarData[i][carPos][3]);
+
+			// Fallback: If vehicle parking position is unset (0, 0, 0), spawn near player
+			if(CarData[i][carPos][0] == 0.0 && CarData[i][carPos][1] == 0.0 && CarData[i][carPos][2] == 0.0)
+			{
+				GetPlayerPos(playerid, CarData[i][carPos][0], CarData[i][carPos][1], CarData[i][carPos][2]);
+				GetPlayerFacingAngle(playerid, CarData[i][carPos][3]);
+				CarData[i][carPos][0] += 2.5;
+			}
+
 			cache_get_value_name_int(0, "carColor1", CarData[i][carColor1]);
 			cache_get_value_name_int(0, "carColor2", CarData[i][carColor2]);
 			cache_get_value_name_int(0, "carPaintjob", CarData[i][carPaintjob]);
@@ -3130,7 +3126,15 @@ FUNX::OnPlayerVehicleSpawn(playerid)
             AssignCarLicenseWeapons(i, str);
 
 			CarData[i][carVehicle] = CreateVehicle(CarData[i][carModel], CarData[i][carPos][0], CarData[i][carPos][1], CarData[i][carPos][2], CarData[i][carPos][3], CarData[i][carColor1], CarData[i][carColor2], -1);
+			if(CarData[i][carVehicle] == INVALID_VEHICLE_ID || CarData[i][carVehicle] == 0)
+			{
+				SendErrorMessage(playerid, "Server vehicle limit reached or failed to create vehicle.");
+				ClosePlayerCarMenu(playerid);
+				return true;
+			}
 			ResetVehicle(CarData[i][carVehicle]);
+			LinkVehicleToInterior(CarData[i][carVehicle], GetPlayerInterior(playerid));
+			SetVehicleVirtualWorld(CarData[i][carVehicle], GetPlayerVirtualWorld(playerid));
 
             SetVehicleNumberPlate(CarData[i][carVehicle], CarData[i][carPlate]);
 

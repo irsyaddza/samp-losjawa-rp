@@ -38,11 +38,11 @@
 /// <p/>
 
 #include "import_table"
-#include "..\amx_header"
-#include "..\amx_memory"
-#include "..\dynamic_call"
-#include "..\phys_memory"
-#include "..\shellcode"
+#include "../amx_header"
+#include "../amx_memory"
+#include "../dynamic_call"
+#include "../phys_memory"
+#include "../shellcode"
 
 #define SW_HIDE (0)
 #define SW_NORMAL (1)

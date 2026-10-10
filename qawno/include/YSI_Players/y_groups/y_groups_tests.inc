@@ -669,7 +669,7 @@ TEST__ y_groups_SetBalancedInvalid()
 #include "y_groups__include"
 
 #define MASTER 60
-#include "..\..\YSI_Core\y_master"
+#include "../../YSI_Core/y_master"
 
 static
 	gPl = 0,

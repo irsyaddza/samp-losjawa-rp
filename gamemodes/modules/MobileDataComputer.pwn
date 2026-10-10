@@ -2803,21 +2803,7 @@ stock ShowPenalCodeUI(playerid, bool:advance_page = false, bool:hide = false, bo
         }
 	}
 
-	/*if(ChargesSelected[playerid][0][0] != -1)
-	{
-	    PlayerTextDrawShow(playerid, MDC_PenalCodeUI[playerid][26]);
 
-		for(new i = 0; i < 5; ++i)
-		{
-		    if(ChargesSelected[playerid][i][0] != -1)
-		    {
-                PlayerTextDrawShow(playerid, MDC_PenalCodeUI[playerid][i + 27]);
-		    }
-		}
-
-		PlayerTextDrawShow(playerid, MDC_PenalCodeUI[playerid][32]);
-		PlayerTextDrawShow(playerid, MDC_PenalCodeUI[playerid][33]);
-	}*/
 	return true;
 }
 
@@ -3681,14 +3667,7 @@ FUNX::MDC_OnNameFound(playerid, dbid)
 	
     cache_delete(house_cache);
 
-	/*if(active_listing > 0)
-	{
-		TextDrawBoxColor(MDC_UI[playerid][first_row], -1440603393);
-        TextDrawColor(MDC_UI[playerid][first_row], -1);
-		PlayerTextDrawSetString(playerid, MDC_UI[playerid][first_row], "]_This_Person_is_linked_to_a_warrant!_click_here_for_info");
 
-		info_rows++; first_row++;
-	}*/
 
     mysql_format(dbCon, query, sizeof(query), "SELECT `exp` FROM `fines` WHERE `addressee` = '%e' ORDER BY `id` DESC", e_Player_MDC_Cache[playerid][player_name]);
     new Cache:fines_cache = mysql_query(dbCon, query);
@@ -3923,30 +3902,7 @@ FUNX::MDC_OnPlateFound(playerid, dbid, bool:valid_id)
 	
     //cache_get_value_name_int(0, "carStolen", stolen);
 
-	/*if(stolen)
-	{
-	    PlayerTextDrawShow(playerid, MDC_UI[playerid][67]);
-	    PlayerTextDrawShow(playerid, MDC_UI[playerid][68]);
-		new year, month, day, MonthStr[16], str[64];
-		getdate(year, month, day);
-		switch(month)
-		{
-		    case 1:  MonthStr = "Jan";
-		    case 2:  MonthStr = "Feb";
-		    case 3:  MonthStr = "Mar";
-		    case 4:  MonthStr = "Apr";
-		    case 5:  MonthStr = "May";
-		    case 6:  MonthStr = "Jun";
-		    case 7:  MonthStr = "Jul";
-		    case 8:  MonthStr = "Aug";
-		    case 9:  MonthStr = "Sep";
-		    case 10: MonthStr = "Oct";
-		    case 11: MonthStr = "Nov";
-		    case 12: MonthStr = "Dec";
-		}
-		format(str, sizeof str, "_NOTE(s):_Vehicle_reported_stolen_-_%d/%s/%d", day, MonthStr, year);
-	    PlayerTextDrawSetString(playerid, MDC_UI[playerid][68], "_NOTE(s):_Vehicle_reported_stolen");
-	}*/
+
 
 	switch(insurance)
 	{
@@ -4062,22 +4018,7 @@ FUNX::MDC_HidePage(playerid, page)
 			        for(new i = 0; i < sizeof(MDC_RosterUI[]); i ++)
 						PlayerTextDrawHide(playerid, MDC_RosterUI[playerid][i]);
 				}
-	            /*case 1:
-	            {
-	                PlayerTextDrawHide(playerid, MDC_UI[playerid][38]);
-	            
-			        for(new i = 0; i < 21; i ++)
-						PlayerTextDrawHide(playerid, MDC_UnitTemplates[playerid][i]);
-				}
-				case 2:
-				{
-				    PlayerTextDrawHide(playerid, MDC_UI[playerid][38]);
-				
-					for(new i = 21; i < 34; ++i)
-					{
-					    PlayerTextDrawHide(playerid, MDC_UnitTemplates[playerid][i]);
-					}
-				}*/
+
 			}
 			
 			e_Player_MDC_Cache[playerid][unit_temp_page] = 0;
@@ -4343,45 +4284,7 @@ stock ShowVehicleBOLOS(playerid)
 	}
 }
 
-/*stock MDC_ShowUnitTemplates(playerid)
-{
-	for(new i = 0; i < 24; ++i)
-	{
-	    PlayerTextDrawHide(playerid, MDC_RosterUI[playerid][i]);
-	}
-	
-	PlayerTextDrawSetString(playerid, MDC_UI[playerid][38], "~<~_Back_to_Roster");
 
-	for(new i = 0; i < 21; ++i)
-	{
-	    PlayerTextDrawShow(playerid, MDC_UnitTemplates[playerid][i]);
-	}
-	
-	PlayerTextDrawShow(playerid, MDC_UI[playerid][38]);
-	
-	e_Player_MDC_Cache[playerid][unit_temp_page] = 1;
-	return true;
-}
-
-stock MDC_EditUnitTemplate(playerid)
-{
-	for(new i = 0; i < 21; ++i)
-	{
-	    PlayerTextDrawHide(playerid, MDC_UnitTemplates[playerid][i]);
-	}
-	
-	PlayerTextDrawSetString(playerid, MDC_UI[playerid][38], "~<~_Back_to_Unit_List");
-	
-	for(new i = 21; i < 34; ++i)
-	{
-	    PlayerTextDrawShow(playerid, MDC_UnitTemplates[playerid][i]);
-	}
-	
-	PlayerTextDrawShow(playerid, MDC_UI[playerid][38]);
-
-	e_Player_MDC_Cache[playerid][unit_temp_page] = 2;
-	return true;
-}*/
 
 stock UpdatePlayerMDC(playerid, page, lastpage)
 {

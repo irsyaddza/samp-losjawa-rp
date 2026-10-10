@@ -1,10 +1,10 @@
 // Look for an upgraded version of this file in common locations.
-#tryinclude ".\omp-stdlib\_open_mp"
-#tryinclude "..\omp-stdlib\_open_mp"
-#tryinclude <omp-stdlib\_open_mp>
-#tryinclude ".\omp-stdlib-master\_open_mp"
-#tryinclude "..\omp-stdlib-master\_open_mp"
-#tryinclude <omp-stdlib-master\_open_mp>
+#tryinclude "./omp-stdlib/_open_mp"
+#tryinclude "../omp-stdlib/_open_mp"
+#tryinclude <omp-stdlib/_open_mp>
+#tryinclude "./omp-stdlib-master/_open_mp"
+#tryinclude "../omp-stdlib-master/_open_mp"
+#tryinclude <omp-stdlib-master/_open_mp>
 #tryinclude "_open_mp"
 #tryinclude <_open_mp>
 

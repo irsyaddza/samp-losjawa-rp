@@ -76,8 +76,8 @@ Optional plugins:
 	Me - sscanf2, fixes2, Whirlpool.
 */
 
-#include "..\..\YSI_Core\y_utils"
-#include "..\y_inline"
+#include "../../YSI_Core/y_utils"
+#include "../y_inline"
 
 #include "y_functional_impl"
 #include "y_functional_funcs"

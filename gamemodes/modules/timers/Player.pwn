@@ -592,6 +592,7 @@ ptask Players[1000](i)
 
 				if(carid != -1)
 				{
+					CarData[carid][carFuel] = CoreVehicles[vehicleid][vehFuel];
 					CarData[carid][carMileage] += vehicleSpeed * 0.621371192 / 3600.0;
 					CarData[carid][carEngineL] -= 0.000016;
 					CarData[carid][carBatteryL] -= 0.000016;
@@ -1087,7 +1088,6 @@ PayDay()
 					PlayerData[i][pJobRank] = 0;
 			}
 
-			Tax += TaxValue;
 
 			PlayerData[i][pAccount] -= TaxValue;
 
@@ -1204,7 +1204,7 @@ PayDay()
 				}
 			}
 
-			if(PlayerData[i][pJob] == JOB_MECHANIC || PlayerData[i][pSideJob] == JOB_MECHANIC)
+			if(PlayerData[i][pJob] == JOB_MECHANIC)
 			{
 			    PlayerData[i][pPayCheck] += 1250;
 

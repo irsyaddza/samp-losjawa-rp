@@ -8,7 +8,7 @@
 #define EVENT_INC 
 
 #include <a_samp>
-#include <YSI\y_hooks>
+#include <YSI/y_hooks>
 
 #if !defined EVENT_DATABASE 
     #define EVENT_DATABASE          "events.db"

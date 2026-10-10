@@ -50,8 +50,14 @@ SQL_Connect()
 			"`id` INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY," \
 			"`entry` VARCHAR(256) NOT NULL," \
 			"`added_by` VARCHAR(32) NOT NULL DEFAULT 'Admin'," \
-			"`added_date` VARCHAR(64) NOT NULL DEFAULT 'Current'" \
+			"`added_date` VARCHAR(64) NOT NULL DEFAULT 'Current'," \
+			"`version` VARCHAR(64) NOT NULL DEFAULT 'Legacy'," \
+			"`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP" \
 		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+		// Changelog versioning columns (duplicate-safe)
+		mysql_tquery(dbCon, "ALTER TABLE `server_changelogs` ADD COLUMN `version` VARCHAR(64) NOT NULL DEFAULT 'Legacy';");
+		mysql_tquery(dbCon, "ALTER TABLE `server_changelogs` ADD COLUMN `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;");
 
 		// Ensure AI NPC table exists
 		mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `npc_ai` (" \
@@ -200,25 +206,6 @@ SQL_LogPlayerDeath(playerid, killerid, reason)
 	return true;
 }
 
-/*SQL_LogCheat(playerid, const key[], const log[])
-{
-	new query[512];
-
-	new clean_log[256];
-	mysql_escape_string(log, clean_log);
-
-	new clean_key[20];
-	mysql_escape_string(key, clean_key);
-
-	format(query, sizeof(query), "INSERT INTO logs_cheat (admin, master_name, char_name, action_key, action_log, stamp) VALUES (%d, '%s', '%s', '%s', '%s', %d)", AccountData[playerid][aUserid], AccountData[playerid][aUsername], ReturnName(playerid), clean_key, clean_log, gettime());
-	mysql_pquery(dbCon, query);
-
-    format(query, sizeof(query), "[%s] %s (%s)", ConverTimestampToDate(gettime()), log, key);
-
-	Log_Write("RawLogs/cheats.txt", query);
-
-	//if(!systemVariables[DiscordStatus]) DCC_SendChannelMessage(cheatLogsChannel, query);
-}*/
 
 SQL_LogMask(playerid, const key[], const log[])
 {
@@ -240,6 +227,21 @@ SQL_ReturnEscaped(const string[])
 // Callbacks
 
 forward Faction_Load();
+// Default rank ladders used when the DB row is empty (j = rank index 0..18)
+static const g_aDefaultEMSRanks[14][32] = {
+	"Medical Director", "Chief Medical Officer", "Chief of Surgery", "Attending Physician",
+     "Senior Resident Doctor", "Resident Doctor", "Medical Intern", "Chief Paramedic",
+     "Senior Paramedic", "Paramedic II", "Paramedic I", "Advanced EMT",
+     "EMT-Basic", "Student EMT"
+};
+
+static const g_aDefaultFireRanks[14][32] = {
+	"Fire Chief", "Assistant Fire Chief", "Deputy Fire Chief", "Battalion Chief",
+     "Fire Captain II", "Fire Captain I", "Fire Lieutenant II", "Fire Lieutenant I",
+     "Senior Engineer", "Firefighter III", "Firefighter II", "Firefighter I",
+     "Probationary Firefighter", "Fire Recruit"
+};
+
 public Faction_Load()
 {
 	new
@@ -281,24 +283,10 @@ public Faction_Load()
 			    }
 			    else
 			    {
-			    	switch(j)
-			    	{
-			    		case 0: format(EMSRanks[i][j], 32, "Medical Director");
-			    		case 1: format(EMSRanks[i][j], 32, "Chief Medical Officer");
-			    		case 2: format(EMSRanks[i][j], 32, "Chief of Surgery");
-			    		case 3: format(EMSRanks[i][j], 32, "Attending Physician");
-			    		case 4: format(EMSRanks[i][j], 32, "Senior Resident Doctor");
-			    		case 5: format(EMSRanks[i][j], 32, "Resident Doctor");
-			    		case 6: format(EMSRanks[i][j], 32, "Medical Intern");
-			    		case 7: format(EMSRanks[i][j], 32, "Chief Paramedic");
-			    		case 8: format(EMSRanks[i][j], 32, "Senior Paramedic");
-			    		case 9: format(EMSRanks[i][j], 32, "Paramedic II");
-			    		case 10: format(EMSRanks[i][j], 32, "Paramedic I");
-			    		case 11: format(EMSRanks[i][j], 32, "Advanced EMT");
-			    		case 12: format(EMSRanks[i][j], 32, "EMT-Basic");
-			    		case 13: format(EMSRanks[i][j], 32, "Student EMT");
-			    		default: format(EMSRanks[i][j], 32, "EMS Trainee");
-			    	}
+			    	if(j < sizeof g_aDefaultEMSRanks)
+			    		format(EMSRanks[i][j], 32, g_aDefaultEMSRanks[j]);
+			    	else
+			    		format(EMSRanks[i][j], 32, "EMS Trainee");
 			    }
 
 			    format(rank, sizeof(rank), "fireRank%d", j + 1);
@@ -310,30 +298,17 @@ public Faction_Load()
 			    }
 			    else
 			    {
-			    	switch(j)
-			    	{
-			    		case 0: format(FireRanks[i][j], 32, "Fire Chief");
-			    		case 1: format(FireRanks[i][j], 32, "Assistant Fire Chief");
-			    		case 2: format(FireRanks[i][j], 32, "Deputy Fire Chief");
-			    		case 3: format(FireRanks[i][j], 32, "Battalion Chief");
-			    		case 4: format(FireRanks[i][j], 32, "Fire Captain II");
-			    		case 5: format(FireRanks[i][j], 32, "Fire Captain I");
-			    		case 6: format(FireRanks[i][j], 32, "Fire Lieutenant II");
-			    		case 7: format(FireRanks[i][j], 32, "Fire Lieutenant I");
-			    		case 8: format(FireRanks[i][j], 32, "Senior Engineer");
-			    		case 9: format(FireRanks[i][j], 32, "Firefighter III");
-			    		case 10: format(FireRanks[i][j], 32, "Firefighter II");
-			    		case 11: format(FireRanks[i][j], 32, "Firefighter I");
-			    		case 12: format(FireRanks[i][j], 32, "Probationary Firefighter");
-			    		case 13: format(FireRanks[i][j], 32, "Fire Recruit");
-			    		default: format(FireRanks[i][j], 32, "Fire Trainee");
-			    	}
+			    	if(j < sizeof g_aDefaultFireRanks)
+			    		format(FireRanks[i][j], 32, g_aDefaultFireRanks[j]);
+			    	else
+			    		format(FireRanks[i][j], 32, "Fire Trainee");
 			    }
 			}
 		}
 	}
 
 	printf("[SERVER]: %d factions were loaded from \"%s\" database...", rows, SQL_DATABASE);
+	Init_StepDone();   // factions
 	return true;
 }
 
@@ -424,6 +399,9 @@ public Bizz_Load()
 		cache_get_value_name_float(i, "biz_etX", BusinessData[i][bExitX]);
 		cache_get_value_name_float(i, "biz_etY", BusinessData[i][bExitY]);
 		cache_get_value_name_float(i, "biz_etZ", BusinessData[i][bExitZ]);
+		cache_get_value_name_float(i, "biz_fillX", BusinessData[i][bFillX]);
+		cache_get_value_name_float(i, "biz_fillY", BusinessData[i][bFillY]);
+		cache_get_value_name_float(i, "biz_fillZ", BusinessData[i][bFillZ]);
 		cache_get_value_name_int(i, "biz_level", BusinessData[i][bLevelNeeded]);
 		cache_get_value_name_int(i, "biz_price", BusinessData[i][bBuyPrice]);
 		cache_get_value_name_int(i, "biz_encost", BusinessData[i][bEntranceCost]);
@@ -459,6 +437,7 @@ public Bizz_Load()
     }
 
 	printf("[SERVER]: %d businesses were loaded from \"%s\" database...", rows, SQL_DATABASE);
+	Init_StepDone();   // businesses
 	return true;
 }
 
@@ -576,6 +555,9 @@ public Vehicle_Load()
 	}
 
 	if(success) printf("[SERVER]: %d vehicles were loaded from \"%s\" database...", systemVariables[vehicleCounts][0], SQL_DATABASE);
+	Init_StepDone();   // vehicles
+
+	SideJob_RefreshAllLabels();   // boot-time availability counts on sidejob labels
 
 	return true;
 }
@@ -644,8 +626,16 @@ public Industry_Load()
 			{
 				StorageData[i][in_pickup] = CreateDynamicPickup(1318, 23, StorageData[i][in_posx], StorageData[i][in_posy], StorageData[i][in_posz], 0, 0);
 
-				format(msg, 128, "[{E5FF00}%s{FFFFFF}]\nStorage: %d / %d\nPrice: %s / unit", GetBusinessCargoDesc(StorageData[i][in_item]), StorageData[i][in_stock], StorageData[i][in_maximum], FormatNumber(StorageData[i][in_price]));
-				StorageData[i][in_label] = CreateDynamic3DTextLabel(msg, -1, StorageData[i][in_posx], StorageData[i][in_posy], StorageData[i][in_posz], 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, -1, -1, -1, 100.0);
+				format(msg, sizeof(msg),
+					"[{A4D247}%s{FFFFFF}] - %s\nCommodity: {E5FF00}%s{FFFFFF}\nPrice: %s / unit\nStock: %d / %d\n{AAAAAA}[IndID: %d | StorageID: %d]",
+					g_arrIndustryNames[StorageData[i][in_industryid]],
+					(StorageData[i][in_trading_type] == 0) ? ("{A4D247}For Sale{FFFFFF}") : ("{CD324D}Wanted{FFFFFF}"),
+					g_arrIndItemProperNames[StorageData[i][in_item]],
+					FormatNumber(StorageData[i][in_price]),
+					StorageData[i][in_stock], StorageData[i][in_maximum],
+					StorageData[i][in_industryid], StorageData[i][in_id]
+				);
+				StorageData[i][in_label] = CreateDynamic3DTextLabel(msg, COLOR_WHITE, StorageData[i][in_posx], StorageData[i][in_posy], StorageData[i][in_posz] + 0.8, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
 			}
             total++;
 
@@ -758,6 +748,7 @@ public Movedoor_Load()
 	}
 
 	printf("[SERVER]: %d dynamic movable doors were loaded from \"%s\" database...", total, SQL_DATABASE);
+	Init_StepDone();   // movable doors
 	return true;
 }
 
@@ -849,6 +840,8 @@ public Points_Load()
 			cache_get_value_name_int(i, "pointFaction", EntranceData[i][pointFaction]);
 			cache_get_value_name_int(i, "outsideWorld", EntranceData[i][outsideWorld]);
 			cache_get_value_name_int(i, "insideWorld", EntranceData[i][insideWorld]);
+			cache_get_value_name_int(i, "outsideInterior", EntranceData[i][outsideInterior]);
+			cache_get_value_name_int(i, "insideInterior", EntranceData[i][insideInterior]);
 
 			EntranceData[i][outsideApartmentID] = -1;
 			EntranceData[i][insideApartmentID] = -1;
@@ -1021,6 +1014,7 @@ public House_Load()
     }
 
     printf("[SERVER]: %d houses were loaded from \"%s\" database...", totals, SQL_DATABASE);
+    Init_StepDone();   // houses
     return true;
 }
 

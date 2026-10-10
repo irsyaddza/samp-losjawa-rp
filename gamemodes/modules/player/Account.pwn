@@ -338,13 +338,15 @@ public OnQueryFinished(extraid, threadid)
 				cache_get_value_name_int(0, "Savings", PlayerData[extraid][pSavings]);
 				cache_get_value_name_int(0, "SavingsCollect", PlayerData[extraid][pSavingsCollect]);
 				cache_get_value_name_int(0, "playerJob", PlayerData[extraid][pJob]);
-	            cache_get_value_name_int(0, "playerSideJob", PlayerData[extraid][pSideJob]);
 				cache_get_value_name_int(0, "playerJobRank", PlayerData[extraid][pJobRank]);
 	            cache_get_value_name_int(0, "playerCareer", PlayerData[extraid][pCareer]);
 	            cache_get_value_name_int(0, "playerHouseKey", PlayerData[extraid][pHouseKey]);
 				cache_get_value_name_int(0, "playerComplexKey", PlayerData[extraid][pComplexKey]);
 				cache_get_value_name_int(0, "busJobDelay", PlayerData[extraid][pBusJobDelay]);
 				cache_get_value_name_int(0, "sweeperJobDelay", PlayerData[extraid][pSweeperJobDelay]);
+				cache_get_value_name_int(0, "farmerRank", PlayerData[extraid][pFarmerRank]);
+				cache_get_value_name_int(0, "farmerExp",  PlayerData[extraid][pFarmerExp]);
+				if(PlayerData[extraid][pFarmerRank] < 1) PlayerData[extraid][pFarmerRank] = 1;
 	            cache_get_value_name(0, "Attribute", PlayerData[extraid][pAttribute]);
 	            if(cache_get_value_name(0, "MarriedTo", PlayerData[extraid][pMarriedTo]) == 0 || isnull(PlayerData[extraid][pMarriedTo]))
 	            {
@@ -396,8 +398,8 @@ public OnQueryFinished(extraid, threadid)
 				cache_get_value_name_float(0, "Health", PlayerData[extraid][pHealth]);
 				cache_get_value_name_float(0, "Armour", PlayerData[extraid][pArmour]);
 
-				if(cache_get_value_name_int(0, "Hunger", PlayerData[extraid][pHunger]) != 0) PlayerData[extraid][pHunger] = 100;
-				if(cache_get_value_name_int(0, "Thirst", PlayerData[extraid][pThirst]) != 0) PlayerData[extraid][pThirst] = 100;
+				cache_get_value_name_int(0, "Hunger", PlayerData[extraid][pHunger]);
+				cache_get_value_name_int(0, "Thirst", PlayerData[extraid][pThirst]);
 
 				cache_get_value_name_int(0, "Fishes", PlayerData[extraid][pFishes]);
 
@@ -494,6 +496,7 @@ public OnQueryFinished(extraid, threadid)
 					if(count == 6) break;
 				}
 
+				ResetPlayerMoney(extraid);
 				GivePlayerMoney(extraid, PlayerData[extraid][pCash]);
 
 				SetPlayerFaction(extraid);
@@ -574,15 +577,6 @@ public OnQueryFinished(extraid, threadid)
 
 				CheckFightingStyle(extraid);
 
-               	/*if(!active)
-				{
-					SendClientMessage(extraid, COLOR_LIGHTRED, "NOTE: Until you make your application and character is accepted you won't be able to play");
-					SendClientMessage(extraid, COLOR_LIGHTRED, "VISIT: legacy-rp.net");
-					SendClientMessage(extraid, COLOR_LIGHTRED, "Your character is not accepted yet!");
-					SendClientMessage(extraid, COLOR_LIGHTRED, "Regards, Legacy-RP Administration team.");
-
-					KickEx(extraid);
-				}*/
 
 				SetPlayerScore(extraid, PlayerData[extraid][pLevel]);
 
@@ -783,6 +777,13 @@ public OnQueryFinished(extraid, threadid)
 		    CharSelTotalSlots[extraid] = rows;
 		    SelectedSlot[extraid] = 0;
 		    SelectedCharacter[extraid] = 0;
+
+		    // Reset login timeout timer for character selection
+		    SafeTime[extraid] = 120;
+
+		    // Reset combined level before re-accumulating from fresh DB rows
+		    AccountData[extraid][aCombinedLevel][0] = 0;
+		    AccountData[extraid][aCombinedLevel][1] = 0;
 
 		    for(new i = 0; i != rows; ++i)
 		    {

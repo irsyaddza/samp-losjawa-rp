@@ -19,6 +19,9 @@ enum E_BUSINESS_DATA
 	Float:bExitX,
 	Float:bExitY,
 	Float:bExitZ,
+	Float:bFillX,       // gas station pump point (fallback: entrance)
+	Float:bFillY,
+	Float:bFillZ,
 	bLevelNeeded,
 	bBuyPrice,
 	bEntranceCost,
@@ -74,6 +77,36 @@ Business_Inside(playerid)
     return InBusiness[playerid];
 }
 
+Business_GetFillPos(bizid, &Float:x, &Float:y, &Float:z)
+{
+	x = BusinessData[bizid][bFillX];
+	y = BusinessData[bizid][bFillY];
+	z = BusinessData[bizid][bFillZ];
+
+	// Not set yet -> fall back to the entrance point (legacy behaviour).
+	if(x == 0.0 && y == 0.0 && z == 0.0)
+	{
+	    x = BusinessData[bizid][bEntranceX];
+	    y = BusinessData[bizid][bEntranceY];
+	    z = BusinessData[bizid][bEntranceZ];
+	}
+}
+
+stock Business_NearestFill(Float:x, Float:y, Float:z, Float:radius = 20.0)
+{
+	foreach (new i : Business)
+	{
+	    if(BusinessData[i][bType] != 1) continue;
+
+		new Float:fx, Float:fy, Float:fz;
+		Business_GetFillPos(i, fx, fy, fz);
+
+		if(VectorSize(x - fx, y - fy, z - fz) <= radius)
+			return i;
+	}
+	return -1;
+}
+
 Business_IsOwner(playerid, bizid)
 {
 	if(!Iter_Contains(Business, bizid)) return false;
@@ -99,8 +132,6 @@ Business_Refresh(bizid)
 		    DestroyDynamic3DTextLabel(BusinessData[bizid][bTextLabel]);
 		    BusinessData[bizid][bTextLabel] = Text3D:INVALID_3DTEXT_ID;
 		}
-
-		if(BusinessData[bizid][bType] == 13) return true; // Black Market
 
 		new model = BusinessData[bizid][bPickupModel];
 		if(!model)

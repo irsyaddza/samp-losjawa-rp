@@ -70,7 +70,7 @@ task Server[60000]()
 
 	if(!gShipDeparture)
 	{
-		if((gettime() - gShipTime) > 7200000)
+		if((gettime() - gShipTime) > 7200)
 		{
 			RampsClosed();
 		}
@@ -78,30 +78,6 @@ task Server[60000]()
 
  	for(new i = 0; i < MAX_DROP_ITEMS; ++i)
 	{
-	    /*if(CORPSES[i][corpseSpawned])
-	    {
-            CORPSES[i][corpseMinutes] += 1;
-
-            if(CORPSES[i][corpseMinutes] >= 20)
-            {
-                new Float:playerPos[3];
-	 	    	GetActorPos(CORPSES[i][corpseActor], playerPos[0], playerPos[1], playerPos[2]);
-
-				foreach (new x : Player)
-				{
-			    	if(IsPlayerInRangeOfPoint(x, 20.0, playerPos[0], playerPos[1], playerPos[2]))
-			    	{
-						SendClientMessage(x, COLOR_PURPLE, "* (( The corpse was despawned. ))");
-			    	}
-				}
-
-                DestroyActor(CORPSES[i][corpseActor]);
-                CORPSES[i][corpseActor] = INVALID_PLAYER_ID;
-                CORPSES[i][corpseName][0] = EOS;
-                CORPSES[i][corpseMinutes] = 0;
-                CORPSES[i][corpseSpawned] = false;
-            }
-	    }*/
 
 	    if(DroppedWeapons[i][DropExists])
 	    {
@@ -113,6 +89,8 @@ task Server[60000]()
 		    }
 	    }
 	}
+
+	Farmer_PlotTick();
 }
 
 IndustryTime()

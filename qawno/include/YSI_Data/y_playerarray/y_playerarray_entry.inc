@@ -76,8 +76,8 @@ Optional plugins:
 	Me - sscanf2, fixes2, Whirlpool.
 */
 
-#include "..\..\YSI_Core\y_utils"
-#include "..\..\YSI_Data\y_bit"
+#include "../../YSI_Core/y_utils"
+#include "../../YSI_Data/y_bit"
 
 #define PA_TYPE_NONE                    (-1)
 #define PA_TYPE_BOOL                    (-2)
