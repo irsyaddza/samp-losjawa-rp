@@ -38,3 +38,6 @@ jawa_backup.sql
 
 #agents
 opencode.json
+
+#backups
+backups/mysql/
