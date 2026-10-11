@@ -1,7 +1,3 @@
-```yaml
-# ─────────────────────────────────────────────────────────────────────────────
-# Nama pipeline ini. Akan muncul di tab "Actions" di halaman GitHub Anda.
-# ─────────────────────────────────────────────────────────────────────────────
 name: CI — Build & Validate
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -155,4 +151,3 @@ jobs:
       - name: Build Web Docker image
         run: |
           docker build -t ljrp-web:ci-test ./web
-```
