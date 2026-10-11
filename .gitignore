@@ -4,10 +4,6 @@ server.cfg
 # Compiled gamemodes and filterscripts (rebuild from .pwn source)
 *.amx
 
-# Compiler binaries (Linux build copied from open.mp server package)
-qawno/pawncc
-qawno/libpawnc.so
-
 # Logs
 logs/
 server_log.txt
@@ -32,9 +28,6 @@ mysql/data/
 
 # Secrets
 scriptfiles/ai_config.json
-
-# Local DB dumps
-jawa_backup.sql
 
 #agents
 opencode.json
