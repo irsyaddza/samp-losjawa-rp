@@ -16014,50 +16014,6 @@ ResetGlobalVariables()
 	}	
 }
 
-CMD:enablecmd(playerid, params[])
-{
-    if(PlayerData[playerid][pAdmin] < 1337)
-        return SendUnauthMessage(playerid, "You're not authorized to use this command.");
-
-	if(isnull(params))
-		return SendSyntaxMessage(playerid, "/enablecmd [Command Name e.g 'givegun']");
-
-	new command = Command_GetID(params);	
-
-	if(command == -1)
-		return SendErrorMessage(playerid, "Command '%s' is invalid.", params);
-
-	if(DisabledCommands[command] == 0)	
-		return SendErrorMessage(playerid, "Command '%s' is already enabled, use /disablecmd.", params);
-
-	DisabledCommands[command] = 0;
-
-	SendClientMessageEx(playerid, COLOR_LIGHTRED, "Command /%s is now enabled. (/disablecmd to disable it)", params);	
-	return true;
-}
-
-CMD:disablecmd(playerid, params[])
-{
-    if(PlayerData[playerid][pAdmin] < 1337)
-        return SendUnauthMessage(playerid, "You're not authorized to use this command.");
-
-	if(isnull(params))
-		return SendSyntaxMessage(playerid, "/disablecmd [Command Name e.g 'givegun']");
-
-	new command = Command_GetID(params);	
-
-	if(command == -1)
-		return SendErrorMessage(playerid, "Command '%s' is invalid.", params);
-
-	if(DisabledCommands[command] == 1)	
-		return SendErrorMessage(playerid, "Command '%s' is already disabled, use /enablecmd.", params);
-
-	DisabledCommands[command] = 1;
-
-	SendClientMessageEx(playerid, COLOR_LIGHTRED, "Command /%s is now disabled. (/enablecmd to enable it again)", params);	
-	return true;
-}
-
 Dialog:MotdUpdate(playerid, response, listitem, inputtext[])
 {
 	if(!response) return true;
