@@ -7,7 +7,7 @@ import { RowDataPacket } from 'mysql2';
 
 export async function POST(request: Request) {
   try {
-    const { username, password } = await request.json();
+    const { username, password }: { username?: string; password?: string } = await request.json();
 
     if (!username || !password) {
       return NextResponse.json(
@@ -16,7 +16,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Query database for user
     const [rows] = await pool.execute<RowDataPacket[]>(
       'SELECT ID, Username, Password, Admin, Email, EmailVerified FROM accounts WHERE Username = ? LIMIT 1',
       [username]
@@ -31,15 +30,17 @@ export async function POST(request: Request) {
 
     const account = rows[0];
     let isPasswordValid = false;
-    const isBcrypt = account.Password.startsWith('$2a$') || account.Password.startsWith('$2y$') || account.Password.startsWith('$2b$');
+    const isBcrypt =
+      account.Password.startsWith('$2a$') ||
+      account.Password.startsWith('$2y$') ||
+      account.Password.startsWith('$2b$');
 
     if (isBcrypt) {
       isPasswordValid = await bcrypt.compare(password, account.Password);
     } else {
       const hashedPassword = whirlpool(password);
-      isPasswordValid = (account.Password.toUpperCase() === hashedPassword);
+      isPasswordValid = account.Password.toUpperCase() === hashedPassword;
 
-      // If legacy check is successful, upgrade to Bcrypt immediately
       if (isPasswordValid) {
         try {
           const salt = await bcrypt.genSalt(12);
@@ -61,8 +62,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if account has a valid email address
-    const hasValidEmail = account.Email && account.Email.trim() !== '' && account.Email !== 'None' && account.Email.includes('@');
+    const hasValidEmail =
+      account.Email &&
+      account.Email.trim() !== '' &&
+      account.Email !== 'None' &&
+      account.Email.includes('@');
 
     if (!hasValidEmail) {
       return NextResponse.json(
@@ -76,7 +80,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if email is verified
     if (account.EmailVerified === 0) {
       return NextResponse.json(
         {
@@ -88,7 +91,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Save session
     await setSessionCookie({
       userId: account.ID,
       username: account.Username,
@@ -103,8 +105,9 @@ export async function POST(request: Request) {
         adminLevel: account.Admin,
       },
     });
-  } catch (error: any) {
-    console.error('Login error:', error);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Login error:', message);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

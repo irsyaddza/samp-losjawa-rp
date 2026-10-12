@@ -3,7 +3,7 @@ import Link from 'next/link';
 import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { RowDataPacket } from 'mysql2';
-import { ArrowLeft, Users, ShieldAlert, Award, Search } from 'lucide-react';
+import { ArrowLeft, Users, Award } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { getSkinImageUrl } from '@/lib/assets';
 
@@ -93,7 +93,7 @@ export default async function OnlinePlayersPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {players.map((player: any) => {
+            {(players as unknown as { ID: number; char_name: string; Level: number; Model: number; factionName: string | null; factionShort: string | null }[]).map((player) => {
               const formattedName = player.char_name.replace('_', ' ');
               return (
                 <div

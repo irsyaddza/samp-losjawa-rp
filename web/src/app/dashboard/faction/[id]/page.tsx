@@ -113,7 +113,7 @@ export default async function FactionPortalPage({ params }: PageProps) {
         {/* Faction Roster Control Table */}
         <FactionRoster
           factionId={factionId}
-          members={members as any[]}
+          members={members as unknown as { ID: number; char_name: string; Level: number; FactionRank: number; Online: number }[]}
           isLeader={isLeader}
         />
       </main>

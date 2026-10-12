@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     );
 
     return NextResponse.json({ success: true, message: 'Security details updated successfully' });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Update security details error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

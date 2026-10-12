@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     const verifyToken = crypto.randomBytes(32).toString('hex');
     const verifyExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    const [result] = await pool.execute<ResultSetHeader>(
+    await pool.execute<ResultSetHeader>(
       `INSERT INTO accounts (Username, Password, Email, EmailVerified, EmailVerifyToken, EmailVerifyExpiry)
        VALUES (?, ?, ?, 0, ?, ?)`,
       [username, hashedPassword, email, verifyToken, verifyExpiry]
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
       success: true,
       message: 'Account created. Please check your email to verify your account.',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Registration error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

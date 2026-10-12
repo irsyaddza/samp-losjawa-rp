@@ -72,7 +72,19 @@ export default function FriendsPage() {
   }
 
   useEffect(() => {
-    fetchFriendsData();
+    let cancelled = false;
+    fetch('/api/friends')
+      .then((res) => res.ok ? res.json() : Promise.reject())
+      .then((data) => {
+        if (!cancelled) {
+          setActiveFriends(data.active || []);
+          setIncomingRequests(data.incoming || []);
+          setOutgoingRequests(data.outgoing || []);
+        }
+      })
+      .catch((err) => console.error('Failed to load friends:', err))
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
   async function handleSendRequest(e: React.FormEvent) {

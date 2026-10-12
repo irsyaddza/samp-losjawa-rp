@@ -1,5 +1,5 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 const phpPath = 'C:\\Users\\irsyadd\\AppData\\Local\\Temp\\lsrp-ucp-temp\\api\\skins.php';
 const destPath = path.join(__dirname, '..', 'src', 'lib', 'skins-map.ts');

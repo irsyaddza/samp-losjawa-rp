@@ -33,8 +33,14 @@ export default function ChangelogManager() {
   }, []);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    let cancelled = false;
+    fetch('/api/admin/changelog')
+      .then((res) => res.ok ? res.json() : Promise.reject())
+      .then((data) => { if (!cancelled) setEntries(data.entries || []); })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
 
   const submit = async () => {
     setMessage('');

@@ -37,7 +37,7 @@ export async function GET() {
       },
       onlineList: onlinePlayersListRows,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Server info error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch server info' },

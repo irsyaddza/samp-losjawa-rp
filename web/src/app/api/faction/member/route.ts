@@ -96,7 +96,7 @@ export async function POST(request: Request) {
     else {
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error('Faction roster action error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

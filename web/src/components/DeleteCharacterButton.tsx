@@ -45,8 +45,9 @@ export default function DeleteCharacterButton({ charId, charName }: DeleteCharac
       setIsOpen(false);
       router.push('/dashboard');
       router.refresh();
-    } catch (err: any) {
-      setError(err.message || 'Terjadi kesalahan sistem.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Terjadi kesalahan sistem.';
+      setError(message);
     } finally {
       setLoading(false);
     }

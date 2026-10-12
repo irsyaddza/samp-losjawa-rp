@@ -120,7 +120,7 @@ export default async function AdminRecordsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-900">
-                    {bans.map((ban: any) => (
+                    {(bans as unknown as { id: number; Character: string; BannedBy: string; Reason: string; Date: string }[]).map((ban) => (
                       <tr key={ban.id} className="hover:bg-zinc-900/10">
                         <td className="py-3 pr-4 font-bold text-white">{ban.Character.replace('_', ' ')}</td>
                         <td className="py-3 px-4 text-zinc-450">{ban.BannedBy}</td>
@@ -161,7 +161,7 @@ export default async function AdminRecordsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-900">
-                    {jails.map((jail: any) => (
+                    {(jails as unknown as { id: number; Character: string; JailedBy: string; Reason: string; Minutes: number; Date: string }[]).map((jail) => (
                       <tr key={jail.id} className="hover:bg-zinc-900/10">
                         <td className="py-3 pr-4 font-bold text-white">{jail.Character.replace('_', ' ')}</td>
                         <td className="py-3 px-4 text-zinc-450">{jail.JailedBy}</td>
@@ -202,7 +202,7 @@ export default async function AdminRecordsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-900">
-                    {kicks.map((kick: any) => (
+                    {(kicks as unknown as { id: number; Character: string; KickedBy: string; Reason: string; Date: string }[]).map((kick) => (
                       <tr key={kick.id} className="hover:bg-zinc-900/10">
                         <td className="py-3 pr-4 font-bold text-white">{kick.Character.replace('_', ' ')}</td>
                         <td className="py-3 px-4 text-zinc-450">{kick.KickedBy}</td>

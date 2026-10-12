@@ -23,7 +23,13 @@ async function getRadioStations() {
     const [rows] = await pool.execute<RowDataPacket[]>(
       'SELECT id, genres_id, subgenres_id, station_name, station_url FROM radio_station ORDER BY genres_id ASC, id ASC'
     );
-    return rows as any[];
+    return rows as unknown as {
+      id: number;
+      genres_id: number;
+      subgenres_id: number;
+      station_name: string;
+      station_url: string;
+    }[];
   } catch (error) {
     console.error('Error fetching radio stations for page:', error);
     return [];
