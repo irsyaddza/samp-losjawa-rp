@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
-import { RowDataPacket, ResultSetHeader } from 'mysql2';
+import { RowDataPacket } from 'mysql2';
 
 export async function POST(request: Request) {
   try {
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
     );
 
     return NextResponse.json({ success: true, message: 'Application submitted successfully' });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Submit application error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

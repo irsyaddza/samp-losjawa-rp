@@ -102,7 +102,11 @@ export default async function AdminPortalPage() {
         )}
 
         {/* Admin Applications Review List */}
-        <AdminPanel initialApps={pendingApps as any[]} currentAdminLevel={session.adminLevel} />
+        <AdminPanel initialApps={pendingApps as unknown as {
+          id: number; master: number; char_name: string; story: string;
+          origin: string; gender: string; age: number; date_of_submit: string;
+          Username: string; answer1: string; answer2: string;
+        }[]} currentAdminLevel={session.adminLevel} />
       </main>
     </div>
   );

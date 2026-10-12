@@ -25,7 +25,13 @@ async function getAdminRoster() {
          Admin DESC, 
          Username ASC`
     );
-    return admins as any[];
+    return admins as unknown as {
+      ID: number;
+      Username: string;
+      Email: string;
+      Admin: number;
+      RegisterDate: string;
+    }[];
   } catch (error) {
     console.error('Error fetching admin roster page data:', error);
     return [];

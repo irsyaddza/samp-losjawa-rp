@@ -15,7 +15,6 @@ import {
   Shield,
   Settings,
   Globe,
-  Award
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
@@ -70,8 +69,11 @@ export default function Navbar({ session }: NavbarProps) {
   }, []);
 
   useEffect(() => {
-    setMobileOpen(false);
-    setDropdownOpen(false);
+    const t = setTimeout(() => {
+      setMobileOpen(false);
+      setDropdownOpen(false);
+    }, 0);
+    return () => clearTimeout(t);
   }, [pathname]);
 
   return (

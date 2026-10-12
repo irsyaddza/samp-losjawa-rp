@@ -1,5 +1,5 @@
-const https = require('https');
-const crypto = require('crypto');
+import https from 'https';
+import crypto from 'crypto';
 
 function calculateMD5Path(filename) {
   const hash = crypto.createHash('md5').update(filename).digest('hex');
@@ -27,6 +27,6 @@ https.get(url, options, (res) => {
   res.on('data', (d) => {
     console.log('Received chunk of size:', d.length);
   });
-}).on('error', (e) => {
-  console.error('Error:', e);
+}).on('error', (error) => {
+  console.error('Error:', error);
 });

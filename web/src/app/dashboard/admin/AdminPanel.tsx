@@ -107,8 +107,8 @@ export default function AdminPanel({ initialApps, currentAdminLevel }: AdminPane
   // Search characters for donators management
   useEffect(() => {
     if (searchQuery.length < 2) {
-      setSearchResults([]);
-      return;
+      const timer = setTimeout(() => setSearchResults([]), 0);
+      return () => clearTimeout(timer);
     }
 
     const delayDebounce = setTimeout(async () => {
@@ -573,7 +573,7 @@ export default function AdminPanel({ initialApps, currentAdminLevel }: AdminPane
                         </label>
                         <div className="h-11 border border-zinc-850 rounded-xl bg-zinc-900/50 px-4 text-xs flex items-center gap-2 font-semibold text-zinc-400">
                           <Clock className="h-4 w-4 text-zinc-500" />
-                          {new Date(Date.now() + durationDays * 86400000).toLocaleDateString('en-US', {
+                          {new Date(new Date().getTime() + durationDays * 86400000).toLocaleDateString('en-US', {
                             day: 'numeric',
                             month: 'long',
                             year: 'numeric',

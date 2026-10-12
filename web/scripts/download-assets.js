@@ -1,7 +1,7 @@
-const fs = require('fs');
-const path = require('path');
-const https = require('https');
-const crypto = require('crypto');
+import fs from 'fs';
+import path from 'path';
+import https from 'https';
+import crypto from 'crypto';
 
 // Configuration
 const SKINS_DIR = path.join(__dirname, '..', 'public', 'skins');

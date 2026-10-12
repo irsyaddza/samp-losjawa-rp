@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
-import { RowDataPacket, ResultSetHeader } from 'mysql2';
+import { RowDataPacket } from 'mysql2';
 
 export async function POST(request: Request) {
   try {
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
     } finally {
       conn.release();
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error('Delete character error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

@@ -81,7 +81,15 @@ export default async function AdminMappingPortalPage() {
         </div>
 
         {/* Admin Mapping Review List */}
-        <AdminMappingPanel initialRequests={pendingMappings as any[]} />
+        <AdminMappingPanel initialRequests={pendingMappings as unknown as {
+          id: number;
+          ucp_name: string;
+          property_type: number;
+          property_id: number;
+          mapping_code: string;
+          created_at: string;
+          custom_title?: string;
+        }[]} />
       </main>
     </div>
   );

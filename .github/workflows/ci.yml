@@ -1,0 +1,153 @@
+name: CI — Build & Validate
+
+# ─────────────────────────────────────────────────────────────────────────────
+# KAPAN PIPELINE INI JALAN?
+# "on" = trigger/pemicu. Artinya: pipeline ini otomatis menyala saat...
+# ─────────────────────────────────────────────────────────────────────────────
+on:
+  push:
+    branches:
+      - development   # ...ada yang git push ke branch "development"
+      - main          # ...ada yang git push ke branch "main"
+  pull_request:
+    branches:
+      - main          # ...ada yang membuat Pull Request ke branch "main"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DAFTAR JOBS (PEKERJAAN) YANG AKAN DIJALANKAN
+# Setiap "job" berjalan di server cloud GitHub yang terpisah dan independen.
+# ─────────────────────────────────────────────────────────────────────────────
+jobs:
+
+  # ───────────────────────────────────────────────
+  # JOB 1: Compile Pawn Gamemode (.pwn → .amx)
+  # ───────────────────────────────────────────────
+  compile-gamemode:
+    name: "Compile Pawn Gamemode"
+
+    # Jenis OS server cloud yang akan dipakai. Kita pakai Ubuntu (Linux)
+    # agar 100% sama dengan lingkungan server game kita.
+    runs-on: ubuntu-latest
+
+    # Daftar langkah-langkah di dalam job ini (dijalankan berurutan dari atas ke bawah)
+    steps:
+
+      # Langkah 1: "Checkout" = unduh seluruh isi repo Anda ke server cloud GitHub.
+      # Tanpa langkah ini, server cloud tidak punya file kode Anda sama sekali.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Langkah 2: Install library 32-bit yang dibutuhkan oleh pawncc.
+      # pawncc (Pawn Compiler) adalah binary 32-bit, jadi butuh library i386.
+      - name: Install 32-bit dependencies for pawncc
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update -qq
+          sudo apt-get install -y libc6:i386 libstdc++6:i386
+
+      # Langkah 3: Beri izin eksekusi pada binary compiler pawncc.
+      # File ini sudah ada di folder qawno/ di repo Anda.
+      - name: Make pawncc executable
+        run: chmod +x ./qawno/pawncc
+
+      # Langkah 4: Jalankan kompilasi! Ini adalah inti dari Job 1.
+      # Persis seperti isi file build.sh Anda, tapi dijalankan di cloud GitHub.
+      - name: Compile roleplay.pwn → roleplay.amx
+        run: |
+          cd gamemodes
+          LD_LIBRARY_PATH="$(cd ../qawno && pwd)" \
+            ../qawno/pawncc roleplay.pwn -i../qawno/include -oroleplay.amx
+
+      # Langkah 5: Upload file roleplay.amx sebagai artefak build.
+      # Artinya: file .amx yang sudah jadi bisa kita DOWNLOAD langsung
+      # dari tab Actions di GitHub, tanpa perlu compile lagi di laptop!
+      - name: Upload roleplay.amx as build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: roleplay-amx          # Nama artefak yang muncul di GitHub
+          path: gamemodes/roleplay.amx # Path file yang diupload
+          retention-days: 7           # Otomatis dihapus setelah 7 hari
+
+  # ───────────────────────────────────────────────
+  # JOB 2: Lint & Build Validasi Web (Next.js)
+  # ───────────────────────────────────────────────
+  validate-web:
+    name: "Lint & Validate Next.js Web"
+    runs-on: ubuntu-latest
+
+    steps:
+      # Langkah 1: Unduh kode repo
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Langkah 2: Siapkan Node.js (runtime untuk Next.js)
+      # "cache: npm" berarti dependensi tidak perlu diunduh ulang setiap kali
+      # pipeline jalan, sehingga lebih cepat.
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+
+      # Langkah 3: Install semua package npm (dependensi Next.js)
+      - name: Install dependencies
+        run: npm ci
+        working-directory: web
+
+      # Langkah 4: Jalankan linter untuk mengecek kesalahan kode TypeScript/JS.
+      # Jika ada error di kode Next.js, langkah ini akan GAGAL (tanda merah ❌)
+      # dan kita diberi tahu sebelum file yang rusak masuk ke server.
+      - name: Run ESLint
+        run: npm run lint
+        working-directory: web
+
+      # Langkah 5 (Opsional tapi sangat berguna):
+      # Coba build Next.js untuk memastikan tidak ada error TypeScript saat
+      # proses produksi. Lebih dalam dari sekedar lint.
+      - name: Build Next.js (production build check)
+        run: npm run build
+        working-directory: web
+        env:
+          # Sediakan env vars dummy agar proses build tidak crash saat
+          # mencari koneksi database yang sebenarnya tidak ada di cloud GitHub.
+          DB_HOST: "localhost"
+          DB_USER: "test"
+          DB_PASSWORD: "test"
+          DB_DATABASE: "test"
+          JWT_SECRET: "ci-test-secret-key"
+          NEXT_PUBLIC_BASE_URL: "http://localhost:3000"
+
+  # ───────────────────────────────────────────────
+  # JOB 3: Docker Image Build Validation
+  # (Smoke Test: apakah Docker bisa build tanpa error?)
+  # ───────────────────────────────────────────────
+  validate-docker:
+    name: "Docker Image Build Validation"
+    runs-on: ubuntu-latest
+
+    # "needs" = Job ini menunggu Job 1 selesai dulu.
+    # Logikanya: tidak ada gunanya build Docker kalau .amx-nya saja belum jadi.
+    needs: compile-gamemode
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Unduh file roleplay.amx yang dihasilkan oleh Job 1 tadi
+      - name: Download compiled roleplay.amx
+        uses: actions/download-artifact@v4
+        with:
+          name: roleplay-amx
+          path: gamemodes/
+
+      # Build Dockerfile SA-MP server untuk memastikan tidak ada error
+      # saat image sedang dibuat (bukan menjalankannya, hanya mem-build).
+      - name: Build SAMP Docker image
+        run: |
+          docker build -t ljrp-samp:ci-test .
+
+      # Build Dockerfile Web portal Next.js
+      - name: Build Web Docker image
+        run: |
+          docker build -t ljrp-web:ci-test ./web
