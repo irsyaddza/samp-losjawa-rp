@@ -13,3 +13,5 @@ mysql/data/
 scriptfiles/ai_config.json
 opencode.json
 backups/mysql/
+.agents
+rus.txt
