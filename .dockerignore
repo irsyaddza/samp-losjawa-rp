@@ -1,0 +1,17 @@
+.git
+.github
+.env
+.env.*
+.vscode
+logs
+server_log.txt
+crashinfo.txt
+server.cfg
+mysql/data
+backups
+node_modules
+web/node_modules
+web/.next
+web/.env.local
+scriptfiles/ai_config.json
+opencode.json
