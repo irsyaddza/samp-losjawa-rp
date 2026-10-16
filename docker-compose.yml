@@ -81,7 +81,7 @@ services:
     environment:
       DB_HOST: mysql
       DB_USER: ${MYSQL_USER:?MYSQL_USER wajib diisi di .env}
-      DB_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSOWRD wajib diisi di .env}
+      DB_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD wajib diisi di .env}
       DB_DATABASE: ${MYSQL_DATABASE:?MYSQL_DATABASE wajib diisi di .env}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET wajib diisi di .env}
       NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-http://localhost:3000}
