@@ -54,7 +54,6 @@ services:
       - samp_logs:/samp/logs
       - samp_scriptfiles:/samp/scriptfiles
       - ./gamemodes:/samp/gamemodes
-      - ./roleplay.amx:/samp/roleplay.amx
     environment:
       MYSQL_HOST: mysql
       MYSQL_USER: ${MYSQL_USER:?MYSQL_USER wajib diisi di .env}
@@ -91,11 +90,7 @@ services:
       DB_DATABASE: ${MYSQL_DATABASE:?MYSQL_DATABASE wajib diisi di .env}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET wajib diisi di .env}
       NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-http://localhost:3000}
-      SMTP_HOST: ${SMTP_HOST}
-      SMTP_PORT: ${SMTP_PORT}
-      SMTP_USER: ${SMTP_USER}
-      SMTP_PASS: ${SMTP_PASS}
-      SMTP_FROM: ${SMTP_FROM}
+      # SMTP baca dari web/.env.local agar konfigurasi Hostinger tidak ditimpa root .env
       TZ: Asia/Jakarta
     env_file:
       - ./web/.env.local
