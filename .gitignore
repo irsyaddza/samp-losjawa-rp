@@ -15,3 +15,4 @@ opencode.json
 backups/mysql/
 .agents
 rus.txt
+gamemodes/modules/db_credentials.inc

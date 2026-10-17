@@ -15,3 +15,9 @@ web/.next
 web/.env.local
 scriptfiles/ai_config.json
 opencode.json
+qawno/
+docs/
+scripts/
+playit/
+roleplay.xml
+gamemodes/modules/db_credentials.inc

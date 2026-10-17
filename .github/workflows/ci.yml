@@ -49,6 +49,26 @@ jobs:
       # File ini sudah ada di folder qawno/ di repo Anda.
       - name: Make pawncc executable
         run: chmod +x ./qawno/pawncc
+      
+      ##Baca include credentials db
+      - name: Prepare db_credentials.inc
+        env:
+          DB_SQL_HOSTNAME: ${{ secrets.DB_SQL_HOSTNAME }}
+          DB_SQL_USERNAME: ${{ secrets.DB_SQL_USERNAME }}
+          DB_SQL_DATABASE: ${{ secrets.DB_SQL_DATABASE }}
+          DB_SQL_PASSWORD: ${{ secrets.DB_SQL_PASSWORD }}
+        run: |
+          if [ -n "$DB_SQL_PASSWORD" ]; then
+            {
+              echo "#define SQL_HOSTNAME \"$DB_SQL_HOSTNAME\""
+              echo "#define SQL_USERNAME \"$DB_SQL_USERNAME\""
+              echo "#define SQL_DATABASE \"$DB_SQL_DATABASE\""
+              echo "#define SQL_PASSWORD \"$DB_SQL_PASSWORD\""
+            } > gamemodes/modules/db_credentials.inc
+          else
+            cp gamemodes/modules/db_credentials.example.inc \
+               gamemodes/modules/db_credentials.inc
+          fi
 
       # Langkah 4: Jalankan kompilasi! Ini adalah inti dari Job 1.
       # Persis seperti isi file build.sh Anda, tapi dijalankan di cloud GitHub.
@@ -56,7 +76,7 @@ jobs:
         run: |
           cd gamemodes
           LD_LIBRARY_PATH="$(cd ../qawno && pwd)" \
-            ../qawno/pawncc roleplay.pwn -i../qawno/include -oroleplay.amx
+            ../qawno/pawncc roleplay.pwn -i../qawno/include -imodules -oroleplay.amx
 
       # Langkah 5: Upload file roleplay.amx sebagai artefak build.
       # Artinya: file .amx yang sudah jadi bisa kita DOWNLOAD langsung

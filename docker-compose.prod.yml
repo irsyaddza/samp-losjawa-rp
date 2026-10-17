@@ -1,0 +1,117 @@
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: ljrp-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD wajib diisi di .env}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:?MYSQL_DATABASE wajib diisi di .env}
+      MYSQL_USER: ${MYSQL_USER:?MYSQL_USER wajib diisi di .env}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD wajib diisi di .env}
+      TZ: Asia/Jakarta
+    ports:
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - samp_net
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --sql-mode=NO_ENGINE_SUBSTITUTION
+      --max_allowed_packet=64M
+    healthcheck:
+      test: ["CMD", "sh", "-c", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  samp:
+    image: ${SAMP_IMAGE:-ghcr.io/irsyaddza/ljrp-samp:main}
+    container_name: ljrp-samp
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "7777:7777/udp"
+      - "7777:7777/tcp"
+    volumes:
+      - samp_logs:/samp/logs
+      - ./scriptfiles/:/samp/scriptfiles/
+      
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_USER: ${MYSQL_USER:?MYSQL_USER wajib diisi di .env}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD wajib diisi di .env}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:?MYSQL_DATABASE wajib diisi di .env}
+      TZ: Asia/Jakarta
+    networks:
+      - samp_net
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -x omp-server >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  web:
+    image: ${WEB_IMAGE:-ghcr.io/irsyaddza/ljrp-web:main}
+    container_name: ljrp-web
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: mysql
+      DB_USER: ${MYSQL_USER:?MYSQL_USER wajib diisi di .env}
+      DB_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD wajib diisi di .env}
+      DB_DATABASE: ${MYSQL_DATABASE:?MYSQL_DATABASE wajib diisi di .env}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET wajib diisi di .env}
+      NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-http://localhost:3000}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      TZ: Asia/Jakarta
+    networks:
+      - samp_net
+
+  models-cdn:
+    image: nginx:alpine
+    container_name: ljrp-models-cdn
+    restart: unless-stopped
+    ports:
+      - "7778:80"
+    volumes:
+      - ./models:/usr/share/nginx/html:ro
+    networks:
+      - samp_net
+
+  playit:
+    image: ghcr.io/playit-cloud/playit-agent:latest
+    container_name: ljrp-playit
+    restart: unless-stopped
+    profiles: ["playit"]
+    environment:
+      SECRET_KEY: ${PLAYIT_SECRET_KEY:-}
+    networks:
+      - samp_net
+
+volumes:
+  mysql_data:
+  samp_logs:
+  samp_scriptfiles:
+
+networks:
+  samp_net:
+    driver: bridge
