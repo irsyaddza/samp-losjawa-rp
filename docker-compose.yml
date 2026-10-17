@@ -90,7 +90,11 @@ services:
       DB_DATABASE: ${MYSQL_DATABASE:?MYSQL_DATABASE wajib diisi di .env}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET wajib diisi di .env}
       NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-http://localhost:3000}
-      # SMTP baca dari web/.env.local agar konfigurasi Hostinger tidak ditimpa root .env
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
       TZ: Asia/Jakarta
     networks:
       - samp_net
@@ -126,8 +130,6 @@ volumes:
   mysql_data:
     driver: local
   samp_logs:
-    driver: local
-  samp_scriptfiles:
     driver: local
 
 networks:
