@@ -52,9 +52,8 @@ services:
       - "7777:7777/tcp"
     volumes:
       - samp_logs:/samp/logs
-      - samp_scriptfiles:/samp/scriptfiles
+      - ./scriptfiles/:/samp/scriptfiles/
       - ./gamemodes:/samp/gamemodes
-      - ./roleplay.amx:/samp/roleplay.amx
     environment:
       MYSQL_HOST: mysql
       MYSQL_USER: ${MYSQL_USER:?MYSQL_USER wajib diisi di .env}
@@ -63,6 +62,12 @@ services:
       TZ: Asia/Jakarta
     networks:
       - samp_net
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -x omp-server >/dev/null || exit 1 "]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   # ─────────────────────────────────────────────
   #  Next.js Web Portal & UCP
@@ -81,24 +86,21 @@ services:
     environment:
       DB_HOST: mysql
       DB_USER: ${MYSQL_USER:?MYSQL_USER wajib diisi di .env}
-      DB_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSOWRD wajib diisi di .env}
+      DB_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD wajib diisi di .env}
       DB_DATABASE: ${MYSQL_DATABASE:?MYSQL_DATABASE wajib diisi di .env}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET wajib diisi di .env}
       NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-http://localhost:3000}
-      SMTP_HOST: ${SMTP_HOST}
-      SMTP_PORT: ${SMTP_PORT}
-      SMTP_USER: ${SMTP_USER}
-      SMTP_PASS: ${SMTP_PASS}
-      SMTP_FROM: ${SMTP_FROM}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
       TZ: Asia/Jakarta
-    env_file:
-      - ./web/.env.local
     networks:
       - samp_net
 
   # ─────────────────────────────────────────────
   #  HTTP CDN — serve /models untuk download client
-  #  ponytail: nginx:alpine, static file serve
   # ─────────────────────────────────────────────
   models-cdn:
     image: nginx:alpine
@@ -118,6 +120,7 @@ services:
     image: ghcr.io/playit-cloud/playit-agent:latest
     container_name: ljrp-playit
     restart: unless-stopped
+    profiles: ["playit"]
     environment:
       SECRET_KEY: ${PLAYIT_SECRET_KEY}
     networks:
@@ -127,8 +130,6 @@ volumes:
   mysql_data:
     driver: local
   samp_logs:
-    driver: local
-  samp_scriptfiles:
     driver: local
 
 networks:

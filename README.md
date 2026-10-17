@@ -1,8 +1,9 @@
 # Los Jawa Roleplay — Server Infrastructure
 
-A production-grade open.mp (SA-MP) roleplay server stack built on Docker Compose, featuring automated database backup, disaster recovery validation, and a Next.js web portal.
+A production-grade open.mp (SA-MP) roleplay server stack built on Docker Compose, featuring automated database backup, disaster recovery validation, a Next.js web portal, and a GitHub Container Registry delivery pipeline.
 
 ![CI Status](https://github.com/irsyaddza/samp-losjawa-rp/actions/workflows/ci.yml/badge.svg)
+![CD Status](https://github.com/irsyaddza/samp-losjawa-rp/actions/workflows/cd.yml/badge.svg)
 
 ---
 
@@ -13,12 +14,39 @@ The stack consists of five services orchestrated via Docker Compose:
 | Container | Image | Port | Purpose |
 | :--- | :--- | :--- | :--- |
 | `ljrp-mysql` | mysql:5.7 | 127.0.0.1:3306 | Primary database (localhost-only) |
-| `ljrp-samp` | custom build | 7777/udp, 7777/tcp | open.mp game server |
-| `ljrp-web` | custom build | 3000 | Next.js web portal and UCP |
+| `ljrp-samp` | custom build / GHCR | 7777/udp, 7777/tcp | open.mp game server |
+| `ljrp-web` | custom build / GHCR | 3000 | Next.js web portal and UCP |
 | `ljrp-models-cdn` | nginx:alpine | 7778 | Static file CDN for client model downloads |
-| `ljrp-playit` | playit-agent | — | Network tunnel via Playit.gg |
+| `ljrp-playit` | playit-agent | — | Network tunnel via Playit.gg (optional, profile-gated) |
 
 All services communicate through an internal Docker bridge network (`samp_net`). The MySQL port is bound exclusively to `127.0.0.1` to prevent external access.
+
+The stack ships with two Compose definitions:
+
+| File | Purpose |
+| :--- | :--- |
+| `docker-compose.yml` | Local development. Builds images from source and bind-mounts the gamemode for fast iteration. |
+| `docker-compose.prod.yml` | Production. Pulls immutable images from GitHub Container Registry and mounts no source code. |
+
+The `playit` service is gated behind the `playit` profile, so it only starts when explicitly requested (`docker compose --profile playit up -d`).
+
+---
+
+## Core Systems & Gameplay Architecture
+
+Los Jawa Roleplay is engineered on a high-performance **modular Pawn architecture** (`gamemodes/modules/`) backed by an asynchronous MySQL persistence engine and a Next.js 14 Web UCP. The codebase prioritizes data integrity, real-time spatial synchronization, and distributed operations:
+
+| System Domain | Technical Complexity & Highlights | Primary Modules |
+| :--- | :--- | :--- |
+| **Living Economy & Real Estate** | Dynamic property instances (virtual worlds), real-time 3D raycast furniture customization engine, multi-tier industrial refining supply chains, and agricultural farming loops. | `Furniture.pwn`, `Property.pwn`, `Industry.pwn`, `Store.pwn` |
+| **Law Enforcement Technology** | Interactive in-game Mobile Data Computer (MDC) with citizen record indexing, live CCTV spectator stream interpolation, automated penal sentencing, and static vehicle fleet management. | `MobileDataComputer.pwn`, `CCTV.pwn`, `Prison.pwn`, `Faction.pwn` |
+| **Autonomous Transit & World** | Autonomous statewide railway transit network (`TrainSystem`), modular vehicle component health (engine, transmission, tires), trunk storage, and dynamic emergency strobes (ELM). | `TrainSystem.pwn`, `VehicleParts.pwn`, `ELM.pwn` |
+| **Illicit Markets & Gang Warfare** | Multi-phase contraband chemical synthesis, black market firearm assembly with serial tracking, dynamic spray-paint graffiti tagging, and gang turf boundary control. | `Drugs.pwn`, `IllegalWeapon.pwn`, `Graffiti.pwn`, `Zones.pwn` |
+| **Full-Stack Web Portal (UCP)** | Modern Next.js 14 App Router portal featuring JWT stateless auth, bcrypt password parity with open.mp, automated SMTP transactional emails, and real-time player telemetry. | Next.js 14, Tailwind, TypeScript, MySQL |
+| **Staff Live-Ops & Tooling** | In-game 3D world map editor with live review/approval pipeline, heuristic anticheat (teleport, speed, weapon spoofing), and live in-game SQL query diagnostic engine. | `MapEditor.pwn`, `MappingRequest.pwn`, `Anticheat.pwn`, `Queries.pwn` |
+
+> 📖 **Deep-Dive Technical Reference:**  
+> For complete domain specifications, database models, and source module breakdowns, see the **[Comprehensive Feature Architecture Guide](docs/FEATURES.md)**.
 
 ---
 
@@ -54,13 +82,37 @@ cp .env.example .env
 
 Edit `.env` with your values. See the [Environment Variables Reference](#environment-variables-reference) section below.
 
-### 3. Start the stack
+### 3. Create the gamemode credential include
+
+`gamemodes/modules/misc/Config.pwn` includes `db_credentials.inc` to obtain its MySQL credentials. That file is excluded from version control, so create it from the template before compiling:
+
+```bash
+cp gamemodes/modules/db_credentials.example.inc \
+   gamemodes/modules/db_credentials.inc
+```
+
+Then set the values to match your `.env`. `SQL_HOSTNAME` is the Compose service name (`mysql`).
+
+### 4. Provide the AI NPC configuration (optional)
+
+The in-game AI NPC system reads `scriptfiles/ai_config.json`, which is also excluded from version control because it stores an API key:
+
+```bash
+cat > scriptfiles/ai_config.json <<'EOF'
+{
+  "openrouter_api_key": "your-openrouter-api-key",
+  "openrouter_model": "your-model"
+}
+EOF
+```
+
+### 5. Start the stack
 
 ```bash
 docker compose up -d
 ```
 
-Docker Compose will start MySQL first, wait until it passes the healthcheck, then start the game server and web portal.
+Docker Compose starts MySQL first, waits until it passes its healthcheck, then starts the game server and web portal.
 
 To rebuild images after code changes:
 
@@ -68,19 +120,23 @@ To rebuild images after code changes:
 docker compose up -d --build
 ```
 
-### 4. Compile the gamemode (local development)
+### 6. Compile the gamemode (local development)
 
 On Linux:
+
 ```bash
 ./build.sh
 ```
 
 On Windows:
+
 ```bash
 build.bat
 ```
 
-The compiled binary (`gamemodes/roleplay.amx`) is automatically picked up by the game server container.
+The compiled binary (`gamemodes/roleplay.amx`) is picked up by the game server container through the bind mount.
+
+> The compiler is invoked with `-i../qawno/include -imodules`. If you compile from an IDE instead of `build.sh`, configure those include paths as well, otherwise `db_credentials.inc` will not be found.
 
 ---
 
@@ -108,6 +164,15 @@ These variables must be set. The stack will refuse to start if any of them are e
 | `SMTP_USER` | — | SMTP authentication username |
 | `SMTP_PASS` | — | SMTP authentication password |
 | `SMTP_FROM` | — | Sender address for outgoing emails |
+
+### Optional — Container Images (Production)
+
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `SAMP_IMAGE` | `ghcr.io/irsyaddza/ljrp-samp:main` | Game server image reference |
+| `WEB_IMAGE` | `ghcr.io/irsyaddza/ljrp-web:main` | Web portal image reference |
+
+The deployment workflow sets both to the exact commit SHA being released, so these values only matter when starting the production stack by hand. Pin a previous SHA here to roll back.
 
 ### Optional — Tunneling
 
@@ -162,17 +227,80 @@ This script performs a dry-run restore into a temporary database (`jawa_restore_
 
 ## CI/CD Pipeline
 
-Continuous Integration runs automatically on every push to `development` or `main`, and on all pull requests targeting `main`.
+Two GitHub Actions workflows drive the repository. Continuous integration validates every change; continuous delivery publishes immutable images and deploys them.
 
-### Pipeline jobs
+```
+pull request ──► CI (validate) ──► merge to main ──► CD (build → push → deploy)
+```
+
+### Continuous Integration — `ci.yml`
+
+Runs on every push to `development` or `main`, and on every pull request targeting `main`.
 
 | Job | What it does |
 | :--- | :--- |
-| `compile-gamemode` | Installs 32-bit dependencies and compiles `roleplay.pwn` to `roleplay.amx` on a GitHub-hosted Linux runner |
+| `compile-gamemode` | Installs 32-bit dependencies and compiles `roleplay.pwn` to `roleplay.amx` |
 | `validate-web` | Runs ESLint and a production build check on the Next.js web portal |
-| `validate-docker` | Builds the SA-MP and web Docker images to verify no build errors exist |
+| `validate-docker` | Builds the SA-MP and web Docker images to confirm the build succeeds |
 
-The compiled `roleplay.amx` is uploaded as a build artifact and available for download from the Actions tab for 7 days.
+The compiled `roleplay.amx` is uploaded as a build artifact and can be downloaded from the Actions tab for 7 days.
+
+Pull requests from forks cannot read repository secrets, so the compile job falls back to `db_credentials.example.inc`. Validation therefore still runs on untrusted contributions.
+
+### Continuous Delivery — `cd.yml`
+
+Runs on pushes to `main` and `development`, and supports manual dispatch.
+
+| Job | What it does |
+| :--- | :--- |
+| `compile` | Generates `db_credentials.inc` from repository secrets and compiles the gamemode |
+| `build-samp` | Builds the game server image and pushes it to GHCR |
+| `build-web` | Builds the web portal image with `NEXT_PUBLIC_BASE_URL` inlined, and pushes it to GHCR |
+| `deploy` | Runs for `main` only. Connects to the production host over SSH, pulls the new images, and recreates the containers |
+
+Each image is published under two tags:
+
+```
+ghcr.io/irsyaddza/ljrp-samp:<commit-sha>    ghcr.io/irsyaddza/ljrp-web:<commit-sha>
+ghcr.io/irsyaddza/ljrp-samp:main           ghcr.io/irsyaddza/ljrp-web:main
+```
+
+The `deploy` job targets the `production` GitHub environment and therefore pauses for manual approval before touching the host. A merged pull request only queues a deployment; it is never applied silently.
+
+### Required repository configuration
+
+Secrets (Settings → Secrets and variables → Actions):
+
+| Name | Scope | Consumed by |
+| :--- | :--- | :--- |
+| `DB_SQL_HOSTNAME` | Repository | `compile` |
+| `DB_SQL_USERNAME` | Repository | `compile` |
+| `DB_SQL_DATABASE` | Repository | `compile` |
+| `DB_SQL_PASSWORD` | Repository | `compile` |
+| `VPS_HOST` | `production` environment | `deploy` |
+| `VPS_USER` | `production` environment | `deploy` |
+| `VPS_SSH_KEY` | `production` environment | `deploy` |
+| `VPS_PORT` | `production` environment | `deploy` |
+| `GHCR_PULL_TOKEN` | `production` environment | `deploy` |
+
+Variables:
+
+| Name | Description |
+| :--- | :--- |
+| `NEXT_PUBLIC_BASE_URL` | Public URL of the web portal. Inlined into the browser bundle at build time. |
+
+`GITHUB_TOKEN` is provided automatically and authenticates the image push to GHCR. Only the deploy job holds host credentials, and build jobs run without environment protection.
+
+### Production deployment
+
+Images are built once in CI and promoted unchanged. The host only pulls and restarts:
+
+```bash
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d --remove-orphans
+```
+
+The running server stays identical to the artifact that was validated, and rolling back means redeploying an earlier image tag.
 
 ---
 
@@ -180,28 +308,35 @@ The compiled `roleplay.amx` is uploaded as a build artifact and available for do
 
 ```
 .
-├── docker-compose.yml       # Service orchestration
-├── Dockerfile               # SA-MP server image
-├── build.sh / build.bat     # Local gamemode compiler scripts
-├── gamemodes/               # Pawn source files (.pwn)
-├── filterscripts/           # Filterscript source files
-├── scriptfiles/             # Server-side data files
-├── models/                  # Custom model files (served via CDN)
-├── plugins/                 # SA-MP plugin binaries (.so)
-├── components/              # open.mp components
-├── qawno/                   # Pawn compiler and IDE
-├── web/                     # Next.js web portal source
+├── docker-compose.yml            # Local development orchestration
+├── docker-compose.prod.yml       # Production orchestration (GHCR images)
+├── Dockerfile                    # SA-MP server image
+├── build.sh / build.bat          # Local gamemode compiler scripts
+├── docs/                         # Technical architecture & feature deep-dives
+├── gamemodes/                    # Pawn source files (.pwn)
+│   └── modules/
+│       ├── db_credentials.example.inc  # Credential template (copy to db_credentials.inc)
+│       └── db_credentials.inc          # Local credentials (git-ignored)
+├── filterscripts/                # Filterscript source files
+├── scriptfiles/                  # Server-side data files
+│   └── ai_config.json            # AI NPC configuration (git-ignored, holds an API key)
+├── models/                       # Custom model files (served via CDN)
+├── plugins/                      # SA-MP plugin binaries (.so)
+├── components/                   # open.mp components
+├── qawno/                        # Pawn compiler and IDE
+├── web/                          # Next.js web portal source
 ├── scripts/
 │   └── backup/
-│       ├── db_backup.sh     # Automated backup script
-│       └── db_restore_test.sh # Disaster recovery verification
+│       ├── db_backup.sh          # Automated backup script
+│       └── db_restore_test.sh    # Disaster recovery verification
 ├── mysql/
-│   └── init/                # SQL files executed on first database start
+│   └── init/                     # SQL files executed on first database start
 ├── backups/
-│   └── mysql/               # Local backup archive storage (git-ignored)
+│   └── mysql/                    # Local backup archive storage (git-ignored)
 └── .github/
     └── workflows/
-        └── ci.yml           # GitHub Actions CI pipeline
+        ├── ci.yml                # Validation pipeline
+        └── cd.yml                # Build, publish, and deploy pipeline
 ```
 
 ---
@@ -220,6 +355,8 @@ The MySQL port is bound to `127.0.0.1:3306` only. To connect with a GUI tool (e.
 
 ## Useful Commands
 
+Local development:
+
 ```bash
 # View logs for all services
 docker compose logs -f
@@ -237,13 +374,28 @@ docker compose down
 docker compose down -v
 ```
 
+Production host:
+
+```bash
+# Show container status
+docker compose -f docker-compose.prod.yml ps
+
+# Stream game server logs
+docker compose -f docker-compose.prod.yml logs -f samp
+
+# Recreate a single service without touching the others
+docker compose -f docker-compose.prod.yml up -d --force-recreate samp
+```
+
 ---
 
 ## Contributing
 
-1. Create a branch from `development` for your changes.
+1. Create a branch from `development`.
 2. Test your changes locally before pushing.
 3. Open a pull request targeting `development`.
 4. Ensure all CI checks pass before requesting a review.
+5. Merging into `development` builds and publishes images without deploying.
+6. Promote to `main` with a pull request to trigger a deployment, then approve it in the `production` environment.
 
 Direct commits to `main` are not permitted.

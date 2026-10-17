@@ -1,0 +1,160 @@
+name: CD — Build, Push & Deploy
+
+on:
+  push:
+    branches: [main, development]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_OWNER: irsyaddza
+  SAMP_IMAGE_NAME: ljrp-samp
+  WEB_IMAGE_NAME: ljrp-web
+
+jobs:
+  compile:
+    name: Compile Pawn Gamemode
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install 32-bit dependencies
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update -qq
+          sudo apt-get install -y libc6:i386 libstdc++6:i386
+
+      - name: Make pawncc executable
+        run: chmod +x ./qawno/pawncc
+
+      - name: Prepare db_credentials.inc
+        env:
+          DB_SQL_HOSTNAME: ${{ secrets.DB_SQL_HOSTNAME }}
+          DB_SQL_USERNAME: ${{ secrets.DB_SQL_USERNAME }}
+          DB_SQL_DATABASE: ${{ secrets.DB_SQL_DATABASE }}
+          DB_SQL_PASSWORD: ${{ secrets.DB_SQL_PASSWORD }}
+        run: |
+          if [ -n "$DB_SQL_PASSWORD" ]; then
+            {
+              echo "#define SQL_HOSTNAME \"$DB_SQL_HOSTNAME\""
+              echo "#define SQL_USERNAME \"$DB_SQL_USERNAME\""
+              echo "#define SQL_DATABASE \"$DB_SQL_DATABASE\""
+              echo "#define SQL_PASSWORD \"$DB_SQL_PASSWORD\""
+            } > gamemodes/modules/db_credentials.inc
+          else
+            cp gamemodes/modules/db_credentials.example.inc \
+               gamemodes/modules/db_credentials.inc
+          fi
+
+      - name: Compile roleplay.pwn
+        run: |
+          cd gamemodes
+          LD_LIBRARY_PATH="$(cd ../qawno && pwd)" \
+            ../qawno/pawncc roleplay.pwn -i../qawno/include -imodules -oroleplay.amx
+
+      - name: Remove credentials before build
+        run: rm -f gamemodes/modules/db_credentials.inc
+
+      - name: Upload roleplay.amx
+        uses: actions/upload-artifact@v4
+        with:
+          name: roleplay-amx
+          path: gamemodes/roleplay.amx
+          retention-days: 7
+
+  build-samp:
+    name: Build & Push SA-MP Image
+    needs: compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download roleplay.amx
+        uses: actions/download-artifact@v4
+        with:
+          name: roleplay-amx
+          path: gamemodes/
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push SA-MP image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ env.SAMP_IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ env.SAMP_IMAGE_NAME }}:${{ github.ref_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-web:
+    name: Build & Push Web Image
+    needs: compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push Web image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./web
+          file: ./web/Dockerfile
+          push: true
+          build-args: |
+            NEXT_PUBLIC_BASE_URL=${{ vars.NEXT_PUBLIC_BASE_URL }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ env.WEB_IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ env.WEB_IMAGE_NAME }}:${{ github.ref_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to VPS
+    needs: [build-samp, build-web]
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script_stop: true
+          script: |
+            set -e
+            cd /opt/ljrp
+            git pull --ff-only
+            echo "${{ secrets.GHCR_PULL_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+            export SAMP_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ env.SAMP_IMAGE_NAME }}:${{ github.sha }}
+            export WEB_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ env.WEB_IMAGE_NAME }}:${{ github.sha }}
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            docker image prune -f
+            docker compose -f docker-compose.prod.yml ps
