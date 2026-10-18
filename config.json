@@ -1,7 +1,7 @@
 {
   "announce": true,
   "artwork": {
-    "cdn": "http://129.225.3.7:7778",
+    "cdn": "http://play.losjawa-rp.fun:7778",
     "enable": true,
     "models_path": "models",
     "port": 7777,

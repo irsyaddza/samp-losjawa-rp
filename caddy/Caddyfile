@@ -1,0 +1,28 @@
+# ─────────────────────────────────────────────────────────────
+#  Caddy — Reverse proxy + automatic HTTPS (Let's Encrypt)
+# ─────────────────────────────────────────────────────────────
+#
+#  Caddy reads the hostname from the site block below, requests a
+#  certificate on first start, and renews it automatically. No certbot,
+#  no cron job, no manual renewal.
+#
+#  DNS for `ucp.losjawa-rp.fun` must point at this host and stay set to
+#  "DNS only" (grey cloud) in Cloudflare, so that the HTTP-01 challenge
+#  reaches Caddy directly.
+#
+#  To serve a different domain, change the site block hostname and update
+#  NEXT_PUBLIC_BASE_URL in the GitHub repository variables.
+{
+	# Uncomment and set a real address to receive certificate expiry notices.
+	# email admin@losjawa-rp.fun
+}
+
+# Web portal (Next.js UCP)
+ucp.losjawa-rp.fun {
+	encode zstd gzip
+
+	reverse_proxy web:3000 {
+		# Preserve the original client address for application logging.
+		header_up X-Real-IP {remote_host}
+	}
+}
