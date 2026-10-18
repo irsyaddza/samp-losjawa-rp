@@ -19,5 +19,6 @@ qawno/
 docs/
 scripts/
 playit/
+caddy/
 roleplay.xml
 gamemodes/modules/db_credentials.inc

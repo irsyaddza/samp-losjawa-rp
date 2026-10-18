@@ -69,7 +69,8 @@ services:
       mysql:
         condition: service_healthy
     ports:
-      - "3000:3000"
+      # Diikat ke localhost saja. Trafik publik masuk lewat Caddy di port 443.
+      - "127.0.0.1:3000:3000"
     environment:
       DB_HOST: mysql
       DB_USER: ${MYSQL_USER:?MYSQL_USER wajib diisi di .env}
@@ -83,6 +84,24 @@ services:
       SMTP_PASS: ${SMTP_PASS:-}
       SMTP_FROM: ${SMTP_FROM:-}
       TZ: Asia/Jakarta
+    networks:
+      - samp_net
+
+  # Reverse proxy + TLS otomatis (Let's Encrypt) untuk ucp.losjawa-rp.fun.
+  # Sertifikat disimpan di volume caddy_data agar tidak terbit ulang setiap recreate.
+  caddy:
+    image: caddy:2-alpine
+    container_name: ljrp-caddy
+    restart: unless-stopped
+    depends_on:
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
     networks:
       - samp_net
 
@@ -110,6 +129,8 @@ services:
 volumes:
   mysql_data:
   samp_logs:
+  caddy_data:
+  caddy_config:
 
 networks:
   samp_net:

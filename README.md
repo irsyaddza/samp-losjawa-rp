@@ -9,17 +9,18 @@ A production-grade open.mp (SA-MP) roleplay server stack built on Docker Compose
 
 ## Architecture
 
-The stack consists of five services orchestrated via Docker Compose:
+The stack consists of six services orchestrated via Docker Compose:
 
 | Container | Image | Port | Purpose |
 | :--- | :--- | :--- | :--- |
 | `ljrp-mysql` | mysql:5.7 | 127.0.0.1:3306 | Primary database (localhost-only) |
 | `ljrp-samp` | custom build / GHCR | 7777/udp, 7777/tcp | open.mp game server |
-| `ljrp-web` | custom build / GHCR | 3000 | Next.js web portal and UCP |
+| `ljrp-web` | custom build / GHCR | 127.0.0.1:3000 | Next.js web portal and UCP (served through Caddy) |
+| `ljrp-caddy` | caddy:2-alpine | 80, 443 | Reverse proxy and automatic TLS termination |
 | `ljrp-models-cdn` | nginx:alpine | 7778 | Static file CDN for client model downloads |
 | `ljrp-playit` | playit-agent | — | Network tunnel via Playit.gg (optional, profile-gated) |
 
-All services communicate through an internal Docker bridge network (`samp_net`). The MySQL port is bound exclusively to `127.0.0.1` to prevent external access.
+All services communicate through an internal Docker bridge network (`samp_net`). The MySQL and web ports are bound exclusively to `127.0.0.1`; the portal is reachable from the internet only through Caddy on port 443.
 
 The stack ships with two Compose definitions:
 
@@ -193,6 +194,85 @@ The deployment workflow sets both to the exact commit SHA being released, so the
 
 ---
 
+## Domain and TLS
+
+The production host serves the web portal over HTTPS through Caddy, which obtains and renews Let's Encrypt certificates automatically.
+
+TLS termination is a functional requirement, not a nicety. The session cookie set by `web/src/lib/auth.ts` carries the `Secure` flag whenever `NODE_ENV=production`, and browsers silently discard `Secure` cookies received over plain HTTP. Without HTTPS, login appears to succeed — the API returns `200` — but no session is ever established and the user is bounced back to the sign-in page.
+
+### DNS records
+
+Create two records in Cloudflare, both set to **DNS only** (grey cloud):
+
+| Type | Name | Content | Purpose |
+| :--- | :--- | :--- | :--- |
+| A | `ucp` | production host IP | Web portal (UCP) |
+| A | `play` | production host IP | Game server and model CDN |
+
+Both records must remain unproxied. The Cloudflare free plan proxies HTTP and HTTPS on a fixed list of ports (80, 443, 8080, 8443, and a few others) and does not proxy UDP at all. The game server listens on UDP 7777 and the model CDN on TCP 7778, so neither can pass through the proxy. The web portal is unproxied as well, which keeps Let's Encrypt's HTTP-01 challenge reachable.
+
+### Reverse proxy
+
+`caddy/Caddyfile` holds the entire proxy configuration:
+
+```caddyfile
+ucp.losjawa-rp.fun {
+	encode zstd gzip
+
+	reverse_proxy web:3000 {
+		header_up X-Real-IP {remote_host}
+	}
+}
+```
+
+Caddy requests a certificate on first start and renews it automatically. Key material and issued certificates live in the `caddy_data` volume, so they survive container recreation and are never re-issued unnecessarily.
+
+### Firewall
+
+Two independent layers must allow inbound traffic.
+
+**Oracle Cloud VCN security list** — add ingress rules for TCP 80 and TCP 443. The existing rules for UDP 7777, TCP 7777, and TCP 7778 stay in place. Port 3000 no longer needs to be reachable from the internet.
+
+**Host firewall** — on images that ship with restrictive `iptables` rules, insert the new rules ahead of the default rejection:
+
+```bash
+sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 80 -j ACCEPT
+sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 443 -j ACCEPT
+sudo netfilter-persistent save
+```
+
+### Values that depend on the domain
+
+Two settings reference the public domain and are baked into immutable images. Both require a rebuild through the CD pipeline; editing them on the host has no effect.
+
+| Value | Where it lives | Correct value |
+| :--- | :--- | :--- |
+| `NEXT_PUBLIC_BASE_URL` | GitHub repository variable, inlined into the browser bundle during `npm run build` | `https://ucp.losjawa-rp.fun` |
+| `config.json` → `artwork.cdn` | Copied into the game server image | `http://play.losjawa-rp.fun:7778` |
+
+### Verification
+
+```bash
+# Certificate issuance and renewal activity
+docker compose -f docker-compose.prod.yml logs caddy | grep -i certificate
+
+# Portal reachable over TLS
+curl -sS -o /dev/null -w '%{http_code}\n' https://ucp.losjawa-rp.fun
+
+# Courteous redirect from plain HTTP
+curl -sS -o /dev/null -w '%{http_code}\n' http://ucp.losjawa-rp.fun
+```
+
+A `200` from the first request and a `308` from the second indicate the proxy, the certificate, and the redirect are all working.
+
+### Optional: Cloudflare proxy in front of Caddy
+
+To add WAF rules and DDoS mitigation, switch the `ucp` record to proxied (orange cloud) and set the SSL/TLS mode to **Full (strict)**. Because Let's Encrypt's HTTP-01 challenge cannot reach the origin through the proxy, issue a Cloudflare Origin Certificate instead, mount it into the Caddy container, and point the site block's `tls` directive at it. Origin certificates are valid for 15 years.
+
+Once the proxy is enabled, configure `trusted_proxies` in the Caddy global block so the application logs the real client address rather than the Cloudflare edge node.
+
+---
+
 ## Database Operations
 
 ### Manual backup
@@ -312,6 +392,8 @@ The running server stays identical to the artifact that was validated, and rolli
 ├── docker-compose.prod.yml       # Production orchestration (GHCR images)
 ├── Dockerfile                    # SA-MP server image
 ├── build.sh / build.bat          # Local gamemode compiler scripts
+├── caddy/
+│   └── Caddyfile                 # Reverse proxy and automatic TLS configuration
 ├── docs/                         # Technical architecture & feature deep-dives
 ├── gamemodes/                    # Pawn source files (.pwn)
 │   └── modules/
@@ -382,6 +464,9 @@ docker compose -f docker-compose.prod.yml ps
 
 # Stream game server logs
 docker compose -f docker-compose.prod.yml logs -f samp
+
+# Stream reverse proxy logs (certificate issuance failures appear here)
+docker compose -f docker-compose.prod.yml logs -f caddy
 
 # Recreate a single service without touching the others
 docker compose -f docker-compose.prod.yml up -d --force-recreate samp
