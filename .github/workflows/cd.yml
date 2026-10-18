@@ -146,11 +146,17 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
-          script_stop: true
           script: |
             set -e
+
+            # The host is a deployment target, not a workspace. Force the working
+            # tree to the exact commit being released, so a manual edit left on the
+            # host can never block a deploy. Git-ignored files (.env, scriptfiles/,
+            # backups/) are untouched by reset --hard.
             cd /opt/ljrp
-            git pull --ff-only
+            git fetch --prune origin
+            git reset --hard ${{ github.sha }}
+
             echo "${{ secrets.GHCR_PULL_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
             export SAMP_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ env.SAMP_IMAGE_NAME }}:${{ github.sha }}
             export WEB_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ env.WEB_IMAGE_NAME }}:${{ github.sha }}
