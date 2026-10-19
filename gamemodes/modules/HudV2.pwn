@@ -243,7 +243,7 @@ CreateHudV2PlayerTDs(playerid)
     PlayerTextDrawSetProportional(playerid, HV2_RadioChan[playerid], true);
 
     // ── Vehicle Speedo Background ─────────────────────────────────────
-    HV2_BaseSpeed[playerid] = CreatePlayerTextDraw(playerid, 541.000, 349.000, "mdl-1414:base_speedo");
+    HV2_BaseSpeed[playerid] = CreatePlayerTextDraw(playerid, 541.000, 349.000, "mdl-1410:base_speedo");
     PlayerTextDrawTextSize(playerid, HV2_BaseSpeed[playerid], 90.000, 98.000);
     PlayerTextDrawAlignment(playerid, HV2_BaseSpeed[playerid], TEXT_DRAW_ALIGN_LEFT);
     PlayerTextDrawColour(playerid, HV2_BaseSpeed[playerid], -1);
@@ -287,7 +287,7 @@ CreateHudV2PlayerTDs(playerid)
     PlayerTextDrawSetProportional(playerid, HV2_Miles[playerid], true);
 
     // ── Fuel Icon Normal ──────────────────────────────────────────────
-    HV2_FuelNorm[playerid] = CreatePlayerTextDraw(playerid, 580.000, 417.000, "mdl-1410:bensin_norm");
+    HV2_FuelNorm[playerid] = CreatePlayerTextDraw(playerid, 580.000, 417.000, "mdl-1418:bensin_norm");
     PlayerTextDrawTextSize(playerid, HV2_FuelNorm[playerid], 31.000, 37.000);
     PlayerTextDrawAlignment(playerid, HV2_FuelNorm[playerid], TEXT_DRAW_ALIGN_LEFT);
     PlayerTextDrawColour(playerid, HV2_FuelNorm[playerid], -1);
@@ -298,7 +298,7 @@ CreateHudV2PlayerTDs(playerid)
     PlayerTextDrawSetProportional(playerid, HV2_FuelNorm[playerid], true);
 
     // ── Fuel Icon Red ─────────────────────────────────────────────────
-    HV2_FuelRed[playerid] = CreatePlayerTextDraw(playerid, 580.000, 417.000, "mdl-1410:bensin_red");
+    HV2_FuelRed[playerid] = CreatePlayerTextDraw(playerid, 580.000, 417.000, "mdl-1418:bensin_red");
     PlayerTextDrawTextSize(playerid, HV2_FuelRed[playerid], 31.000, 37.000);
     PlayerTextDrawAlignment(playerid, HV2_FuelRed[playerid], TEXT_DRAW_ALIGN_LEFT);
     PlayerTextDrawColour(playerid, HV2_FuelRed[playerid], -1);
@@ -320,7 +320,7 @@ CreateHudV2PlayerTDs(playerid)
     PlayerTextDrawSetProportional(playerid, HV2_FuelPercent[playerid], true);
 
     // ── Lights OFF Icon ───────────────────────────────────────────────
-    HV2_LightsOff[playerid] = CreatePlayerTextDraw(playerid, 558.000, 413.000, "mdl-1410:lampu_off");
+    HV2_LightsOff[playerid] = CreatePlayerTextDraw(playerid, 558.000, 413.000, "mdl-1417:lampu_off");
     PlayerTextDrawTextSize(playerid, HV2_LightsOff[playerid], 68.000, 71.000);
     PlayerTextDrawAlignment(playerid, HV2_LightsOff[playerid], TEXT_DRAW_ALIGN_LEFT);
     PlayerTextDrawColour(playerid, HV2_LightsOff[playerid], -1);
@@ -331,7 +331,7 @@ CreateHudV2PlayerTDs(playerid)
     PlayerTextDrawSetProportional(playerid, HV2_LightsOff[playerid], true);
 
     // ── Lights ON Icon ────────────────────────────────────────────────
-    HV2_LightsOn[playerid] = CreatePlayerTextDraw(playerid, 558.000, 413.000, "mdl-1410:lampu_on");
+    HV2_LightsOn[playerid] = CreatePlayerTextDraw(playerid, 558.000, 413.000, "mdl-1417:lampu_on");
     PlayerTextDrawTextSize(playerid, HV2_LightsOn[playerid], 68.000, 71.000);
     PlayerTextDrawAlignment(playerid, HV2_LightsOn[playerid], TEXT_DRAW_ALIGN_LEFT);
     PlayerTextDrawColour(playerid, HV2_LightsOn[playerid], -1);
@@ -342,7 +342,7 @@ CreateHudV2PlayerTDs(playerid)
     PlayerTextDrawSetProportional(playerid, HV2_LightsOn[playerid], true);
 
     // ── Lock Icon ─────────────────────────────────────────────────────
-    HV2_Lock[playerid] = CreatePlayerTextDraw(playerid, 607.000, 431.000, "mdl-1414:lock");
+    HV2_Lock[playerid] = CreatePlayerTextDraw(playerid, 607.000, 431.000, "mdl-1415:lock");
     PlayerTextDrawTextSize(playerid, HV2_Lock[playerid], 7.000, 8.000);
     PlayerTextDrawAlignment(playerid, HV2_Lock[playerid], TEXT_DRAW_ALIGN_LEFT);
     PlayerTextDrawColour(playerid, HV2_Lock[playerid], -1);
@@ -353,7 +353,7 @@ CreateHudV2PlayerTDs(playerid)
     PlayerTextDrawSetProportional(playerid, HV2_Lock[playerid], true);
 
     // ── Unlock Icon ───────────────────────────────────────────────────
-    HV2_Unlock[playerid] = CreatePlayerTextDraw(playerid, 607.000, 431.000, "mdl-1414:unlock");
+    HV2_Unlock[playerid] = CreatePlayerTextDraw(playerid, 607.000, 431.000, "mdl-1415:unlock");
     PlayerTextDrawTextSize(playerid, HV2_Unlock[playerid], 7.000, 8.000);
     PlayerTextDrawAlignment(playerid, HV2_Unlock[playerid], TEXT_DRAW_ALIGN_LEFT);
     PlayerTextDrawColour(playerid, HV2_Unlock[playerid], -1);
