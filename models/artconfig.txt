@@ -21,9 +21,12 @@ AddSimpleModel(-1, 19475, -1407, "lssd6.dff", "lssd.txd");
 AddSimpleModel(-1, 19475, -1408, "lssd7.dff", "lssd.txd");
 AddSimpleModel(-1, 19475, -1409, "lssd8.dff", "lssd.txd");
 AddSimpleModel(-1, 19475, -1401, "lssdtruck.dff", "lssd.txd");
-AddSimpleModel(-1, 19475, -1410, "logo.dff", "logo.txd");
+AddSimpleModel(-1, 19475, -1410, "bensin-lampu.dff", "bensin-lampu.txd");
 AddSimpleModel(-1, 19475, -1411, "cctvui.dff", "cctvui.txd");
 AddSimpleModel(-1, 19475, -1412, "dinding.dff", "dinding.txd");
+AddSimpleModel(-1, 19475, -1413, "loading-login.dff", "loading-login.txd");
+AddSimpleModel(-1, 19475, -1414, "speedo-1.dff", "speedo-1.txd");
+
 
 // Custom Skins
 AddCharModel(280, 20001, "lvpdpc2.dff", "lvpdpc2.txd");
