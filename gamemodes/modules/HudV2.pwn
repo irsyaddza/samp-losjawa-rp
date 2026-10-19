@@ -1,6 +1,5 @@
 /*
  * HudV2.pwn — LJRP HUD V6.7 (open.mp)
- * Overwritten/Upgraded to HUD V6.7 using mdl-1410: assets
  * Position fixes and removed siren icons.
  */
 
@@ -72,7 +71,7 @@ new PlayerText:HV2_Unlock     [MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...
 CreateHudV2GlobalTDs()
 {
     // ── Server Logo ───────────────────────────────────────────────────
-    HV2_Logo = TextDrawCreate(265.000, 4.000, "mdl-1410:logo");
+    HV2_Logo = TextDrawCreate(265.000, 4.000, "mdl-1413:logo");
     TextDrawTextSize(HV2_Logo, 95.000, 36.000);
     TextDrawAlignment(HV2_Logo, TEXT_DRAW_ALIGN_LEFT);
     TextDrawColour(HV2_Logo, -1);
@@ -244,7 +243,7 @@ CreateHudV2PlayerTDs(playerid)
     PlayerTextDrawSetProportional(playerid, HV2_RadioChan[playerid], true);
 
     // ── Vehicle Speedo Background ─────────────────────────────────────
-    HV2_BaseSpeed[playerid] = CreatePlayerTextDraw(playerid, 541.000, 349.000, "mdl-1410:base_speedo");
+    HV2_BaseSpeed[playerid] = CreatePlayerTextDraw(playerid, 541.000, 349.000, "mdl-1414:base_speedo");
     PlayerTextDrawTextSize(playerid, HV2_BaseSpeed[playerid], 90.000, 98.000);
     PlayerTextDrawAlignment(playerid, HV2_BaseSpeed[playerid], TEXT_DRAW_ALIGN_LEFT);
     PlayerTextDrawColour(playerid, HV2_BaseSpeed[playerid], -1);
@@ -343,7 +342,7 @@ CreateHudV2PlayerTDs(playerid)
     PlayerTextDrawSetProportional(playerid, HV2_LightsOn[playerid], true);
 
     // ── Lock Icon ─────────────────────────────────────────────────────
-    HV2_Lock[playerid] = CreatePlayerTextDraw(playerid, 607.000, 431.000, "mdl-1410:lock");
+    HV2_Lock[playerid] = CreatePlayerTextDraw(playerid, 607.000, 431.000, "mdl-1414:lock");
     PlayerTextDrawTextSize(playerid, HV2_Lock[playerid], 7.000, 8.000);
     PlayerTextDrawAlignment(playerid, HV2_Lock[playerid], TEXT_DRAW_ALIGN_LEFT);
     PlayerTextDrawColour(playerid, HV2_Lock[playerid], -1);
@@ -354,7 +353,7 @@ CreateHudV2PlayerTDs(playerid)
     PlayerTextDrawSetProportional(playerid, HV2_Lock[playerid], true);
 
     // ── Unlock Icon ───────────────────────────────────────────────────
-    HV2_Unlock[playerid] = CreatePlayerTextDraw(playerid, 607.000, 431.000, "mdl-1410:unlock");
+    HV2_Unlock[playerid] = CreatePlayerTextDraw(playerid, 607.000, 431.000, "mdl-1414:unlock");
     PlayerTextDrawTextSize(playerid, HV2_Unlock[playerid], 7.000, 8.000);
     PlayerTextDrawAlignment(playerid, HV2_Unlock[playerid], TEXT_DRAW_ALIGN_LEFT);
     PlayerTextDrawColour(playerid, HV2_Unlock[playerid], -1);
