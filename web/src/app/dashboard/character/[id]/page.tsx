@@ -3,33 +3,94 @@ import Link from 'next/link';
 import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { RowDataPacket } from 'mysql2';
-import { ArrowLeft, User, Shield, Calendar, Landmark, Coins, Heart, FileText, CheckCircle, XCircle, Car, Home, Briefcase, Lock, Unlock, Zap, Gauge } from 'lucide-react';
+import { ArrowLeft, Shield, Landmark, Coins, Heart, FileText, CheckCircle, XCircle, Car, Home, Briefcase, Lock, Unlock, Zap, Gauge } from 'lucide-react';
 import Navbar from '@/components/Navbar';
-import { getSkinImageUrl, getVehicleImageUrl } from '@/lib/assets';
+import { getVehicleImageUrl } from '@/lib/assets';
 import DeleteCharacterButton from '@/components/DeleteCharacterButton';
 
-// Helper mapping for Factions
-const FACTION_NAMES: Record<number, string> = {
-  1: 'Los Santos Police Department (LSPD)',
-  2: 'San Andreas News (SAN)',
-  3: 'Los Santos Fire Department (LSFD)',
-  4: 'City Hall / Government',
-  5: 'Gang / Family Organization',
-  6: 'Los Santos Sheriff Department (LSSD)',
-  7: 'Department of Corrections (DOC)',
+// Job titles mirror ReturnJobName() / the JOB_* constants in the gamemode.
+const JOB_TITLES: Record<number, string> = {
+  0: 'None',
+  1: 'Farmer',
+  3: 'Car Mechanic',
+  4: 'Taxi Driver',
+  5: 'Tour Guide',
+  8: 'Train Driver',
 };
 
-// Helper mapping for Jobs
-const JOB_NAMES: Record<number, string> = {
-  0: 'Pengangguran / None',
-  1: 'Petani (Farmer)',
-  2: 'Supir Truk (Trucker)',
-  3: 'Mekanik (Mechanic)',
-  4: 'Supir Taksi (Taxi Driver)',
-  5: 'Pemandu (Tour Guide)',
-  6: 'Weapon Dealer',
-  7: 'Supplier',
-};
+const TRUCKER_TITLES = [
+  'Courier Trainee',
+  'Courier',
+  'Professional Courier',
+  'Trucker Trainee',
+  'Trucker',
+  'Professional Trucker',
+];
+
+function getJobTitle(job: number, jobRank: number): string {
+  if (job === 2) return TRUCKER_TITLES[jobRank] ?? 'Trucker';
+  return JOB_TITLES[job] ?? 'Unemployed';
+}
+
+function getStoredRank(faction: RowDataPacket, rank: number): string {
+  const name = faction[`factionRank${rank}`];
+  return typeof name === 'string' && name.trim() ? name : `Rank ${rank}`;
+}
+
+// Mirrors Faction_GetRank() in modules/Faction.pwn, including division ranks.
+function getFactionRankTitle(faction: RowDataPacket, char: RowDataPacket): string {
+  const rank = Number(char.FactionRank) || 0;
+  if (rank < 1) return 'None';
+
+  const type = Number(faction.factionType);
+  const dbRank = Number(char.DBRank) || 0;
+  const swatRank = Number(char.SWATRank) || 0;
+  const emsRank = Number(char.EMSRank) || 0;
+  const fireRank = Number(char.FireRank) || 0;
+
+  if (type === 1 && dbRank > 0) {
+    return ['Detective I', 'Detective II', 'Detective III'][dbRank - 1] ?? getStoredRank(faction, rank);
+  }
+  if ((type === 1 || type === 6) && swatRank > 0) {
+    const division = type === 1 ? 'SWAT' : 'SEB';
+    const title = ['Operator', 'Team Leader', 'Commander'][swatRank - 1];
+    if (title) return `${division} ${title}`;
+  }
+  if (type === 3) {
+    if (emsRank > 0) {
+      const title = ['EMT-Basic', 'Paramedic', 'Resident Doctor', 'Chief Medical Officer'][emsRank - 1];
+      if (title) return title;
+    }
+    if (fireRank > 0) {
+      const title = ['Probationary Firefighter', 'Firefighter', 'Fire Lieutenant', 'Battalion Chief'][fireRank - 1];
+      if (title) return title;
+    }
+  }
+
+  return getStoredRank(faction, rank);
+}
+
+// Jailed: 0 = free, 2 = admin jail, 3 = prison (see pJailed in the gamemode).
+function getJailStatus(char: RowDataPacket) {
+  const state = Number(char.Jailed) || 0;
+  if (!state) return null;
+
+  return {
+    label: state === 2 ? 'Admin Jail' : state === 3 ? 'Prison' : 'Incarcerated',
+    remaining: Number(char.SentenceTime) || 0,
+  };
+}
+
+function formatDuration(totalSeconds: number): string {
+  const seconds = Math.max(0, Math.floor(totalSeconds));
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (minutes > 0) return `${minutes}m ${secs}s`;
+  return `${secs}s`;
+}
 
 // GTA SA-MP Vehicle Names mapping (common models)
 const VEHICLE_NAMES: Record<number, string> = {
@@ -81,10 +142,36 @@ async function getCharacterHouses(charId: number) {
   }
 }
 
+async function getCharacterApartments(charId: number) {
+  try {
+    const [rows] = await pool.execute<RowDataPacket[]>(
+      'SELECT * FROM apartments WHERE ownerSQLID = ? AND owned = 1',
+      [charId]
+    );
+    return rows;
+  } catch (error) {
+    console.error('Error fetching character apartments:', error);
+    return [];
+  }
+}
+
+async function getFactionData(factionId: number) {
+  try {
+    const [rows] = await pool.execute<RowDataPacket[]>(
+      'SELECT * FROM factions WHERE factionID = ? LIMIT 1',
+      [factionId]
+    );
+    return rows[0] || null;
+  } catch (error) {
+    console.error('Error fetching faction:', error);
+    return null;
+  }
+}
+
 async function getCharacterBusinesses(charName: string) {
   try {
     const [rows] = await pool.execute<RowDataPacket[]>(
-      'SELECT * FROM business WHERE biz_owner = ?',
+      'SELECT * FROM business WHERE biz_owner = ? AND biz_owned = 1',
       [charName]
     );
     return rows;
@@ -130,7 +217,17 @@ export default async function CharacterDetailsPage({ params }: PageProps) {
   // Fetch character assets
   const vehicles = await getCharacterVehicles(char.ID);
   const houses = await getCharacterHouses(char.ID);
+  const apartments = await getCharacterApartments(char.ID);
   const businesses = await getCharacterBusinesses(char.char_name);
+  const faction = char.Faction > 0 ? await getFactionData(char.Faction) : null;
+
+  const properties = [...houses, ...apartments];
+  const jail = getJailStatus(char);
+  const jobTitle = getJobTitle(Number(char.playerJob) || 0, Number(char.playerJobRank) || 0);
+  const factionRank = faction ? getFactionRankTitle(faction, char) : '';
+  const factionName = faction
+    ? `${faction.factionShort ? `${faction.factionShort} — ` : ''}${faction.factionName}`
+    : 'Civilian';
 
   return (
     <div className="min-h-screen bg-[#09090b] pt-20 pb-12">
@@ -237,12 +334,10 @@ export default async function CharacterDetailsPage({ params }: PageProps) {
               <div className="space-y-4 text-xs">
                 <div className="py-2 border-b border-zinc-900">
                   <span className="text-zinc-500 block mb-1">Faction Affiliation</span>
-                  <span className="font-bold text-white">
-                    {FACTION_NAMES[char.Faction] || 'Civilian Player'}
-                  </span>
-                  {char.Faction > 0 && (
+                  <span className="font-bold text-white">{factionName}</span>
+                  {faction && (
                     <div className="flex flex-col gap-2 mt-1.5">
-                      <span className="text-[10px] text-zinc-500 block">Rank Level: {char.FactionRank}</span>
+                      <span className="text-[10px] text-zinc-500 block">Rank: {factionRank}</span>
                       <Link
                         href={`/dashboard/faction/${char.Faction}`}
                         className="inline-flex items-center justify-center gap-1 rounded-lg bg-zinc-900 border border-zinc-800 hover:bg-zinc-850 py-1.5 px-3 text-[10px] font-bold text-amber-500 hover:text-amber-400 transition cursor-pointer w-fit"
@@ -254,7 +349,7 @@ export default async function CharacterDetailsPage({ params }: PageProps) {
                 </div>
                 <div className="py-2">
                   <span className="text-zinc-500 block mb-1">Primary Occupation</span>
-                  <span className="font-bold text-white">{JOB_NAMES[char.playerJob] || 'None'}</span>
+                  <span className="font-bold text-white">{jobTitle}</span>
                 </div>
               </div>
             </div>
@@ -333,10 +428,16 @@ export default async function CharacterDetailsPage({ params }: PageProps) {
                   <span className="text-zinc-500">Hunger Level</span>
                   <span className="font-bold text-white">{char.Hunger}%</span>
                 </div>
+                <div className="flex justify-between items-center py-1 border-b border-zinc-900">
+                  <span className="text-zinc-500">Thirst Level</span>
+                  <span className="font-bold text-white">{char.Thirst}%</span>
+                </div>
                 <div className="flex justify-between items-center py-1">
                   <span className="text-zinc-500">Jail Status</span>
-                  {char.Jailed ? (
-                    <span className="text-red-500 font-bold">Incarcerated ({char.SentenceTime} seconds remaining)</span>
+                  {jail ? (
+                    <span className="text-red-500 font-bold">
+                      {jail.label} ({formatDuration(jail.remaining)} remaining)
+                    </span>
                   ) : (
                     <span className="text-green-500 font-bold">Clear / Free</span>
                   )}
@@ -377,26 +478,30 @@ export default async function CharacterDetailsPage({ params }: PageProps) {
 
                       <div className="grid grid-cols-2 gap-y-2 pt-2 border-t border-zinc-900">
                         <div>
-                          <span className="text-zinc-500 block text-[9px] uppercase tracking-wider">Engine Health</span>
+                          <span className="text-zinc-500 block text-[9px] uppercase tracking-wider">Vehicle Health</span>
                           <span className="font-semibold text-white flex items-center gap-1">
                             <Zap className="h-3 w-3 text-amber-500" />
-                            {veh.carHealth}% HP
+                            {Number(veh.carHealth ?? 0).toFixed(0)} HP
                           </span>
                         </div>
                         <div>
-                          <span className="text-zinc-500 block text-[9px] uppercase tracking-wider">Odometer</span>
-                          <span className="font-semibold text-white flex items-center gap-0.5">
-                            <Gauge className="h-3 w-3 text-zinc-500" />
-                            {veh.carMileage.toFixed(1)} km
-                          </span>
+                          <span className="text-zinc-500 block text-[9px] uppercase tracking-wider">Engine Life</span>
+                          <span className="font-semibold text-white">{Number(veh.carEngineL ?? 0).toFixed(0)}%</span>
                         </div>
                         <div>
                           <span className="text-zinc-500 block text-[9px] uppercase tracking-wider">Battery</span>
-                          <span className="font-semibold text-white">{veh.carBatteryL.toFixed(0)}%</span>
+                          <span className="font-semibold text-white">{Number(veh.carBatteryL ?? 0).toFixed(0)}%</span>
                         </div>
                         <div>
                           <span className="text-zinc-500 block text-[9px] uppercase tracking-wider">Fuel Level</span>
-                          <span className="font-semibold text-white">{veh.carFuel.toFixed(0)} L</span>
+                          <span className="font-semibold text-white">{Number(veh.carFuel ?? 0).toFixed(0)} L</span>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-zinc-500 block text-[9px] uppercase tracking-wider">Odometer</span>
+                          <span className="font-semibold text-white flex items-center gap-0.5">
+                            <Gauge className="h-3 w-3 text-zinc-500" />
+                            {Number(veh.carMileage ?? 0).toFixed(1)} mi
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -424,33 +529,47 @@ export default async function CharacterDetailsPage({ params }: PageProps) {
           {/* Properties (Houses & Businesses) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             
-            {/* Houses */}
+            {/* Houses & Apartments */}
             <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
               <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2">
                 <Home className="h-5 w-5 text-amber-500" />
-                Houses & Apartments ({houses.length})
+                Houses & Apartments ({properties.length})
               </h3>
               
-              {houses.length === 0 ? (
-                <p className="text-xs text-zinc-500 text-center py-6">This character does not own any houses.</p>
+              {properties.length === 0 ? (
+                <p className="text-xs text-zinc-500 text-center py-6">This character does not own any properties.</p>
               ) : (
                 <div className="space-y-4">
-                  {houses.map((house) => (
-                    <div key={house.id} className="rounded-xl border border-zinc-850 bg-zinc-900/10 p-4 text-xs">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-bold text-white text-sm truncate max-w-[200px]">
-                          {house.info || `House ID ${house.id}`}
-                        </h4>
-                        {house.locked ? <Lock className="h-3.5 w-3.5 text-red-400" /> : <Unlock className="h-3.5 w-3.5 text-green-400" />}
+                  {properties.map((property) => {
+                    const isApartment = property.info === undefined;
+
+                    return (
+                      <div
+                        key={isApartment ? `apartment-${property.ID}` : `house-${property.id}`}
+                        className="rounded-xl border border-zinc-850 bg-zinc-900/10 p-4 text-xs"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <h4 className="font-bold text-white text-sm truncate max-w-[200px]">
+                              {isApartment
+                                ? property.name || `Apartment ID ${property.ID}`
+                                : property.info || `House ID ${property.id}`}
+                            </h4>
+                            <span className="text-[9px] uppercase tracking-wider text-zinc-500">
+                              {isApartment ? 'Apartment' : 'House'}
+                            </span>
+                          </div>
+                          {property.locked ? <Lock className="h-3.5 w-3.5 text-red-400" /> : <Unlock className="h-3.5 w-3.5 text-green-400" />}
+                        </div>
+                        <div className="flex justify-between text-zinc-500 pt-2 border-t border-zinc-900 text-[11px]">
+                          <span>Price: ${property.price.toLocaleString('en-US')}</span>
+                          {property.rentable === 1 && (
+                            <span className="text-amber-400 font-semibold">Rent: ${property.rentprice}/day</span>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex justify-between text-zinc-500 pt-2 border-t border-zinc-900 text-[11px]">
-                        <span>Price: ${house.price.toLocaleString('en-US')}</span>
-                        {house.rentable === 1 && (
-                          <span className="text-amber-400 font-semibold">Rent: ${house.rentprice}/day</span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

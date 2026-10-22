@@ -25,6 +25,32 @@ async function getNotifications(userId: number) {
   }
 }
 
+async function getSentMessages(username: string) {
+  try {
+    const [rows] = await pool.execute<RowDataPacket[]>(
+      `SELECT n.ID, n.title, n.body, DATE_FORMAT(n.time, "%Y-%m-%dT%H:%i:%s.000Z") as time,
+              COALESCE(a.Username, 'Unknown') as recipient
+       FROM notifications n
+       LEFT JOIN accounts a ON a.ID = n.master
+       WHERE n.sender = ?
+       ORDER BY n.time DESC`,
+      [username]
+    );
+    return rows.map(row => ({
+      id: row.ID,
+      title: row.title,
+      body: row.body,
+      time: row.time,
+      read: true,
+      sender: username,
+      recipient: row.recipient
+    }));
+  } catch (error) {
+    console.error('Error fetching sent messages:', error);
+    return [];
+  }
+}
+
 async function getUserEmail(username: string) {
   try {
     const [rows] = await pool.execute<RowDataPacket[]>(
@@ -46,13 +72,18 @@ export default async function InboxPage() {
 
   const email = await getUserEmail(session.username);
   const notifications = await getNotifications(session.userId);
+  const sentMessages = await getSentMessages(session.username);
 
   return (
     <div className="min-h-screen bg-[#09090b] pt-20 pb-12">
       <Navbar session={session ? { username: session.username, email } : null} />
 
       <main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8 max-w-4xl">
-        <InboxClient initialNotifications={notifications} />
+        <InboxClient
+          initialNotifications={notifications}
+          initialSentMessages={sentMessages}
+          currentUsername={session.username}
+        />
       </main>
     </div>
   );
