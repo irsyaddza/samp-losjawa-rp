@@ -13974,9 +13974,15 @@ FUNX::OnAccountUnbanned(playerid, account[])
 {
 	if(cache_affected_rows())
 	{
-		new auditDetails[256];
+		new auditDetails[256], closeQuery[512];
 		format(auditDetails, sizeof(auditDetails), "Removed the account ban on %s.", account);
 		LogGameAudit(playerid, "game.unban", "account", account, auditDetails);
+
+		mysql_format(dbCon, closeQuery, sizeof(closeQuery), "UPDATE `ucp_ban_appeals` SET `status` = 'accepted', `admin_id` = %d, `admin_username` = '%e', `response` = 'Resolved in-game by an administrator.', `reviewed_at` = NOW() WHERE `username` = '%e' AND `status` = 'open'", AccountData[playerid][aUserid], AccountData[playerid][aUsername], account);
+		mysql_pquery(dbCon, closeQuery);
+
+		mysql_format(dbCon, closeQuery, sizeof(closeQuery), "INSERT INTO `ucp_notifications` (`account_id`, `type`, `title`, `body`, `link`) SELECT `ID`, 'moderation', 'Ban removed', 'Your ban was lifted by an in-game administrator.', '/dashboard/appeal' FROM `accounts` WHERE `Username` = '%e' LIMIT 1", account);
+		mysql_pquery(dbCon, closeQuery);
 
 		SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(1): %s unbanned %s.", ReturnName(playerid), account);
 	}
