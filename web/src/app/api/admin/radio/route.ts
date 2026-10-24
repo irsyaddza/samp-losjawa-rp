@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
+import { logAdminAction } from '@/lib/audit';
 
 // Helper to verify Admin Level >= 1
 function isAuthorizedAdmin(adminLevel?: number): boolean {
@@ -90,6 +91,16 @@ export async function POST(req: Request) {
         [genreId, subgenreId, name, url]
       );
 
+      await logAdminAction({
+        adminId: session.userId,
+        adminUsername: session.username,
+        action: 'radio.add',
+        targetType: 'radio_station',
+        targetId: result.insertId,
+        details: `Added radio station "${name}".`,
+        request: req,
+      });
+
       return NextResponse.json({
         success: true,
         message: `Successfully added radio station "${name}" (ID #${result.insertId}).`,
@@ -113,6 +124,16 @@ export async function POST(req: Request) {
         [genreId, subgenreId, name, url, stationId]
       );
 
+      await logAdminAction({
+        adminId: session.userId,
+        adminUsername: session.username,
+        action: 'radio.edit',
+        targetType: 'radio_station',
+        targetId: stationId,
+        details: `Updated radio station "${name}".`,
+        request: req,
+      });
+
       return NextResponse.json({
         success: true,
         message: `Successfully updated radio station "${name}".`,
@@ -131,6 +152,16 @@ export async function POST(req: Request) {
         'DELETE FROM radio_station WHERE id = ?',
         [stationId]
       );
+
+      await logAdminAction({
+        adminId: session.userId,
+        adminUsername: session.username,
+        action: 'radio.delete',
+        targetType: 'radio_station',
+        targetId: stationId,
+        details: `Deleted radio station #${stationId}.`,
+        request: req,
+      });
 
       return NextResponse.json({
         success: true,

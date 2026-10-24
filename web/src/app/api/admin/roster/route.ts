@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
+import { logAdminAction } from '@/lib/audit';
 
 // Helper to verify if user is Deputy Head Admin (Level >= 4) or Head Admin (Level 1337)
 function isAuthorizedAdmin(adminLevel: number): boolean {
@@ -91,6 +92,16 @@ export async function POST(req: Request) {
         [level, targetAccount.ID]
       );
 
+      await logAdminAction({
+        adminId: session.userId,
+        adminUsername: session.username,
+        action: 'roster.add',
+        targetType: 'account',
+        targetId: targetAccount.ID,
+        details: `Appointed ${targetAccount.Username} as administrator level ${level}.`,
+        request: req,
+      });
+
       return NextResponse.json({
         success: true,
         message: `Successfully appointed ${targetAccount.Username} as Administrator (Level ${level}).`,
@@ -134,6 +145,16 @@ export async function POST(req: Request) {
         [level, targetUserId]
       );
 
+      await logAdminAction({
+        adminId: session.userId,
+        adminUsername: session.username,
+        action: 'roster.update',
+        targetType: 'account',
+        targetId: targetAccount.ID,
+        details: `Changed ${targetAccount.Username}'s admin level from ${targetAccount.Admin} to ${level}.`,
+        request: req,
+      });
+
       return NextResponse.json({
         success: true,
         message: `Successfully updated ${targetAccount.Username}'s rank level to ${level}.`,
@@ -166,6 +187,16 @@ export async function POST(req: Request) {
         'UPDATE accounts SET Admin = 0 WHERE ID = ?',
         [targetUserId]
       );
+
+      await logAdminAction({
+        adminId: session.userId,
+        adminUsername: session.username,
+        action: 'roster.remove',
+        targetType: 'account',
+        targetId: targetAccount.ID,
+        details: `Demoted ${targetAccount.Username} (level ${targetAccount.Admin}) to regular player.`,
+        request: req,
+      });
 
       return NextResponse.json({
         success: true,

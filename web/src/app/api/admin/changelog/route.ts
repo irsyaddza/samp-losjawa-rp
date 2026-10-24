@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
+import { logAdminAction } from '@/lib/audit';
 
 const HEAD_ADMIN = 1337;
 
@@ -59,6 +60,15 @@ export async function POST(req: NextRequest) {
       inserted++;
     }
 
+    await logAdminAction({
+      adminId: session.userId,
+      adminUsername: session.username,
+      action: 'changelog.create',
+      targetType: 'changelog',
+      details: `Published ${inserted} changelog ${inserted === 1 ? 'entry' : 'entries'} for version ${version}.`,
+      request: req,
+    });
+
     return NextResponse.json({ success: true, inserted });
   } catch (error) {
     console.error('Changelog insert error:', error);
@@ -80,6 +90,17 @@ export async function DELETE(req: NextRequest) {
     }
 
     await pool.execute('DELETE FROM server_changelogs WHERE id = ?', [id]);
+
+    await logAdminAction({
+      adminId: session.userId,
+      adminUsername: session.username,
+      action: 'changelog.delete',
+      targetType: 'changelog',
+      targetId: id,
+      details: `Deleted changelog entry #${id}.`,
+      request: req,
+    });
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Changelog delete error:', error);
