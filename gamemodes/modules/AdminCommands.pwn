@@ -212,6 +212,14 @@ CMD:kick(playerid, params[])
 	return true;
 }
 
+LogGameAudit(playerid, const action[], const targetType[], const targetId[], const details[])
+{
+	new query[512];
+
+	mysql_format(dbCon, query, sizeof(query), "INSERT INTO `ucp_admin_audit` (`admin_id`, `admin_username`, `action`, `target_type`, `target_id`, `details`, `ip`) VALUES (%d, '%e', '%e', '%e', '%e', '%e', 'game')", AccountData[playerid][aUserid], AccountData[playerid][aUsername], action, targetType, targetId, details);
+	mysql_pquery(dbCon, query);
+}
+
 CMD:ban(playerid, params[])
 {
     UnauthGate(playerid, 1);
@@ -249,6 +257,10 @@ CMD:ban(playerid, params[])
 
 	mysql_format(dbCon, largeQuery, sizeof(largeQuery), "INSERT INTO `logs_ban` (`Character`, `BannedBy`, `Reason`, `IP`, `character_id`, `user_id`) VALUES ('%e', '%e', '%e', '%e', %d, %d)", ReturnName(userid), ReturnName(playerid), reason, ip, PlayerData[userid][pID], AccountData[userid][aUserid]);
 	mysql_pquery(dbCon, largeQuery);
+
+	new auditDetails[256];
+	format(auditDetails, sizeof(auditDetails), "Banned %s (%s). Reason: %s", AccountData[userid][aUsername], ReturnName(userid), reason);
+	LogGameAudit(playerid, "game.ban", "account", AccountData[userid][aUsername], auditDetails);
 
     KickEx(userid);
 	return true;

@@ -13974,6 +13974,10 @@ FUNX::OnAccountUnbanned(playerid, account[])
 {
 	if(cache_affected_rows())
 	{
+		new auditDetails[256];
+		format(auditDetails, sizeof(auditDetails), "Removed the account ban on %s.", account);
+		LogGameAudit(playerid, "game.unban", "account", account, auditDetails);
+
 		SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(1): %s unbanned %s.", ReturnName(playerid), account);
 	}
 	else
@@ -13987,6 +13991,10 @@ FUNX::OnIPAddressUnbanned(playerid, address[])
 {
 	if(cache_affected_rows())
 	{
+		new auditDetails[256];
+		format(auditDetails, sizeof(auditDetails), "Removed the IP ban on %s.", address);
+		LogGameAudit(playerid, "game.unban", "ip", address, auditDetails);
+
 		SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(1): %s unbanned IP %s.", ReturnName(playerid), address);
 	}
 	else
