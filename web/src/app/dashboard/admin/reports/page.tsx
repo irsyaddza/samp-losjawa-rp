@@ -69,7 +69,10 @@ async function getReports(filter: Filter, query: string) {
       `SELECT r.id, r.reporter_account_id, r.reporter_username, r.reporter_character_name,
               r.reported_account_id, r.reported_username, r.reported_character_id,
               r.reported_character_name, r.category, r.subject, r.description, r.evidence,
-              r.status, r.assigned_username, r.staff_notes, r.resolution,
+              r.status, r.ban_id, r.assigned_username, r.staff_notes, r.resolution,
+              (SELECT b.id FROM bans b
+               WHERE b.name = r.reported_username AND (b.perm = 1 OR b.expire > NOW())
+               ORDER BY b.id DESC LIMIT 1) AS active_ban_id,
               DATE_FORMAT(r.created_at, '%b %e, %Y %H:%i') AS created_at,
               DATE_FORMAT(r.reviewed_at, '%b %e, %Y %H:%i') AS reviewed_at,
               DATE_FORMAT(r.updated_at, '%b %e, %Y %H:%i') AS updated_at

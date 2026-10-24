@@ -4,10 +4,12 @@ import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { RowDataPacket } from 'mysql2';
 import {
+  Activity,
   ArrowLeft,
   Ban,
   Clock,
   Fingerprint,
+  Flag,
   Gavel,
   Globe,
   Mail,
@@ -18,6 +20,7 @@ import {
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { getAppealStatus } from '@/lib/appeals';
+import { getReportCategory, getReportStatus } from '@/lib/reports';
 
 async function getUserEmail(username: string) {
   try {
@@ -74,7 +77,8 @@ async function getActiveBans(username: string) {
 async function getBanHistory(accountId: number) {
   const [rows] = await pool.execute<RowDataPacket[]>(
     `SELECT id, \`Character\`, BannedBy, Reason, IP,
-            DATE_FORMAT(Date, '%b %e, %Y %H:%i') AS created_at
+            DATE_FORMAT(Date, '%b %e, %Y %H:%i') AS created_at,
+            UNIX_TIMESTAMP(Date) AS created_ts
      FROM logs_ban
      WHERE user_id = ?
      ORDER BY id DESC
@@ -102,12 +106,28 @@ async function getAppealHistory(username: string) {
   const [rows] = await pool.execute<RowDataPacket[]>(
     `SELECT id, ban_id, status, message, response, admin_username,
             DATE_FORMAT(created_at, '%b %e, %Y %H:%i') AS created_at,
+            UNIX_TIMESTAMP(created_at) AS created_ts,
             DATE_FORMAT(reviewed_at, '%b %e, %Y %H:%i') AS reviewed_at
      FROM ucp_ban_appeals
      WHERE username = ?
      ORDER BY id DESC
      LIMIT 10`,
     [username]
+  );
+  return rows;
+}
+
+async function getReportHistory(accountId: number) {
+  const [rows] = await pool.execute<RowDataPacket[]>(
+    `SELECT id, reporter_account_id, reporter_username, reported_account_id,
+            reported_username, reported_character_name, category, subject, status, ban_id,
+            DATE_FORMAT(created_at, '%b %e, %Y %H:%i') AS created_at,
+            UNIX_TIMESTAMP(created_at) AS created_ts
+     FROM ucp_player_reports
+     WHERE reporter_account_id = ? OR reported_account_id = ?
+     ORDER BY id DESC
+     LIMIT 20`,
+    [accountId, accountId]
   );
   return rows;
 }
@@ -135,14 +155,61 @@ export default async function PlayerDetailPage({
     notFound();
   }
 
-  const [email, characters, activeBans, banHistory, connections, appeals] = await Promise.all([
+  const [email, characters, activeBans, banHistory, connections, appeals, reports] = await Promise.all([
     getUserEmail(session.username),
     getCharacters(accountId),
     getActiveBans(account.Username),
     getBanHistory(accountId),
     getConnections(account.Username),
     getAppealHistory(account.Username),
+    getReportHistory(accountId),
   ]);
+
+  const timeline = [
+    ...reports.map((report) => {
+      const status = getReportStatus(report.status);
+      const direction = Number(report.reporter_account_id) === accountId ? 'submitted' : 'received';
+      const target = String(report.reported_username || report.reported_character_name || 'unknown').replace(/_/g, ' ');
+      return {
+        timestamp: Number(report.created_ts || 0),
+        type: 'report' as const,
+        id: Number(report.id),
+        title: `Report #${report.id} ${direction}`,
+        detail: `${getReportCategory(report.category).label} · ${report.subject} · ${direction === 'submitted' ? `against ${target}` : `by ${report.reporter_username}`}`,
+        date: report.created_at,
+        badge: status.label,
+        badgeClassName: status.className,
+        href: `/dashboard/admin/reports?status=all&q=${encodeURIComponent(report.subject)}`,
+      };
+    }),
+    ...banHistory.map((ban) => ({
+      timestamp: Number(ban.created_ts || 0),
+      type: 'ban' as const,
+      id: Number(ban.id),
+      title: 'Ban issued',
+      detail: `${ban.Reason || 'No reason recorded'} · by ${ban.BannedBy}`,
+      date: ban.created_at,
+      badge: 'Ban',
+      badgeClassName: 'border-red-500/20 bg-red-500/10 text-red-400',
+      href: `/dashboard/admin/moderation?q=${encodeURIComponent(account.Username)}`,
+    })),
+    ...appeals.map((appeal) => {
+      const status = getAppealStatus(appeal.status);
+      return {
+        timestamp: Number(appeal.created_ts || 0),
+        type: 'appeal' as const,
+        id: Number(appeal.id),
+        title: `Appeal #${appeal.id} · ban #${appeal.ban_id}`,
+        detail: appeal.message,
+        date: appeal.created_at,
+        badge: status.label,
+        badgeClassName: status.className,
+        href: '/dashboard/admin/appeals?status=all',
+      };
+    }),
+  ]
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .slice(0, 20);
 
   return (
     <div className="min-h-screen bg-[#09090b] pb-16 pt-20">
@@ -301,6 +368,56 @@ export default async function PlayerDetailPage({
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+        </section>
+
+        <section className="mt-4 rounded-2xl border border-zinc-800/80 bg-zinc-950/60">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800 px-5 py-4">
+            <h2 className="flex items-center gap-2 text-sm font-bold text-white">
+              <Activity className="h-4 w-4 text-amber-500" />
+              Moderation timeline
+            </h2>
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-[10px] text-zinc-600">{timeline.length} recent event{timeline.length === 1 ? '' : 's'}</span>
+              <Link href="/dashboard/admin/reports?status=all" className="text-[11px] font-bold text-amber-400 hover:text-amber-300">
+                Open reports
+              </Link>
+            </div>
+          </div>
+
+          {timeline.length === 0 ? (
+            <p className="px-5 py-8 text-xs text-zinc-500">No moderation history recorded for this account.</p>
+          ) : (
+            <div className="divide-y divide-zinc-900">
+              {timeline.map((entry) => {
+                const Icon = entry.type === 'report' ? Flag : entry.type === 'ban' ? Ban : Scale;
+                return (
+                  <div key={`${entry.type}-${entry.id}`} className="flex gap-3 px-5 py-3">
+                    <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border ${
+                      entry.type === 'report'
+                        ? 'border-amber-500/20 bg-amber-500/10 text-amber-400'
+                        : entry.type === 'ban'
+                          ? 'border-red-500/20 bg-red-500/10 text-red-400'
+                          : 'border-sky-500/20 bg-sky-500/10 text-sky-400'
+                    }`}>
+                      <Icon className="h-3.5 w-3.5" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Link href={entry.href} className="text-xs font-semibold text-white hover:text-amber-400">
+                          {entry.title}
+                        </Link>
+                        <span className={`rounded-full border px-2 py-0.5 text-[9px] font-bold ${entry.badgeClassName}`}>
+                          {entry.badge}
+                        </span>
+                        <span className="ml-auto text-[10px] text-zinc-600">{entry.date}</span>
+                      </div>
+                      <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-zinc-400">{entry.detail}</p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </section>

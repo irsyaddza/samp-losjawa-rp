@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS `ucp_player_reports` (
   `description` text NOT NULL,
   `evidence` text,
   `status` varchar(20) NOT NULL DEFAULT 'open',
+  `ban_id` int(11) DEFAULT NULL,
   `assigned_to` int(11) DEFAULT NULL,
   `assigned_username` varchar(32) DEFAULT NULL,
   `staff_notes` text,
@@ -27,6 +28,7 @@ CREATE TABLE IF NOT EXISTS `ucp_player_reports` (
   KEY `reporter_account_id` (`reporter_account_id`),
   KEY `reported_account_id` (`reported_account_id`),
   KEY `status` (`status`),
+  KEY `ban_id` (`ban_id`),
   KEY `assigned_to` (`assigned_to`),
   KEY `created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

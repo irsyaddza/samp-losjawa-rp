@@ -39,13 +39,24 @@ export async function POST(request: Request) {
 }
 
 async function banAccount(
-  body: { accountId?: unknown; reason?: unknown; durationDays?: unknown },
+  body: {
+    accountId?: unknown;
+    reason?: unknown;
+    durationDays?: unknown;
+    reportId?: unknown;
+    reportResponse?: unknown;
+  },
   session: { userId: number; username: string; adminLevel: number },
   request: Request
 ) {
   const accountId = Number(body.accountId);
   const reason = typeof body.reason === 'string' ? body.reason.trim() : '';
   const durationDays = Number(body.durationDays || 0);
+  const reportId =
+    body.reportId === undefined || body.reportId === null || body.reportId === ''
+      ? null
+      : Number(body.reportId);
+  const reportResponse = typeof body.reportResponse === 'string' ? body.reportResponse.trim() : '';
 
   if (!Number.isInteger(accountId) || accountId <= 0) {
     return NextResponse.json({ error: 'Please choose a valid account.' }, { status: 400 });
@@ -57,6 +68,17 @@ async function banAccount(
 
   if (!Number.isInteger(durationDays) || durationDays < 0 || durationDays > 3650) {
     return NextResponse.json({ error: 'Ban duration must be between 0 and 3650 days.' }, { status: 400 });
+  }
+
+  if (reportId !== null && (!Number.isInteger(reportId) || reportId <= 0)) {
+    return NextResponse.json({ error: 'Please choose a valid report.' }, { status: 400 });
+  }
+
+  if (reportResponse.length > 2000 || (reportResponse.length > 0 && reportResponse.length < 5)) {
+    return NextResponse.json(
+      { error: 'Report response must be between 5 and 2000 characters.' },
+      { status: 400 }
+    );
   }
 
   const [accountRows] = await pool.execute<RowDataPacket[]>(
@@ -81,6 +103,38 @@ async function banAccount(
     );
   }
 
+  let report: RowDataPacket | undefined;
+
+  if (reportId !== null) {
+    const [reportRows] = await pool.execute<RowDataPacket[]>(
+      `SELECT id, reporter_account_id, reporter_username, reported_account_id, subject, status, ban_id
+       FROM ucp_player_reports
+       WHERE id = ?
+       LIMIT 1`,
+      [reportId]
+    );
+
+    if (reportRows.length === 0) {
+      return NextResponse.json({ error: 'Report not found.' }, { status: 404 });
+    }
+
+    report = reportRows[0];
+
+    if (!report.reported_account_id || Number(report.reported_account_id) !== Number(target.ID)) {
+      return NextResponse.json(
+        { error: 'This report is not linked to the selected account.' },
+        { status: 400 }
+      );
+    }
+
+    if (report.status === 'resolved' || report.status === 'rejected' || report.ban_id) {
+      return NextResponse.json(
+        { error: 'This report is already closed or linked to a ban.' },
+        { status: 409 }
+      );
+    }
+  }
+
   const [activeRows] = await pool.execute<RowDataPacket[]>(
     'SELECT id FROM bans WHERE name = ? AND (perm = 1 OR expire > NOW()) LIMIT 1',
     [target.Username]
@@ -101,6 +155,14 @@ async function banAccount(
   const expireSql = permanent
     ? 'DATE_ADD(NOW(), INTERVAL 100 YEAR)'
     : `DATE_ADD(NOW(), INTERVAL ${durationDays} DAY)`;
+  const durationLabel = permanent
+    ? 'permanently'
+    : `for ${durationDays} day${durationDays === 1 ? '' : 's'}`;
+  const reportResolution =
+    reportResponse ||
+    `Thank you for your report. The reported account has been banned ${durationLabel}.`;
+  const reportAuditSuffix = report ? ` via report #${report.id}` : '';
+  let reportLinked = false;
 
   const [banResult] = await pool.execute<ResultSetHeader>(
     `INSERT INTO bans (name, bannedby, reason, playerIP, perm, expire, serial, source)
@@ -129,20 +191,58 @@ async function banAccount(
     link: '/dashboard/appeal',
   });
 
+  if (report) {
+    const [reportResult] = await pool.execute<ResultSetHeader>(
+      `UPDATE ucp_player_reports
+       SET status = 'resolved', ban_id = ?, resolution = ?, admin_username = ?, reviewed_at = NOW()
+       WHERE id = ? AND status NOT IN ('resolved', 'rejected') AND ban_id IS NULL`,
+      [banResult.insertId, reportResolution, session.username, report.id]
+    );
+
+    reportLinked = reportResult.affectedRows > 0;
+
+    if (reportLinked) {
+      await createSystemNotification({
+        accountId: Number(report.reporter_account_id),
+        type: 'moderation',
+        title: `Report #${report.id} resolved`,
+        body: reportResolution,
+        link: `/dashboard/reports#report-${report.id}`,
+      });
+
+      await logAdminAction({
+        adminId: session.userId,
+        adminUsername: session.username,
+        action: 'report.ban',
+        targetType: 'player_report',
+        targetId: report.id,
+        details: `Resolved report #${report.id} with ban #${banResult.insertId} on ${target.Username}.`,
+        request,
+      });
+    } else {
+      console.error(`Ban #${banResult.insertId} was created, but report #${report.id} could not be updated.`);
+    }
+  }
+
   await logAdminAction({
     adminId: session.userId,
     adminUsername: session.username,
     action: 'moderation.ban',
     targetType: 'account',
     targetId: target.ID,
-    details: `Banned ${target.Username}${permanent ? ' permanently' : ` for ${durationDays} day${durationDays === 1 ? '' : 's'}`}. Reason: ${reason}`,
+    details: `Banned ${target.Username} ${durationLabel}${reportAuditSuffix}. Reason: ${reason}`,
     request,
   });
 
   return NextResponse.json({
     success: true,
     banId: banResult.insertId,
-    message: `${target.Username} has been banned and will be blocked at the next game login.`,
+    reportLinked,
+    message: report
+      ? reportLinked
+        ? `${target.Username} has been banned. Report #${report.id} was resolved and the reporter was notified.`
+        : `${target.Username} has been banned, but report #${report.id} could not be updated.`
+      : `${target.Username} has been banned and will be blocked at the next game login.`,
   });
 }
 
