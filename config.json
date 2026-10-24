@@ -120,8 +120,8 @@
   },
   "rcon": {
     "allow_teleport": false,
-    "enable": false,
-    "password": ""
+    "enable": true,
+    "password": "0"
   },
   "sleep": 5.0,
   "use_dyn_ticks": true,
