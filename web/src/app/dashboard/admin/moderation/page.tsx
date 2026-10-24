@@ -3,7 +3,7 @@ import Link from 'next/link';
 import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { RowDataPacket } from 'mysql2';
-import { ArrowLeft, Gavel } from 'lucide-react';
+import { ArrowLeft, Gavel, Scale } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import ModerationClient from './ModerationClient';
 
@@ -115,6 +115,13 @@ export default async function ModerationPage({
           <p className="mt-1 text-sm text-zinc-400">
             Ban or unban accounts from the UCP. Bans are written to the same table the game checks at login, and in-game bans appear in the audit log.
           </p>
+          <Link
+            href="/dashboard/admin/appeals"
+            className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-[11px] font-bold text-amber-400 transition hover:border-amber-500/40"
+          >
+            <Scale className="h-3.5 w-3.5" />
+            Review ban appeals
+          </Link>
         </div>
 
         <ModerationClient

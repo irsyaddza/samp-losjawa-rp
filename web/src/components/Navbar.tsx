@@ -16,6 +16,7 @@ import {
   Settings,
   Globe,
   LifeBuoy,
+  Scale,
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
@@ -263,6 +264,15 @@ export default function Navbar({ session }: NavbarProps) {
                       </Link>
 
                       <Link
+                        href="/dashboard/appeal"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 transition hover:bg-zinc-900 hover:text-amber-400"
+                      >
+                        <Scale className="h-4 w-4 text-amber-500" />
+                        Ban Appeal
+                      </Link>
+
+                      <Link
                         href="/dashboard/settings"
                         onClick={() => setDropdownOpen(false)}
                         className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 transition hover:bg-zinc-900 hover:text-amber-400"
@@ -341,12 +351,20 @@ export default function Navbar({ session }: NavbarProps) {
               </Link>
             ))}
             {session && (
-              <Link
-                href="/dashboard/online"
-                className="rounded-xl px-4 py-3 text-xs font-bold uppercase tracking-wider text-zinc-300 hover:bg-zinc-900 hover:text-white"
-              >
-                Online Players
-              </Link>
+              <>
+                <Link
+                  href="/dashboard/online"
+                  className="rounded-xl px-4 py-3 text-xs font-bold uppercase tracking-wider text-zinc-300 hover:bg-zinc-900 hover:text-white"
+                >
+                  Online Players
+                </Link>
+                <Link
+                  href="/dashboard/appeal"
+                  className="rounded-xl px-4 py-3 text-xs font-bold uppercase tracking-wider text-zinc-300 hover:bg-zinc-900 hover:text-white"
+                >
+                  Ban Appeal
+                </Link>
+              </>
             )}
             <a
               href="https://forum.losjawa-rp.fun"

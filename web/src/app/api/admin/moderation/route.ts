@@ -125,8 +125,8 @@ async function banAccount(
     accountId: target.ID,
     type: 'moderation',
     title: permanent ? 'Account permanently banned' : `Account banned for ${durationDays} day${durationDays === 1 ? '' : 's'}`,
-    body: `${reason} - banned by ${session.username}.`,
-    link: '/dashboard/support',
+    body: `${reason} - banned by ${session.username}. You can submit an appeal from the Ban Appeal page.`,
+    link: '/dashboard/appeal',
   });
 
   await logAdminAction({
@@ -185,6 +185,15 @@ async function unbanAccount(
   }
 
   await pool.execute('DELETE FROM bans WHERE id = ?', [banId]);
+
+  await pool.execute(
+    `UPDATE ucp_ban_appeals
+     SET status = 'accepted', admin_id = ?, admin_username = ?,
+         response = COALESCE(response, 'Resolved from the Moderation Center.'),
+         reviewed_at = NOW()
+     WHERE ban_id = ? AND status = 'open'`,
+    [session.userId, session.username, banId]
+  );
 
   if (targetAccount) {
     await createSystemNotification({

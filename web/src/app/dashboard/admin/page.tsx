@@ -10,6 +10,7 @@ import {
   Gavel,
   History,
   Map,
+  Scale,
   Shield,
   Ticket,
   UserSearch,
@@ -24,6 +25,7 @@ interface AdminStats {
   pendingMappings: number;
   onlinePlayers: number;
   activeBans: number;
+  pendingAppeals: number;
 }
 
 async function getPendingApplications() {
@@ -61,7 +63,8 @@ async function getAdminStats(): Promise<AdminStats> {
         (SELECT COUNT(*) FROM ucp_tickets WHERE status IN ('open', 'in_progress')) AS activeTickets,
         (SELECT COUNT(*) FROM property_mappings WHERE status = 0) AS pendingMappings,
         (SELECT COUNT(*) FROM characters WHERE Online = 1) AS onlinePlayers,
-        (SELECT COUNT(*) FROM bans WHERE perm = 1 OR expire > NOW()) AS activeBans`
+        (SELECT COUNT(*) FROM bans WHERE perm = 1 OR expire > NOW()) AS activeBans,
+        (SELECT COUNT(*) FROM ucp_ban_appeals WHERE status = 'open') AS pendingAppeals`
     );
 
     const row = rows[0];
@@ -71,10 +74,18 @@ async function getAdminStats(): Promise<AdminStats> {
       pendingMappings: Number(row?.pendingMappings || 0),
       onlinePlayers: Number(row?.onlinePlayers || 0),
       activeBans: Number(row?.activeBans || 0),
+      pendingAppeals: Number(row?.pendingAppeals || 0),
     };
   } catch (error) {
     console.error('Error fetching admin stats:', error);
-    return { pendingApplications: 0, activeTickets: 0, pendingMappings: 0, onlinePlayers: 0, activeBans: 0 };
+    return {
+      pendingApplications: 0,
+      activeTickets: 0,
+      pendingMappings: 0,
+      onlinePlayers: 0,
+      activeBans: 0,
+      pendingAppeals: 0,
+    };
   }
 }
 
@@ -151,6 +162,12 @@ export default async function AdminPortalPage() {
       href: '/dashboard/admin/moderation',
       icon: Gavel,
     },
+    {
+      label: 'Ban Appeals',
+      value: stats.pendingAppeals,
+      href: '/dashboard/admin/appeals',
+      icon: Scale,
+    },
   ];
 
   return (
@@ -186,7 +203,7 @@ export default async function AdminPortalPage() {
           </p>
         </div>
 
-        <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {statCards.map((card) => {
             const Icon = card.icon;
             return (
@@ -225,6 +242,17 @@ export default async function AdminPortalPage() {
             <span className="flex items-center gap-2 text-xs font-bold text-white">
               <Gavel className="h-4 w-4 text-amber-500" />
               Moderation Center
+            </span>
+            <ArrowRight className="h-4 w-4 text-zinc-600 transition group-hover:text-amber-400" />
+          </Link>
+
+          <Link
+            href="/dashboard/admin/appeals"
+            className="group flex items-center justify-between rounded-xl border border-zinc-800/80 bg-zinc-950/60 px-4 py-3 transition hover:border-amber-500/30"
+          >
+            <span className="flex items-center gap-2 text-xs font-bold text-white">
+              <Scale className="h-4 w-4 text-amber-500" />
+              Ban Appeals
             </span>
             <ArrowRight className="h-4 w-4 text-zinc-600 transition group-hover:text-amber-400" />
           </Link>

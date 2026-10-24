@@ -21,6 +21,7 @@ import {
   Wallet,
   FileText,
   ChevronDown,
+  Scale,
   type LucideIcon,
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
@@ -456,6 +457,13 @@ export default async function DashboardPage() {
             >
               <ShieldAlert className="h-3.5 w-3.5" />
               Sanction Records
+            </Link>
+            <Link
+              href="/dashboard/appeal"
+              className="inline-flex items-center gap-1.5 transition hover:text-amber-400"
+            >
+              <Scale className="h-3.5 w-3.5" />
+              Ban Appeal
             </Link>
             <Link
               href="/dashboard/support"

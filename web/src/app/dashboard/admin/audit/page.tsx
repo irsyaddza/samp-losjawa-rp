@@ -62,7 +62,7 @@ export default async function AdminAuditPage() {
             Admin Audit Log
           </h1>
           <p className="mt-1 text-sm text-zinc-400">
-            The latest 100 staff actions from the UCP and the game, including bans, unbans, tickets, applications, mappings, donators, roster, changelog, and radio changes.
+            The latest 100 staff actions from the UCP and the game, including bans, unbans, ban appeals, tickets, applications, mappings, donators, roster, changelog, and radio changes.
           </p>
         </div>
 
