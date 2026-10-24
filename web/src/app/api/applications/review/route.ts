@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
-import { RowDataPacket } from 'mysql2';
+import { RowDataPacket, ResultSetHeader } from 'mysql2';
+import { createSystemNotification } from '@/lib/system-notifications';
+import { logAdminAction } from '@/lib/audit';
 
 export async function POST(request: Request) {
   try {
@@ -42,10 +44,28 @@ export async function POST(request: Request) {
       const phoneNum = Math.floor(Math.random() * (maxPhone - minPhone + 1)) + minPhone;
 
       // 3. Create the character in characters table
-      await pool.execute(
+      const [characterResult] = await pool.execute<ResultSetHeader>(
         'INSERT INTO characters (master, char_name, Model, Activated, Cash, BankAccount, Level, PhoneNumbr, playerJob) VALUES (?, ?, ?, 1, 10000, 5000, 1, ?, 0)',
         [app.master, app.char_name, app.skin, phoneNum]
       );
+
+      await createSystemNotification({
+        accountId: Number(app.master),
+        type: 'application',
+        title: 'Character application accepted',
+        body: `${app.char_name} has been approved and is ready to play.`,
+        link: `/dashboard/character/${characterResult.insertId}`,
+      });
+
+      await logAdminAction({
+        adminId: session.userId,
+        adminUsername: session.username,
+        action: 'application.accept',
+        targetType: 'application',
+        targetId: appId,
+        details: `Accepted application for ${app.char_name}.`,
+        request,
+      });
 
       return NextResponse.json({ success: true, message: 'Application accepted and character created!' });
     } else if (action === 'deny') {
@@ -58,6 +78,24 @@ export async function POST(request: Request) {
         'UPDATE application SET status = 1, accepted = 0, reviewed_by = ?, reason = ?, date_of_review = ? WHERE id = ?',
         [session.userId, reason, currentDate, appId]
       );
+
+      await createSystemNotification({
+        accountId: Number(app.master),
+        type: 'application',
+        title: 'Character application rejected',
+        body: `${app.char_name}: ${String(reason).slice(0, 300)}`,
+        link: '/dashboard',
+      });
+
+      await logAdminAction({
+        adminId: session.userId,
+        adminUsername: session.username,
+        action: 'application.deny',
+        targetType: 'application',
+        targetId: appId,
+        details: `Rejected application for ${app.char_name}. Reason: ${reason}`,
+        request,
+      });
 
       return NextResponse.json({ success: true, message: 'Application denied successfully.' });
     } else {

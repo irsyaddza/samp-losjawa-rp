@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
+import { logAdminAction } from '@/lib/audit';
 
 export async function GET() {
   const session = await getSession();
@@ -57,6 +58,16 @@ export async function POST(req: NextRequest) {
     if (result.affectedRows === 0) {
       return NextResponse.json({ error: 'Request mapping tidak ditemukan.' }, { status: 404 });
     }
+
+    await logAdminAction({
+      adminId: session.userId,
+      adminUsername: session.username,
+      action: `mapping.${action}`,
+      targetType: 'property_mapping',
+      targetId: reqId,
+      details: `Mapping request #${reqId} ${action === 'approve' ? 'approved' : 'rejected'}${adminComment ? `: ${adminComment}` : '.'}`,
+      request: req,
+    });
 
     return NextResponse.json({ success: true, message: `Request mapping berhasil di-${action}.` });
   } catch (error) {

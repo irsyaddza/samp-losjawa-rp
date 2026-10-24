@@ -3,7 +3,7 @@ import Link from 'next/link';
 import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { RowDataPacket } from 'mysql2';
-import { ArrowLeft, ShieldAlert, Clock, Info, ShieldX } from 'lucide-react';
+import { ArrowLeft, ShieldAlert, Clock, Info, ShieldX, Scale } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 
 async function getBans(userId: number) {
@@ -96,6 +96,13 @@ export default async function AdminRecordsPage() {
           <p className="text-xs text-zinc-400 mt-1">
             Administrative sanction logs (Bans, Admin Jails, and Kicks) recorded for all characters under this UCP.
           </p>
+          <Link
+            href="/dashboard/appeal"
+            className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-[11px] font-bold text-amber-400 transition hover:border-amber-500/40"
+          >
+            <Scale className="h-3.5 w-3.5" />
+            Appeal an active ban
+          </Link>
         </div>
 
         <div className="space-y-8">

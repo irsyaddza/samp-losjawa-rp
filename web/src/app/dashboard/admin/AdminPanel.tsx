@@ -173,10 +173,10 @@ export default function AdminPanel({ initialApps, currentAdminLevel }: AdminPane
   return (
     <div className="space-y-6">
       {/* Tabs */}
-      <div className="flex border-b border-zinc-800">
+      <div className="flex overflow-x-auto border-b border-zinc-800">
         <button
           onClick={() => setActiveTab('applications')}
-          className={`px-5 py-3 text-sm font-bold border-b-2 transition ${
+          className={`shrink-0 whitespace-nowrap px-5 py-3 text-sm font-bold border-b-2 transition ${
             activeTab === 'applications'
               ? 'border-amber-500 text-amber-500'
               : 'border-transparent text-zinc-400 hover:text-white'
@@ -186,7 +186,7 @@ export default function AdminPanel({ initialApps, currentAdminLevel }: AdminPane
         </button>
         <button
           onClick={() => setActiveTab('donators')}
-          className={`px-5 py-3 text-sm font-bold border-b-2 transition ${
+          className={`shrink-0 whitespace-nowrap px-5 py-3 text-sm font-bold border-b-2 transition ${
             activeTab === 'donators'
               ? 'border-amber-500 text-amber-500'
               : 'border-transparent text-zinc-400 hover:text-white'
@@ -196,20 +196,20 @@ export default function AdminPanel({ initialApps, currentAdminLevel }: AdminPane
         </button>
         <Link
           href="/dashboard/admin/mapping"
-          className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-zinc-400 hover:text-white transition"
+          className="shrink-0 whitespace-nowrap px-5 py-3 text-sm font-bold border-b-2 border-transparent text-zinc-400 hover:text-white transition"
         >
           Review Property Mappings
         </Link>
         <Link
           href="/dashboard/admin/radio"
-          className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-zinc-400 hover:text-white transition flex items-center gap-1.5"
+          className="shrink-0 whitespace-nowrap px-5 py-3 text-sm font-bold border-b-2 border-transparent text-zinc-400 hover:text-white transition flex items-center gap-1.5"
         >
           Radio Manager
         </Link>
         {currentAdminLevel && currentAdminLevel >= 4 && (
           <Link
             href="/dashboard/admin/roster"
-            className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-amber-400 hover:text-amber-300 transition flex items-center gap-1.5"
+            className="shrink-0 whitespace-nowrap px-5 py-3 text-sm font-bold border-b-2 border-transparent text-amber-400 hover:text-amber-300 transition flex items-center gap-1.5"
           >
             Staff Roster
           </Link>
@@ -344,7 +344,7 @@ export default function AdminPanel({ initialApps, currentAdminLevel }: AdminPane
                             <FileText className="h-4 w-4" />
                             Character Backstory (Story)
                           </h5>
-                          <div className="text-zinc-200 text-xs leading-relaxed bg-zinc-900/10 p-5 rounded-xl border border-zinc-900 whitespace-pre-line font-medium">
+                          <div className="text-zinc-200 text-xs leading-relaxed bg-zinc-900/10 p-5 rounded-xl border border-zinc-900 whitespace-pre-wrap break-words font-medium">
                             {app.story}
                           </div>
                         </div>

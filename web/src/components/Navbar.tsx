@@ -15,6 +15,9 @@ import {
   Shield,
   Settings,
   Globe,
+  LifeBuoy,
+  Scale,
+  Flag,
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
@@ -37,25 +40,43 @@ export default function Navbar({ session }: NavbarProps) {
   const pathname = usePathname();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [messageCount, setMessageCount] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!session) return;
-    async function fetchCount() {
+    async function fetchCounts() {
       try {
-        const res = await fetch('/api/user/notifications/count');
-        if (res.ok) {
-          const data = await res.json();
-          setUnreadCount(data.count || 0);
+        const [notificationRes, messageRes] = await Promise.all([
+          fetch('/api/user/system-notifications/count'),
+          fetch('/api/user/notifications/count'),
+        ]);
+
+        if (notificationRes.ok) {
+          const data = await notificationRes.json();
+          setNotificationCount(data.count || 0);
+        }
+        if (messageRes.ok) {
+          const data = await messageRes.json();
+          setMessageCount(data.count || 0);
         }
       } catch (error) {
-        console.error('Error fetching notification count:', error);
+        console.error('Error fetching notification counts:', error);
       }
     }
-    fetchCount();
-    const interval = setInterval(fetchCount, 60000);
-    return () => clearInterval(interval);
+
+    function handleNotificationsUpdated() {
+      fetchCounts();
+    }
+
+    fetchCounts();
+    const interval = setInterval(fetchCounts, 60000);
+    window.addEventListener('notifications-updated', handleNotificationsUpdated);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('notifications-updated', handleNotificationsUpdated);
+    };
   }, [session]);
 
   useEffect(() => {
@@ -140,14 +161,14 @@ export default function Navbar({ session }: NavbarProps) {
             <div className="flex items-center gap-3">
               {/* Notification Bell */}
               <Link
-                href="/dashboard/inbox"
+                href="/dashboard/notifications"
                 className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/60 text-zinc-400 transition hover:border-amber-500/30 hover:bg-zinc-800 hover:text-white"
-                aria-label="Inbox & Notifications"
+                aria-label="Notifications"
               >
                 <Bell className="h-4 w-4" />
-                {unreadCount > 0 && (
+                {notificationCount > 0 && (
                   <span className="absolute -top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-amber-500 text-[9px] font-black text-black ring-2 ring-[#09090b]">
-                    {unreadCount > 9 ? '9+' : unreadCount}
+                    {notificationCount > 9 ? '9+' : notificationCount}
                   </span>
                 )}
               </Link>
@@ -167,7 +188,7 @@ export default function Navbar({ session }: NavbarProps) {
 
                 {/* Dropdown Menu */}
                 {dropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-60 rounded-2xl border border-zinc-800 bg-zinc-950 p-2 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="absolute right-0 mt-2 max-h-[calc(100vh-5rem)] w-60 overflow-y-auto rounded-2xl border border-zinc-800 bg-zinc-950 p-2 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-150">
                     <div className="mb-2 border-b border-zinc-900 px-3 py-2.5">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">UCP Account</p>
                       <p className="mt-0.5 truncate text-xs font-bold text-white">{session.username}</p>
@@ -194,6 +215,22 @@ export default function Navbar({ session }: NavbarProps) {
                       </Link>
 
                       <Link
+                        href="/dashboard/notifications"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 transition hover:bg-zinc-900 hover:text-amber-400"
+                      >
+                        <span className="flex items-center gap-2.5">
+                          <Bell className="h-4 w-4 text-amber-500" />
+                          Notifications
+                        </span>
+                        {notificationCount > 0 && (
+                          <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-400 border border-amber-500/20">
+                            {notificationCount}
+                          </span>
+                        )}
+                      </Link>
+
+                      <Link
                         href="/dashboard/friends"
                         onClick={() => setDropdownOpen(false)}
                         className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 transition hover:bg-zinc-900 hover:text-amber-400"
@@ -211,11 +248,38 @@ export default function Navbar({ session }: NavbarProps) {
                           <Mail className="h-4 w-4 text-amber-500" />
                           Inbox
                         </span>
-                        {unreadCount > 0 && (
+                        {messageCount > 0 && (
                           <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-400 border border-amber-500/20">
-                            {unreadCount}
+                            {messageCount}
                           </span>
                         )}
+                      </Link>
+
+                      <Link
+                        href="/dashboard/support"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 transition hover:bg-zinc-900 hover:text-amber-400"
+                      >
+                        <LifeBuoy className="h-4 w-4 text-amber-500" />
+                        Support Center
+                      </Link>
+
+                      <Link
+                        href="/dashboard/reports"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 transition hover:bg-zinc-900 hover:text-amber-400"
+                      >
+                        <Flag className="h-4 w-4 text-amber-500" />
+                        Player Reports
+                      </Link>
+
+                      <Link
+                        href="/dashboard/appeal"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 transition hover:bg-zinc-900 hover:text-amber-400"
+                      >
+                        <Scale className="h-4 w-4 text-amber-500" />
+                        Ban Appeal
                       </Link>
 
                       <Link
@@ -234,7 +298,7 @@ export default function Navbar({ session }: NavbarProps) {
                           className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-amber-400 transition hover:bg-amber-500/10"
                         >
                           <Shield className="h-4 w-4 text-amber-400" />
-                          Admin Review Portal
+                          Admin Portal
                         </Link>
                       ) : null}
                     </div>
@@ -297,12 +361,26 @@ export default function Navbar({ session }: NavbarProps) {
               </Link>
             ))}
             {session && (
-              <Link
-                href="/dashboard/online"
-                className="rounded-xl px-4 py-3 text-xs font-bold uppercase tracking-wider text-zinc-300 hover:bg-zinc-900 hover:text-white"
-              >
-                Online Players
-              </Link>
+              <>
+                <Link
+                  href="/dashboard/online"
+                  className="rounded-xl px-4 py-3 text-xs font-bold uppercase tracking-wider text-zinc-300 hover:bg-zinc-900 hover:text-white"
+                >
+                  Online Players
+                </Link>
+                <Link
+                  href="/dashboard/appeal"
+                  className="rounded-xl px-4 py-3 text-xs font-bold uppercase tracking-wider text-zinc-300 hover:bg-zinc-900 hover:text-white"
+                >
+                  Ban Appeal
+                </Link>
+                <Link
+                  href="/dashboard/reports"
+                  className="rounded-xl px-4 py-3 text-xs font-bold uppercase tracking-wider text-zinc-300 hover:bg-zinc-900 hover:text-white"
+                >
+                  Player Reports
+                </Link>
+              </>
             )}
             <a
               href="https://forum.losjawa-rp.fun"

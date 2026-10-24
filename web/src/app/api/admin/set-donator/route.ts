@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { RowDataPacket } from 'mysql2';
+import { createSystemNotification } from '@/lib/system-notifications';
+import { logAdminAction } from '@/lib/audit';
 
 export async function POST(request: Request) {
   try {
@@ -54,7 +56,31 @@ export async function POST(request: Request) {
         'UPDATE accounts SET DonateRank = ? WHERE ID = ?',
         [maxRank, masterAccountId]
       );
+
+      await createSystemNotification({
+        accountId: Number(masterAccountId),
+        type: 'account',
+        title: 'Donator status updated',
+        body:
+          targetLevel === 0
+            ? `Donator status removed from character #${charId}.`
+            : `Character #${charId} is now donator level ${targetLevel} for ${durationDays} days.`,
+        link: '/dashboard',
+      });
     }
+
+    await logAdminAction({
+      adminId: session.userId,
+      adminUsername: session.username,
+      action: 'donator.set',
+      targetType: 'character',
+      targetId: charId,
+      details:
+        targetLevel === 0
+          ? `Removed donator status from character #${charId}.`
+          : `Set character #${charId} to donator level ${targetLevel} for ${durationDays} days.`,
+      request,
+    });
 
     return NextResponse.json({ 
       success: true, 
