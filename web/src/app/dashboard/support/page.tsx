@@ -3,7 +3,7 @@ import Link from 'next/link';
 import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { RowDataPacket } from 'mysql2';
-import { ArrowRight, LifeBuoy, MessageSquare } from 'lucide-react';
+import { ArrowRight, Flag, LifeBuoy, MessageSquare } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import NewTicketForm from './NewTicketForm';
 import { getTicketCategory, getTicketStatus } from '@/lib/tickets';
@@ -68,14 +68,25 @@ export default async function SupportPage() {
           <span className="font-medium text-zinc-500">Support Center</span>
         </div>
 
-        <div className="mb-8">
-          <h1 className="flex items-center gap-2 text-2xl font-black text-white">
-            <LifeBuoy className="h-6 w-6 text-amber-500" />
-            Support Center
-          </h1>
-          <p className="mt-1 text-sm text-zinc-400">
-            Report a player, report a bug, appeal a sanction, or ask staff for help.
-          </p>
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="flex items-center gap-2 text-2xl font-black text-white">
+              <LifeBuoy className="h-6 w-6 text-amber-500" />
+              Support Center
+            </h1>
+            <p className="mt-1 text-sm text-zinc-400">
+              Report a player, report a bug, appeal a sanction, or ask staff for help.
+            </p>
+          </div>
+
+          <Link
+            href="/dashboard/reports"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 px-4 text-xs font-bold text-zinc-300 transition hover:border-amber-500/30 hover:text-white"
+          >
+            <Flag className="h-4 w-4 text-amber-500" />
+            Player Reports
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">

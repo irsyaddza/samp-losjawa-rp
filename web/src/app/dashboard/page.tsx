@@ -22,6 +22,7 @@ import {
   FileText,
   ChevronDown,
   Scale,
+  Flag,
   type LucideIcon,
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
@@ -464,6 +465,13 @@ export default async function DashboardPage() {
             >
               <Scale className="h-3.5 w-3.5" />
               Ban Appeal
+            </Link>
+            <Link
+              href="/dashboard/reports"
+              className="inline-flex items-center gap-1.5 transition hover:text-amber-400"
+            >
+              <Flag className="h-3.5 w-3.5" />
+              Player Reports
             </Link>
             <Link
               href="/dashboard/support"

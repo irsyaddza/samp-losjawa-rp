@@ -1,0 +1,32 @@
+-- Sprint 4: player reports and moderation follow-up.
+
+CREATE TABLE IF NOT EXISTS `ucp_player_reports` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `reporter_account_id` int(11) NOT NULL,
+  `reporter_username` varchar(32) NOT NULL,
+  `reporter_character_id` int(11) DEFAULT NULL,
+  `reporter_character_name` varchar(24) DEFAULT NULL,
+  `reported_account_id` int(11) DEFAULT NULL,
+  `reported_username` varchar(32) DEFAULT NULL,
+  `reported_character_id` int(11) DEFAULT NULL,
+  `reported_character_name` varchar(24) NOT NULL,
+  `category` varchar(32) NOT NULL DEFAULT 'other',
+  `subject` varchar(120) NOT NULL,
+  `description` text NOT NULL,
+  `evidence` text,
+  `status` varchar(20) NOT NULL DEFAULT 'open',
+  `assigned_to` int(11) DEFAULT NULL,
+  `assigned_username` varchar(32) DEFAULT NULL,
+  `staff_notes` text,
+  `resolution` text,
+  `admin_username` varchar(32) DEFAULT NULL,
+  `reviewed_at` datetime DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `reporter_account_id` (`reporter_account_id`),
+  KEY `reported_account_id` (`reported_account_id`),
+  KEY `status` (`status`),
+  KEY `assigned_to` (`assigned_to`),
+  KEY `created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

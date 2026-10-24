@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   ArrowRight,
   FileText,
+  Flag,
   Gavel,
   History,
   Map,
@@ -26,6 +27,7 @@ interface AdminStats {
   onlinePlayers: number;
   activeBans: number;
   pendingAppeals: number;
+  pendingReports: number;
 }
 
 async function getPendingApplications() {
@@ -64,7 +66,8 @@ async function getAdminStats(): Promise<AdminStats> {
         (SELECT COUNT(*) FROM property_mappings WHERE status = 0) AS pendingMappings,
         (SELECT COUNT(*) FROM characters WHERE Online = 1) AS onlinePlayers,
         (SELECT COUNT(*) FROM bans WHERE perm = 1 OR expire > NOW()) AS activeBans,
-        (SELECT COUNT(*) FROM ucp_ban_appeals WHERE status = 'open') AS pendingAppeals`
+        (SELECT COUNT(*) FROM ucp_ban_appeals WHERE status = 'open') AS pendingAppeals,
+        (SELECT COUNT(*) FROM ucp_player_reports WHERE status IN ('open', 'investigating')) AS pendingReports`
     );
 
     const row = rows[0];
@@ -75,6 +78,7 @@ async function getAdminStats(): Promise<AdminStats> {
       onlinePlayers: Number(row?.onlinePlayers || 0),
       activeBans: Number(row?.activeBans || 0),
       pendingAppeals: Number(row?.pendingAppeals || 0),
+      pendingReports: Number(row?.pendingReports || 0),
     };
   } catch (error) {
     console.error('Error fetching admin stats:', error);
@@ -85,6 +89,7 @@ async function getAdminStats(): Promise<AdminStats> {
       onlinePlayers: 0,
       activeBans: 0,
       pendingAppeals: 0,
+      pendingReports: 0,
     };
   }
 }
@@ -168,6 +173,12 @@ export default async function AdminPortalPage() {
       href: '/dashboard/admin/appeals',
       icon: Scale,
     },
+    {
+      label: 'Player Reports',
+      value: stats.pendingReports,
+      href: '/dashboard/admin/reports',
+      icon: Flag,
+    },
   ];
 
   return (
@@ -203,7 +214,7 @@ export default async function AdminPortalPage() {
           </p>
         </div>
 
-        <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
           {statCards.map((card) => {
             const Icon = card.icon;
             return (
@@ -253,6 +264,17 @@ export default async function AdminPortalPage() {
             <span className="flex items-center gap-2 text-xs font-bold text-white">
               <Scale className="h-4 w-4 text-amber-500" />
               Ban Appeals
+            </span>
+            <ArrowRight className="h-4 w-4 text-zinc-600 transition group-hover:text-amber-400" />
+          </Link>
+
+          <Link
+            href="/dashboard/admin/reports"
+            className="group flex items-center justify-between rounded-xl border border-zinc-800/80 bg-zinc-950/60 px-4 py-3 transition hover:border-amber-500/30"
+          >
+            <span className="flex items-center gap-2 text-xs font-bold text-white">
+              <Flag className="h-4 w-4 text-amber-500" />
+              Player Reports
             </span>
             <ArrowRight className="h-4 w-4 text-zinc-600 transition group-hover:text-amber-400" />
           </Link>

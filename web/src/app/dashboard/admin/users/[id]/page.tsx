@@ -11,11 +11,13 @@ import {
   Gavel,
   Globe,
   Mail,
+  Scale,
   Shield,
   UserRound,
   Users,
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import { getAppealStatus } from '@/lib/appeals';
 
 async function getUserEmail(username: string) {
   try {
@@ -96,6 +98,20 @@ async function getConnections(username: string) {
   return rows;
 }
 
+async function getAppealHistory(username: string) {
+  const [rows] = await pool.execute<RowDataPacket[]>(
+    `SELECT id, ban_id, status, message, response, admin_username,
+            DATE_FORMAT(created_at, '%b %e, %Y %H:%i') AS created_at,
+            DATE_FORMAT(reviewed_at, '%b %e, %Y %H:%i') AS reviewed_at
+     FROM ucp_ban_appeals
+     WHERE username = ?
+     ORDER BY id DESC
+     LIMIT 10`,
+    [username]
+  );
+  return rows;
+}
+
 export default async function PlayerDetailPage({
   params,
 }: {
@@ -119,12 +135,13 @@ export default async function PlayerDetailPage({
     notFound();
   }
 
-  const [email, characters, activeBans, banHistory, connections] = await Promise.all([
+  const [email, characters, activeBans, banHistory, connections, appeals] = await Promise.all([
     getUserEmail(session.username),
     getCharacters(accountId),
     getActiveBans(account.Username),
     getBanHistory(accountId),
     getConnections(account.Username),
+    getAppealHistory(account.Username),
   ]);
 
   return (
@@ -354,6 +371,47 @@ export default async function PlayerDetailPage({
             )}
           </section>
         </div>
+
+        <section className="mt-4 rounded-2xl border border-zinc-800/80 bg-zinc-950/60">
+          <div className="flex items-center justify-between gap-3 border-b border-zinc-800 px-5 py-4">
+            <h2 className="flex items-center gap-2 text-sm font-bold text-white">
+              <Scale className="h-4 w-4 text-amber-500" />
+              Ban appeals
+            </h2>
+            <Link href="/dashboard/admin/appeals?status=all" className="text-[11px] font-bold text-amber-400 hover:text-amber-300">
+              Open queue
+            </Link>
+          </div>
+
+          {appeals.length === 0 ? (
+            <p className="px-5 py-8 text-xs text-zinc-500">No ban appeals from this account.</p>
+          ) : (
+            <div className="divide-y divide-zinc-900">
+              {appeals.map((appeal) => {
+                const status = getAppealStatus(appeal.status);
+                return (
+                  <div key={appeal.id} className="px-5 py-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-xs font-semibold text-white">Appeal #{appeal.id} · ban #{appeal.ban_id}</p>
+                        <span className={`rounded-full border px-2 py-0.5 text-[9px] font-bold ${status.className}`}>
+                          {status.label}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-zinc-600">{appeal.created_at}</p>
+                    </div>
+                    <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-zinc-400">{appeal.message}</p>
+                    {appeal.response ? (
+                      <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-zinc-500">
+                        Staff response{appeal.admin_username ? ` (${appeal.admin_username})` : ''}: {appeal.response}
+                      </p>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
       </main>
     </div>
   );

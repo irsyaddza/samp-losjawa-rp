@@ -3,8 +3,10 @@ import Link from 'next/link';
 import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { RowDataPacket } from 'mysql2';
-import { ArrowLeft, FileText, Shield } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, FileText, Search, Shield } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+
+const PAGE_SIZE = 50;
 
 async function getUserEmail(username: string) {
   try {
@@ -18,23 +20,73 @@ async function getUserEmail(username: string) {
   }
 }
 
-export default async function AdminAuditPage() {
+export default async function AdminAuditPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ src?: string | string[]; q?: string | string[]; page?: string | string[] }>;
+}) {
   const session = await getSession();
 
   if (!session || session.adminLevel < 4) {
     redirect('/dashboard');
   }
 
+  const params = await searchParams;
+  const rawSource = typeof params.src === 'string' ? params.src : 'all';
+  const source = rawSource === 'web' || rawSource === 'game' ? rawSource : 'all';
+  const query = typeof params.q === 'string' ? params.q.trim().slice(0, 64) : '';
+  const rawPage = typeof params.page === 'string' ? Number.parseInt(params.page, 10) : 1;
+  const requestedPage = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
+
+  const conditions: string[] = [];
+  const values: string[] = [];
+
+  if (source === 'game') {
+    conditions.push("action LIKE 'game.%'");
+  } else if (source === 'web') {
+    conditions.push("action NOT LIKE 'game.%'");
+  }
+
+  if (query) {
+    conditions.push(
+      "(admin_username LIKE ? OR action LIKE ? OR COALESCE(details, '') LIKE ? OR COALESCE(target_id, '') LIKE ?)"
+    );
+    values.push(`%${query}%`, `%${query}%`, `%${query}%`, `%${query}%`);
+  }
+
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  const [countRows] = await pool.execute<RowDataPacket[]>(
+    `SELECT COUNT(*) AS total FROM ucp_admin_audit ${where}`,
+    values
+  );
+
+  const total = Number(countRows[0]?.total || 0);
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const page = Math.min(requestedPage, totalPages);
+  const offset = (page - 1) * PAGE_SIZE;
+
   const [logs] = await pool.execute<RowDataPacket[]>(
     `SELECT id, admin_username, action, target_type, target_id, details, ip,
             CASE WHEN action LIKE 'game.%' THEN 'In-Game' ELSE 'Web' END AS source,
             DATE_FORMAT(created_at, '%b %e, %Y %H:%i') AS created_at
      FROM ucp_admin_audit
+     ${where}
      ORDER BY id DESC
-     LIMIT 100`
+     LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
+    values
   );
 
   const email = await getUserEmail(session.username);
+
+  function pageHref(targetPage: number) {
+    const nextParams = new URLSearchParams();
+    if (source !== 'all') nextParams.set('src', source);
+    if (query) nextParams.set('q', query);
+    if (targetPage > 1) nextParams.set('page', String(targetPage));
+    const suffix = nextParams.toString();
+    return `/dashboard/admin/audit${suffix ? `?${suffix}` : ''}`;
+  }
 
   return (
     <div className="min-h-screen bg-[#09090b] pb-16 pt-20">
@@ -61,16 +113,64 @@ export default async function AdminAuditPage() {
             <Shield className="h-6 w-6 text-amber-500" />
             Admin Audit Log
           </h1>
-          <p className="mt-1 text-sm text-zinc-400">
-            The latest 100 staff actions from the UCP and the game, including bans, unbans, ban appeals, tickets, applications, mappings, donators, roster, changelog, and radio changes.
+          <p className="mt-1 max-w-3xl text-sm leading-relaxed text-zinc-400">
+            Staff actions from the UCP and the game, newest first. Use the filters to narrow down bans, appeals, reports, tickets, applications, mappings, donators, roster, changelog, and radio changes.
           </p>
+        </div>
+
+        <form method="get" action="/dashboard/admin/audit" className="mb-4 flex flex-col gap-2 sm:flex-row">
+          <select
+            name="src"
+            defaultValue={source}
+            aria-label="Audit source"
+            className="h-11 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 text-xs text-white outline-none focus:border-amber-500/50 sm:w-40"
+          >
+            <option value="all">All sources</option>
+            <option value="web">Web</option>
+            <option value="game">In-Game</option>
+          </select>
+          <div className="relative min-w-0 flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+            <input
+              type="search"
+              name="q"
+              defaultValue={query}
+              placeholder="Search admin, action, target, or details..."
+              className="h-11 w-full rounded-xl border border-zinc-800 bg-zinc-900/60 pl-10 pr-3 text-sm text-white placeholder:text-zinc-600 focus:border-amber-500/50 focus:outline-none"
+            />
+          </div>
+          <button
+            type="submit"
+            className="h-11 rounded-xl bg-amber-500 px-5 text-xs font-bold text-black transition hover:bg-amber-400"
+          >
+            Filter
+          </button>
+          {source !== 'all' || query ? (
+            <Link
+              href="/dashboard/admin/audit"
+              className="flex h-11 items-center justify-center rounded-xl border border-zinc-800 px-4 text-xs font-bold text-zinc-400 transition hover:text-white"
+            >
+              Clear
+            </Link>
+          ) : null}
+        </form>
+
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-zinc-500">
+          <span>
+            {total} entr{total === 1 ? 'y' : 'ies'}
+            {source !== 'all' ? ` · ${source === 'game' ? 'In-Game' : 'Web'}` : ''}
+            {query ? ` · "${query}"` : ''}
+          </span>
+          <span>
+            Page {page} of {totalPages}
+          </span>
         </div>
 
         {logs.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-zinc-800 bg-zinc-950/40 px-6 py-14 text-center">
             <FileText className="mx-auto mb-3 h-10 w-10 text-zinc-700" />
-            <h2 className="text-sm font-bold text-white">No audit entries yet</h2>
-            <p className="mt-1 text-xs text-zinc-500">Staff actions will appear here automatically.</p>
+            <h2 className="text-sm font-bold text-white">No audit entries found</h2>
+            <p className="mt-1 text-xs text-zinc-500">Try a different filter or search keyword.</p>
           </div>
         ) : (
           <>
@@ -148,6 +248,44 @@ export default async function AdminAuditPage() {
                 </div>
               ))}
             </div>
+
+            {totalPages > 1 ? (
+              <div className="mt-5 flex items-center justify-between gap-3">
+                {page > 1 ? (
+                  <Link
+                    href={pageHref(page - 1)}
+                    className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-950 px-4 text-xs font-bold text-zinc-300 transition hover:border-amber-500/30 hover:text-white"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Link>
+                ) : (
+                  <span className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-zinc-900 px-4 text-xs font-bold text-zinc-700">
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </span>
+                )}
+
+                <span className="text-[11px] text-zinc-500">
+                  Page {page} of {totalPages}
+                </span>
+
+                {page < totalPages ? (
+                  <Link
+                    href={pageHref(page + 1)}
+                    className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-950 px-4 text-xs font-bold text-zinc-300 transition hover:border-amber-500/30 hover:text-white"
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                ) : (
+                  <span className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-zinc-900 px-4 text-xs font-bold text-zinc-700">
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </span>
+                )}
+              </div>
+            ) : null}
           </>
         )}
       </main>

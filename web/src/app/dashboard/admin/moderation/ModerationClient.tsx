@@ -13,6 +13,17 @@ import {
   X,
 } from 'lucide-react';
 
+const BAN_REASON_TEMPLATES = [
+  'Cheating or exploiting server bugs.',
+  'Harassment, threats, or hate speech.',
+  'Scamming other players.',
+  'Deathmatching or random killing.',
+  'Abusing a server bug for personal gain.',
+  'Advertising or spamming.',
+  'Ban evasion with another account.',
+  'Failure to follow staff instructions.',
+];
+
 interface BanRecord {
   id: number;
   name: string | null;
@@ -267,6 +278,28 @@ export default function ModerationClient({
           </div>
 
           <form onSubmit={handleBan} className="mt-4 space-y-4">
+            <div>
+              <label htmlFor="ban-template" className="mb-2 block text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                Quick template
+              </label>
+              <select
+                id="ban-template"
+                defaultValue=""
+                onChange={(event) => {
+                  if (event.target.value) setReason(event.target.value);
+                  event.currentTarget.value = '';
+                }}
+                className="h-10 w-full rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 text-xs text-white outline-none focus:border-red-500/50 sm:max-w-sm"
+              >
+                <option value="">Choose a template...</option>
+                {BAN_REASON_TEMPLATES.map((template) => (
+                  <option key={template} value={template}>
+                    {template}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div>
               <label htmlFor="ban-reason" className="mb-2 block text-[10px] font-bold uppercase tracking-wider text-zinc-400">
                 Reason

@@ -17,6 +17,7 @@ import {
   Globe,
   LifeBuoy,
   Scale,
+  Flag,
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
@@ -264,6 +265,15 @@ export default function Navbar({ session }: NavbarProps) {
                       </Link>
 
                       <Link
+                        href="/dashboard/reports"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 transition hover:bg-zinc-900 hover:text-amber-400"
+                      >
+                        <Flag className="h-4 w-4 text-amber-500" />
+                        Player Reports
+                      </Link>
+
+                      <Link
                         href="/dashboard/appeal"
                         onClick={() => setDropdownOpen(false)}
                         className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 transition hover:bg-zinc-900 hover:text-amber-400"
@@ -363,6 +373,12 @@ export default function Navbar({ session }: NavbarProps) {
                   className="rounded-xl px-4 py-3 text-xs font-bold uppercase tracking-wider text-zinc-300 hover:bg-zinc-900 hover:text-white"
                 >
                   Ban Appeal
+                </Link>
+                <Link
+                  href="/dashboard/reports"
+                  className="rounded-xl px-4 py-3 text-xs font-bold uppercase tracking-wider text-zinc-300 hover:bg-zinc-900 hover:text-white"
+                >
+                  Player Reports
                 </Link>
               </>
             )}
