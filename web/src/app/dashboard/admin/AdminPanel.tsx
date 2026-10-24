@@ -344,7 +344,7 @@ export default function AdminPanel({ initialApps, currentAdminLevel }: AdminPane
                             <FileText className="h-4 w-4" />
                             Character Backstory (Story)
                           </h5>
-                          <div className="text-zinc-200 text-xs leading-relaxed bg-zinc-900/10 p-5 rounded-xl border border-zinc-900 whitespace-pre-line font-medium">
+                          <div className="text-zinc-200 text-xs leading-relaxed bg-zinc-900/10 p-5 rounded-xl border border-zinc-900 whitespace-pre-wrap break-words font-medium">
                             {app.story}
                           </div>
                         </div>
