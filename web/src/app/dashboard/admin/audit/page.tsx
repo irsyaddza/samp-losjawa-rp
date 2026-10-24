@@ -27,6 +27,7 @@ export default async function AdminAuditPage() {
 
   const [logs] = await pool.execute<RowDataPacket[]>(
     `SELECT id, admin_username, action, target_type, target_id, details, ip,
+            CASE WHEN action LIKE 'game.%' THEN 'In-Game' ELSE 'Web' END AS source,
             DATE_FORMAT(created_at, '%b %e, %Y %H:%i') AS created_at
      FROM ucp_admin_audit
      ORDER BY id DESC
@@ -61,7 +62,7 @@ export default async function AdminAuditPage() {
             Admin Audit Log
           </h1>
           <p className="mt-1 text-sm text-zinc-400">
-            The latest 100 staff actions, including ticket, application, mapping, donator, roster, changelog, and radio changes.
+            The latest 100 staff actions from the UCP and the game, including bans, unbans, tickets, applications, mappings, donators, roster, changelog, and radio changes.
           </p>
         </div>
 
@@ -80,6 +81,7 @@ export default async function AdminAuditPage() {
                     <tr>
                       <th className="px-4 py-3 font-bold">Time</th>
                       <th className="px-4 py-3 font-bold">Admin</th>
+                      <th className="px-4 py-3 font-bold">Source</th>
                       <th className="px-4 py-3 font-bold">Action</th>
                       <th className="px-4 py-3 font-bold">Target</th>
                       <th className="px-4 py-3 font-bold">Details</th>
@@ -91,6 +93,17 @@ export default async function AdminAuditPage() {
                       <tr key={log.id} className="align-top transition hover:bg-zinc-900/30">
                         <td className="whitespace-nowrap px-4 py-3 text-zinc-500">{log.created_at}</td>
                         <td className="whitespace-nowrap px-4 py-3 font-semibold text-white">{log.admin_username}</td>
+                        <td className="whitespace-nowrap px-4 py-3">
+                          <span
+                            className={`rounded-md border px-2 py-1 text-[10px] font-bold ${
+                              log.source === 'In-Game'
+                                ? 'border-amber-500/20 bg-amber-500/10 text-amber-400'
+                                : 'border-blue-500/20 bg-blue-500/10 text-blue-400'
+                            }`}
+                          >
+                            {log.source}
+                          </span>
+                        </td>
                         <td className="whitespace-nowrap px-4 py-3">
                           <span className="rounded-md border border-amber-500/20 bg-amber-500/10 px-2 py-1 font-mono text-[10px] text-amber-400">
                             {log.action}
@@ -117,6 +130,15 @@ export default async function AdminAuditPage() {
                     </span>
                     <span className="text-[10px] text-zinc-600">{log.created_at}</span>
                   </div>
+                  <span
+                    className={`mt-2 inline-block rounded-md border px-2 py-0.5 text-[9px] font-bold ${
+                      log.source === 'In-Game'
+                        ? 'border-amber-500/20 bg-amber-500/10 text-amber-400'
+                        : 'border-blue-500/20 bg-blue-500/10 text-blue-400'
+                    }`}
+                  >
+                    {log.source}
+                  </span>
                   <p className="mt-2 text-xs font-semibold text-white">{log.admin_username}</p>
                   <p className="mt-1 text-[11px] text-zinc-400">
                     {log.target_type ? `${log.target_type}${log.target_id ? ` #${log.target_id}` : ''}` : 'No target'}

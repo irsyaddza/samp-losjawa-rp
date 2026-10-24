@@ -7,10 +7,12 @@ import {
   ArrowLeft,
   ArrowRight,
   FileText,
+  Gavel,
   History,
   Map,
   Shield,
   Ticket,
+  UserSearch,
   Users,
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
@@ -21,6 +23,7 @@ interface AdminStats {
   activeTickets: number;
   pendingMappings: number;
   onlinePlayers: number;
+  activeBans: number;
 }
 
 async function getPendingApplications() {
@@ -57,7 +60,8 @@ async function getAdminStats(): Promise<AdminStats> {
         (SELECT COUNT(*) FROM application WHERE status = 0) AS pendingApplications,
         (SELECT COUNT(*) FROM ucp_tickets WHERE status IN ('open', 'in_progress')) AS activeTickets,
         (SELECT COUNT(*) FROM property_mappings WHERE status = 0) AS pendingMappings,
-        (SELECT COUNT(*) FROM characters WHERE Online = 1) AS onlinePlayers`
+        (SELECT COUNT(*) FROM characters WHERE Online = 1) AS onlinePlayers,
+        (SELECT COUNT(*) FROM bans WHERE perm = 1 OR expire > NOW()) AS activeBans`
     );
 
     const row = rows[0];
@@ -66,10 +70,11 @@ async function getAdminStats(): Promise<AdminStats> {
       activeTickets: Number(row?.activeTickets || 0),
       pendingMappings: Number(row?.pendingMappings || 0),
       onlinePlayers: Number(row?.onlinePlayers || 0),
+      activeBans: Number(row?.activeBans || 0),
     };
   } catch (error) {
     console.error('Error fetching admin stats:', error);
-    return { pendingApplications: 0, activeTickets: 0, pendingMappings: 0, onlinePlayers: 0 };
+    return { pendingApplications: 0, activeTickets: 0, pendingMappings: 0, onlinePlayers: 0, activeBans: 0 };
   }
 }
 
@@ -140,6 +145,12 @@ export default async function AdminPortalPage() {
       href: '/dashboard/online',
       icon: Users,
     },
+    {
+      label: 'Active Bans',
+      value: stats.activeBans,
+      href: '/dashboard/admin/moderation',
+      icon: Gavel,
+    },
   ];
 
   return (
@@ -175,7 +186,7 @@ export default async function AdminPortalPage() {
           </p>
         </div>
 
-        <div className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {statCards.map((card) => {
             const Icon = card.icon;
             return (
@@ -195,7 +206,7 @@ export default async function AdminPortalPage() {
           })}
         </div>
 
-        <div className="mb-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <Link
             href="/dashboard/admin/tickets"
             className="group flex items-center justify-between rounded-xl border border-zinc-800/80 bg-zinc-950/60 px-4 py-3 transition hover:border-amber-500/30"
@@ -203,6 +214,28 @@ export default async function AdminPortalPage() {
             <span className="flex items-center gap-2 text-xs font-bold text-white">
               <Ticket className="h-4 w-4 text-amber-500" />
               Support Tickets
+            </span>
+            <ArrowRight className="h-4 w-4 text-zinc-600 transition group-hover:text-amber-400" />
+          </Link>
+
+          <Link
+            href="/dashboard/admin/moderation"
+            className="group flex items-center justify-between rounded-xl border border-zinc-800/80 bg-zinc-950/60 px-4 py-3 transition hover:border-amber-500/30"
+          >
+            <span className="flex items-center gap-2 text-xs font-bold text-white">
+              <Gavel className="h-4 w-4 text-amber-500" />
+              Moderation Center
+            </span>
+            <ArrowRight className="h-4 w-4 text-zinc-600 transition group-hover:text-amber-400" />
+          </Link>
+
+          <Link
+            href="/dashboard/admin/users"
+            className="group flex items-center justify-between rounded-xl border border-zinc-800/80 bg-zinc-950/60 px-4 py-3 transition hover:border-amber-500/30"
+          >
+            <span className="flex items-center gap-2 text-xs font-bold text-white">
+              <UserSearch className="h-4 w-4 text-amber-500" />
+              Player Directory
             </span>
             <ArrowRight className="h-4 w-4 text-zinc-600 transition group-hover:text-amber-400" />
           </Link>
