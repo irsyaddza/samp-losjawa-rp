@@ -8,6 +8,8 @@ import Navbar from '@/components/Navbar';
 import ReportsClient, { type ReportRecord } from './ReportsClient';
 
 type Filter = 'open' | 'investigating' | 'resolved' | 'rejected' | 'all';
+type Assignee = 'all' | 'me' | 'unassigned';
+type Sort = 'newest' | 'oldest';
 
 async function getUserEmail(username: string) {
   try {
@@ -46,13 +48,26 @@ async function getReportStats() {
   }
 }
 
-async function getReports(filter: Filter, query: string) {
+async function getReports(
+  filter: Filter,
+  query: string,
+  assignee: Assignee,
+  sort: Sort,
+  currentUserId: number
+) {
   const conditions: string[] = [];
-  const values: string[] = [];
+  const values: (string | number)[] = [];
 
   if (filter !== 'all') {
     conditions.push('r.status = ?');
     values.push(filter);
+  }
+
+  if (assignee === 'me') {
+    conditions.push('r.assigned_to = ?');
+    values.push(currentUserId);
+  } else if (assignee === 'unassigned') {
+    conditions.push('r.assigned_to IS NULL');
   }
 
   if (query) {
@@ -63,6 +78,10 @@ async function getReports(filter: Filter, query: string) {
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  const orderBy =
+    sort === 'oldest'
+      ? "FIELD(r.status, 'open', 'investigating', 'resolved', 'rejected'), r.created_at ASC, r.id ASC"
+      : "FIELD(r.status, 'open', 'investigating', 'resolved', 'rejected'), r.id DESC";
 
   try {
     const [rows] = await pool.execute<RowDataPacket[]>(
@@ -75,10 +94,12 @@ async function getReports(filter: Filter, query: string) {
                ORDER BY b.id DESC LIMIT 1) AS active_ban_id,
               DATE_FORMAT(r.created_at, '%b %e, %Y %H:%i') AS created_at,
               DATE_FORMAT(r.reviewed_at, '%b %e, %Y %H:%i') AS reviewed_at,
-              DATE_FORMAT(r.updated_at, '%b %e, %Y %H:%i') AS updated_at
+              DATE_FORMAT(r.updated_at, '%b %e, %Y %H:%i') AS updated_at,
+              TIMESTAMPDIFF(HOUR, r.created_at, NOW()) AS age_hours,
+              TIMESTAMPDIFF(HOUR, r.updated_at, NOW()) AS idle_hours
        FROM ucp_player_reports r
        ${where}
-       ORDER BY FIELD(r.status, 'open', 'investigating', 'resolved', 'rejected'), r.id DESC
+       ORDER BY ${orderBy}
        LIMIT 100`,
       values
     );
@@ -92,7 +113,12 @@ async function getReports(filter: Filter, query: string) {
 export default async function AdminReportsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string | string[]; q?: string | string[] }>;
+  searchParams: Promise<{
+    status?: string | string[];
+    q?: string | string[];
+    assignee?: string | string[];
+    sort?: string | string[];
+  }>;
 }) {
   const session = await getSession();
 
@@ -110,12 +136,26 @@ export default async function AdminReportsPage({
       ? rawStatus
       : 'open';
   const query = typeof params.q === 'string' ? params.q.trim().slice(0, 64) : '';
+  const rawAssignee = typeof params.assignee === 'string' ? params.assignee : '';
+  const assignee: Assignee = rawAssignee === 'me' || rawAssignee === 'unassigned' ? rawAssignee : 'all';
+  const rawSort = typeof params.sort === 'string' ? params.sort : '';
+  const sort: Sort = rawSort === 'oldest' ? 'oldest' : 'newest';
 
   const [email, stats, reports] = await Promise.all([
     getUserEmail(session.username),
     getReportStats(),
-    getReports(filter, query),
+    getReports(filter, query, assignee, sort, session.userId),
   ]);
+
+  function queueHref(next: { status?: Filter; assignee?: Assignee; sort?: Sort }) {
+    const nextParams = new URLSearchParams();
+    nextParams.set('status', next.status ?? filter);
+    if (query) nextParams.set('q', query);
+    const nextAssignee = next.assignee ?? assignee;
+    if (nextAssignee !== 'all') nextParams.set('assignee', nextAssignee);
+    if ((next.sort ?? sort) === 'oldest') nextParams.set('sort', 'oldest');
+    return `/dashboard/admin/reports?${nextParams.toString()}`;
+  }
 
   const tabs: { value: Filter; label: string; count: number }[] = [
     { value: 'open', label: 'Open', count: stats.open },
@@ -159,7 +199,7 @@ export default async function AdminReportsPage({
               Player Reports
             </h1>
             <p className="mt-1 max-w-3xl text-sm leading-relaxed text-zinc-400">
-              Review player reports, keep internal notes, and record the outcome. Closing a report sends the decision to the reporter.
+              Review player reports, keep internal notes, and record the outcome. Active reports with no activity for 24 hours are highlighted for follow-up.
             </p>
           </div>
 
@@ -187,7 +227,7 @@ export default async function AdminReportsPage({
             return (
               <Link
                 key={tab.value}
-                href={`/dashboard/admin/reports?status=${tab.value}${query ? `&q=${encodeURIComponent(query)}` : ''}`}
+                href={queueHref({ status: tab.value })}
                 className={`inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-[11px] font-bold transition ${
                   active
                     ? 'border-amber-500/30 bg-amber-500/10 text-amber-400'
@@ -203,8 +243,59 @@ export default async function AdminReportsPage({
           })}
         </div>
 
+        <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-950/40 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="mr-1 text-[10px] font-bold uppercase tracking-wider text-zinc-600">Assignee</span>
+            {([
+              { value: 'all' as const, label: 'All' },
+              { value: 'me' as const, label: 'Assigned to me' },
+              { value: 'unassigned' as const, label: 'Unassigned' },
+            ]).map((item) => {
+              const active = assignee === item.value;
+              return (
+                <Link
+                  key={item.value}
+                  href={queueHref({ assignee: item.value })}
+                  className={`rounded-lg border px-2.5 py-1.5 text-[10px] font-bold transition ${
+                    active
+                      ? 'border-amber-500/30 bg-amber-500/10 text-amber-400'
+                      : 'border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-white'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="mr-1 text-[10px] font-bold uppercase tracking-wider text-zinc-600">Sort</span>
+            {([
+              { value: 'newest' as const, label: 'Newest' },
+              { value: 'oldest' as const, label: 'Oldest first' },
+            ]).map((item) => {
+              const active = sort === item.value;
+              return (
+                <Link
+                  key={item.value}
+                  href={queueHref({ sort: item.value })}
+                  className={`rounded-lg border px-2.5 py-1.5 text-[10px] font-bold transition ${
+                    active
+                      ? 'border-amber-500/30 bg-amber-500/10 text-amber-400'
+                      : 'border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-white'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
         <form method="get" action="/dashboard/admin/reports" className="mb-5 flex flex-col gap-2 sm:flex-row">
           <input type="hidden" name="status" value={filter} />
+          {assignee !== 'all' ? <input type="hidden" name="assignee" value={assignee} /> : null}
+          {sort === 'oldest' ? <input type="hidden" name="sort" value="oldest" /> : null}
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
             <input

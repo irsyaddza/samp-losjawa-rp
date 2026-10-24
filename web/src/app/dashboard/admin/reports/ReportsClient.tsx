@@ -40,6 +40,8 @@ export interface ReportRecord {
   created_at: string;
   reviewed_at: string | null;
   updated_at: string;
+  age_hours: number;
+  idle_hours: number;
 }
 
 function displayName(value: string) {
@@ -54,6 +56,21 @@ function targetLabel(report: ReportRecord) {
     return report.reported_username;
   }
   return displayName(report.reported_character_name);
+}
+
+function ageBadge(hours: number) {
+  if (hours < 24) {
+    return { label: 'New', className: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400' };
+  }
+  if (hours < 72) {
+    return { label: '1d old', className: 'border-amber-500/20 bg-amber-500/10 text-amber-400' };
+  }
+  return { label: '3d+ old', className: 'border-red-500/20 bg-red-500/10 text-red-400' };
+}
+
+function idleAge(hours: number) {
+  if (hours < 24) return `${Math.max(1, Math.floor(hours))}h`;
+  return `${Math.floor(hours / 24)}d`;
 }
 
 function EvidenceLinks({ text }: { text: string }) {
@@ -279,13 +296,24 @@ export default function ReportsClient({
             const finalStatus = report.status === 'resolved' || report.status === 'rejected';
             const assignedToMe = report.assigned_username === currentUsername;
             const canBan = Boolean(report.reported_account_id) && !finalStatus && !report.ban_id && !report.active_ban_id;
+            const ageHours = Number(report.age_hours || 0);
+            const idleHours = Number(report.idle_hours || 0);
+            const aging = ageBadge(ageHours);
+            const stale = !finalStatus && idleHours >= 24;
             const target = targetLabel(report);
             const targetHref = report.reported_account_id
               ? `/dashboard/admin/users/${report.reported_account_id}`
               : `/dashboard/admin/users?q=${encodeURIComponent(target)}`;
 
             return (
-              <article key={report.id} className="rounded-2xl border border-zinc-800/80 bg-zinc-950/60 p-4 sm:p-5">
+              <article
+                key={report.id}
+                className={`rounded-2xl border p-4 sm:p-5 ${
+                  stale
+                    ? 'border-amber-500/30 bg-amber-500/[0.02]'
+                    : 'border-zinc-800/80 bg-zinc-950/60'
+                }`}
+              >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
@@ -296,6 +324,11 @@ export default function ReportsClient({
                       <span className={`rounded-full border px-2 py-0.5 text-[9px] font-bold ${reportStatus.className}`}>
                         {reportStatus.label}
                       </span>
+                      {!finalStatus ? (
+                        <span className={`rounded-full border px-2 py-0.5 text-[9px] font-bold ${aging.className}`}>
+                          {aging.label}
+                        </span>
+                      ) : null}
                       {report.ban_id ? (
                         <span className="rounded-full border border-red-500/20 bg-red-500/10 px-2 py-0.5 text-[9px] font-bold text-red-400">
                           Ban #{report.ban_id}
@@ -326,6 +359,12 @@ export default function ReportsClient({
                     <p className="mt-1 text-[10px] text-zinc-600">
                       Submitted {report.created_at} · Updated {report.updated_at}
                     </p>
+                    {stale ? (
+                      <p className="mt-1 flex items-center gap-1.5 text-[10px] font-bold text-amber-500">
+                        <Clock className="h-3 w-3" />
+                        Needs attention · no activity for {idleAge(idleHours)}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
 
