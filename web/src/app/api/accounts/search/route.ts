@@ -26,6 +26,14 @@ export async function GET(request: Request) {
          a.Username as username,
          COUNT(DISTINCT c.ID) as characterCount,
          SUBSTRING_INDEX(GROUP_CONCAT(DISTINCT REPLACE(c.char_name, '_', ' ') SEPARATOR ', '), ', ', 2) as sampleCharacters,
+         SUBSTRING_INDEX(
+           GROUP_CONCAT(
+             DISTINCT CASE WHEN c.char_name LIKE ? THEN REPLACE(c.char_name, '_', ' ') END
+             SEPARATOR ', '
+           ),
+           ', ',
+           3
+         ) as matchedCharacters,
          f.friendPending,
          f.playerID as requestSenderId
        FROM accounts a
@@ -45,6 +53,7 @@ export async function GET(request: Request) {
          a.Username ASC
        LIMIT 10`,
       [
+        searchPattern,
         session.userId,
         session.userId,
         searchPattern,
@@ -69,6 +78,9 @@ export async function GET(request: Request) {
         username: row.username,
         characterCount: Number(row.characterCount || 0),
         sampleCharacters: row.sampleCharacters || null,
+        matchedCharacters: row.matchedCharacters
+          ? String(row.matchedCharacters).split(', ').filter(Boolean)
+          : [],
         status,
       };
     });

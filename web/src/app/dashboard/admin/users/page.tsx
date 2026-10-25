@@ -3,8 +3,9 @@ import Link from 'next/link';
 import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { RowDataPacket } from 'mysql2';
-import { ArrowLeft, ArrowRight, Search, Shield, Users } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Shield, Users } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import PlayerDirectorySearch from './PlayerDirectorySearch';
 
 async function getUserEmail(username: string) {
   try {
@@ -129,24 +130,7 @@ export default async function PlayerDirectoryPage({
           ))}
         </div>
 
-        <form action="/dashboard/admin/users" method="get" className="mb-4 flex flex-col gap-2 sm:flex-row">
-          <div className="relative min-w-0 flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
-            <input
-              type="search"
-              name="q"
-              defaultValue={query}
-              placeholder="Search username or character name..."
-              className="h-11 w-full rounded-xl border border-zinc-800 bg-zinc-900/60 pl-10 pr-3 text-sm text-white placeholder:text-zinc-600 focus:border-amber-500/50 focus:outline-none"
-            />
-          </div>
-          <button
-            type="submit"
-            className="h-11 rounded-xl bg-amber-500 px-5 text-xs font-bold text-black transition hover:bg-amber-400"
-          >
-            Search
-          </button>
-        </form>
+        <PlayerDirectorySearch key={query} initialQuery={query} />
 
         {accounts.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-zinc-800 bg-zinc-950/40 px-6 py-14 text-center">
