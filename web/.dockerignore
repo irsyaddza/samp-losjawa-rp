@@ -7,38 +7,23 @@
 # Env & secret
 .env
 .env.*
-scriptfiles/ai_config.json
-opencode.json
-gamemodes/modules/db_credentials.inc
+.env.local
 
-# Editor & agen
+# Editor & agent
 .vscode
 .agents
+AGENTS.md
+CLAUDE.md
 
-# Output runtime
-logs
-server_log.txt
-crashinfo.txt
-backups
-mysql/data
+# Dependencies & build output
+node_modules
+.next
+tsconfig.tsbuildinfo
+npm-debug.log*
+.DS_Store
 
-# Tooling lokal (tidak dipakai Dockerfile)
-qawno
-docs
+# Local tooling
 scripts
-playit
-migrations
-test.pwn
-pawn.json
-skills-lock.json
-
-# Artefak web (context root)
-web/node_modules
-web/.next
-web/.env.local
-web/tsconfig.tsbuildinfo
-
-# Lain-lain
-roleplay.xml
+docs
 README.md
 LICENSE
