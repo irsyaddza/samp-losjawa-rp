@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
-import { getSession } from '@/lib/auth';
+import { getSession, setSessionCookieForAccount } from '@/lib/auth';
 import { whirlpool } from '@/lib/hash';
 import bcrypt from 'bcryptjs';
 import { RowDataPacket } from 'mysql2';
@@ -51,11 +51,24 @@ export async function POST(request: Request) {
     const salt = await bcrypt.genSalt(12);
     const newHashed = await bcrypt.hash(newPassword, salt);
     await pool.execute(
-      'UPDATE accounts SET Password = ? WHERE ID = ?',
+      'UPDATE accounts SET Password = ?, SessionVersion = SessionVersion + 1 WHERE ID = ?',
       [newHashed, session.userId]
     );
 
-    return NextResponse.json({ success: true, message: 'Password updated successfully' });
+    try {
+      await setSessionCookieForAccount(session.userId);
+    } catch (sessionError) {
+      console.error('Failed to refresh session after password change:', sessionError);
+      return NextResponse.json({
+        success: true,
+        message: 'Password updated. Please sign in again.',
+      });
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Password updated successfully. Other sessions have been signed out.',
+    });
   } catch (error) {
     console.error('Update password error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

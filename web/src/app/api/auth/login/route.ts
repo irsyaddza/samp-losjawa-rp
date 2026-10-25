@@ -2,8 +2,37 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { whirlpool } from '@/lib/hash';
 import { setSessionCookie } from '@/lib/auth';
+import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 import bcrypt from 'bcryptjs';
 import { RowDataPacket } from 'mysql2';
+
+function describeUserAgent(userAgent: string) {
+  const browser = /Edg\//.test(userAgent)
+    ? 'Edge'
+    : /OPR\//.test(userAgent)
+      ? 'Opera'
+      : /Chrome\//.test(userAgent)
+        ? 'Chrome'
+        : /Firefox\//.test(userAgent)
+          ? 'Firefox'
+          : /Safari\//.test(userAgent)
+            ? 'Safari'
+            : 'Unknown';
+
+  const os = /Windows/.test(userAgent)
+    ? 'Windows'
+    : /Android/.test(userAgent)
+      ? 'Android'
+      : /iPhone|iPad|iPod/.test(userAgent)
+        ? 'iOS'
+        : /Mac OS X/.test(userAgent)
+          ? 'macOS'
+          : /Linux/.test(userAgent)
+            ? 'Linux'
+            : 'Unknown';
+
+  return { browser, os };
+}
 
 export async function POST(request: Request) {
   try {
@@ -16,8 +45,22 @@ export async function POST(request: Request) {
       );
     }
 
+    const ip = getClientIp(request);
+    const [ipLimit, accountLimit] = await Promise.all([
+      checkRateLimit({ action: 'login:ip', key: ip, limit: 30, windowSeconds: 15 * 60 }),
+      checkRateLimit({
+        action: 'login:account',
+        key: username.toLowerCase(),
+        limit: 10,
+        windowSeconds: 15 * 60,
+      }),
+    ]);
+
+    if (!ipLimit.allowed) return rateLimitResponse(ipLimit);
+    if (!accountLimit.allowed) return rateLimitResponse(accountLimit);
+
     const [rows] = await pool.execute<RowDataPacket[]>(
-      'SELECT ID, Username, Password, Admin, Email, EmailVerified FROM accounts WHERE Username = ? LIMIT 1',
+      'SELECT ID, Username, Password, Admin, Email, EmailVerified, SessionVersion FROM accounts WHERE Username = ? LIMIT 1',
       [username]
     );
 
@@ -95,7 +138,19 @@ export async function POST(request: Request) {
       userId: account.ID,
       username: account.Username,
       adminLevel: account.Admin,
+      sessionVersion: Number(account.SessionVersion ?? 0),
     });
+
+    const { browser, os } = describeUserAgent(request.headers.get('user-agent') || '');
+
+    try {
+      await pool.execute(
+        'INSERT INTO ucp_logins (User, IP, Browser, OS) VALUES (?, ?, ?, ?)',
+        [account.Username, ip, browser, os]
+      );
+    } catch (historyError) {
+      console.error('Login history insert failed:', historyError);
+    }
 
     return NextResponse.json({
       success: true,

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
+import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 import bcrypt from 'bcryptjs';
 import { RowDataPacket } from 'mysql2';
 
@@ -14,6 +15,15 @@ export async function POST(request: Request) {
     if (password.length < 6) {
       return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 });
     }
+
+    const ipLimit = await checkRateLimit({
+      action: 'reset:ip',
+      key: getClientIp(request),
+      limit: 10,
+      windowSeconds: 15 * 60,
+    });
+
+    if (!ipLimit.allowed) return rateLimitResponse(ipLimit);
 
     const [rows] = await pool.execute<RowDataPacket[]>(
       'SELECT ID, ResetCodeExpiry FROM accounts WHERE ResetCode = ? LIMIT 1',
@@ -37,6 +47,7 @@ export async function POST(request: Request) {
     await pool.execute(
       `UPDATE accounts SET
         Password = ?,
+        SessionVersion = SessionVersion + 1,
         EmailVerified = 1,
         EmailVerifyToken = NULL,
         EmailVerifyExpiry = NULL,

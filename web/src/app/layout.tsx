@@ -28,6 +28,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-[#09090b] text-[#fafafa] antialiased flex flex-col font-sans selection:bg-amber-500 selection:text-black`}
       >
+        <noscript>
+          <style>{`[data-reveal]{opacity:1!important;transform:none!important}`}</style>
+        </noscript>
         {children}
       </body>
     </html>

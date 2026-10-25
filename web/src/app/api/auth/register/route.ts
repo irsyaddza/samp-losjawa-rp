@@ -3,6 +3,7 @@ import pool from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { sendVerificationEmail } from '@/lib/mailer';
+import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 
 export async function POST(request: Request) {
@@ -18,6 +19,20 @@ export async function POST(request: Request) {
     if (password.length < 6) {
       return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 });
     }
+
+    const ip = getClientIp(request);
+    const [ipLimit, emailLimit] = await Promise.all([
+      checkRateLimit({ action: 'register:ip', key: ip, limit: 5, windowSeconds: 60 * 60 }),
+      checkRateLimit({
+        action: 'register:email',
+        key: email.toLowerCase(),
+        limit: 3,
+        windowSeconds: 60 * 60,
+      }),
+    ]);
+
+    if (!ipLimit.allowed) return rateLimitResponse(ipLimit);
+    if (!emailLimit.allowed) return rateLimitResponse(emailLimit);
 
     // Clean up expired unverified accounts matching username or email
     await pool.execute(

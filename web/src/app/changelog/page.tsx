@@ -1,11 +1,19 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import pool from '@/lib/db';
 import { RowDataPacket } from 'mysql2';
-import { ArrowLeft, Info, ChevronDown } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { getSession } from '@/lib/auth';
 import Navbar from '@/components/Navbar';
+import ChangelogTimeline, { type ChangelogGroupView } from '@/components/landing/ChangelogTimeline';
+import { MotionProvider } from '@/components/motion/LandingMotion';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: 'Changelog | Los Jawa Roleplay',
+  description: 'Release notes for the systems, features, and fixes that keep Los Jawa Roleplay moving.',
+};
 
 interface ChangelogEntry {
   id: number;
@@ -35,39 +43,39 @@ const SECTION_STYLES: Record<string, { label: string; cls: string; order: number
   OTHER:    { label: 'Other',    cls: 'text-zinc-400',    order: 6 },
 };
 
-function toDate(v: string | Date): Date {
-  return v instanceof Date ? v : new Date(v);
+function toDate(value: string | Date): Date {
+  return value instanceof Date ? value : new Date(value);
 }
 
-function fmtDate(d: Date): string {
-  if (isNaN(d.getTime())) return '-';
-  return `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+function fmtDate(date: Date): string {
+  if (isNaN(date.getTime())) return '-';
+  return `${MONTHS[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
 }
 
 function parseEntry(entry: string) {
-  const m = entry.match(/^\[([A-Z]+)\]\s*(.*)$/);
-  if (!m) return { key: 'OTHER', text: entry };
-  return { key: m[1], text: m[2] };
+  const match = entry.match(/^\[([A-Z]+)\]\s*(.*)$/);
+  if (!match) return { key: 'OTHER', text: entry };
+  return { key: match[1], text: match[2] };
 }
 
 function versionBadge(version: string): string {
-  const m = version.match(/(\d+\.\d+)/);
-  return m ? m[1] : version.slice(0, 3);
+  const match = version.match(/(\d+\.\d+)/);
+  return match ? match[1] : version.slice(0, 3);
 }
 
 function buildSections(entries: ChangelogEntry[]): Section[] {
   const map = new Map<string, Section>();
 
-  for (const e of entries) {
-    const { key, text } = parseEntry(e.entry);
+  for (const entry of entries) {
+    const { key, text } = parseEntry(entry.entry);
     const style = SECTION_STYLES[key] ?? SECTION_STYLES.OTHER;
 
-    let sec = map.get(style.label);
-    if (!sec) {
-      sec = { label: style.label, cls: style.cls, order: style.order, items: [] };
-      map.set(style.label, sec);
+    let section = map.get(style.label);
+    if (!section) {
+      section = { label: style.label, cls: style.cls, order: style.order, items: [] };
+      map.set(style.label, section);
     }
-    sec.items.push(text);
+    section.items.push(text);
   }
 
   return [...map.values()].sort((a, b) => a.order - b.order);
@@ -90,42 +98,21 @@ async function getEntries() {
 function groupByVersion(entries: ChangelogEntry[]) {
   const grouped: { version: string; date: Date; entries: ChangelogEntry[] }[] = [];
 
-  for (const e of entries) {
-    const d = toDate(e.created_at);
+  for (const entry of entries) {
+    const date = toDate(entry.created_at);
 
-    let g = grouped.find((x) => x.version === e.version);
-    if (!g) {
-      g = { version: e.version, date: d, entries: [] };
-      grouped.push(g);
-    } else if (d > g.date) {
-      g.date = d;   // version release date = newest entry of that version
+    let group = grouped.find((item) => item.version === entry.version);
+    if (!group) {
+      group = { version: entry.version, date, entries: [] };
+      grouped.push(group);
+    } else if (date > group.date) {
+      group.date = date;
     }
-    g.entries.push(e);
+    group.entries.push(entry);
   }
 
-  // Order versions by release date, newest first - not insertion order.
   grouped.sort((a, b) => b.date.getTime() - a.date.getTime());
   return grouped;
-}
-
-function SectionList({ sections }: { sections: Section[] }) {
-  return (
-    <div className="mt-5 space-y-5">
-      {sections.map((sec) => (
-        <div key={sec.label}>
-          <h4 className={`text-sm font-bold ${sec.cls}`}>{sec.label}</h4>
-          <ul className="mt-2 space-y-1.5">
-            {sec.items.map((item, i) => (
-              <li key={i} className="flex gap-2.5 text-sm leading-6 text-zinc-300">
-                <span className={`mt-[9px] h-1 w-1 shrink-0 rounded-full ${sec.cls.replace('text-', 'bg-')}`} />
-                {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
-    </div>
-  );
 }
 
 export default async function ChangelogPage() {
@@ -137,119 +124,66 @@ export default async function ChangelogPage() {
 
   const entries = await getEntries();
   const grouped = groupByVersion(entries);
+  const latest = grouped[0];
 
-  const year = new Date().getFullYear();
+  const groups: ChangelogGroupView[] = grouped.map((group, index) => ({
+    version: group.version,
+    dateLabel: fmtDate(group.date),
+    badge: versionBadge(group.version),
+    entryCount: group.entries.length,
+    isLatest: index === 0,
+    sections: buildSections(group.entries).map(({ label, cls, items }) => ({ label, cls, items })),
+  }));
 
   return (
-    <div className="min-h-screen bg-[#09090b] pt-20 pb-16">
-      <Navbar session={navSession} />
+    <MotionProvider>
+      <div className="relative isolate min-h-screen bg-[#05070c] text-zinc-100">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[32rem] bg-[radial-gradient(circle_at_50%_0%,rgba(245,158,11,0.07),transparent_60%)]"
+        />
+        <Navbar session={navSession} />
 
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
-        {/* Breadcrumbs */}
-        <div className="flex items-center gap-2 mb-6">
-          <Link
-            href="/"
-            className="flex items-center gap-1 text-xs text-zinc-400 hover:text-white transition"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Home
-          </Link>
-          <span className="text-zinc-650 text-xs">/</span>
-          <span className="text-xs text-zinc-500 font-medium font-bold">Changelog</span>
-        </div>
-
-        {/* Banner */}
-        <div className="relative overflow-hidden rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600">
-          <div className="absolute -left-12 -top-20 h-56 w-56 rounded-full bg-white/25 blur-3xl" />
-          <div className="absolute right-8 -top-14 h-44 w-44 rounded-full bg-orange-300/40 blur-3xl" />
-          <div className="absolute bottom-[-70px] left-1/3 h-52 w-52 rounded-full bg-red-400/25 blur-3xl" />
-          <h1 className="relative py-12 text-center text-3xl sm:text-4xl font-black text-black">
-            What&apos;s new?
-          </h1>
-        </div>
-
-        {/* Info bar */}
-        <div className="mt-4 flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-5 py-3">
-          <p className="flex items-center gap-2 text-xs text-zinc-400">
-            <Info className="h-3.5 w-3.5 shrink-0" />
-            A changelog of the latest <span className="font-bold text-zinc-300">Los Jawa RP</span> releases, updates and important fixes
-          </p>
-          <span className="hidden sm:inline-flex shrink-0 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-zinc-300">
-            Changelog in {year}
-          </span>
-        </div>
-
-        {/* Timeline */}
-        {grouped.length === 0 ? (
-          <p className="mt-10 text-sm text-zinc-500">No changelog entries published yet.</p>
-        ) : (
-          <div className="relative mt-10">
-            {/* vertical connector — aligned to the date column edge */}
-            <span className="absolute left-[150px] top-3 bottom-16 hidden w-px bg-white/10 sm:block" />
-
-            <div className="space-y-8">
-              {grouped.map((g, gi) => {
-                const sections = buildSections(g.entries);
-                const isLatest = gi === 0;
-                const badge = versionBadge(g.version);
-                const glow = isLatest
-                  ? 'bg-amber-500/20'
-                  : 'bg-orange-500/10';
-
-                return (
-                  <div key={g.version} className="relative grid gap-x-10 sm:grid-cols-[150px_1fr]">
-                    {/* Date + dot + line segment */}
-                    <div className="relative hidden whitespace-nowrap pt-1 pr-20 text-right text-xs text-zinc-400 sm:block">
-                      {fmtDate(g.date)}
-                      <span className="absolute -right-[5px] top-1.5 h-2.5 w-2.5 rounded-full bg-amber-400 ring-4 ring-amber-400/20" />
-                    </div>
-
-                    {/* Card */}
-                    {isLatest ? (
-                      <div className="relative overflow-hidden rounded-2xl border border-amber-500/30 bg-white/5 p-6">
-                        <div className={`pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full ${glow} blur-2xl`} />
-                        <span className="pointer-events-none absolute right-6 top-3 select-none text-6xl font-black text-white/5">
-                          {badge}
-                        </span>
-                        <div className="relative">
-                          <div className="flex items-center gap-3">
-                            <h3 className="text-lg font-black text-white">{g.version}</h3>
-                            <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-black">
-                              Latest
-                            </span>
-                          </div>
-                          <SectionList sections={sections} />
-                        </div>
-                      </div>
-                    ) : (
-                      <details className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 open:border-white/20 open:bg-white/[0.07]">
-                        <summary className="flex cursor-pointer list-none items-center justify-between p-5 [&::-webkit-details-marker]:hidden">
-                          <div className="flex items-center gap-3">
-                            <h3 className="text-sm font-bold text-zinc-200">{g.version}</h3>
-                            <span className="rounded-full bg-white/5 px-2 py-0.5 text-[11px] text-zinc-500">
-                              {g.entries.length} update{g.entries.length > 1 ? 's' : ''}
-                            </span>
-                          </div>
-                          <ChevronDown className="h-4 w-4 text-zinc-500 transition-transform group-open:rotate-180" />
-                        </summary>
-                        <div className="relative px-6 pb-6">
-                          <div className={`pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full ${glow} blur-2xl`} />
-                          <span className="pointer-events-none absolute right-6 top-3 select-none text-5xl font-black text-white/5">
-                            {badge}
-                          </span>
-                          <div className="relative">
-                            <SectionList sections={sections} />
-                          </div>
-                        </div>
-                      </details>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+        <main className="mx-auto max-w-5xl px-4 pb-20 pt-24 sm:px-6 sm:pt-28 lg:px-8">
+          <div className="flex items-center gap-2">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1.5 text-xs text-zinc-500 transition hover:text-white"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Home
+            </Link>
+            <span className="text-xs text-zinc-700">/</span>
+            <span className="text-xs font-medium text-zinc-400">Changelog</span>
           </div>
-        )}
-      </main>
-    </div>
+
+          <header className="mt-8">
+            <h1 className="max-w-3xl text-balance text-4xl font-black leading-[1.02] tracking-[-0.045em] text-white sm:text-6xl">
+              Every change, on the record.
+            </h1>
+            <p className="mt-5 max-w-2xl text-base leading-8 text-zinc-400">
+              Release notes for the systems, features, and fixes that keep Los Jawa moving.
+            </p>
+
+            <div className="mt-10 grid gap-6 border-y border-white/5 py-6 sm:grid-cols-3">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Releases</p>
+                <p className="mt-2 text-2xl font-black text-white">{grouped.length}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Updates</p>
+                <p className="mt-2 text-2xl font-black text-white">{entries.length}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Latest</p>
+                <p className="mt-2 truncate text-2xl font-black text-white">{latest ? latest.version : 'No releases'}</p>
+              </div>
+            </div>
+          </header>
+
+          <ChangelogTimeline groups={groups} />
+        </main>
+      </div>
+    </MotionProvider>
   );
 }

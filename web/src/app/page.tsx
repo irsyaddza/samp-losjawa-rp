@@ -1,24 +1,26 @@
+import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { RowDataPacket } from 'mysql2';
 import {
-  Server,
-  Users,
-  User,
-  Shield,
-  Compass,
-  Sparkles,
-  Play,
-  FileText,
-  ArrowRight,
+  ArrowUpRight,
   BadgeCheck,
-  MessageSquare,
   Clock3,
+  Server,
+  User,
+  Users,
 } from 'lucide-react';
 
 import Navbar from '@/components/Navbar';
+import HomeHero from '@/components/landing/HomeHero';
+import { CountUp, MotionProvider, Reveal } from '@/components/motion/LandingMotion';
+
+export const metadata: Metadata = {
+  title: 'Los Jawa Roleplay | SA-MP Roleplay City',
+  description: 'Join Los Jawa Roleplay, an immersive SA-MP roleplay city with real jobs, factions, and a community that keeps the story moving.',
+};
 
 async function getStats() {
   try {
@@ -49,6 +51,20 @@ async function getStats() {
   }
 }
 
+function ChapterHeader({ number, label }: { number: string; label: string }) {
+  return (
+    <div className="flex items-center gap-4">
+      <span className="font-mono text-xs font-semibold tracking-[0.24em] text-amber-400">
+        {number}
+      </span>
+      <span aria-hidden="true" className="h-px flex-1 bg-white/10" />
+      <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-400">
+        {label}
+      </span>
+    </div>
+  );
+}
+
 export default async function Home() {
   const session = await getSession();
   const stats = await getStats();
@@ -66,209 +82,337 @@ export default async function Home() {
     }
   }
 
+  const capacity = Math.min(100, (stats.onlinePlayers / stats.maxPlayers) * 100);
+
   return (
-    <div className="min-h-screen bg-[#05070c] text-zinc-100">
-      <Navbar session={session ? { username: session.username, email } : null} />
+    <MotionProvider>
+      <div className="min-h-screen bg-[#05070c] text-zinc-100">
+        <Navbar session={session ? { username: session.username, email } : null} />
 
-      <main className="pt-24 sm:pt-28">
-        <section className="relative isolate overflow-hidden">
-          <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,_rgba(245,158,11,0.18),_transparent_35%),radial-gradient(circle_at_bottom_right,_rgba(251,191,36,0.16),_transparent_30%)]" />
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8 lg:py-28">
-            <div className="grid items-center gap-10 lg:grid-cols-[1.15fr_0.85fr]">
-              <div className="max-w-2xl">
-                <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-sm font-medium text-amber-300">
-                  <Sparkles className="h-4 w-4" />
-                  Modern roleplay with a polished community experience
-                </div>
+        <main className="pt-24 sm:pt-28">
+          <HomeHero stats={stats} isLoggedIn={Boolean(session)} />
 
-                <h1 className="text-4xl font-black leading-[0.95] tracking-[-0.03em] text-white sm:text-5xl lg:text-7xl">
-                  A fresh city, a better roleplay journey.
-                </h1>
-
-                <p className="mt-5 max-w-xl text-base leading-8 text-zinc-400 sm:text-lg">
-                  Join Los Jawa Roleplay to build a life, run a business, grow friendships and experience one of the most immersive SA-MP communities in the region.
-                </p>
-
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                  <Link
-                    href={session ? '/dashboard' : '/register'}
-                    className="inline-flex items-center justify-center gap-2 rounded-full bg-amber-500 px-6 py-3.5 text-sm font-semibold text-black transition hover:bg-amber-400"
-                  >
-                    {session ? 'Open UCP dashboard' : 'Create your account'}
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                  <a
-                    href="samp://77.80.80.80:7777"
-                    className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
-                  >
-                    <Play className="h-4 w-4" />
-                    Connect to server
-                  </a>
-                  <Link
-                    href="/changelog"
-                    className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
-                  >
-                    <FileText className="h-4 w-4" />
-                    Changelog
-                  </Link>
-                </div>
-
-                <div className="mt-8 flex flex-wrap gap-3 text-sm text-zinc-400">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2">
-                    <BadgeCheck className="h-4 w-4 text-amber-400" />
-                    Verified account access
-                  </span>
-                  <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2">
-                    <Clock3 className="h-4 w-4 text-amber-400" />
-                    Active community events
-                  </span>
-                </div>
-              </div>
-
-              <div className="rounded-[2rem] border border-white/10 bg-zinc-950/75 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-7">
-                <div className="flex items-center gap-3 border-b border-white/10 pb-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-amber-500/25 bg-amber-500/10">
-                    <Image src="/logo.png" alt="Los Jawa RP logo" width={36} height={36} priority />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-white">Los Jawa Roleplay</p>
-                    <p className="text-sm text-zinc-400">SA-MP server portal</p>
-                  </div>
-                </div>
-
-                <div className="mt-6 grid gap-3">
-                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-zinc-400">Server status</span>
-                      <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold text-emerald-300">
-                        Online
-                      </span>
-                    </div>
-                    <p className="mt-3 text-3xl font-black text-white">{stats.onlinePlayers} / {stats.maxPlayers}</p>
-                    <p className="text-sm text-zinc-400">Players currently in-world</p>
-                  </div>
-
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-2xl border border-white/10 bg-zinc-900/70 p-4">
-                      <p className="text-sm text-zinc-400">Registered accounts</p>
-                      <p className="mt-2 text-2xl font-black text-white">{stats.totalAccounts}</p>
-                    </div>
-                    <div className="rounded-2xl border border-white/10 bg-zinc-900/70 p-4">
-                      <p className="text-sm text-zinc-400">Characters created</p>
-                      <p className="mt-2 text-2xl font-black text-white">{stats.totalCharacters}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="stats" className="border-y border-white/10 bg-zinc-950/70 py-16 sm:py-20">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-6">
-                <Users className="mb-3 h-8 w-8 text-amber-400" />
-                <p className="text-3xl font-black text-white">{stats.onlinePlayers} / {stats.maxPlayers}</p>
-                <p className="mt-1 text-sm text-zinc-400">Players currently online</p>
-              </div>
-              <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-6">
-                <User className="mb-3 h-8 w-8 text-amber-400" />
-                <p className="text-3xl font-black text-white">{stats.totalAccounts}</p>
-                <p className="mt-1 text-sm text-zinc-400">Accounts registered</p>
-              </div>
-              <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-6">
-                <Server className="mb-3 h-8 w-8 text-amber-400" />
-                <p className="text-3xl font-black text-white">{stats.totalCharacters}</p>
-                <p className="mt-1 text-sm text-zinc-400">Characters created</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="features" className="py-20 sm:py-24">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-12 max-w-2xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-amber-400">Why players stay</p>
-              <h2 className="mt-3 text-3xl font-black tracking-[-0.02em] text-white sm:text-4xl">
-                Designed for immersive roleplay and smooth daily play.
-              </h2>
-            </div>
-
-            <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-              <div className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 p-7 sm:p-8">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/12 text-amber-400">
-                  <Shield className="h-6 w-6" />
-                </div>
-                <h3 className="mt-6 text-2xl font-bold text-white">Reliable systems, modern tools, and safe access</h3>
-                <p className="mt-3 text-base leading-8 text-zinc-400">
-                  From secure UCP access to polished account tools and responsive support, every part of the experience is built to feel clean and dependable.
-                </p>
-                <ul className="mt-6 space-y-3 text-sm text-zinc-300">
-                  <li className="flex items-start gap-2"><BadgeCheck className="mt-0.5 h-4 w-4 text-amber-400" /> Secure login and account management flow</li>
-                  <li className="flex items-start gap-2"><BadgeCheck className="mt-0.5 h-4 w-4 text-amber-400" /> Roleplay-friendly systems for factions and progression</li>
-                  <li className="flex items-start gap-2"><BadgeCheck className="mt-0.5 h-4 w-4 text-amber-400" /> Smooth experience across desktop and mobile devices</li>
-                </ul>
-              </div>
-
-              <div className="grid gap-6">
-                <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6">
-                  <Compass className="h-8 w-8 text-amber-400" />
-                  <h3 className="mt-4 text-xl font-semibold text-white">Vivid city life</h3>
-                  <p className="mt-2 text-sm leading-7 text-zinc-400">
-                    Explore locations, uncover stories, and interact with a city that feels active and alive.
-                  </p>
-                </div>
-                <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6">
-                  <MessageSquare className="h-8 w-8 text-amber-400" />
-                  <h3 className="mt-4 text-xl font-semibold text-white">Strong social layer</h3>
-                  <p className="mt-2 text-sm leading-7 text-zinc-400">
-                    Built for conversation, community activities, and roleplay that grows naturally over time.
-                  </p>
-                </div>
-                <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6">
-                  <Sparkles className="h-8 w-8 text-amber-400" />
-                  <h3 className="mt-4 text-xl font-semibold text-white">A more refined economy</h3>
-                  <p className="mt-2 text-sm leading-7 text-zinc-400">
-                    Create opportunities, manage property, and shape your path through a responsive economy.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="community" className="pb-20 sm:pb-24">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-            <div className="rounded-[2rem] border border-amber-500/20 bg-[linear-gradient(135deg,rgba(245,158,11,0.2),rgba(3,7,18,0.92))] p-8 shadow-[0_24px_80px_rgba(0,0,0,0.3)] sm:p-10">
-              <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-                <div className="max-w-2xl">
-                  <p className="text-sm font-semibold uppercase tracking-[0.3em] text-amber-300">Ready to step in</p>
-                  <h2 className="mt-3 text-3xl font-black tracking-[-0.02em] text-white sm:text-4xl">
-                    Start your story in Los Jawa today.
+          <section id="stats" className="scroll-mt-24 border-b border-white/5 bg-white/[0.015] py-16 sm:py-20">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <Reveal>
+                <div className="max-w-xl">
+                  <h2 className="text-2xl font-black tracking-[-0.03em] text-white sm:text-3xl">
+                    The city, right now.
                   </h2>
-                  <p className="mt-4 text-base leading-8 text-zinc-300">
-                    Whether you are joining for the first time or returning to the city, the experience is polished for both new players and long-term roleplayers.
+                  <p className="mt-2 text-sm leading-6 text-zinc-400">
+                    Live numbers from the server and the people building stories inside it.
                   </p>
                 </div>
-                <Link
-                  href={session ? '/dashboard' : '/register'}
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-100"
-                >
-                  {session ? 'Continue to dashboard' : 'Join the server'}
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
+              </Reveal>
+
+              <Reveal delay={0.08}>
+                <div className="mt-8 grid gap-px overflow-hidden rounded-3xl border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr]">
+                  <div className="bg-[#070a10] p-6 sm:col-span-2 sm:p-8 lg:col-span-1">
+                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                      <Users className="h-4 w-4 text-amber-400" />
+                      Players online
+                    </div>
+                    <p className="mt-5 text-5xl font-black tracking-[-0.04em] text-white sm:text-6xl">
+                      <CountUp value={stats.onlinePlayers} />
+                      <span className="ml-2 text-xl font-semibold tracking-normal text-zinc-500">
+                        / {stats.maxPlayers}
+                      </span>
+                    </p>
+                    <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-white/10">
+                      <div className="h-full rounded-full bg-amber-400" style={{ width: `${capacity}%` }} />
+                    </div>
+                    <p className="mt-3 text-sm text-zinc-500">Live capacity across the city.</p>
+                  </div>
+
+                  <div className="bg-[#070a10] p-6 sm:p-8">
+                    <User className="h-5 w-5 text-amber-400" />
+                    <p className="mt-6 text-4xl font-black tracking-[-0.04em] text-white">
+                      <CountUp value={stats.totalAccounts} />
+                    </p>
+                    <p className="mt-2 text-sm text-zinc-400">Registered accounts</p>
+                    <p className="mt-3 text-xs text-zinc-600">People with a UCP identity.</p>
+                  </div>
+
+                  <div className="bg-[#070a10] p-6 sm:p-8">
+                    <Server className="h-5 w-5 text-amber-400" />
+                    <p className="mt-6 text-4xl font-black tracking-[-0.04em] text-white">
+                      <CountUp value={stats.totalCharacters} />
+                    </p>
+                    <p className="mt-2 text-sm text-zinc-400">Characters created</p>
+                    <p className="mt-3 text-xs text-zinc-600">Stories already in motion.</p>
+                  </div>
+                </div>
+              </Reveal>
+            </div>
+          </section>
+
+          <section id="features" className="relative isolate scroll-mt-24 overflow-hidden py-20 sm:py-28">
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-x-0 top-24 -z-10 h-[34rem] bg-[radial-gradient(ellipse_at_center,rgba(245,158,11,0.07),transparent_65%)]"
+            />
+            <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <Reveal>
+                <div className="grid gap-6 lg:grid-cols-[1fr_0.7fr] lg:items-end">
+                  <div>
+                    <span aria-hidden="true" className="block h-px w-12 bg-amber-500" />
+                    <h2 className="mt-5 max-w-2xl text-balance text-3xl font-black tracking-[-0.04em] text-white sm:text-4xl">
+                      Designed for stories that last.
+                    </h2>
+                  </div>
+                  <p className="max-w-xl text-base leading-7 text-zinc-400 lg:pb-1">
+                    A persistent city where factions, businesses, and street life react to every choice. The systems below keep it moving.
+                  </p>
+                </div>
+              </Reveal>
+
+              <div className="mt-16 space-y-20 sm:mt-20 sm:space-y-28">
+                <div>
+                  <Reveal>
+                    <ChapterHeader number="01" label="Factions" />
+                  </Reveal>
+                  <div className="mt-8 grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-16">
+                    <Reveal delay={0.05}>
+                      <div className="max-w-lg">
+                        <h3 className="text-3xl font-black tracking-[-0.03em] text-white sm:text-4xl">
+                          Factions with real weight
+                        </h3>
+                        <p className="mt-4 text-base leading-7 text-zinc-400">
+                          Law, streets, and business each have their own rhythm. Find the one that fits your character, then live with the consequences.
+                        </p>
+                        <ul className="mt-8 space-y-0">
+                          {[
+                            ['Law', 'Patrol the city and keep the peace.'],
+                            ['Streets', 'Build influence where the rules run thin.'],
+                            ['Business', 'Turn a legitimate front into real power.'],
+                          ].map(([label, copy]) => (
+                            <li key={label} className="flex gap-4 border-t border-white/10 py-4 last:border-b">
+                              <BadgeCheck aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                              <div>
+                                <p className="text-sm font-semibold text-white">{label}</p>
+                                <p className="mt-1 text-sm leading-6 text-zinc-400">{copy}</p>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </Reveal>
+
+                    <Reveal delay={0.12}>
+                      <div className="relative mx-auto flex min-h-[300px] w-full max-w-[560px] items-end justify-center pb-8 sm:min-h-[440px]">
+                        <div
+                          aria-hidden="true"
+                          className="absolute inset-x-12 bottom-4 h-40 rounded-full bg-amber-500/10 blur-3xl"
+                        />
+                        <Image
+                          src="/skins/ballas2-380-600.png"
+                          alt="Los Jawa Roleplay street faction character"
+                          width={380}
+                          height={600}
+                          sizes="(max-width: 640px) 40vw, 200px"
+                          className="relative z-0 w-[44%] max-w-[210px] opacity-80 drop-shadow-[0_24px_40px_rgba(0,0,0,0.5)]"
+                        />
+                        <Image
+                          src="/skins/csher-380-600.png"
+                          alt="Los Jawa Roleplay law faction character"
+                          width={380}
+                          height={600}
+                          sizes="(max-width: 640px) 50vw, 250px"
+                          className="relative z-10 -ml-8 w-[52%] max-w-[260px] drop-shadow-[0_30px_50px_rgba(0,0,0,0.55)]"
+                        />
+                        <p className="absolute inset-x-0 bottom-0 text-center text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-500">
+                          Law and streets, one city
+                        </p>
+                      </div>
+                    </Reveal>
+                  </div>
+                </div>
+
+                <div>
+                  <Reveal>
+                    <ChapterHeader number="02" label="Economy" />
+                  </Reveal>
+                  <div className="mt-8 grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-16">
+                    <Reveal delay={0.05} className="lg:order-2">
+                      <div className="max-w-lg">
+                        <h3 className="text-3xl font-black tracking-[-0.03em] text-white sm:text-4xl">
+                          An economy you can shape
+                        </h3>
+                        <p className="mt-4 text-base leading-7 text-zinc-400">
+                          Build a business, manage property, and turn a steady income into a story worth telling.
+                        </p>
+                        <ul className="mt-8 space-y-0">
+                          {[
+                            ['Businesses', 'Open a front and give the city somewhere to gather.'],
+                            ['Property', 'Own the places other characters want to be.'],
+                            ['Income', 'Turn steady work into long-term leverage.'],
+                          ].map(([label, copy]) => (
+                            <li key={label} className="flex gap-4 border-t border-white/10 py-4 last:border-b">
+                              <BadgeCheck aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                              <div>
+                                <p className="text-sm font-semibold text-white">{label}</p>
+                                <p className="mt-1 text-sm leading-6 text-zinc-400">{copy}</p>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </Reveal>
+
+                    <Reveal delay={0.12} className="lg:order-1">
+                      <div className="relative mx-auto flex min-h-[240px] w-full max-w-[560px] items-end justify-center pb-8 sm:min-h-[360px]">
+                        <div
+                          aria-hidden="true"
+                          className="absolute inset-x-10 bottom-10 h-36 rounded-full bg-amber-500/10 blur-3xl"
+                        />
+                        <Image
+                          src="/skins/bmybu-380-600.png"
+                          alt="Los Jawa Roleplay business character"
+                          width={380}
+                          height={600}
+                          sizes="(max-width: 640px) 30vw, 160px"
+                          className="relative z-0 w-[30%] max-w-[160px] opacity-70 drop-shadow-[0_24px_40px_rgba(0,0,0,0.5)]"
+                        />
+                        <Image
+                          src="/vehicles/411.png"
+                          alt="Los Jawa Roleplay sports car"
+                          width={600}
+                          height={380}
+                          sizes="(max-width: 640px) 78vw, 420px"
+                          className="relative z-10 -ml-10 w-[78%] max-w-[430px] drop-shadow-[0_30px_50px_rgba(0,0,0,0.55)]"
+                        />
+                        <p className="absolute inset-x-0 bottom-0 text-center text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-500">
+                          Business and property
+                        </p>
+                      </div>
+                    </Reveal>
+                  </div>
+                </div>
+
+                <div>
+                  <Reveal>
+                    <ChapterHeader number="03" label="Tools" />
+                  </Reveal>
+                  <div className="mt-8 grid gap-10 lg:grid-cols-2 lg:items-start lg:gap-16">
+                    <Reveal delay={0.05}>
+                      <div className="max-w-lg">
+                        <h3 className="text-3xl font-black tracking-[-0.03em] text-white sm:text-4xl">
+                          Tools that stay out of the way
+                        </h3>
+                        <p className="mt-4 text-base leading-7 text-zinc-400">
+                          A clean UCP for account, character, and support tasks. Fast on desktop, readable on a phone, and quiet enough to let the city stay the main thing.
+                        </p>
+                      </div>
+                    </Reveal>
+
+                    <Reveal delay={0.12}>
+                      <div className="relative border-l border-white/10 pl-6 sm:pl-8">
+                        <span
+                          aria-hidden="true"
+                          className="absolute left-0 top-0 h-16 w-px bg-amber-500"
+                        />
+                        <p className="font-mono text-6xl font-black tracking-[-0.08em] text-white/[0.07] sm:text-7xl">
+                          UCP
+                        </p>
+                        <ul className="mt-6 space-y-0">
+                          {[
+                            ['Account and characters', 'Keep every identity in one place.'],
+                            ['Support and appeals', 'Reach the team without leaving the flow.'],
+                            ['Responsive by default', 'The same tools on every screen.'],
+                          ].map(([label, copy]) => (
+                            <li key={label} className="flex gap-4 border-t border-white/10 py-4 last:border-b">
+                              <BadgeCheck aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                              <div>
+                                <p className="text-sm font-semibold text-white">{label}</p>
+                                <p className="mt-1 text-sm leading-6 text-zinc-400">{copy}</p>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </Reveal>
+                  </div>
+                </div>
               </div>
+
+              <Reveal>
+                <div className="mt-20 flex flex-col gap-4 border-t border-white/10 pt-8 sm:flex-row sm:items-start sm:gap-8">
+                  <div className="flex items-start gap-3">
+                    <Clock3 aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />
+                    <p className="max-w-2xl text-sm leading-7 text-zinc-400">
+                      <span className="font-semibold text-white">Built for the long run.</span> Stable systems, thoughtful limits, and room for the city to grow without losing what makes it feel alive.
+                    </p>
+                  </div>
+                </div>
+              </Reveal>
+            </div>
+          </section>
+
+          <section id="community" className="scroll-mt-24 pb-20 sm:pb-28">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <Reveal>
+                <div className="relative overflow-hidden rounded-[2.5rem] border border-amber-500/20 bg-[#0a0c11]">
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_78%_18%,rgba(245,158,11,0.16),transparent_34%),linear-gradient(135deg,rgba(245,158,11,0.07),rgba(5,7,12,0.9))]"
+                  />
+                  <div className="relative grid gap-8 p-8 sm:p-10 lg:grid-cols-[1fr_0.8fr] lg:items-end lg:p-12">
+                    <div className="max-w-xl">
+                      <h2 className="text-balance text-3xl font-black tracking-[-0.04em] text-white sm:text-4xl">
+                        The city is waiting.
+                      </h2>
+                      <p className="mt-4 text-base leading-8 text-zinc-300">
+                        Create your character, find your people, and start a story that is yours to keep.
+                      </p>
+                      <a
+                        href="https://forum.losjawa-rp.net"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-bold text-zinc-950 transition hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0c11]"
+                      >
+                        Visit the forum
+                        <ArrowUpRight className="h-4 w-4" />
+                      </a>
+                    </div>
+                    <div className="relative hidden justify-end lg:flex">
+                      <Image
+                        src="/skins/bmyri-380-600.png"
+                        alt=""
+                        width={380}
+                        height={600}
+                        sizes="220px"
+                        className="h-auto w-[220px] opacity-80 drop-shadow-[0_24px_50px_rgba(0,0,0,0.55)]"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </Reveal>
+            </div>
+          </section>
+        </main>
+
+        <footer className="border-t border-white/5 py-8">
+          <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+            <p>© {new Date().getFullYear()} Los Jawa Roleplay. All rights reserved.</p>
+            <div className="flex flex-wrap gap-4 text-xs">
+              <Link href="/changelog" className="transition hover:text-white">
+                Changelog
+              </Link>
+              <Link href="/donator" className="transition hover:text-white">
+                Donator
+              </Link>
+              <a
+                href="https://forum.losjawa-rp.net"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition hover:text-white"
+              >
+                Forum
+              </a>
             </div>
           </div>
-        </section>
-      </main>
-
-      <footer className="border-t border-white/10 bg-zinc-950/80 py-8">
-        <div className="mx-auto max-w-6xl px-4 text-center text-sm text-zinc-500 sm:px-6 lg:px-8">
-          <p>© {new Date().getFullYear()} Los Jawa Roleplay. All rights reserved.</p>
-        </div>
-      </footer>
-    </div>
+        </footer>
+      </div>
+    </MotionProvider>
   );
 }

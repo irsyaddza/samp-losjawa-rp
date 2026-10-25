@@ -7,11 +7,11 @@ import {
   Ban,
   CheckCircle2,
   Loader2,
-  Search,
   ShieldOff,
   UserX,
   X,
 } from 'lucide-react';
+import PlayerAutocomplete, { type PlayerSuggestion } from '@/components/PlayerAutocomplete';
 
 const BAN_REASON_TEMPLATES = [
   'Cheating or exploiting server bugs.',
@@ -66,6 +66,7 @@ export default function ModerationClient({
   currentUsername,
 }: ModerationClientProps) {
   const router = useRouter();
+  const [searchValue, setSearchValue] = useState(query);
   const [selected, setSelected] = useState<AccountResult | null>(null);
   const [reason, setReason] = useState('');
   const [durationDays, setDurationDays] = useState('0');
@@ -77,6 +78,39 @@ export default function ModerationClient({
   const resetMessages = () => {
     setError('');
     setSuccess('');
+  };
+
+  const handleSuggestionSelect = (suggestion: PlayerSuggestion) => {
+    resetMessages();
+
+    if (suggestion.username === currentUsername) {
+      setError('You cannot ban your own account.');
+      return;
+    }
+
+    if (suggestion.adminLevel >= currentAdminLevel) {
+      setError('You cannot ban an administrator with the same or a higher level.');
+      return;
+    }
+
+    if (suggestion.activeBans > 0) {
+      setError(`${suggestion.username} already has an active ban.`);
+      return;
+    }
+
+    setSelected({
+      ID: suggestion.id,
+      Username: suggestion.username,
+      Admin: suggestion.adminLevel,
+      Online: suggestion.online ? 1 : 0,
+      LastIP: suggestion.lastIp,
+      registered_at: suggestion.registeredAt || '—',
+      last_login: suggestion.lastLogin,
+      characters: suggestion.characters,
+      active_bans: suggestion.activeBans,
+    });
+    setReason('');
+    setDurationDays('0');
   };
 
   const handleBan = async (event: React.FormEvent) => {
@@ -179,16 +213,17 @@ export default function ModerationClient({
         </div>
 
         <form action="/dashboard/admin/moderation" method="get" className="flex flex-col gap-2 sm:flex-row">
-          <div className="relative min-w-0 flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
-            <input
-              type="search"
-              name="q"
-              defaultValue={query}
-              placeholder="Username or character name..."
-              className="h-11 w-full rounded-xl border border-zinc-800 bg-zinc-900/60 pl-10 pr-3 text-sm text-white placeholder:text-zinc-600 focus:border-amber-500/50 focus:outline-none"
-            />
-          </div>
+          <PlayerAutocomplete
+            endpoint="/api/admin/users"
+            value={searchValue}
+            onChange={setSearchValue}
+            onSelect={handleSuggestionSelect}
+            inputName="q"
+            inputId="moderation-player-search"
+            ariaLabel="Search player to moderate"
+            placeholder="Username or character name..."
+            className="min-w-0 flex-1"
+          />
           <button
             type="submit"
             className="h-11 rounded-xl bg-amber-500 px-5 text-xs font-bold text-black transition hover:bg-amber-400"
@@ -197,8 +232,13 @@ export default function ModerationClient({
           </button>
         </form>
 
-        {query.length > 0 && query.length < 2 ? (
-          <p className="mt-3 text-xs text-zinc-500">Type at least 2 characters to search.</p>
+        <p className="mt-3 text-xs text-zinc-500">
+          Start typing at least 2 characters, then pick the exact account from the suggestions.
+          Selecting a player opens the ban panel so you do not ban the wrong target.
+        </p>
+
+        {searchValue.length > 0 && searchValue.length < 2 ? (
+          <p className="mt-2 text-xs text-zinc-500">Type at least 2 characters to search.</p>
         ) : null}
 
         {accounts.length > 0 ? (

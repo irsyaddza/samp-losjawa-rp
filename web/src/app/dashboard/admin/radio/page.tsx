@@ -3,7 +3,7 @@ import Link from 'next/link';
 import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { RowDataPacket } from 'mysql2';
-import { ArrowLeft, Radio } from 'lucide-react';
+import { ArrowLeft, Flag, LayoutDashboard, Map as MapIcon, Radio, Users } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import RadioManagerClient from './RadioManagerClient';
 
@@ -77,48 +77,66 @@ export default async function AdminRadioManagerPage() {
             <ArrowLeft className="h-3.5 w-3.5" />
             Dashboard
           </Link>
-          <span className="text-zinc-650 text-xs">/</span>
+          <span className="text-zinc-600 text-xs">/</span>
           <Link
             href="/dashboard/admin"
             className="text-xs text-zinc-400 hover:text-white transition"
           >
             Admin Portal
           </Link>
-          <span className="text-zinc-650 text-xs">/</span>
-          <span className="text-xs text-zinc-500 font-medium font-bold">Radio Manager</span>
+          <span className="text-zinc-600 text-xs">/</span>
+          <span className="text-xs font-bold text-zinc-500">Radio Manager</span>
         </div>
 
-        {/* Header & Quick Navigation */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div>
-            <h2 className="text-2xl font-black text-white flex items-center gap-2">
-              <Radio className="h-6 w-6 text-amber-500" />
-              In-Game Radio Station Manager
-            </h2>
-            <p className="text-xs text-zinc-400 mt-1">
-              Manage in-game radio stations and audio stream links for /setstation and vehicle boomboxes. (Staff Level 1+ Access Only)
-            </p>
-          </div>
+        <section className="relative mb-6 overflow-hidden rounded-3xl border border-zinc-800/80 bg-gradient-to-br from-amber-500/10 via-zinc-950 to-zinc-950 p-5 sm:p-7">
+          <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-amber-500/10 blur-3xl" />
+          <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-400">
+                <Radio className="h-3 w-3" />
+                Broadcast control · Staff level 1+
+              </span>
+              <h1 className="mt-3 text-2xl font-black tracking-tight text-white sm:text-3xl">
+                Radio Station Manager
+              </h1>
+              <p className="mt-2 text-xs leading-relaxed text-zinc-400 sm:text-sm">
+                Manage in-game radio streams for <span className="font-mono text-zinc-300">/setstation</span> and
+                vehicle boomboxes. Test a stream in the browser before players tune in.
+              </p>
+            </div>
 
-          {/* Quick Nav Links */}
-          <div className="flex items-center gap-2">
-            <Link
-              href="/dashboard/admin"
-              className="h-10 px-4 rounded-xl border border-zinc-800 bg-zinc-950 text-xs font-bold text-zinc-400 hover:text-white hover:bg-zinc-900 transition flex items-center gap-2"
-            >
-              Applications
-            </Link>
-            <Link
-              href="/dashboard/admin/mapping"
-              className="h-10 px-4 rounded-xl border border-zinc-800 bg-zinc-950 text-xs font-bold text-zinc-400 hover:text-white hover:bg-zinc-900 transition flex items-center gap-2"
-            >
-              Mappings
-            </Link>
-            <span className="h-10 px-4 rounded-xl border border-amber-500/30 bg-amber-500/10 text-xs font-bold text-amber-400 flex items-center gap-2">
-              Radio Manager
-            </span>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/dashboard/admin"
+                className="inline-flex h-10 items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/80 px-4 text-xs font-bold text-zinc-400 transition hover:bg-zinc-900 hover:text-white"
+              >
+                <LayoutDashboard className="h-3.5 w-3.5" />
+                Admin Portal
+              </Link>
+              <Link
+                href="/dashboard/admin/mapping"
+                className="inline-flex h-10 items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/80 px-4 text-xs font-bold text-zinc-400 transition hover:bg-zinc-900 hover:text-white"
+              >
+                <MapIcon className="h-3.5 w-3.5" />
+                Mappings
+              </Link>
+              <Link
+                href="/dashboard/admin/users"
+                className="inline-flex h-10 items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/80 px-4 text-xs font-bold text-zinc-400 transition hover:bg-zinc-900 hover:text-white"
+              >
+                <Users className="h-3.5 w-3.5" />
+                Player Directory
+              </Link>
+              <Link
+                href="/dashboard/admin/reports"
+                className="inline-flex h-10 items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/80 px-4 text-xs font-bold text-zinc-400 transition hover:bg-zinc-900 hover:text-white"
+              >
+                <Flag className="h-3.5 w-3.5" />
+                Player Reports
+              </Link>
+            </div>
           </div>
-        </div>
+        </section>
 
         {/* Client Component */}
         <RadioManagerClient initialStations={stations} />

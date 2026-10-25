@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertTriangle, CheckCircle2, Loader2, Send, X } from 'lucide-react';
+import PlayerAutocomplete from '@/components/PlayerAutocomplete';
 import { REPORT_CATEGORIES } from '@/lib/reports';
 
 interface CharacterOption {
@@ -113,15 +114,21 @@ export default function NewReportForm({ characters }: { characters: CharacterOpt
         <label htmlFor="report-target" className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-zinc-400">
           Reported player
         </label>
-        <input
-          id="report-target"
+        <PlayerAutocomplete
+          endpoint="/api/accounts/search"
           value={reportedName}
-          onChange={(event) => setReportedName(event.target.value)}
-          maxLength={64}
-          required
+          onChange={setReportedName}
+          selectValue={(suggestion) => suggestion.matchedCharacters[0] || suggestion.username}
+          inputId="report-target"
+          ariaLabel="Search reported player"
           placeholder="Character name or UCP username"
-          className="h-10 w-full rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 text-xs text-white outline-none placeholder:text-zinc-600 focus:border-amber-500/50"
+          required
+          maxLength={64}
         />
+        <p className="mt-1 text-[10px] leading-relaxed text-zinc-600">
+          Pick a suggestion to lock the exact character or UCP account. You can still type a name manually
+          if the player is not listed.
+        </p>
       </div>
 
       <div>
