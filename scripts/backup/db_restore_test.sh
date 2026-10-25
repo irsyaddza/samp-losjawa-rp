@@ -1,7 +1,6 @@
 #!/bin/bash
     # ==============================================================================
     # Disaster Recovery (DR) Automated Verification Test
-    # Standar: Fortress Digital Services - System Administrator
     # ==============================================================================
     
     set -euo pipefail
