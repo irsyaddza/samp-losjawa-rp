@@ -1,7 +1,19 @@
 import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'losjawaroleplaysecretkey123';
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+
+  if (!secret || secret.trim() === '') {
+    throw new Error('JWT_SECRET is not configured');
+  }
+
+  if (secret.length < 32) {
+    throw new Error('JWT_SECRET must be at least 32 characters');
+  }
+
+  return secret;
+}
 
 export interface AuthSession {
   userId: number;
@@ -10,12 +22,14 @@ export interface AuthSession {
 }
 
 export function signToken(payload: AuthSession): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: '7d' });
 }
 
 export function verifyToken(token: string): AuthSession | null {
+  const secret = getJwtSecret();
+
   try {
-    return jwt.verify(token, JWT_SECRET) as AuthSession;
+    return jwt.verify(token, secret) as AuthSession;
   } catch {
     return null;
   }

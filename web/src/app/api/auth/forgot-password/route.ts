@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import crypto from 'crypto';
 import { sendPasswordResetEmail } from '@/lib/mailer';
+import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 import { RowDataPacket } from 'mysql2';
 
 export async function POST(request: Request) {
@@ -11,6 +12,20 @@ export async function POST(request: Request) {
     if (!email) {
       return NextResponse.json({ error: 'Email address is required' }, { status: 400 });
     }
+
+    const ip = getClientIp(request);
+    const [ipLimit, emailLimit] = await Promise.all([
+      checkRateLimit({ action: 'forgot:ip', key: ip, limit: 5, windowSeconds: 15 * 60 }),
+      checkRateLimit({
+        action: 'forgot:email',
+        key: email.toLowerCase(),
+        limit: 3,
+        windowSeconds: 15 * 60,
+      }),
+    ]);
+
+    if (!ipLimit.allowed) return rateLimitResponse(ipLimit);
+    if (!emailLimit.allowed) return rateLimitResponse(emailLimit);
 
     const [rows] = await pool.execute<RowDataPacket[]>(
       'SELECT ID, Username FROM accounts WHERE Email = ? LIMIT 1',

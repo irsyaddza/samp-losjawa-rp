@@ -15,9 +15,7 @@ function getTransporter() {
       user,
       pass,
     },
-    tls: {
-      rejectUnauthorized: false,
-    },
+    // Nodemailer validates SMTP TLS certificates by default. Do not disable this.
   });
 }
 

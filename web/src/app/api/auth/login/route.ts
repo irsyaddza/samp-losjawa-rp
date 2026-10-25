@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { whirlpool } from '@/lib/hash';
 import { setSessionCookie } from '@/lib/auth';
+import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 import bcrypt from 'bcryptjs';
 import { RowDataPacket } from 'mysql2';
 
@@ -15,6 +16,20 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    const ip = getClientIp(request);
+    const [ipLimit, accountLimit] = await Promise.all([
+      checkRateLimit({ action: 'login:ip', key: ip, limit: 30, windowSeconds: 15 * 60 }),
+      checkRateLimit({
+        action: 'login:account',
+        key: username.toLowerCase(),
+        limit: 10,
+        windowSeconds: 15 * 60,
+      }),
+    ]);
+
+    if (!ipLimit.allowed) return rateLimitResponse(ipLimit);
+    if (!accountLimit.allowed) return rateLimitResponse(accountLimit);
 
     const [rows] = await pool.execute<RowDataPacket[]>(
       'SELECT ID, Username, Password, Admin, Email, EmailVerified FROM accounts WHERE Username = ? LIMIT 1',

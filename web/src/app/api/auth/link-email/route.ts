@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import crypto from 'crypto';
 import { sendVerificationEmail } from '@/lib/mailer';
+import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 import { RowDataPacket } from 'mysql2';
 
 export async function POST(request: Request) {
@@ -15,6 +16,20 @@ export async function POST(request: Request) {
     if (!email.includes('@') || !email.includes('.')) {
       return NextResponse.json({ error: 'Please enter a valid email address' }, { status: 400 });
     }
+
+    const ip = getClientIp(request);
+    const [ipLimit, accountLimit] = await Promise.all([
+      checkRateLimit({ action: 'link:ip', key: ip, limit: 5, windowSeconds: 15 * 60 }),
+      checkRateLimit({
+        action: 'link:account',
+        key: String(accountId),
+        limit: 5,
+        windowSeconds: 15 * 60,
+      }),
+    ]);
+
+    if (!ipLimit.allowed) return rateLimitResponse(ipLimit);
+    if (!accountLimit.allowed) return rateLimitResponse(accountLimit);
 
     // Verify account exists
     const [userRows] = await pool.execute<RowDataPacket[]>(
