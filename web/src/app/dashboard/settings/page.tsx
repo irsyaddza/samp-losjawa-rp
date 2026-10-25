@@ -6,6 +6,7 @@ import { RowDataPacket } from 'mysql2';
 import { ArrowLeft, Settings } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import SettingsForm from './SettingsForm';
+import LoginHistory from './LoginHistory';
 
 async function getUserData(username: string) {
   try {
@@ -20,6 +21,28 @@ async function getUserData(username: string) {
   }
 }
 
+async function getLoginHistory(username: string) {
+  try {
+    const [rows] = await pool.execute<RowDataPacket[]>(
+      'SELECT IP, Browser, OS, Date FROM ucp_logins WHERE User = ? ORDER BY Date DESC LIMIT 10',
+      [username]
+    );
+
+    return rows.map((row) => {
+      const date = row.Date instanceof Date ? row.Date : new Date(String(row.Date));
+      return {
+        ip: String(row.IP),
+        browser: String(row.Browser),
+        os: String(row.OS),
+        date: Number.isNaN(date.getTime()) ? '' : date.toISOString(),
+      };
+    });
+  } catch (error) {
+    console.error('Error fetching login history:', error);
+    return [];
+  }
+}
+
 export default async function SettingsPage() {
   const session = await getSession();
 
@@ -31,6 +54,8 @@ export default async function SettingsPage() {
   if (!account) {
     redirect('/login');
   }
+
+  const loginHistory = await getLoginHistory(session.username);
 
   return (
     <div className="min-h-screen bg-[#09090b] pt-20">
@@ -67,6 +92,10 @@ export default async function SettingsPage() {
           initialSecretWord={account.SecretWord || ''}
           initialSecretHint={account.SecretHint || ''}
         />
+
+        <div className="mt-8">
+          <LoginHistory entries={loginHistory} />
+        </div>
       </main>
     </div>
   );

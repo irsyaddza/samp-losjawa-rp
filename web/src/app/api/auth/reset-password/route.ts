@@ -47,6 +47,7 @@ export async function POST(request: Request) {
     await pool.execute(
       `UPDATE accounts SET
         Password = ?,
+        SessionVersion = SessionVersion + 1,
         EmailVerified = 1,
         EmailVerifyToken = NULL,
         EmailVerifyExpiry = NULL,

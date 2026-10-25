@@ -170,6 +170,15 @@ async function banAccount(
     [target.Username, session.username, reason, playerIp, permanent ? 1 : 0, target.Serial || '']
   );
 
+  try {
+    await pool.execute(
+      'UPDATE accounts SET SessionVersion = SessionVersion + 1 WHERE ID = ?',
+      [target.ID]
+    );
+  } catch (sessionError) {
+    console.error('Failed to revoke sessions for banned account:', sessionError);
+  }
+
   await pool.execute(
     `INSERT INTO logs_ban (\`Character\`, BannedBy, Reason, IP, character_id, user_id)
      VALUES (?, ?, ?, ?, ?, ?)`,

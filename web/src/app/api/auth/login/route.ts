@@ -6,6 +6,34 @@ import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit
 import bcrypt from 'bcryptjs';
 import { RowDataPacket } from 'mysql2';
 
+function describeUserAgent(userAgent: string) {
+  const browser = /Edg\//.test(userAgent)
+    ? 'Edge'
+    : /OPR\//.test(userAgent)
+      ? 'Opera'
+      : /Chrome\//.test(userAgent)
+        ? 'Chrome'
+        : /Firefox\//.test(userAgent)
+          ? 'Firefox'
+          : /Safari\//.test(userAgent)
+            ? 'Safari'
+            : 'Unknown';
+
+  const os = /Windows/.test(userAgent)
+    ? 'Windows'
+    : /Android/.test(userAgent)
+      ? 'Android'
+      : /iPhone|iPad|iPod/.test(userAgent)
+        ? 'iOS'
+        : /Mac OS X/.test(userAgent)
+          ? 'macOS'
+          : /Linux/.test(userAgent)
+            ? 'Linux'
+            : 'Unknown';
+
+  return { browser, os };
+}
+
 export async function POST(request: Request) {
   try {
     const { username, password }: { username?: string; password?: string } = await request.json();
@@ -32,7 +60,7 @@ export async function POST(request: Request) {
     if (!accountLimit.allowed) return rateLimitResponse(accountLimit);
 
     const [rows] = await pool.execute<RowDataPacket[]>(
-      'SELECT ID, Username, Password, Admin, Email, EmailVerified FROM accounts WHERE Username = ? LIMIT 1',
+      'SELECT ID, Username, Password, Admin, Email, EmailVerified, SessionVersion FROM accounts WHERE Username = ? LIMIT 1',
       [username]
     );
 
@@ -110,7 +138,19 @@ export async function POST(request: Request) {
       userId: account.ID,
       username: account.Username,
       adminLevel: account.Admin,
+      sessionVersion: Number(account.SessionVersion ?? 0),
     });
+
+    const { browser, os } = describeUserAgent(request.headers.get('user-agent') || '');
+
+    try {
+      await pool.execute(
+        'INSERT INTO ucp_logins (User, IP, Browser, OS) VALUES (?, ?, ?, ?)',
+        [account.Username, ip, browser, os]
+      );
+    } catch (historyError) {
+      console.error('Login history insert failed:', historyError);
+    }
 
     return NextResponse.json({
       success: true,
