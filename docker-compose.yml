@@ -76,6 +76,9 @@ services:
     build:
       context: ./web
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-http://localhost:3000}
+        NEXT_PUBLIC_SAMP_SERVER: ${NEXT_PUBLIC_SAMP_SERVER:-play.losjawa-rp.fun:7777}
     container_name: ljrp-web
     restart: unless-stopped
     depends_on:

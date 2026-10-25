@@ -16,6 +16,7 @@ interface HomeHeroProps {
 }
 
 const ease: [number, number, number, number] = [0.22, 1, 0.36, 1];
+const SERVER_ADDRESS = process.env.NEXT_PUBLIC_SAMP_SERVER || 'play.losjawa-rp.fun:7777';
 
 export default function HomeHero({ stats, isLoggedIn }: HomeHeroProps) {
   const container = {
@@ -78,7 +79,7 @@ export default function HomeHero({ stats, isLoggedIn }: HomeHeroProps) {
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
             <a
-              href="samp://77.80.80.80:7777"
+              href={`samp://${SERVER_ADDRESS}`}
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-6 py-3.5 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#05070c]"
             >
               <Play className="h-4 w-4" />

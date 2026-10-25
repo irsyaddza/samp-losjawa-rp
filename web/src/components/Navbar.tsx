@@ -177,6 +177,8 @@ export default function Navbar({ session }: NavbarProps) {
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setDropdownOpen((open) => !open)}
+                  aria-expanded={dropdownOpen}
+                  aria-haspopup="menu"
                   className="flex items-center gap-2.5 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-1.5 text-zinc-300 transition hover:border-amber-500/30 hover:bg-zinc-800 hover:text-white cursor-pointer"
                 >
                   <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs font-black uppercase text-amber-400">
@@ -187,10 +189,17 @@ export default function Navbar({ session }: NavbarProps) {
                 </button>
 
                 {/* Dropdown Menu */}
-                {dropdownOpen && (
-                  <div className="absolute right-0 mt-2 max-h-[calc(100vh-5rem)] w-60 overflow-y-auto rounded-2xl border border-zinc-800 bg-zinc-950 p-2 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-150">
+                <div
+                  className={`absolute right-0 mt-2 max-h-[calc(100vh-5rem)] w-60 origin-top-right overflow-y-auto rounded-2xl border border-zinc-800 bg-zinc-950 p-2 shadow-2xl transition-all duration-200 ease-out ${
+                    dropdownOpen
+                      ? 'pointer-events-auto translate-y-0 scale-100 opacity-100'
+                      : 'pointer-events-none -translate-y-2 scale-[0.98] opacity-0'
+                  }`}
+                  aria-hidden={!dropdownOpen}
+                  inert={!dropdownOpen}
+                >
                     <div className="mb-2 border-b border-zinc-900 px-3 py-2.5">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">UCP Account</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">User Control Panel</p>
                       <p className="mt-0.5 truncate text-xs font-bold text-white">{session.username}</p>
                       <p className="truncate text-[10px] text-zinc-400">{session.email || `${session.username}@ucp`}</p>
                     </div>
@@ -314,8 +323,7 @@ export default function Navbar({ session }: NavbarProps) {
                         Sign Out
                       </button>
                     </form>
-                  </div>
-                )}
+                </div>
               </div>
             </div>
           ) : (

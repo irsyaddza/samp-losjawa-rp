@@ -130,7 +130,7 @@ export default async function Home() {
                       <CountUp value={stats.totalAccounts} />
                     </p>
                     <p className="mt-2 text-sm text-zinc-400">Registered accounts</p>
-                    <p className="mt-3 text-xs text-zinc-600">People with a UCP identity.</p>
+                    <p className="mt-3 text-xs text-zinc-600">People with a User Control Panel account.</p>
                   </div>
 
                   <div className="bg-[#070a10] p-6 sm:p-8">
@@ -300,7 +300,7 @@ export default async function Home() {
                           Tools that stay out of the way
                         </h3>
                         <p className="mt-4 text-base leading-7 text-zinc-400">
-                          A clean UCP for account, character, and support tasks. Fast on desktop, readable on a phone, and quiet enough to let the city stay the main thing.
+                          A clean User Control Panel for account, character, and support tasks. Fast on desktop, readable on a phone, and quiet enough to let the city stay the main thing.
                         </p>
                       </div>
                     </Reveal>
@@ -311,8 +311,8 @@ export default async function Home() {
                           aria-hidden="true"
                           className="absolute left-0 top-0 h-16 w-px bg-amber-500"
                         />
-                        <p className="font-mono text-6xl font-black tracking-[-0.08em] text-white/[0.07] sm:text-7xl">
-                          UCP
+                        <p className="text-2xl font-black tracking-[-0.03em] text-white sm:text-4xl lg:text-5xl">
+                          User Control Panel
                         </p>
                         <ul className="mt-6 space-y-0">
                           {[
