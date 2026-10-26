@@ -5,6 +5,23 @@ import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { createSystemNotification } from '@/lib/system-notifications';
 import { logAdminAction } from '@/lib/audit';
 
+const PHONE_MIN = 100000;
+const PHONE_MAX = 999999;
+
+async function generateUniquePhoneNumber(): Promise<number> {
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const phone = Math.floor(Math.random() * (PHONE_MAX - PHONE_MIN + 1)) + PHONE_MIN;
+    const [rows] = await pool.execute<RowDataPacket[]>(
+      'SELECT 1 FROM characters WHERE PhoneNumbr = ? LIMIT 1',
+      [phone]
+    );
+
+    if (rows.length === 0) return phone;
+  }
+
+  throw new Error('Unable to allocate a unique phone number');
+}
+
 export async function POST(request: Request) {
   try {
     const session = await getSession();
@@ -38,16 +55,26 @@ export async function POST(request: Request) {
         [session.userId, 'Accepted', currentDate, appId]
       );
 
-      // 2. Generate a random phone number for the character
-      const minPhone = 100000;
-      const maxPhone = 999999;
-      const phoneNum = Math.floor(Math.random() * (maxPhone - minPhone + 1)) + minPhone;
+      // 2. Create the character with a unique phone number. The unique
+      // database index is the final guard; retry if another insert won the race.
+      let characterResult: ResultSetHeader | undefined;
+      for (let attempt = 0; attempt < 5 && !characterResult; attempt++) {
+        const phoneNum = await generateUniquePhoneNumber();
 
-      // 3. Create the character in characters table
-      const [characterResult] = await pool.execute<ResultSetHeader>(
-        'INSERT INTO characters (master, char_name, Model, Activated, Cash, BankAccount, Level, PhoneNumbr, playerJob) VALUES (?, ?, ?, 1, 10000, 5000, 1, ?, 0)',
-        [app.master, app.char_name, app.skin, phoneNum]
-      );
+        try {
+          const [result] = await pool.execute<ResultSetHeader>(
+            'INSERT INTO characters (master, char_name, Model, Activated, Cash, BankAccount, Level, PhoneNumbr, playerJob, Hunger, Thirst) VALUES (?, ?, ?, 1, 10000, 5000, 1, ?, 0, 100, 100)',
+            [app.master, app.char_name, app.skin, phoneNum]
+          );
+          characterResult = result;
+        } catch (error) {
+          if ((error as { code?: string }).code !== 'ER_DUP_ENTRY') throw error;
+        }
+      }
+
+      if (!characterResult) {
+        return NextResponse.json({ error: 'Could not allocate a unique phone number. Please retry.' }, { status: 500 });
+      }
 
       await createSystemNotification({
         accountId: Number(app.master),
