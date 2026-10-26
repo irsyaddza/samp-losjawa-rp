@@ -22,6 +22,7 @@ new const gCropYield[MAX_CROPS]     = { 10, 8, 8 };         // units per harvest
 new const gCropCoopPrice[MAX_CROPS] = { 20, 50, 85 };       // $ per unit at co-op
 
 new const gCropName[MAX_CROPS][] = { "Wheat", "Cotton", "Fruit" };
+new const gCropStageName[CROP_STAGES][] = { "Just planted", "Growing", "Almost ready", "Ready to Harvest!" };
 
 // Plant object models (SA-MP existing plant models)
 // Wheat (806), Cotton (862), Fruit Tree (19473)
@@ -97,6 +98,7 @@ enum E_PLOT
     Float:plotPosZ
 };
 new PlotData[MAX_FARM_PLOTS][E_PLOT];
+new Iterator:FarmPlots<MAX_FARM_PLOTS>;
 new gPlotCount = 0;
 
 // Per-player produce inventory
@@ -299,6 +301,7 @@ stock Farmer_SetupTable()
 
 
     // Reset all plot slots in memory to empty (-1)
+    Iter_Clear(FarmPlots);
     for(new i = 0; i < MAX_FARM_PLOTS; i++)
     {
         PlotData[i][plotCropId] = -1;
@@ -355,6 +358,7 @@ public Farmer_LoadPlots()
 {
     new rows = cache_num_rows();
     gPlotCount = 0;
+    Iter_Clear(FarmPlots);
 
     for(new i = 0; i < rows && i < MAX_FARM_PLOTS; i++)
     {
@@ -370,14 +374,11 @@ public Farmer_LoadPlots()
         cache_get_value_name_float(i, "posY",      PlotData[i][plotPosY]);
         cache_get_value_name_float(i, "posZ",      PlotData[i][plotPosZ]);
 
+        if(PlotData[i][plotCropId] < 0) continue;
 
-
-        // Recalculate stage from timestamps
-        if(PlotData[i][plotCropId] >= 0)
-            PlotData[i][plotStage] = Farmer_ComputeStage(i);
-
-        // Spawn object
+        PlotData[i][plotStage] = Farmer_ComputeStage(i);
         Farmer_SpawnObject(i);
+        Iter_Add(FarmPlots, i);
         gPlotCount++;
     }
     printf("[FARMER]: Loaded %d active farm plots.", gPlotCount);
@@ -482,23 +483,19 @@ Farmer_SpawnObject(pIndex)
         PlotData[pIndex][plotPosZ],
         1.5, 0, 0, -1, 15.0);
 
-    // Calculate remaining growth time
-    new growMins = gCropGrowTime[cropId];
-    new elapsed  = (gettime() - PlotData[pIndex][plotPlantTime]) / 60;
-    new remaining = growMins - elapsed;
-    if(remaining < 0) remaining = 0;
-
-    // Create 3D text label above plant object showing Crop Name, Owner, and Estimated Growth Time
+    // Create 3D text label above plant object. Stage-only text keeps label
+    // updates tied to growth stage changes instead of every minute.
     new labelText[200];
-    if(PlotData[pIndex][plotStage] >= CROP_STAGES - 1 || remaining <= 0)
+    new stage = PlotData[pIndex][plotStage];
+    if(stage >= CROP_STAGES - 1)
     {
         format(labelText, sizeof(labelText), "{FFCC00}%s Plant\n{FFFFFF}Owner: {A4D247}%s\n{00FF00}Status: Ready to Harvest!",
             gCropName[cropId], PlotData[pIndex][plotOwnerName]);
     }
     else
     {
-        format(labelText, sizeof(labelText), "{FFCC00}%s Plant\n{FFFFFF}Owner: {A4D247}%s\n{FFFFFF}Growth Time Estimated: {FFCC00}~%d mins",
-            gCropName[cropId], PlotData[pIndex][plotOwnerName], remaining);
+        format(labelText, sizeof(labelText), "{FFCC00}%s Plant\n{FFFFFF}Owner: {A4D247}%s\n{FFFFFF}Status: {FFCC00}%s",
+            gCropName[cropId], PlotData[pIndex][plotOwnerName], gCropStageName[stage]);
     }
 
     PlotData[pIndex][plotLabel] = CreateDynamic3DTextLabel(labelText, 0xFFFFFFFF,
@@ -544,6 +541,10 @@ public Farmer_OnPlotInserted(idx)
 
 Farmer_DeletePlot(idx)
 {
+    if(PlotData[idx][plotCropId] < 0) return 0;
+
+    Iter_Remove(FarmPlots, idx);
+
     if(PlotData[idx][plotDBId] > 0)
     {
         new q[64];
@@ -574,19 +575,20 @@ Farmer_DeletePlot(idx)
     PlotData[idx][plotPlantTime]= 0;
     PlotData[idx][plotDBId]     = 0;
     gPlotCount--;
+    return 1;
 }
 
 // ─── Server growth tick (called from task Server[60000]) ──────────────────────
 
 Farmer_PlotTick()
 {
-    for(new i = 0; i < MAX_FARM_PLOTS; i++)
+    foreach (new i : FarmPlots)
     {
-        if(PlotData[i][plotCropId] < 0) continue;
-
         new newStage = Farmer_ComputeStage(i);
+        if(newStage == PlotData[i][plotStage]) continue;
+
         PlotData[i][plotStage] = newStage;
-        Farmer_SpawnObject(i); // update 3D label & growth time countdown
+        Farmer_SpawnObject(i);
     }
 }
 
@@ -832,9 +834,8 @@ Farmer_CmdPlant(playerid, const params[])
     GetPlayerPos(playerid, px, py, pz);
 
     // Check proximity to existing active plants (prevent stacking)
-    for(new i = 0; i < MAX_FARM_PLOTS; i++)
+    foreach (new i : FarmPlots)
     {
-        if(PlotData[i][plotCropId] < 0) continue;
         if(IsPlayerInRangeOfPoint(playerid, 2.0, PlotData[i][plotPosX], PlotData[i][plotPosY], PlotData[i][plotPosZ]))
             return SendClientMessage(playerid, 0xFF6666FF, "[FARM] You are too close to an existing plant. Move a few steps away.");
     }
@@ -865,6 +866,7 @@ Farmer_CmdPlant(playerid, const params[])
     PlotData[slot][plotPosY]      = py;
     PlotData[slot][plotPosZ]      = pz;
     GetPlayerName(playerid, PlotData[slot][plotOwnerName], MAX_PLAYER_NAME);
+    Iter_Add(FarmPlots, slot);
     gPlotCount++;
 
     Farmer_SpawnObject(slot);
@@ -895,9 +897,8 @@ Farmer_CmdHarvest(playerid)
 
     // Find nearest ready plot owned by this player
     new found = -1;
-    for(new i = 0; i < MAX_FARM_PLOTS; i++)
+    foreach (new i : FarmPlots)
     {
-        if(PlotData[i][plotCropId] < 0) continue;
         if(PlotData[i][plotOwnerId] != PlayerData[playerid][pID]) continue;
         if(PlotData[i][plotStage] < CROP_STAGES - 1) continue; // not ready
 
@@ -1198,9 +1199,8 @@ Farmer_CmdInfo(playerid)
     // My plots
     new charId = PlayerData[playerid][pID];
     new plotsFound = 0;
-    for(new i = 0; i < MAX_FARM_PLOTS; i++)
+    foreach (new i : FarmPlots)
     {
-        if(PlotData[i][plotCropId] < 0) continue;
         if(PlotData[i][plotOwnerId] != charId) continue;
         plotsFound++;
 
@@ -1241,9 +1241,8 @@ ptask CombineHarvestTimer[1000](playerid)
     GetVehiclePos(vehicleid, vx, vy, vz);
     GetVehicleZAngle(vehicleid, va);
 
-    for(new i = 0; i < MAX_FARM_PLOTS; i++)
+    foreach (new i : FarmPlots)
     {
-        if(PlotData[i][plotCropId] < 0) continue;
         if(PlotData[i][plotStage] < CROP_STAGES - 1) continue; // not ready
 
         if(IsPlayerInRangeOfPoint(playerid, 8.0, PlotData[i][plotPosX], PlotData[i][plotPosY], PlotData[i][plotPosZ]))
@@ -1290,9 +1289,8 @@ Farmer_AdminPlots(playerid)
     SendClientMessage(playerid, 0xFFCC00FF, "[FARM ADMIN] Active plots:");
     new found = 0;
     new zoneNames[FARM_ZONE_COUNT][] = {"Flint Range 1", "Flint Range 2", "Flint Range 3", "Blueberry Land 1"};
-    for(new i = 0; i < MAX_FARM_PLOTS; i++)
+    foreach (new i : FarmPlots)
     {
-        if(PlotData[i][plotCropId] < 0) continue;
         found++;
         new zoneIdx = PlotData[i][plotFarmId];
         new msg[128];
@@ -1329,9 +1327,8 @@ Farmer_AdminReset(playerid, const params[])
     // Option 2: Stand near crop plant (5.0 range)
     if(found == -1)
     {
-        for(new i = 0; i < MAX_FARM_PLOTS; i++)
+        foreach (new i : FarmPlots)
         {
-            if(PlotData[i][plotCropId] < 0) continue;
             if(IsPlayerInRangeOfPoint(playerid, 5.0, PlotData[i][plotPosX], PlotData[i][plotPosY], PlotData[i][plotPosZ]))
             {
                 found = i;
@@ -1360,9 +1357,8 @@ Farmer_AdminSpeed(playerid, const params[])
     if(!isnull(params) && !strcmp(params, "all", true))
     {
         new count = 0;
-        for(new i = 0; i < MAX_FARM_PLOTS; i++)
+        foreach (new i : FarmPlots)
         {
-            if(PlotData[i][plotCropId] < 0) continue;
             new cropId = PlotData[i][plotCropId];
             PlotData[i][plotPlantTime] = gettime() - (gCropGrowTime[cropId] * 60 + 10);
             PlotData[i][plotStage]     = CROP_STAGES - 1;
@@ -1390,9 +1386,8 @@ Farmer_AdminSpeed(playerid, const params[])
     // Mode 3: Stand near crop plant (5.0 range)
     if(found == -1)
     {
-        for(new i = 0; i < MAX_FARM_PLOTS; i++)
+        foreach (new i : FarmPlots)
         {
-            if(PlotData[i][plotCropId] < 0) continue;
             if(IsPlayerInRangeOfPoint(playerid, 5.0, PlotData[i][plotPosX], PlotData[i][plotPosY], PlotData[i][plotPosZ]))
             {
                 found = i;
@@ -1454,9 +1449,8 @@ Dialog:FarmBuySeedsAmount(playerid, response, listitem, inputtext[])
 
 hook OnPlayerEnterDynamicCP(playerid, STREAMER_TAG_CP:checkpointid)
 {
-    for(new i = 0; i < MAX_FARM_PLOTS; i++)
+    foreach (new i : FarmPlots)
     {
-        if(PlotData[i][plotCropId] < 0) continue;
         if(PlotData[i][plotCP] == checkpointid)
         {
             new cropId = PlotData[i][plotCropId];

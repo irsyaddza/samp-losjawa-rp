@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
+import { FORUM_URL } from '@/lib/site';
 import { RowDataPacket } from 'mysql2';
 import {
   ArrowUpRight,
@@ -365,7 +366,7 @@ export default async function Home() {
                         Create your character, find your people, and start a story that is yours to keep.
                       </p>
                       <a
-                        href="https://forum.losjawa-rp.net"
+                        href={FORUM_URL}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-bold text-zinc-950 transition hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0c11]"
@@ -402,7 +403,7 @@ export default async function Home() {
                 Donator
               </Link>
               <a
-                href="https://forum.losjawa-rp.net"
+                href={FORUM_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="transition hover:text-white"

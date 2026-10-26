@@ -1103,7 +1103,7 @@ stock FormatPM(playerid, type)
 
 CMD:friends(playerid, params[])
 {
-	SendClientMessage(playerid, COLOR_WHITE, "{ADC3E7}Tip: {FFFFFF}To see a list of your friends, or to add one, go to {ADC3E7}losjawa-rp.net{FFFFFF}!");
+	SendClientMessage(playerid, COLOR_WHITE, "{ADC3E7}Tip: {FFFFFF}To see a list of your friends, or to add one, go to {ADC3E7}" SERVER_DOMAIN "{FFFFFF}!");
 	SendClientMessage(playerid, COLOR_WHITE, "{ADC3E7}Tip: {FFFFFF}You can enable/disable friend notifications with {ADC3E7}/togfriends{FFFFFF}.");
 	SendClientMessage(playerid, COLOR_WHITE, "{ADC3E7}Tip: {FFFFFF}You can use {ADC3E7}/friendson{FFFFFF} for a list of friends online now.");
 	return true;
@@ -1657,6 +1657,15 @@ CMD:help(playerid, params[])
     return 1;
 }
 
+CMD:skiptutorial(playerid, params[])
+{
+    if(!PlayerData[playerid][pTutorialStep])
+        return SendErrorMessage(playerid, "You are not in the tutorial.");
+
+    FinishTutorial(playerid);
+    return 1;
+}
+
 ShowHelpCategories(playerid)
 {
 	gstr[0] = EOS;
@@ -1673,9 +1682,7 @@ ShowHelpCategories(playerid)
 	strcat(gstr, "11\tHouse & Property Commands\n");
 	strcat(gstr, "12\tApartment / Flat Commands\n");
 	strcat(gstr, "13\tBusiness & Enterprise Commands\n");
-	strcat(gstr, "14\tGarage Commands\n");
-	strcat(gstr, "15\tVIP & Donator Commands\n");
-	strcat(gstr, "16\tIllegal Weapon System\n");
+	strcat(gstr, "14\tIllegal Weapon System\n");
 
 	Dialog_Show(playerid, Help_Main, DIALOG_STYLE_TABLIST, "Help Categories", gstr, "Select", "Close");
 	return 1;
@@ -1714,6 +1721,7 @@ Dialog:Help_Main(playerid, response, listitem, inputtext[])
 			gstr[0] = EOS;
 			strcat(gstr, "{FFFFFF}=== BASIC COMMANDS ===\n\n");
 			strcat(gstr, "{A9C4E4}/stats{FFFFFF} - View your character profile, level, money, and stats\n");
+			strcat(gstr, "{A9C4E4}/joinjob / /jobhelp / /leavejob{FFFFFF} - Join a job at a briefcase job point, view job commands, or quit\n");
 			strcat(gstr, "{A9C4E4}/id / /getid [Name/ID]{FFFFFF} - Search for a player's ID and level\n");
 			strcat(gstr, "{A9C4E4}/admins{FFFFFF} - View list of online administrators\n");
 			strcat(gstr, "{A9C4E4}/testers{FFFFFF} - View list of online community helpers / testers\n");
@@ -1793,7 +1801,7 @@ Dialog:Help_Main(playerid, response, listitem, inputtext[])
 			strcat(gstr, "{A9C4E4}/hangup / /h{FFFFFF} - End active call\n");
 			strcat(gstr, "{A9C4E4}/p{FFFFFF} - Answer incoming call\n");
 			strcat(gstr, "{A9C4E4}/sms [Number] [Text]{FFFFFF} - Send text message (SMS)\n");
-			strcat(gstr, "{A9C4E4}/dropcell / /loudspeaker / /convo{FFFFFF} - Phone options\n");
+			strcat(gstr, "{A9C4E4}/loudspeaker / /convo{FFFFFF} - Phone options\n");
 			strcat(gstr, "{A9C4E4}/setchannel / /setslot / /part / /r / /radio / /rlow / /r1../r8{FFFFFF} - Portable radio");
 
 			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Phone & Radio", gstr, "<< Back", "Close");
@@ -1815,7 +1823,7 @@ Dialog:Help_Main(playerid, response, listitem, inputtext[])
 			gstr[0] = EOS;
 			strcat(gstr, "{FFFFFF}=== JOB & SIDEJOB COMMANDS ===\n\n");
 			strcat(gstr, "{A9C4E4}/jobhelp / /businesshelp{FFFFFF} - View job guide & instructions\n");
-			strcat(gstr, "{A9C4E4}/jobswitch / /leavejob / /leavesidejob{FFFFFF} - Switch or leave jobs\n\n");
+			strcat(gstr, "{A9C4E4}/joinjob / /jobhelp / /leavejob{FFFFFF} - Join a job, view its commands, or quit\n");
 			strcat(gstr, "{7E98B6}Specific Job Commands:{FFFFFF}\n");
 			strcat(gstr, "• {A9C4E4}Mechanic:{FFFFFF} /mechanicjob\n");
 			strcat(gstr, "• {A9C4E4}Farmer:{FFFFFF} /farm (plant, water, harvest, sell, buyseeds, info)\n");
@@ -1885,21 +1893,18 @@ Dialog:Help_Main(playerid, response, listitem, inputtext[])
 
 			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Business Commands", gstr, "<< Back", "Close");
 		}
-		case 13: // Garage Commands
+		case 13: // Illegal Weapon System
 		{
 			gstr[0] = EOS;
-			strcat(gstr, "{FFFFFF}=== GARAGE PROPERTY COMMANDS ===\n\n");
-			strcat(gstr, "{A9C4E4}Coming Soon\n");
+			strcat(gstr, "{FFFFFF}=== ILLEGAL WEAPON SYSTEM (IWS) ===\n\n");
+			strcat(gstr, "{A9C4E4}/illegaljob join / /weaponsupplier join{FFFFFF} - Join the Weapon Supplier illegal job\n");
+			strcat(gstr, "{A9C4E4}/buymaterial [amount]{FFFFFF} - Buy materials at material supply points\n");
+			strcat(gstr, "{A9C4E4}/buyschematic{FFFFFF} - Buy weapon schematics at schematic shops\n");
+			strcat(gstr, "{A9C4E4}/gun create [weapon name] [ammo]{FFFFFF} - Craft weapons from schematics & materials\n");
+			strcat(gstr, "{A9C4E4}/delays{FFFFFF} - Check remaining crafting and job cooldowns\n");
+			strcat(gstr, "{A9C4E4}/items{FFFFFF} - View your materials, schematics, and weapon packages");
 
-			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Garage Commands", gstr, "<< Back", "Close");
-		}
-		case 14: // Donator Commands
-		{
-			gstr[0] = EOS;
-			strcat(gstr, "{FFFFFF}=== VIP & DONATOR COMMANDS ===\n\n");
-			strcat(gstr, "{A9C4E4}Coming Soon\n");
-
-			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Donator Commands", gstr, "<< Back", "Close");
+			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Illegal Weapon System", gstr, "<< Back", "Close");
 		}
 	}
 	return 1;
@@ -2021,94 +2026,8 @@ Dialog:Help_FactionList(playerid, response, listitem, inputtext[])
 			strcat(gstr, "{FFFFFF}=== ORGANIZED CRIME / MAFIA / FAMILIES ===\n\n");
 			strcat(gstr, "{A9C4E4}/f / /g / /fchat / /nofam / /disband{FFFFFF} - Organization IC & OOC chat\n");
 			strcat(gstr, "{A9C4E4}/fmenu / /factionmenu / /faction / /factionon / /invite / /uninvite / /rank / /accept / /decline{FFFFFF} - Organization\n");
-		}
-		case 8: // Vehicle Commands
-		{
-			gstr[0] = EOS;
-			strcat(gstr, "{FFFFFF}=== VEHICLE & TRANSPORTATION COMMANDS ===\n\n");
-			strcat(gstr, "{A9C4E4}/v / /vehicle{FFFFFF} - Open main vehicle management GUI\n");
-			strcat(gstr, "{A9C4E4}/engine{FFFFFF} - Toggle vehicle engine on/off\n");
-			strcat(gstr, "{A9C4E4}/lock / /flock{FFFFFF} - Lock or force lock vehicle doors\n");
-			strcat(gstr, "{A9C4E4}/v buypark{FFFFFF} - Buy parking location\n");
-			strcat(gstr, "{A9C4E4}/v park{FFFFFF} - Park your vehicle\n");
-			strcat(gstr, "{A9C4E4}/hood / /trunk / /vehpackage{FFFFFF} - Vehicle hood, trunk & package\n");
-			strcat(gstr, "{A9C4E4}/fill{FFFFFF} - Refuel vehicle at gas station\n");
-			strcat(gstr, "{A9C4E4}/fuel{FFFFFF} - Check current fuel level\n");
-			strcat(gstr, "{A9C4E4}/rw / /rollwindow{FFFFFF} - Roll vehicle windows up/down\n");
-			strcat(gstr, "{A9C4E4}/vehiclename / /colorlist / /paintcar{FFFFFF} - Vehicle name & colors\n");
-			strcat(gstr, "{A9C4E4}/service / /checkcomponents / /setbuycomp / /buycomp{FFFFFF} - Repairs & components\n");
-			strcat(gstr, "{A9C4E4}/attach / /detach / /towcar / /towcars{FFFFFF} - Towing & trailers\n");
-			strcat(gstr, "{A9C4E4}/carsign / /remove_carsign / /callsign{FFFFFF} - Vehicle sign & callsign\n");
-			strcat(gstr, "{A9C4E4}/rentvehicle / /unrentvehicle{FFFFFF} - Rent or return rental vehicle");
 
-			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Vehicle Commands", gstr, "<< Back", "Close");
-		}
-		case 9: // Faction Help
-		{
-			ShowFactionHelpMenu(playerid);
-		}
-		case 10: // House Commands
-		{
-			gstr[0] = EOS;
-			strcat(gstr, "{FFFFFF}=== HOUSE & PROPERTY COMMANDS ===\n\n");
-			strcat(gstr, "{A9C4E4}/myhouse / /househelp{FFFFFF} - House info & guide\n");
-			strcat(gstr, "{A9C4E4}/buyhouse{FFFFFF} - Purchase an unowned house\n");
-			strcat(gstr, "{A9C4E4}/hlock{FFFFFF} - Lock or unlock house front door\n");
-			strcat(gstr, "{A9C4E4}/furniture{FFFFFF} - Place and customize house furniture\n");
-			strcat(gstr, "{A9C4E4}/offerrent / /setrentable / /setrent / /rentroom / /stoprent / /unrent{FFFFFF} - Rental\n");
-			strcat(gstr, "{A9C4E4}/tenants / /evict / /evictall{FFFFFF} - Tenant management\n");
-			strcat(gstr, "{A9C4E4}/houseupgrade / /grantbuild / /cmdspot{FFFFFF} - Upgrades & building\n");
-			strcat(gstr, "{A9C4E4}/propkeys / /givepropkey / /takepropkey{FFFFFF} - House keys");
-
-			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: House Commands", gstr, "<< Back", "Close");
-		}
-		case 11: // Apartment / Flat Commands
-		{
-			gstr[0] = EOS;
-			strcat(gstr, "{FFFFFF}=== APARTMENT & FLAT COMMANDS ===\n\n");
-			strcat(gstr, "{A9C4E4}/enter / /exit{FFFFFF} - Enter or exit apartment building\n");
-
-			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Apartment Commands", gstr, "<< Back", "Close");
-		}
-		case 12: // Business Commands
-		{
-			gstr[0] = EOS;
-			strcat(gstr, "{FFFFFF}=== BUSINESS & ENTERPRISE COMMANDS ===\n\n");
-			strcat(gstr, "{A9C4E4}/bizinfo{FFFFFF} - View business information\n");
-			strcat(gstr, "{A9C4E4}/buybiz / /sellbiz{FFFFFF} - Purchase or sell business\n");
-			strcat(gstr, "{A9C4E4}/bizbank / /bizwithdraw{FFFFFF} - Business bank vault & cash withdrawal\n");
-			strcat(gstr, "{A9C4E4}/buycomp / /setbuycomp / /compprice / /bizfee{FFFFFF} - Components & pricing");
-
-			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Business Commands", gstr, "<< Back", "Close");
-		}
-		case 13: // Garage Commands
-		{
-			gstr[0] = EOS;
-			strcat(gstr, "{FFFFFF}=== GARAGE PROPERTY COMMANDS ===\n\n");
-			strcat(gstr, "{A9C4E4}Coming Soon\n");
-
-			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Garage Commands", gstr, "<< Back", "Close");
-		}
-		case 14: // Donator Commands
-		{
-			gstr[0] = EOS;
-			strcat(gstr, "{FFFFFF}=== VIP & DONATOR COMMANDS ===\n\n");
-			strcat(gstr, "{A9C4E4}Coming Soon\n");
-
-			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Donator Commands", gstr, "<< Back", "Close");
-		}
-		case 15: // Illegal Weapon System
-		{
-			gstr[0] = EOS;
-			strcat(gstr, "{FFFFFF}=== ILLEGAL WEAPON SYSTEM (IWS) ===\n\n");
-			strcat(gstr, "{A9C4E4}/illegaljob join / /weaponsupplier join{FFFFFF} - Join the Weapon Supplier illegal job\n");
-			strcat(gstr, "{A9C4E4}/buymaterial [amount]{FFFFFF} - Buy materials at material supply points\n");
-			strcat(gstr, "{A9C4E4}/buyschematic{FFFFFF} - Buy weapon schematics at schematic shops\n");
-			strcat(gstr, "{A9C4E4}/gun create [weapon name] [ammo]{FFFFFF} - Craft weapons from schematics & materials\n");
-			strcat(gstr, "{A9C4E4}/delays{FFFFFF} - Check remaining crafting and job cooldowns\n");
-			strcat(gstr, "{A9C4E4}/items{FFFFFF} - View your materials, schematics, and weapon packages");
-
-			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Illegal Weapon System", gstr, "<< Back", "Close");
+			Dialog_Show(playerid, Help_FactionDetail, DIALOG_STYLE_MSGBOX, "Faction Help: Organized Crime", gstr, "<< Back", "Close");
 		}
 	}
 	return 1;
@@ -2129,7 +2048,7 @@ Dialog:Help_FactionDetail(playerid, response, listitem, inputtext[])
 CMD:rules(playerid, params[])
 {
 	ShowPlayerDialog(playerid, DIALOG_RULES, DIALOG_STYLE_MSGBOX, "Server's Rules",
-	"{CBCCCE}You can find out more about our server rules at forum.losjawa-rp.net", "Close", "");
+	"{CBCCCE}You can find out more about our server rules at " SERVER_FORUM, "Close", "");
 	return true;
 }
 
@@ -2445,14 +2364,12 @@ CMD:jobhelp(playerid, params[])
 	{
 		SendClientMessage(playerid, COLOR_GRAD1, "Read documentation on forums:");
 		SendClientMessage(playerid, COLOR_GRAD1, "Server Information -> Feature Documentation -> Trucker Career");
-		SendClientMessage(playerid, COLOR_GRAD1, "(http://forum.losjawa-rp.fun)");
+		SendClientMessage(playerid, COLOR_GRAD1, "(" SERVER_FORUM ")");
 		SendClientMessage(playerid, COLOR_GRAD2, "You need to own a pickup, a van or a truck to perform this job.");
 
 		SendClientMessage(playerid, COLOR_YELLOW, "Commands:{FFFFFF} Use{FFFF00} /cargo{FFFFFF} to see a list of available actions.");
 		SendClientMessage(playerid, COLOR_YELLOW, "Commands:{FFFFFF} Use{FFFF00} /tpda{FFFFFF} to show a trucker's PDA with information.");
 		SendClientMessage(playerid, COLOR_YELLOW, "Commands:{FFFFFF} Use{FFFF00} /industry{FFFFFF} to show a trucker's PDA with information.");
-
-		//if(PlayerData[playerid][pCareer]) SendClientMessageEx(playerid, COLOR_WHITE, "You have %d career hours.", PlayerData[playerid][pCareer]);
 
 		SendClientMessage(playerid, COLOR_GREEN, "_______________________________________");
 	}
@@ -2463,7 +2380,8 @@ CMD:jobhelp(playerid, params[])
 		SendClientMessage(playerid, COLOR_WHITE, "/trainjob [join / queue / leavequeue / leave / status / start]");
 	}
 
-	SendNoticeMessage(playerid, "You have logged 0 hours on this job.");
+	if(PlayerData[playerid][pJob] != JOB_NONE && PlayerData[playerid][pJob] != JOB_MECHANIC && PlayerData[playerid][pJob] != JOB_TAXI && PlayerData[playerid][pJob] != JOB_GUIDE)
+		SendNoticeMessage(playerid, "You have logged %d hours on this job.", PlayerData[playerid][pContractTime]);
 	return true;
 }
 
@@ -2494,7 +2412,7 @@ CMD:phonehelp(playerid, params[])
 {
 	SendClientMessage(playerid, COLOR_LIGHTRED, "Phone Commands:");
 	SendClientMessage(playerid, COLOR_WHITE, "/c(all) - /p(ickup) - /h(angup) - /ph(one)");
-	SendClientMessage(playerid, COLOR_WHITE, "/text - /txt - /sms - /loudspeaker - /dropcell - /selfie - /passcall");
+	SendClientMessage(playerid, COLOR_WHITE, "/text - /txt - /sms - /loudspeaker - /selfie - /passcall");
 	SendClientMessage(playerid, COLOR_WHITE, "/phone switch - /burnerhelp");
 	return true;
 }
@@ -3760,64 +3678,6 @@ CMD:selfie(playerid, params[])
 	return true;
 }
 
-CMD:dropcell(playerid, params[])
-{
-    if(PlayerData[playerid][pInjured])
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "You cannot use the phone at this time.");
-
-	new query[128];
-
-	if(PlayerData[playerid][pPnumber])
-	{
-	    format(query, sizeof(query), "DELETE FROM phone_contacts WHERE contactAdded = '%d'", PlayerData[playerid][pPnumber]); // Delete Contacts
-		mysql_pquery(dbCon, query);
-
-	    format(query, sizeof(query), "DELETE FROM phone_sms WHERE PhoneReceive = '%d'", PlayerData[playerid][pPnumber]); // Delete a message
-		mysql_pquery(dbCon, query);
-
-		if(PlayerData[playerid][pCallLine] != INVALID_PLAYER_ID)
-		{
-			SendClientMessage(PlayerData[playerid][pCallLine], COLOR_GRAD2, "[ ! ] They hung up.");
-			CancelCall(playerid);
-		}
-
-        PhoneSelfie_Stop(playerid);
-
-     	PlayerData[playerid][pPnumber] = 0;
-     	PlayerData[playerid][pPhoneModel] = 0;
-
-		SendNoticeMessage(playerid, "You've dropped your mobile phone.");
-	}
-	else SendClientMessage(playerid, COLOR_GRAD1, "   You don't have a phone");
-
-	return true;
-}
-
-CMD:buycell(playerid, params[])
-{
-	if(PlayerData[playerid][pInjured])
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "Error: You are not able to do this right now.");
-
-	if(DeathMode{playerid})
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "Error: You are not able to do this right now.");
-
-	if(PlayerData[playerid][pPnumber])
-		return SendClientMessage(playerid, COLOR_GRAD1, "   You already own a phone.");
-
-	if(PlayerData[playerid][pCash] < 500)
-		return SendClientMessageEx(playerid, COLOR_LIGHTRED, "Error: You need at least %s to buy a phone.", FormatNumber(500));
-
-	// Assign a unique random number (100000-199999)
-	new newNumber = 100000 + random(99999);
-	PlayerData[playerid][pPnumber] = newNumber;
-	PlayerData[playerid][pPhoneModel] = 0; // default black cover
-
-	TakePlayerMoney(playerid, 500);
-
-	SendNoticeMessage(playerid, "You purchased a new phone for $500. Your number: %d", newNumber);
-	return true;
-}
-
 CMD:loudspeaker(playerid, params[])
 {
     if(PlayerData[playerid][pInjured])
@@ -4958,13 +4818,8 @@ CMD:acceptdeath(playerid, params[])
 
 	if(DeathTimer[playerid] > 0)
 	{
-	    if(KnockedOut{playerid})
-	    {
-			SendErrorMessage(playerid, "You can't accept death yet!");
-			SendClientMessage(playerid, COLOR_LIGHTRED, "[ ! ] >> {FFFFFF}Don't accept death right after you die. Role-play your injuries properly.");
-			SendClientMessage(playerid, COLOR_LIGHTRED, "[ ! ] >> {FFFFFF}You can accept death in 120 seconds after you die.");
-	    }
-
+	    SendErrorMessage(playerid, "You can't accept death yet!");
+	    SendClientMessageEx(playerid, COLOR_LIGHTRED, "[ ! ] >> {FFFFFF}Wait %d more seconds and role-play your injuries properly.", DeathTimer[playerid]);
 	    return true;
 	}
 
@@ -5016,7 +4871,7 @@ CMD:respawnme(playerid, params[])
 	    return SendClientMessage(playerid, COLOR_YELLOW, "You're not dead.");
 
 	if(DeathTimer[playerid] > 0)
-	    return SendClientMessageEx(playerid, COLOR_YELLOW, "-> There's only %d seconds since you died, need to wait until 60.", 60 - DeathTimer[playerid]);
+	    return SendClientMessageEx(playerid, COLOR_YELLOW, "-> Wait %d more seconds before using /respawnme.", DeathTimer[playerid]);
 
 	if(IsPlayerInAnyVehicle(playerid)) RemoveFromVehicle(playerid);
 
@@ -8822,19 +8677,32 @@ CMD:trace(playerid, params[])
 {
     if(!IsPolice(playerid))
         return SendClientMessage(playerid, COLOR_GREY, "You aren't able to trace.");
-    
-    new id, Float:FindFloats[3];
-    if(sscanf(params, "u", id))
-        return SendSyntaxMessage(playerid, "/trace [playerid]");
 
     if(!PlayerData[playerid][pOnDuty])
         return SendClientMessage(playerid, COLOR_GREY, "You're not on duty.");
 
-    new location[MAX_ZONE_NAME];
-    GetPlayerPos(id, FindFloats[0], FindFloats[1], FindFloats[2]);
-    GetPlayer2DZone(id, location, sizeof(location));
-	SetPlayerCheckpoint(playerid, FindFloats[0], FindFloats[1], FindFloats[2], 3.0);
-    return 1;
+    new number;
+    if(sscanf(params, "d", number) || number <= 0)
+        return SendSyntaxMessage(playerid, "/trace [phone number]");
+
+    new targetid = GetPlayerByPhoneNumber(number);
+    if(targetid == INVALID_PLAYER_ID)
+        return SendErrorMessage(playerid, "No connected player is using that phone number.");
+
+    if(targetid == playerid)
+        return SendErrorMessage(playerid, "You can't trace your own phone.");
+
+    if(!CheckPhoneStatus(targetid))
+        return SendErrorMessage(playerid, "That phone is switched off.");
+
+    if(ph_airmode[targetid])
+        return SendErrorMessage(playerid, "That phone has no signal (airplane mode).");
+
+    new Float:position[3];
+    GetPlayerPos(targetid, position[0], position[1], position[2]);
+    SetPlayerCheckpoint(playerid, position[0], position[1], position[2], 3.0);
+    SendClientMessageEx(playerid, COLOR_YELLOW, "Trace: phone %d locked near %s.", number, ReturnLocationPos(position[0], position[1]));
+    return true;
 }
 
 CMD:tagcolor(playerid, params[])
@@ -14120,6 +13988,29 @@ CMD:vehiclename(playerid, parmas[])
 	return true;
 }
 
+// Builds one query for every spare key the player holds.
+stock BuildDupKeysQuery(playerid, query[], size)
+{
+	new count, len;
+
+	len = format(query, size, "SELECT `carID`, `carModel`, `carPlate` FROM `cars` WHERE `carID` IN (");
+
+	for(new i = 0; i < 10; ++i)
+	{
+		if(PlayerData[playerid][pDupKeys][i] != 9999)
+		{
+			len += format(query[len], size - len, "%s%d", count ? "," : "", PlayerData[playerid][pDupKeys][i]);
+			count++;
+		}
+	}
+
+	if(!count)
+		return 0;
+
+	format(query[len], size - len, ")");
+	return 1;
+}
+
 YCMD:vehicle(playerid, params[], help) = v;
 
 CMD:v(playerid, params[])
@@ -14295,32 +14186,10 @@ CMD:v(playerid, params[])
 	}
 	else if(!strcmp(type, "keys", true))
 	{
-	    new count, rows, model, plate[30];
+	    if(!BuildDupKeysQuery(playerid, query, sizeof(query)))
+	        return SendClientMessage(playerid, COLOR_LIGHTRED, "You don't have any keys.");
 
-	    for(new i = 0; i < 10; ++i)
-	    {
-	        if(PlayerData[playerid][pDupKeys][i] != 9999)
-	        {
-				mysql_format(dbCon, query, sizeof(query), "SELECT `carModel`, `carPlate` FROM `cars` WHERE `carID` = '%d' LIMIT 1", PlayerData[playerid][pDupKeys][i]);
-				new Cache:cache = mysql_query(dbCon, query);
-
-				cache_get_row_count(rows);
-
-				if(rows)
-				{
-					cache_get_value_name_int(0, "carModel", model);
-					cache_get_value_name(0, "carPlate", plate, 30);
-
-					SendClientMessageEx(playerid, COLOR_YELLOW3, "KEYID:%d VEHICLE: %s PLATES: %s", i + 1, ReturnVehicleModelNameEx(model), plate);
-
-					count++;
-				}
-
-				cache_delete(cache);
-	        }
-	    }
-
-	    if(!count) SendClientMessage(playerid, COLOR_LIGHTRED, "You don't have any keys.");
+	    mysql_tquery(dbCon, query, "OnShowVehicleKeys", "d", playerid);
 	}
 	else if(!strcmp(type, "dropkey", true))
 	{
@@ -14343,28 +14212,10 @@ CMD:v(playerid, params[])
 		if(PlayerData[playerid][pDupKeys][keyid] == 9999)
 		    return SendErrorMessage(playerid, "You don't have a key in that slot.");
 
-	    new rows, model, plate[30];
+	    carid = PlayerData[playerid][pDupKeys][keyid];
 
-		mysql_format(dbCon, query, sizeof(query), "SELECT `carModel`, `carPlate` FROM `cars` WHERE `carID` = '%d' LIMIT 1", PlayerData[playerid][pDupKeys][keyid]);
-		new Cache:cache = mysql_query(dbCon, query);
-
-		cache_get_row_count(rows);
-
-		if(!rows)
-		{
-		    cache_delete(cache);
-		    
-			return SendClientMessage(playerid, COLOR_YELLOW, "Fatal error dropping your spare key.");
-		}
-
-		cache_get_value_name_int(0, "carModel", model);
-		cache_get_value_name(0, "carPlate", plate, 30);
-		
-		cache_delete(cache);
-
-		RemoveVehicleDupKey(playerid, PlayerData[playerid][pDupKeys][keyid]);
-
-		SendClientMessageEx(playerid, COLOR_YELLOW, "SERVER: You dropped the spare key to a %s with the license plate %s.", ReturnVehicleModelNameEx(model), plate);
+		mysql_format(dbCon, query, sizeof(query), "SELECT `carModel`, `carPlate` FROM `cars` WHERE `carID` = '%d' LIMIT 1", carid);
+		mysql_tquery(dbCon, query, "OnDropVehicleKey", "ddd", playerid, keyid, carid);
 	}
 	else if(!strcmp(type, "upgrade", true))
 	{
@@ -14719,38 +14570,8 @@ CMD:v(playerid, params[])
 	}
 	else if(!strcmp(type, "location", true))
 	{
-	    new vehicleData[2], vehicleName[64], Float:vehDistance[4], rows;
-
 		mysql_format(dbCon, query, sizeof(query), "SELECT `carID`, `carModel`, `carName`, `carPosX`, `carPosY`, `carPosZ` FROM `cars` WHERE `carOwner` = '%d'", PlayerData[playerid][pID]);
-		new Cache:cache = mysql_query(dbCon, query);
-
-		cache_get_row_count(rows);
-
-		if(!rows)
-		{
-			cache_delete(cache);
-
-			return SendClientMessage(playerid, COLOR_LIGHTRED, "You don't own any vehicles.");
-		}
-
-		for(new i = 0; i < rows; ++i)
-		{
-		    cache_get_value_name_int(i, "carID", vehicleData[0]);
-			cache_get_value_name_int(i, "carModel", vehicleData[1]);
-
-			cache_get_value_name(i, "carName", vehicleName, 64);
-
-			cache_get_value_name_float(i, "carPosX", vehDistance[0]);
-			cache_get_value_name_float(i, "carPosY", vehDistance[1]);
-			cache_get_value_name_float(i, "carPosZ", vehDistance[2]);
-
-			if(strlen(vehicleName) >= 3)
-				SendClientMessageEx(playerid, COLOR_GREEN, "Your %s (#%d) is set to spawn at %s, San Andreas.", vehicleName, vehicleData[1], ReturnDynamicAddress(vehDistance[0], vehDistance[1]));
-			else
-				SendClientMessageEx(playerid, COLOR_GREEN, "Your %s (#%d) is set to spawn at %s, San Andreas.", ReturnVehicleModelNameEx(vehicleData[1]), vehicleData[1], ReturnDynamicAddress(vehDistance[0], vehDistance[1]));
-		}
-
-		cache_delete(cache);
+		mysql_tquery(dbCon, query, "OnPlayerVehicleLocations", "d", playerid);
 	}
 	else if(!strcmp(type, "buypark", true))
 	{
@@ -15295,6 +15116,193 @@ stock IsVehicleTrunk(vehicleid)
 	return 0;
 }
 
+forward OnShowCheques(playerid, all, display_id);
+public OnShowCheques(playerid, all, display_id)
+{
+	if(!IsPlayerConnected(playerid))
+		return 0;
+
+	new rows = cache_num_rows();
+
+	if(!rows)
+		return 0;
+
+	new playername[MAX_PLAYER_NAME+1], rec[MAX_PLAYER_NAME+1], sen[MAX_PLAYER_NAME+1], code[64], amount, id;
+
+	GetPlayerName(playerid, playername, sizeof(playername));
+
+	for(new i = 0; i < rows; ++i)
+	{
+		cache_get_value_name(i, "sender", sen);
+		cache_get_value_name(i, "reciever", rec);
+		cache_get_value_name(i, "code", code);
+		cache_get_value_name_int(i, "amount", amount);
+
+		id = all ? 0 : display_id;
+		if(all) cache_get_value_name_int(i, "id", id);
+
+		SendClientMessage(playerid,COLOR_YELLOW3, "-------------------------------------------------------------------------------");
+		SendClientMessageEx(playerid,COLOR_YELLOW3,   "|_Check_ID:_%06d_|", id);
+		SendClientMessage(playerid,COLOR_YELLOW3, "|_BANK OF LOS SANTOS - Los Santos, San Andress.");
+		SendClientMessageEx(playerid,COLOR_YELLOW3,   "|_Pay to the order of: %s |_ From: %s", rec, sen);
+		SendClientMessageEx(playerid,COLOR_YELLOW3,   "|____  To the sum of: $%d", amount);
+		SendClientMessage(playerid,COLOR_YELLOW3, "| Signature: Towards your efforts n the agency.");
+		SendClientMessage(playerid,COLOR_YELLOW3, "-------------------------------------------------------------------------------");
+
+		if(!strcmp(playername, rec, true))
+		{
+			SendClientMessageEx(playerid, COLOR_YELLOW3,   "|=== Code: %s", code);
+		}
+	}
+	return 1;
+}
+
+forward OnShowVehicleKeys(playerid);
+public OnShowVehicleKeys(playerid)
+{
+	if(!IsPlayerConnected(playerid))
+		return 0;
+
+	new rows = cache_num_rows(), count, carid, model, plate[30];
+
+	for(new i = 0; i < rows; ++i)
+	{
+		cache_get_value_name_int(i, "carID", carid);
+
+		for(new j = 0; j < 10; ++j)
+		{
+			if(PlayerData[playerid][pDupKeys][j] == carid)
+			{
+				cache_get_value_name_int(i, "carModel", model);
+				cache_get_value_name(i, "carPlate", plate, 30);
+
+				SendClientMessageEx(playerid, COLOR_YELLOW3, "KEYID:%d VEHICLE: %s PLATES: %s", j + 1, ReturnVehicleModelNameEx(model), plate);
+
+				count++;
+				break;
+			}
+		}
+	}
+
+	if(!count) SendClientMessage(playerid, COLOR_LIGHTRED, "You don't have any keys.");
+	return 1;
+}
+
+forward OnDropVehicleKey(playerid, keyid, carid);
+public OnDropVehicleKey(playerid, keyid, carid)
+{
+	if(!IsPlayerConnected(playerid))
+		return 0;
+
+	if(keyid < 0 || keyid > 9 || PlayerData[playerid][pDupKeys][keyid] != carid)
+		return 0;
+
+	if(!cache_num_rows())
+	{
+		SendClientMessage(playerid, COLOR_YELLOW, "Fatal error dropping your spare key.");
+		return 0;
+	}
+
+	new model, plate[30];
+
+	cache_get_value_name_int(0, "carModel", model);
+	cache_get_value_name(0, "carPlate", plate, 30);
+
+	RemoveVehicleDupKey(playerid, carid);
+
+	SendClientMessageEx(playerid, COLOR_YELLOW, "SERVER: You dropped the spare key to a %s with the license plate %s.", ReturnVehicleModelNameEx(model), plate);
+	return 1;
+}
+
+forward OnVehKeysAdminLoaded(playerid, mode);
+public OnVehKeysAdminLoaded(playerid, mode)
+{
+	if(!IsPlayerConnected(playerid))
+		return 0;
+
+	new rows = cache_num_rows(), count, carid, model, plate[30], string[1024], key[32];
+
+	if(mode == 0)
+		format(string, sizeof(string), "Slot\tVehicle Model\tLicense Plate\n");
+
+	for(new i = 0; i < rows; ++i)
+	{
+		cache_get_value_name_int(i, "carID", carid);
+
+		for(new j = 0; j < 10; ++j)
+		{
+			if(PlayerData[playerid][pDupKeys][j] == carid)
+			{
+				cache_get_value_name_int(i, "carModel", model);
+				cache_get_value_name(i, "carPlate", plate, 30);
+
+				if(mode == 0)
+					format(string, sizeof(string), "%sSlot %d\t%s\t%s\n", string, j + 1, ReturnVehicleModelNameEx(model), plate);
+				else
+				{
+					format(string, sizeof(string), "%sSlot %d: %s [%s]\n", string, j + 1, ReturnVehicleModelNameEx(model), plate);
+					format(key, sizeof(key), "Vdrop_KeyIdx_%d", count);
+					SetPVarInt(playerid, key, j);
+				}
+
+				count++;
+				break;
+			}
+		}
+	}
+
+	if(!count)
+	{
+		if(mode == 0)
+			SendErrorMessage(playerid, "You do not hold any spare keys.");
+		else
+			SendErrorMessage(playerid, "You do not hold any spare keys to drop.");
+
+		ShowPlayerVehMainDialog(playerid);
+		return 0;
+	}
+
+	if(mode == 0)
+		Dialog_Show(playerid, PlayerVehKeysList, DIALOG_STYLE_TABLIST_HEADERS, "My Spare Keys", string, "Close", "Back");
+	else
+		Dialog_Show(playerid, PlayerVehKeysDropList, DIALOG_STYLE_LIST, "Drop Spare Key", string, "Drop", "Back");
+
+	return 1;
+}
+
+forward OnPlayerVehicleLocations(playerid);
+public OnPlayerVehicleLocations(playerid)
+{
+	if(!IsPlayerConnected(playerid))
+		return 0;
+
+	new rows = cache_num_rows();
+
+	if(!rows)
+	{
+		SendClientMessage(playerid, COLOR_LIGHTRED, "You don't own any vehicles.");
+		return 0;
+	}
+
+	new vehicleData[2], vehicleName[64], Float:vehDistance[4];
+
+	for(new i = 0; i < rows; ++i)
+	{
+		cache_get_value_name_int(i, "carID", vehicleData[0]);
+		cache_get_value_name_int(i, "carModel", vehicleData[1]);
+		cache_get_value_name(i, "carName", vehicleName, 64);
+		cache_get_value_name_float(i, "carPosX", vehDistance[0]);
+		cache_get_value_name_float(i, "carPosY", vehDistance[1]);
+		cache_get_value_name_float(i, "carPosZ", vehDistance[2]);
+
+		if(strlen(vehicleName) >= 3)
+			SendClientMessageEx(playerid, COLOR_GREEN, "Your %s (#%d) is set to spawn at %s, San Andreas.", vehicleName, vehicleData[1], ReturnDynamicAddress(vehDistance[0], vehDistance[1]));
+		else
+			SendClientMessageEx(playerid, COLOR_GREEN, "Your %s (#%d) is set to spawn at %s, San Andreas.", ReturnVehicleModelNameEx(vehicleData[1]), vehicleData[1], ReturnDynamicAddress(vehDistance[0], vehDistance[1]));
+	}
+	return 1;
+}
+
 CMD:cheque(playerid, params[])
 {
 	new tmp[32], tmp2[32], query[256];
@@ -15322,77 +15330,14 @@ CMD:cheque(playerid, params[])
         if(strcmp(string,"all",true) == 0)
 		{
 			format(query,sizeof(query),"SELECT * FROM cheques WHERE owner_ID = '%d' ORDER BY id ASC", PlayerData[playerid][pID]);
-			new Cache:cache = mysql_query(dbCon, query);
-
-			if(cache_num_rows())
-			{
-			    new playername[MAX_PLAYER_NAME+1], rec[MAX_PLAYER_NAME+1], sen[MAX_PLAYER_NAME+1], code[64], amount, id;
-
-			    GetPlayerName(playerid, playername, sizeof(playername));
-
-			    for(new i = 0; i != cache_num_rows(); ++i)
-			    {
-				    cache_get_value_name(i, "sender", sen);
-				    cache_get_value_name(i, "reciever", rec);
-				    cache_get_value_name(i, "code", code);
-					cache_get_value_name_int(i, "amount", amount);
-					cache_get_value_name_int(i, "id", id);
-
-                    SendClientMessage(playerid,COLOR_YELLOW3, "-------------------------------------------------------------------------------");
-                    SendClientMessageEx(playerid,COLOR_YELLOW3,   "|_Check_ID:_%06d_|", id);
-                    SendClientMessage(playerid,COLOR_YELLOW3, "|_BANK OF LOS SANTOS - Los Santos, San Andress.");
-                    SendClientMessageEx(playerid,COLOR_YELLOW3,   "|_Pay to the order of: %s |_ From: %s", rec, sen);
-                    SendClientMessageEx(playerid,COLOR_YELLOW3,   "|____  To the sum of: $%d", amount);
-                    SendClientMessage(playerid,COLOR_YELLOW3, "| Signature: Towards your efforts n the agency.");
-                    SendClientMessage(playerid,COLOR_YELLOW3, "-------------------------------------------------------------------------------");
-
-                    if(!strcmp(playername, rec, true))
-                    {
-                    	SendClientMessageEx(playerid, COLOR_YELLOW3,   "|=== Code: %s", code);
-                    }
-			    }
-			}
-
-			cache_delete(cache);
+			mysql_tquery(dbCon, query, "OnShowCheques", "ddd", playerid, 1, 0);
 		}
-		else
+		else if(IsNumeric(string))
 		{
-			if(IsNumeric(string))
-			{
-				format(query,sizeof(query),"SELECT * FROM cheques WHERE owner_ID = '%d' AND id = '%s'", PlayerData[playerid][pID], string);
-				new Cache:cache = mysql_query(dbCon, query);
-
-				if(cache_num_rows())
-				{
-				    new playername[MAX_PLAYER_NAME+1], rec[MAX_PLAYER_NAME+1], sen[MAX_PLAYER_NAME+1], code[64];
-
-				    cache_get_value_name(0, "sender", sen);
-				    cache_get_value_name(0, "reciever", rec);
-				    cache_get_value_name(0, "code", code);
-
-					new amount;
-					cache_get_value_name_int(0, "amount", amount);
-
-                    SendClientMessage(playerid,COLOR_YELLOW3, "-------------------------------------------------------------------------------");
-                    SendClientMessageEx(playerid,COLOR_YELLOW3,   "|_Check_ID:_%06d_|", strval(string));
-                    SendClientMessage(playerid,COLOR_YELLOW3, "|_BANK OF LOS SANTOS - Los Santos, San Andress.");
-                    SendClientMessageEx(playerid,COLOR_YELLOW3,   "|_Pay to the order of: %s |_ From: %s", rec, sen);
-                    SendClientMessageEx(playerid,COLOR_YELLOW3,   "|____  To the sum of: $%d", amount);
-                    SendClientMessage(playerid,COLOR_YELLOW3, "| Signature: Towards your efforts n the agency.");
-                    SendClientMessage(playerid,COLOR_YELLOW3, "-------------------------------------------------------------------------------");
-
-                    GetPlayerName(playerid, playername, sizeof(playername));
-                    if(!strcmp(playername, rec, true))
-                    {
-                    	SendClientMessageEx(playerid,COLOR_YELLOW3,   "|=== Code: %s", code);
-                    }
-				}
-
-				cache_delete(cache);
-			}
+			format(query,sizeof(query),"SELECT * FROM cheques WHERE owner_ID = '%d' AND id = '%s'", PlayerData[playerid][pID], string);
+			mysql_tquery(dbCon, query, "OnShowCheques", "ddd", playerid, 0, strval(string));
 		}
 		return true;
-
 	}
 	else if(strcmp(tmp,"paycheck",true) == 0)
 	{
@@ -16641,7 +16586,7 @@ CMD:setstyle(playerid, params[])
   		else if(option == 5)
 		{
 		    if(PlayerData[playerid][pDonateRank] < 1)
-    			return SendUnauthMessage(playerid, "Sorry but Jog Styles are for Donators only. Check out losjawa-rp.net to purchase premium!");
+			return SendUnauthMessage(playerid, "Sorry but Jog Styles are for Donators only. Check out " SERVER_DOMAIN " to purchase premium!");
 
 			new style;
 
@@ -18486,31 +18431,15 @@ Dialog:PlayerVehKeysAdmin(playerid, response, listitem, inputtext[])
 	{
 		case 0: // View my spare keys
 		{
-			new string[1024], count = 0, rows, model, plate[30], query[128];
-			format(string, sizeof(string), "Slot\tVehicle Model\tLicense Plate\n");
-			for(new i = 0; i < 10; ++i)
-			{
-				if(PlayerData[playerid][pDupKeys][i] != 9999)
-				{
-					mysql_format(dbCon, query, sizeof(query), "SELECT `carModel`, `carPlate` FROM `cars` WHERE `carID` = '%d' LIMIT 1", PlayerData[playerid][pDupKeys][i]);
-					new Cache:cache = mysql_query(dbCon, query);
-					cache_get_row_count(rows);
-					if(rows)
-					{
-						cache_get_value_name_int(0, "carModel", model);
-						cache_get_value_name(0, "carPlate", plate, 30);
-						format(string, sizeof(string), "%sSlot %d\t%s\t%s\n", string, i + 1, ReturnVehicleModelNameEx(model), plate);
-						count++;
-					}
-					cache_delete(cache);
-				}
-			}
-			if(!count)
+			new query[256];
+
+			if(!BuildDupKeysQuery(playerid, query, sizeof(query)))
 			{
 				SendErrorMessage(playerid, "You do not hold any spare keys.");
 				return ShowPlayerVehMainDialog(playerid);
 			}
-			Dialog_Show(playerid, PlayerVehKeysList, DIALOG_STYLE_TABLIST_HEADERS, "My Spare Keys", string, "Close", "Back");
+
+			mysql_tquery(dbCon, query, "OnVehKeysAdminLoaded", "dd", playerid, 0);
 		}
 		case 1: // Duplicate Key
 		{
@@ -18530,33 +18459,15 @@ Dialog:PlayerVehKeysAdmin(playerid, response, listitem, inputtext[])
 		}
 		case 2: // Drop Key
 		{
-			new string[512], count = 0, rows, model, plate[30], query[128];
-			new key[32];
-			for(new i = 0; i < 10; ++i)
-			{
-				if(PlayerData[playerid][pDupKeys][i] != 9999)
-				{
-					mysql_format(dbCon, query, sizeof(query), "SELECT `carModel`, `carPlate` FROM `cars` WHERE `carID` = '%d' LIMIT 1", PlayerData[playerid][pDupKeys][i]);
-					new Cache:cache = mysql_query(dbCon, query);
-					cache_get_row_count(rows);
-					if(rows)
-					{
-						cache_get_value_name_int(0, "carModel", model);
-						cache_get_value_name(0, "carPlate", plate, 30);
-						format(string, sizeof(string), "%sSlot %d: %s [%s]\n", string, i + 1, ReturnVehicleModelNameEx(model), plate);
-						format(key, sizeof(key), "Vdrop_KeyIdx_%d", count);
-						SetPVarInt(playerid, key, i);
-						count++;
-					}
-					cache_delete(cache);
-				}
-			}
-			if(!count)
+			new query[256];
+
+			if(!BuildDupKeysQuery(playerid, query, sizeof(query)))
 			{
 				SendErrorMessage(playerid, "You do not hold any spare keys to drop.");
 				return ShowPlayerVehMainDialog(playerid);
 			}
-			Dialog_Show(playerid, PlayerVehKeysDropList, DIALOG_STYLE_LIST, "Drop Spare Key", string, "Drop", "Back");
+
+			mysql_tquery(dbCon, query, "OnVehKeysAdminLoaded", "dd", playerid, 1);
 		}
 	}
 	return 1;
@@ -18655,21 +18566,10 @@ Dialog:PlayerVehKeysDropList(playerid, response, listitem, inputtext[])
 		return ShowPlayerVehMainDialog(playerid);
 	}
 	
-	new rows, model, plate[30], query[128];
-	mysql_format(dbCon, query, sizeof(query), "SELECT `carModel`, `carPlate` FROM `cars` WHERE `carID` = '%d' LIMIT 1", PlayerData[playerid][pDupKeys][keyid]);
-	new Cache:cache = mysql_query(dbCon, query);
-	cache_get_row_count(rows);
-	if(!rows)
-	{
-		cache_delete(cache);
-		return SendErrorMessage(playerid, "Fatal error dropping your spare key.");
-	}
-	cache_get_value_name_int(0, "carModel", model);
-	cache_get_value_name(0, "carPlate", plate, 30);
-	cache_delete(cache);
-	
-	RemoveVehicleDupKey(playerid, PlayerData[playerid][pDupKeys][keyid]);
-	SendClientMessageEx(playerid, COLOR_YELLOW, "SERVER: You dropped the spare key to a %s with the license plate %s.", ReturnVehicleModelNameEx(model), plate);
+	new query[128], carid = PlayerData[playerid][pDupKeys][keyid];
+
+	mysql_format(dbCon, query, sizeof(query), "SELECT `carModel`, `carPlate` FROM `cars` WHERE `carID` = '%d' LIMIT 1", carid);
+	mysql_tquery(dbCon, query, "OnDropVehicleKey", "ddd", playerid, keyid, carid);
 	return 1;
 }
 

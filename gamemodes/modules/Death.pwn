@@ -90,7 +90,7 @@ MakePlayerWounded(playerid, issuerid = INVALID_PLAYER_ID, bool:car_death = false
 
 	SetPlayerHealthEx(playerid, 40.0, false);
 
-	DeathTimer[playerid] = 120;
+	DeathTimer[playerid] = DEATH_WAIT_SECONDS;
 
 	if(PlayerData[playerid][pCallLine] != INVALID_PLAYER_ID)
 	{
@@ -228,8 +228,8 @@ MakePlayerWounded(playerid, issuerid = INVALID_PLAYER_ID, bool:car_death = false
 			SendNoticeMessage(playerid, "You died and lost your items. Use /lostitems to see what you lost.");
 		}
 
-		SendClientMessage(playerid, COLOR_LIGHTRED, "You were brutally wounded, now if a medic or anyone else doesn't save you, you will die.");
-		SendClientMessage(playerid, COLOR_LIGHTRED, "To accept death, type /acceptdeath.");
+		SendClientMessageEx(playerid, COLOR_LIGHTRED, "You were brutally wounded. Wait %d seconds, then type /acceptdeath.", DEATH_WAIT_SECONDS);
+		SendClientMessage(playerid, COLOR_LIGHTRED, "A medic can save you before the timer ends.");
 
 		format(sgstr, sizeof(sgstr), "(( Has been injured %d times, /damages %d for more information. ))", TotalPlayerDamages[playerid], playerid);
 		SetPlayerChatBubble(playerid, sgstr, 0xFF6347FF, 30.0, 300 * 1000);
@@ -237,8 +237,8 @@ MakePlayerWounded(playerid, issuerid = INVALID_PLAYER_ID, bool:car_death = false
 
 		if(headshot_wound)
 		{
-		    SendClientMessage(playerid, COLOR_YELLOW, "-> You suffered a gun shot wound to the head and died.");
-		    SendClientMessage(playerid, COLOR_YELLOW, "-> You need to wait 60 seconds and then you'll get the ability to /respawnme.");
+		    SendClientMessage(playerid, COLOR_YELLOW, "-> You suffered a gunshot wound to the head and died.");
+		    SendClientMessageEx(playerid, COLOR_YELLOW, "-> Wait %d seconds, then use /respawnme.", DEATH_WAIT_SECONDS);
 
 		    MakePlayerDead(playerid, false);
 		}
@@ -273,10 +273,9 @@ MakePlayerWounded(playerid, issuerid = INVALID_PLAYER_ID, bool:car_death = false
 
 		GameTextForPlayer(playerid, "~b~KNOCKED OUT", 5000, 3);
 
-		SendClientMessage(playerid, COLOR_LIGHTRED, "You've been knocked out!");
-		SendClientMessage(playerid, COLOR_LIGHTRED, "If someone doesn't come help you up, or a paramedic doesn't save you, you may die.");
-		SendClientMessage(playerid, COLOR_LIGHTRED, "You do not lose any of your items since you're only knocked out until you die.");
-		SendClientMessage(playerid, COLOR_LIGHTRED, "To accept death, type /acceptdeath.");
+		SendClientMessageEx(playerid, COLOR_LIGHTRED, "You've been knocked out. Wait %d seconds, then type /acceptdeath.", DEATH_WAIT_SECONDS);
+		SendClientMessage(playerid, COLOR_LIGHTRED, "Once the timer ends, someone can /helpup you.");
+		SendClientMessage(playerid, COLOR_LIGHTRED, "You do not lose items unless you die.");
 
 		format(sgstr, sizeof(sgstr), "(( Has been hit %d times and knocked out, /helpup %d to help them up. ))", TotalPlayerDamages[playerid], playerid);
 		SetPlayerChatBubble(playerid, sgstr, 0xFF6347FF, 20.0, 300 * 1000);
@@ -312,7 +311,7 @@ MakePlayerDead(playerid, bool:executed = true)
 {
 	DeathMode{playerid} = true;
 	KnockedOut{playerid} = false;
-	DeathTimer[playerid] = 60;
+	DeathTimer[playerid] = DEATH_WAIT_SECONDS;
 
 	SetPlayerHealthEx(playerid, 20.0, false);
 
@@ -334,7 +333,7 @@ MakePlayerDead(playerid, bool:executed = true)
 
 	SetPlayerChatBubble(playerid, "(( THIS PLAYER IS DEAD. ))", 0xFF6347FF, 10.0, 300 * 1000);
 
-	if(executed) SendClientMessage(playerid, COLOR_YELLOW, "-> You're now dead. You need to wait 60 seconds and then you'll get the ability to /respawnme.");
+	if(executed) SendClientMessageEx(playerid, COLOR_YELLOW, "-> You're dead. Wait %d seconds, then use /respawnme.", DEATH_WAIT_SECONDS);
 
 	SetPlayerWeather(playerid, globalWeather);
 }

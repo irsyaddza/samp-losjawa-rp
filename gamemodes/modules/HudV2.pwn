@@ -104,7 +104,7 @@ CreateHudV2GlobalTDs()
     TextDrawSetProportional(HV2_Date, true);
 
     // ── Time ─────────────────────────────────────────────────────────
-    HV2_Time = TextDrawCreate(181.000, 410.000, "00:00:00");
+    HV2_Time = TextDrawCreate(181.000, 410.000, "00:00");
     TextDrawLetterSize(HV2_Time, 0.170, 0.888);
     TextDrawAlignment(HV2_Time, TEXT_DRAW_ALIGN_LEFT);
     TextDrawColour(HV2_Time, -56);
@@ -548,18 +548,33 @@ UpdateHudV2Time()
 {
     if(HV2_Time == Text:INVALID_TEXT_DRAW) return;
 
+    static lastMinute = -1;
+    static lastDate = -1;
+
     new h, m, s;
     gettime(h, m, s);
 
-    new timeStr[12], dateStr[14];
-    new dispH = (ghour) % 24;
-    format(timeStr, sizeof(timeStr), "%02d:%02d:%02d", dispH, m, s);
-    TextDrawSetString(HV2_Time, timeStr);
-
     new year, month, day;
     getdate(year, month, day);
-    format(dateStr, sizeof(dateStr), "%02d/%02d/%04d", day, month, year);
-    TextDrawSetString(HV2_Date, dateStr);
+
+    new dateKey = (year * 10000) + (month * 100) + day;
+    if(m == lastMinute && dateKey == lastDate) return;
+
+    if(m != lastMinute)
+    {
+        new timeStr[8];
+        format(timeStr, sizeof(timeStr), "%02d:%02d", ghour % 24, m);
+        TextDrawSetString(HV2_Time, timeStr);
+        lastMinute = m;
+    }
+
+    if(dateKey != lastDate)
+    {
+        new dateStr[14];
+        format(dateStr, sizeof(dateStr), "%02d/%02d/%04d", day, month, year);
+        TextDrawSetString(HV2_Date, dateStr);
+        lastDate = dateKey;
+    }
 }
 
 UpdateHudV2Player(playerid, vehicleid)

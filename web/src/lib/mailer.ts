@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { FORUM_URL, MAIN_SITE_URL } from '@/lib/site';
 
 function getTransporter() {
   const host = process.env.SMTP_HOST || 'smtp.gmail.com';
@@ -42,7 +43,7 @@ export function resolveBaseUrl(requestOrBaseUrl?: Request | string): string {
     return envUrl.replace(/\/$/, '');
   }
 
-  return 'https://losjawa-rp.fun';
+  return MAIN_SITE_URL;
 }
 
 interface EnterpriseEmailOptions {
@@ -149,7 +150,7 @@ function buildEnterpriseEmailHtml({
               </p>
               <p style="margin:0 0 16px 0;font-size:11px;color:#a1a1aa;">
                 <a href="${baseUrl}" style="color:#71717a;text-decoration:none;">Website</a> &nbsp;•&nbsp;
-                <a href="https://forum.losjawa-rp.net" style="color:#71717a;text-decoration:none;">Forum</a> &nbsp;•&nbsp;
+                <a href="${FORUM_URL}" style="color:#71717a;text-decoration:none;">Forum</a> &nbsp;•&nbsp;
                 <a href="${baseUrl}/donator" style="color:#71717a;text-decoration:none;">Donator Portal</a>
               </p>
               <p style="margin:0;font-size:10px;color:#d4d4d8;line-height:1.4;">

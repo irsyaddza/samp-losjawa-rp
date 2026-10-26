@@ -34,14 +34,10 @@ SQL_Connect()
 	{
 		printf("[SQL] Connection to \"%s\" passed!", SQL_HOSTNAME);
 
-		// Ensure Hunger & Thirst columns exist in characters table
-		mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `Hunger` INT(11) NOT NULL DEFAULT '100';");
-		mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `Thirst` INT(11) NOT NULL DEFAULT '100';");
-
 		// Ensure server_settings table exists
 		mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `server_settings` (" \
 			"`id` INT(11) NOT NULL PRIMARY KEY DEFAULT '1'," \
-			"`web_url` VARCHAR(128) NOT NULL DEFAULT 'https://ucp.rusdi-bot.site'," \
+			"`web_url` VARCHAR(128) NOT NULL DEFAULT '" SERVER_UCP "'," \
 			"`server_mode` VARCHAR(64) NOT NULL DEFAULT 'LJ:RP 0.1.0'" \
 		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;", "OnServerSettingsTableInit", "");
 
@@ -84,7 +80,8 @@ SQL_Connect()
 forward OnServerSettingsTableInit();
 public OnServerSettingsTableInit()
 {
-	mysql_tquery(dbCon, "INSERT IGNORE INTO `server_settings` (`id`, `web_url`, `server_mode`) VALUES (1, 'https://ucp.rusdi-bot.site', 'LJ:RP 0.1.0');");
+	mysql_tquery(dbCon, "INSERT IGNORE INTO `server_settings` (`id`, `web_url`, `server_mode`) VALUES (1, '" SERVER_UCP "', 'LJ:RP 0.1.0');");
+	mysql_tquery(dbCon, "UPDATE `server_settings` SET `web_url` = '" SERVER_UCP "' WHERE `id` = 1 AND `web_url` IN ('https://ucp.rusdi-bot.site', 'http://ucp.rusdi-bot.site');");
 	mysql_tquery(dbCon, "SELECT * FROM `server_settings` WHERE `id` = 1 LIMIT 1", "LoadServerSettings", "");
 	return 1;
 }
@@ -138,10 +135,7 @@ SQL_LoadCharacters(playerid)
 
 SQL_CreateCharacter(playerid, const character[])
 {
-	new query[300], phoneNumber = randomEx(100000, 999999);
-	
-	mysql_format(dbCon, query, sizeof(query), "INSERT INTO `characters` (master, char_name, PhoneNumbr, Activated) VALUES (%d, '%e', %d, 1)", AccountData[playerid][aUserid], character, phoneNumber);
-    mysql_tquery(dbCon, query, "OnQueryFinished", "dd", playerid, THREAD_CREATE_CHARACTER);
+	CharacterCreate_Start(playerid, AccountData[playerid][aUserid], AccountData[playerid][aUsername], character, 0, 0, 0);
 }
 
 SQL_AttemptLogin(playerid, const password[])

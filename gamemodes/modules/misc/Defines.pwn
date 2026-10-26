@@ -15,6 +15,7 @@
 #define FULL_SKILL		3
 
 #define MAX_SERVER_HEALTH (200.0)
+#define DEATH_WAIT_SECONDS (60)
 #define MAX_SCENES 50
 #define MAX_COOLDOWNS 3
 #define MAX_SIGNALTOWER 60
@@ -69,6 +70,10 @@
 #define PH_OUTGOING 0
 #define PH_INCOMING 1
 #define PH_MISSED 	2
+
+#define PHONE_NUMBER_MIN 100000
+#define PHONE_NUMBER_MAX 999999
+#define PHONE_ASSIGN_ATTEMPTS 20
 
 // Main configuration
 #define TollCost (50) 					// How much it costs to pass the tolls

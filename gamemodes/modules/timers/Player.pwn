@@ -58,6 +58,14 @@ ptask Players[1000](i)
 
 	new playerState = GetPlayerState(i), vehicleid = GetPlayerVehicleID(i), timestamp = gettime();
 
+	if(LastSave[i] == 0) LastSave[i] = timestamp;
+
+	if(timestamp - LastSave[i] >= 300)
+	{
+		SQL_SaveCharacter(i, false);
+		LastSave[i] = timestamp;
+	}
+
 	PlayerData[i][pPlayingSeconds]++;
 
 	if(PhoneOpen{i})
@@ -248,6 +256,17 @@ ptask Players[1000](i)
 		}
 	}
 
+	if((PlayerData[i][pInjured] || DeathMode{i}) && DeathTimer[i] > 0 && h_times[i] <= 0)
+	{
+	    new deathMsg[128];
+
+	    if(DeathMode{i}) format(deathMsg, sizeof(deathMsg), "~r~DEAD~n~~w~Respawn in ~y~%d~w~ seconds", DeathTimer[i]);
+	    else if(KnockedOut{i}) format(deathMsg, sizeof(deathMsg), "~b~KNOCKED OUT~n~~w~Wait ~y~%d~w~ seconds, then /helpup", DeathTimer[i]);
+	    else format(deathMsg, sizeof(deathMsg), "~r~WOUNDED~n~~w~Wait ~y~%d~w~ seconds, then /acceptdeath", DeathTimer[i]);
+
+	    ShowPlayerFooter(i, deathMsg, 1200);
+	}
+
 	//unscrambling
 	if(h_times[i] > 0)
 	{
@@ -392,20 +411,20 @@ ptask Players[1000](i)
 			SendClientMessage(i, COLOR_LIGHTRED, "[WITHDRAWAL] Your body is experiencing mild tremors due to high drug tolerance...");
 		}
 
-	// Hunger & Thirst Decay (Every 180s = -2% Hunger, Every 120s = -3% Thirst)
-	if(PlayerData[i][pPlayingSeconds] % 180 == 0)
+	// Hunger & Thirst Decay (Every 300s = -1% Hunger, Every 180s = -1% Thirst)
+	if(PlayerData[i][pPlayingSeconds] % 300 == 0)
 	{
 		if(PlayerData[i][pHunger] > 0)
 		{
-			PlayerData[i][pHunger] -= 2;
+			PlayerData[i][pHunger] -= 1;
 			if(PlayerData[i][pHunger] < 0) PlayerData[i][pHunger] = 0;
 		}
 	}
-	if(PlayerData[i][pPlayingSeconds] % 120 == 0)
+	if(PlayerData[i][pPlayingSeconds] % 180 == 0)
 	{
 		if(PlayerData[i][pThirst] > 0)
 		{
-			PlayerData[i][pThirst] -= 3;
+			PlayerData[i][pThirst] -= 1;
 			if(PlayerData[i][pThirst] < 0) PlayerData[i][pThirst] = 0;
 		}
 	}

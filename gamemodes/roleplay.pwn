@@ -1134,6 +1134,7 @@ new nearApartment_var[MAX_PLAYERS];
 new PropertyViewPage[MAX_PLAYERS];
 new PropertyViewPageIndexes[30][2];
 new TutorialDelay[MAX_PLAYERS];   // countdown seconds remaining for tutorial auto-advance
+new LastSave[MAX_PLAYERS];        // last periodic character autosave (unix time)
 
 new
 	pToAccept[MAX_PLAYERS],
@@ -2001,6 +2002,7 @@ new Iterator:sv_activevehicles<MAX_VEHICLES>;
 #include "modules/system/SkinTest.pwn"
 #include "modules/VehicleParts.pwn"
 #include "modules/timers/Server.pwn"
+forward FinishTutorial(playerid);
 forward RefreshTutorial(playerid);
 #include "modules/timers/Player.pwn"
 #include "modules/timers/Vehicle.pwn"
@@ -2154,6 +2156,12 @@ public OnGameModeInit()
 
 public OnGameModeExit()
 {
+	// Best effort on unexpected shutdown; the periodic autosave is the primary guard.
+	foreach (new i : Player)
+	{
+		if(SQL_IsLogged(i)) SQL_SaveCharacter(i, true);
+	}
+
 	mysql_close(dbCon);
 	DestroyHudV2GlobalTDs();
 
@@ -2790,7 +2798,7 @@ public OnPlayerGiveDamage(playerid, damagedid, Float: amount, weaponid, bodypart
 
 			if(health < 1)
 			{
-	   			DeathTimer[damagedid] = 120;
+				DeathTimer[damagedid] = DEATH_WAIT_SECONDS;
 				PlayerData[damagedid][pInjured] = 1;
 				PlayerData[damagedid][pInterior] = GetPlayerInterior(damagedid);
 				PlayerData[damagedid][pWorld] = GetPlayerVirtualWorld(damagedid);
@@ -2956,7 +2964,8 @@ public e_COMMAND_ERRORS:OnPlayerCommandReceived(playerid, cmdtext[], e_COMMAND_E
 
 	if(PlayerData[playerid][pTutorialStep])
 	{
-		return COMMAND_DENIED;		
+		if(strcmp(cmdtext, "/skiptutorial", true) == 0) return COMMAND_OK;
+		return COMMAND_DENIED;
 	}
 
 	return COMMAND_OK;
@@ -4476,6 +4485,7 @@ ResetPlayer(playerid)
 ResetStatistics(playerid) // Clear player Stats
 {
 	PlayerData[playerid][pAdmin] = 0;
+	LastSave[playerid] = 0;
 
     //master account data
 	AccountData[playerid][aConnectionID] = 0;
@@ -4803,7 +4813,7 @@ ResetStatistics(playerid) // Clear player Stats
 	gLastCar[playerid] = 0;
 	SafeTime[playerid] = 120;
 	DeathMode{playerid} = false;
-	DeathTimer[playerid] = 120;
+	DeathTimer[playerid] = DEATH_WAIT_SECONDS;
     TaxiDuty{playerid} = false;
 	TaxiFare{playerid} = 0;
 	TaxiStart{playerid} = false;
@@ -5011,11 +5021,202 @@ ResetStatistics(playerid) // Clear player Stats
 	format(GraffitiFont[playerid], 24, "Arial");
 }
 
-TerminateConnection(playerid, reason)
+CleanupCharacterWorldState(playerid, bool:disconnecting = false)
 {
 	if(Unpackaging{playerid}) KillTimer(UnpackageTimer[playerid]);
+	if(selfie_timer[playerid]) KillTimer(selfie_timer[playerid]);
+	if(calltimer[playerid]) KillTimer(calltimer[playerid]);
+	if(smstimer[playerid]) KillTimer(smstimer[playerid]);
+	if(PlayerData[playerid][pShowFooter]) KillTimer(PlayerData[playerid][pFooterTimer]);
+	if(PlayerData[playerid][pFreeze]) KillTimer(PlayerData[playerid][pFreezeTimer]);
 
 	RemovePrisonLabel(playerid);
+
+	if(PlayerData[playerid][pInTuning]) Tuning_ExitDisplay(playerid, disconnecting);
+
+	if(ReplacingGraffiti{playerid}) KillTimer(spraytimer[playerid]);
+
+	if(HelpingPlayer[playerid] != INVALID_PLAYER_ID)
+	{
+		new userid = HelpingPlayer[playerid];
+
+		if(!KnockedOut{playerid})
+		{
+			KillTimer(HelpUpTimer[userid]);
+			HelpupStage[userid] = 0;
+
+			if(IsValidDynamic3DTextLabel(KnockoutLabel[userid])) DestroyDynamic3DTextLabel(KnockoutLabel[userid]);
+		}
+		else
+		{
+			KillTimer(HelpUpTimer[playerid]);
+			HelpupStage[playerid] = 0;
+
+			if(IsValidDynamic3DTextLabel(KnockoutLabel[playerid])) DestroyDynamic3DTextLabel(KnockoutLabel[playerid]);
+		}
+
+		HelpingPlayer[userid] = INVALID_PLAYER_ID;
+		HelpingPlayer[playerid] = INVALID_PLAYER_ID;
+	}
+
+	if(TaxiMoney[playerid] > 0 && IsPlayerInAnyVehicle(playerid))
+	{
+		gPassengerCar[playerid] = GetPlayerVehicleID(playerid);
+		ChargePerson(playerid);
+	}
+
+	if(BoomboxData[playerid][boomboxPlaced])
+	{
+		Boombox_Destroy(playerid);
+
+		foreach (new i : Player)
+		{
+			if(grantboombox[i] == playerid)
+			{
+				grantboombox[i] = INVALID_PLAYER_ID;
+			}
+		}
+	}
+
+	if(BreakingIn[playerid] != -1)
+	{
+		new breakingcar = BreakingIn[playerid];
+
+		CancelVehicleBreakin(breakingcar);
+
+		if(IsValidVehicle(breakingcar))
+		{
+			new
+				engine,
+				lights,
+				alarm,
+				doors,
+				bonnet,
+				boot,
+				objective;
+
+			GetVehicleParamsEx(breakingcar, engine, lights, alarm, doors, bonnet, boot, objective);
+			SetVehicleParamsEx(breakingcar, engine, lights, 0, doors, bonnet, boot, 0);
+		}
+	}
+
+	ExitSettingVehicle(playerid);
+
+	new callerid = PlayerData[playerid][pCallConnect];
+
+	if(callerid != INVALID_PLAYER_ID)
+	{
+		SendClientMessage(callerid, COLOR_GRAD2, "[ ! ] They hung up (disconnected)");
+
+		RenderPlayerPhone(callerid, 0, 0);
+
+		if(GetPlayerSpecialAction(callerid) == SPECIAL_ACTION_USECELLPHONE) SetPlayerSpecialAction(callerid, SPECIAL_ACTION_STOPUSECELLPHONE);
+
+		PlayerData[callerid][pCallConnect] = INVALID_PLAYER_ID;
+		PlayerData[playerid][pCallConnect] = INVALID_PLAYER_ID;
+	}
+	return true;
+}
+
+ResetCharacterState(playerid)
+{
+	new
+		admin = PlayerData[playerid][pAdmin],
+		connectionid = AccountData[playerid][aConnectionID],
+		userid = AccountData[playerid][aUserid],
+		username[MAX_PLAYER_NAME],
+		email[MAX_PLAYER_NAME],
+		secretword[MAX_PLAYER_NAME],
+		combined0 = AccountData[playerid][aCombinedLevel][0],
+		combined1 = AccountData[playerid][aCombinedLevel][1],
+		serial[50],
+		lastserial[50],
+		lastlogin = LastLogin[playerid],
+		connectstamp = ConnectStamp[playerid],
+		loginattempts = LoginAttempts[playerid],
+		bool:accountchecked = AccountChecked{playerid}
+	;
+
+	format(username, sizeof(username), "%s", AccountData[playerid][aUsername]);
+	format(email, sizeof(email), "%s", AccountData[playerid][aEmail]);
+	format(secretword, sizeof(secretword), "%s", AccountData[playerid][aSecretWord]);
+	format(serial, sizeof(serial), "%s", PlayerSerial[playerid]);
+	format(lastserial, sizeof(lastserial), "%s", LastSerial[playerid]);
+
+	ResetStatistics(playerid);
+	ResetPlayerWeapons(playerid);
+
+	PlayerData[playerid][pAdmin] = admin;
+	AccountData[playerid][aConnectionID] = connectionid;
+	AccountData[playerid][aUserid] = userid;
+	format(AccountData[playerid][aUsername], MAX_PLAYER_NAME, "%s", username);
+	format(AccountData[playerid][aEmail], MAX_PLAYER_NAME, "%s", email);
+	format(AccountData[playerid][aSecretWord], MAX_PLAYER_NAME, "%s", secretword);
+	AccountData[playerid][aCombinedLevel][0] = combined0;
+	AccountData[playerid][aCombinedLevel][1] = combined1;
+	format(PlayerSerial[playerid], 50, "%s", serial);
+	format(LastSerial[playerid], 50, "%s", lastserial);
+	LastLogin[playerid] = lastlogin;
+	ConnectStamp[playerid] = connectstamp;
+	LoginAttempts[playerid] = loginattempts;
+	AccountChecked{playerid} = accountchecked;
+
+	PlayerData[playerid][pDBRank] = 0;
+	PlayerData[playerid][pSWATRank] = 0;
+	PlayerData[playerid][pEMSRank] = 0;
+	PlayerData[playerid][pFireRank] = 0;
+	PlayerData[playerid][pFactionSpawn] = 0;
+	pIllegalJob[playerid] = 0;
+	PlayerData[playerid][pPbiskey] = -1;
+	PlayerData[playerid][pCarLic] = 0;
+	PlayerData[playerid][pWepLic] = 0;
+	PlayerData[playerid][pCCWLic] = 0;
+	PlayerData[playerid][pFlyLic] = 0;
+	PlayerData[playerid][pMedLic] = 0;
+	PlayerData[playerid][pTruckLic] = 0;
+	PlayerData[playerid][pBusJobDelay] = 0;
+	PlayerData[playerid][pSweeperJobDelay] = 0;
+	PlayerData[playerid][pFarmerRank] = 1;
+	PlayerData[playerid][pFarmerExp] = 0;
+	PlayerData[playerid][pPrisonTimes] = 0;
+	PlayerData[playerid][pJailTimes] = 0;
+	PlayerData[playerid][pActiveListings] = 0;
+	PlayerData[playerid][pDrugAmountUsed] = 0.0;
+	PlayerData[playerid][pDrugDuration] = 0;
+	PlayerData[playerid][pNarcan] = 0;
+	PlayerData[playerid][pMedkits] = 0;
+	PlayerData[playerid][pOverdosing] = 0;
+	PlayerData[playerid][pOverdoseTimer] = 0;
+	PlayerData[playerid][pTuningCategoryID] = 0;
+	PlayerData[playerid][pTuningCount] = 0;
+	PlayerData[playerid][pTuningComponent] = 0;
+	PlayerData[playerid][pCallCost] = 0;
+	PlayerData[playerid][pHelpmeMessage][0] = EOS;
+	PlayerData[playerid][pAnimation] = 0;
+	PlayerData[playerid][pHunger] = 100;
+	PlayerData[playerid][pThirst] = 100;
+	PlayerData[playerid][pInTuning] = 0;
+	PlayerData[playerid][pRadio] = 0;
+	PlayerData[playerid][pRChannel] = 0;
+	PlayerData[playerid][pRSlot] = 0;
+	PlayerData[playerid][pLoginToggle] = 0;
+	PlayerData[playerid][pLoginSound] = 0;
+	PlayerData[playerid][pLoginNotify] = 0;
+	PlayerData[playerid][pSprayBanned] = 0;
+	LessLethalActive{playerid} = false;
+
+	format(PlayerData[playerid][pMarriedTo], MAX_PLAYER_NAME, "None");
+
+	for(new i = 0; i < 10; i++) PlayerData[playerid][pDrugTolerance][i] = 0;
+	for(new i = 0; i < 12; i++) PlayerData[playerid][ItemCache][i] = -1;
+
+	LastSave[playerid] = 0;
+	return true;
+}
+
+TerminateConnection(playerid, reason)
+{
+	CleanupCharacterWorldState(playerid, true);
 
 	new vehicleid, carid;
 
@@ -5076,87 +5277,9 @@ TerminateConnection(playerid, reason)
 		}
 	}
 
-    if(PlayerData[playerid][pInTuning]) Tuning_ExitDisplay(playerid, true);
-
-	if(ReplacingGraffiti{playerid})
-	{
-	    KillTimer(spraytimer[playerid]);
-	}
-
-	if(HelpingPlayer[playerid] != INVALID_PLAYER_ID)
-	{
-	    new userid = HelpingPlayer[playerid];
-
-	    if(!KnockedOut{playerid})
-	    {
-	        KillTimer(HelpUpTimer[userid]);
-
-	        HelpupStage[userid] = 0;
-			
-			if(IsValidDynamic3DTextLabel(KnockoutLabel[userid])) DestroyDynamic3DTextLabel(KnockoutLabel[userid]);
-	    }
-	    else
-	    {
-	        KillTimer(HelpUpTimer[playerid]);
-
-	        HelpupStage[playerid] = 0;
-
-			if(IsValidDynamic3DTextLabel(KnockoutLabel[playerid])) DestroyDynamic3DTextLabel(KnockoutLabel[playerid]);
-	    }
-
-	    HelpingPlayer[userid] = INVALID_PLAYER_ID;
-	    HelpingPlayer[playerid] = INVALID_PLAYER_ID;
-	}	
-
-	if(TaxiMoney[playerid] > 0 && IsPlayerInAnyVehicle(playerid))
-	{
-    	gPassengerCar[playerid] = GetPlayerVehicleID(playerid);
-
-		ChargePerson(playerid);
-	}
-
-	if(BoomboxData[playerid][boomboxPlaced])
-	{
-		Boombox_Destroy(playerid);
-
-		foreach (new i : Player)
-		{
-			if(grantboombox[i] == playerid)
-			{
-				grantboombox[i] = INVALID_PLAYER_ID;
-			}
-		}
-	}
-
-	if(BreakingIn[playerid] != -1)
-	{
-		new breakingcar = BreakingIn[playerid];
-
-		CancelVehicleBreakin(breakingcar);
-
-		if(IsValidVehicle(breakingcar))
-		{
-			new
-				engine,
-				lights,
-				alarm,
-				doors,
-				bonnet,
-				boot,
-				objective;
-
-			GetVehicleParamsEx(breakingcar, engine, lights, alarm, doors, bonnet, boot, objective);
-			SetVehicleParamsEx(breakingcar, engine, lights, 0, doors, bonnet, boot, 0);	
-		}
-	}
-
 	if(AdminDuty{playerid}) SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmCmd: %s is now off admin duty. (disconnected)", AccountName(playerid));
 
 	if(TesterDuty{playerid}) SendTesterAlert(TEAM_TESTER_COLOR, "[TESTER] {FFBB00}%s is now off tester duty! (disconnected)", AccountName(playerid));
-
-	if(PlayerData[playerid][pShowFooter]) KillTimer(PlayerData[playerid][pFooterTimer]);
-
-	if(PlayerData[playerid][pFreeze]) KillTimer(PlayerData[playerid][pFreezeTimer]);
 
 	foreach (new i : Player)
 	{
@@ -5189,22 +5312,6 @@ TerminateConnection(playerid, reason)
 			prToAccept[i] = 0;
 			tToAccept[i] = 0;
 		}
-	}
-
-    ExitSettingVehicle(playerid);
-
-	new callerid = PlayerData[playerid][pCallConnect];
-
-	if(callerid != INVALID_PLAYER_ID)
-	{
-		SendClientMessage(callerid, COLOR_GRAD2, "[ ! ] They hung up (disconnected)");
-
-		RenderPlayerPhone(callerid, 0, 0);
-
-		if(GetPlayerSpecialAction(callerid) == SPECIAL_ACTION_USECELLPHONE) SetPlayerSpecialAction(callerid, SPECIAL_ACTION_STOPUSECELLPHONE);
-
-	   	PlayerData[callerid][pCallConnect] = INVALID_PLAYER_ID;
-	   	PlayerData[playerid][pCallConnect] = INVALID_PLAYER_ID;
 	}
 
 	if(AccountData[playerid][aUserid] > 0)
@@ -5246,8 +5353,11 @@ Relog_Player(playerid)
 	if(!SQL_IsLogged(playerid) || AccountData[playerid][aUserid] <= 0)
 		return SendErrorMessage(playerid, "You are not logged in.");
 
-	// 1. Save current character data, then load the character list after it commits
-	SQL_SaveCharacter(playerid, false, true);
+	// 1. Clear world state first so the save captures the cleaned position.
+	CleanupCharacterWorldState(playerid, false);
+
+	// 1b. Save current character data, then load the character list after it commits
+	SQL_SaveCharacter(playerid, true, true);
 
 	// 2. Exit any vehicle
 	if(IsPlayerInAnyVehicle(playerid))
@@ -5294,12 +5404,16 @@ Relog_Player(playerid)
 		}
 	}
 
-	// 3. Clear weapons, money display and animations
-	ResetPlayerWeapons(playerid);
-	ResetPlayerMoney(playerid);
+	// 3. Destroy HudV2 player textdraws before ResetCharacterState clears
+	//    HUD_Created; otherwise the old textdraws stay on screen and stack
+	//    with the new set created after character selection.
+	HideHudV2Full(playerid);
+	DestroyHudV2PlayerTDs(playerid);
+	HUD_Created{playerid} = false;
+
+	// 4. Clear animations and attached objects; the generic reset handles the rest
 	ClearAnimations(playerid);
 
-	// Remove all attached objects (weapons on back, accessories, etc.)
 	for(new i = 0; i < 10; i++)
 	{
 		if(IsPlayerAttachedObjectSlotUsed(playerid, i))
@@ -5308,92 +5422,15 @@ Relog_Player(playerid)
 		}
 	}
 
-	// Reset internal weapon variables so server doesn't think they still hold weapons
-	for(new i = 0; i < 13; i++)
-	{
-		PlayerData[playerid][pGuns][i] = 0;
-	}
+	ResetCharacterState(playerid);
 
-	// 4. Reset in-game flags
-	Spawned{playerid} = false;
-	LoggedIn{playerid} = false;
-	SafeTime[playerid] = 120;
-
-	// 5. Mark character as not selected (pID = -1 means "at char select screen")
-	PlayerData[playerid][pID] = -1;
-
-	// Reset character-specific data so nothing carries over to next character
-	PlayerData[playerid][pFaction] = -1;
-	PlayerData[playerid][pFactionID] = -1;
-	PlayerData[playerid][pFactionRank] = 0;
-	PlayerData[playerid][pFactionEdit] = -1;
-	PlayerData[playerid][pDBRank] = 0;
-	PlayerData[playerid][pSWATRank] = 0;
-	PlayerData[playerid][pEMSRank] = 0;
-	PlayerData[playerid][pFireRank] = 0;
-	PlayerData[playerid][pSwat] = false;
-	PlayerData[playerid][pFireman] = false;
-	PlayerData[playerid][pJob] = 0;
-	PlayerData[playerid][pJobRank] = 0;
-	PlayerData[playerid][pCareer] = 0;
-	// Note: pAdmin is account-level (loaded from accounts table on connect), so do NOT reset it on relog
-	PlayerData[playerid][pDonateRank] = 0;
-	PlayerData[playerid][pDonateUnix] = 0;
-	PlayerData[playerid][pHouseKey] = -1;
-	PlayerData[playerid][pComplexKey] = -1;
-	PlayerData[playerid][pPbiskey] = -1;
-	PlayerData[playerid][pPCarkey] = 9999;
-	PlayerData[playerid][pMarriedTo][0] = EOS;
-	PlayerData[playerid][pWeapon][0] = 0;
-	PlayerData[playerid][pWeapon][1] = 0;
-	PlayerData[playerid][pWeapon][2] = 0;
-	PlayerData[playerid][pAmmunation][0] = 0;
-	PlayerData[playerid][pAmmunation][1] = 0;
-	PlayerData[playerid][pAmmunation][2] = 0;
-	PlayerData[playerid][pCash] = 0;
-	PlayerData[playerid][pAccount] = 0;
-	PlayerData[playerid][pSavings] = 0;
-	PlayerData[playerid][pSavingsCollect] = 0;
-	PlayerData[playerid][pLevel] = 1;
-	PlayerData[playerid][pExp] = 0;
-	PlayerData[playerid][pExpCounter] = 0;
-	PlayerData[playerid][pPlayingSeconds] = 0;
-	PlayerData[playerid][pPnumber] = 0;
-	PlayerData[playerid][pPhoneModel] = 0;
-	PlayerData[playerid][pInjured] = 0;
-	PlayerData[playerid][pJailed] = 0;
-	PlayerData[playerid][pSentenceTime] = 0;
-	PlayerData[playerid][pPrimaryLicense] = 0;
-	PlayerData[playerid][pSecondaryLicense] = 0;
-	PlayerData[playerid][pCCWLic] = 0;
-	PlayerData[playerid][pWepLic] = 0;
-	PlayerData[playerid][pCarLic] = 0;
-	PlayerData[playerid][pFlyLic] = 0;
-	PlayerData[playerid][pMedLic] = 0;
-	PlayerData[playerid][pTruckLic] = 0;
-	PlayerData[playerid][pOnDuty] = 0;
-	PlayerData[playerid][pOnDutySkin] = 0;
-	PlayerData[playerid][pFavUniform] = 0;
-	pIllegalJob[playerid] = 0;
-	MedicBill[playerid] = 0;
-	TotalPlayerDamages[playerid] = 0;
-	DeathReason[playerid] = 0;
-	AdminDuty{playerid} = false;
-	TesterDuty{playerid} = false;
-	KnockedOut{playerid} = false;
-	ForceKnockout{playerid} = false;
-	TazerActive{playerid} = false;
-	BeanbagActive{playerid} = false;
-	LessLethalActive{playerid} = false;
-	TagColor{playerid} = false;
-
-	// 6. Restore player name back to account name (strip character name)
+	// 5. Restore player name back to account name (strip character name)
 	SetPlayerName(playerid, AccountData[playerid][aUsername]);
 
-	// 7. Put player back in spectate mode so they don't appear in-world
+	// 6. Put player back in spectate mode so they don't appear in-world
 	TogglePlayerSpectating(playerid, true);
 
-	// 8. Cancel any active TextDraw selection mode
+	// 7. Cancel any active TextDraw selection mode
 	CancelSelectTextDraw(playerid);
 
 	// Destroy any existing selection actors to prevent duplication
@@ -5406,22 +5443,14 @@ Relog_Player(playerid)
 		}
 	}
 
-	// 9. Destroy ALL 13 old CharSelectionTD slots so they don't stack up
+	// 8. Destroy ALL 13 old CharSelectionTD slots so they don't stack up
 	for(new i = 0; i < 13; ++i)
 	{
 		PlayerTextDrawDestroy(playerid, CharSelectionTD[playerid][i]);
 		CharSelectionTD[playerid][i] = PlayerText:INVALID_TEXT_DRAW;
 	}
 
-	// 10. Destroy HudV2 player textdraws to prevent duplication on re-spawn
-	if(HUD_Created{playerid})
-	{
-		HideHudV2Full(playerid);
-		DestroyHudV2PlayerTDs(playerid);
-		HUD_Created{playerid} = false;
-	}
-
-	// 11. Character list will be loaded by the delayed callback
+	// 9. Character list will be loaded by the delayed callback
 	//     (OnCharacterSavedThenLoadList → 5s → OnRelogLoadCharacterList)
 	//     to ensure all side-table saves have committed first.
 	//     Do NOT call SQL_LoadCharacters here — a second load would
@@ -5447,8 +5476,8 @@ SQL_SaveCharacter(playerid, bool:quit = true, bool:thenLoadList = false)
 	    adminduty,
 	    testerduty,
 	    hudtoggled,
-	    bool:swap_weapons = false,
-	    temp_wep[3][2]
+	    save_wep[3],
+	    save_ammo[3]
 	;
 
 	PlayerData[playerid][pInterior] = GetPlayerInterior(playerid);
@@ -5462,29 +5491,37 @@ SQL_SaveCharacter(playerid, bool:quit = true, bool:thenLoadList = false)
 	{
 	    PlayerData[playerid][pOnDutySkin] = GetPlayerSkin(playerid);
 
-		if(quit)
-		{
-        	RestorePlayerWeapons(playerid, false);
-		}
-		else
-		{
-			swap_weapons = true;
-			for(new i = 0; i < 3; i++)
-			{
-				temp_wep[i][0] = PlayerData[playerid][pWeapon][i];
-				temp_wep[i][1] = PlayerData[playerid][pAmmunation][i];
-
-				PlayerData[playerid][pWeapon][i] = TempWeapons[playerid][i][0];
-				PlayerData[playerid][pAmmunation][i] = TempWeapons[playerid][i][1];
-			}
-		}
-
-		if(!PlayerData[playerid][pTimeout]) PlayerData[playerid][pArmour] = 0;
+		if(quit && !PlayerData[playerid][pTimeout]) PlayerData[playerid][pArmour] = 0;
 	}
 
-	if(ParticleSettings[playerid][usingParticle])
+	// Periodic saves must not mutate transient duty/particle state.
+	if(quit)
 	{
-        RestorePlayerWeapons(playerid, false);
+		if(PlayerData[playerid][pOnDuty] || ParticleSettings[playerid][usingParticle])
+			RestorePlayerWeapons(playerid, false);
+
+		for(new i = 0; i < 3; i++)
+		{
+			save_wep[i] = PlayerData[playerid][pWeapon][i];
+			save_ammo[i] = PlayerData[playerid][pAmmunation][i];
+		}
+	}
+	else
+	{
+		for(new i = 0; i < 3; i++)
+		{
+			save_wep[i] = PlayerData[playerid][pWeapon][i];
+			save_ammo[i] = PlayerData[playerid][pAmmunation][i];
+		}
+
+		if(PlayerData[playerid][pOnDuty] || ParticleSettings[playerid][usingParticle])
+		{
+			for(new i = 0; i < 3; i++)
+			{
+				save_wep[i] = TempWeapons[playerid][i][0];
+				save_ammo[i] = TempWeapons[playerid][i][1];
+			}
+		}
 	}
 
 	if(KnockedOut{playerid})
@@ -5505,7 +5542,7 @@ SQL_SaveCharacter(playerid, bool:quit = true, bool:thenLoadList = false)
 
 	    if(TesterDuty{playerid}) testerduty = 1;
 	}
-	else
+	else if(quit)
 	{
 	    if(PlayerData[playerid][pHasMask])
 	    {
@@ -5525,12 +5562,12 @@ SQL_SaveCharacter(playerid, bool:quit = true, bool:thenLoadList = false)
 		PlayerData[playerid][pInterior],
 		PlayerData[playerid][pWorld],
 		PlayerData[playerid][pLocal],
-		PlayerData[playerid][pWeapon][0],
-		PlayerData[playerid][pAmmunation][0],
-		PlayerData[playerid][pWeapon][1],
-		PlayerData[playerid][pAmmunation][1],
-		PlayerData[playerid][pWeapon][2],
-		PlayerData[playerid][pAmmunation][2]
+		save_wep[0],
+		save_ammo[0],
+		save_wep[1],
+		save_ammo[1],
+		save_wep[2],
+		save_ammo[2]
 	);
 
 	format(query, sizeof(query), "%s, `Tutorial` = '%d', `Model` = '%d', `PhoneNumbr` = '%d', `PhoneModel` = '%d', `SpawnPoint` = '%d', `FactionSpawn` = '%d', `Level` = '%d', `Exp` = '%d', `ExpCounter` = '%d', `PayDay` = '%d', `PayDayHad` = '%d', `PayCheck` = '%d', `ChequeCash` = '%d', `Injured` = '%d', `playerTimeout` = '%d', `MedicBill` = '%d', `Armour` = '%f', `Health` = '%f', `Hunger` = '%d', `Thirst` = '%d' WHERE `ID` = '%d'",
@@ -5586,7 +5623,7 @@ SQL_SaveCharacter(playerid, bool:quit = true, bool:thenLoadList = false)
 		PlayerData[playerid][pCarLic]
 	);
 
-	format(query, sizeof(query), "%s, `Radio` = '%d', `RadioChannel` = '%d', `RadioSlot` = '%d', `playerJob` = '%d', `playerJobRank` = '%d', `playerCareer` = '%d', `playerHouseKey` = '%d', `playerComplexKey` = '%d', `PlayerBusinessKey` = '%d', `PlayerCarkey` = '%d', `Checkpoint_Type` = '%d', `Checkpoint_X` = '%f', `Checkpoint_Y` = '%f', `Checkpoint_Z` = '%f', `Fishes` = '%d', `SavingsCollect` = '%d', `Online` = '0', `PlayingSeconds` = '%d', `ADPoint` = '%d', `WepLic` = '%d'",
+	format(query, sizeof(query), "%s, `Radio` = '%d', `RadioChannel` = '%d', `RadioSlot` = '%d', `playerJob` = '%d', `playerJobRank` = '%d', `playerCareer` = '%d', `playerHouseKey` = '%d', `playerComplexKey` = '%d', `PlayerBusinessKey` = '%d', `PlayerCarkey` = '%d', `Checkpoint_Type` = '%d', `Checkpoint_X` = '%f', `Checkpoint_Y` = '%f', `Checkpoint_Z` = '%f', `Fishes` = '%d', `SavingsCollect` = '%d', `Online` = '%d', `PlayingSeconds` = '%d', `ADPoint` = '%d', `WepLic` = '%d'",
 	    query,
 	    PlayerData[playerid][pRadio],
 	    PlayerData[playerid][pRChannel],
@@ -5604,6 +5641,7 @@ SQL_SaveCharacter(playerid, bool:quit = true, bool:thenLoadList = false)
 	    PlayerData[playerid][pCP_Z],
 	    PlayerData[playerid][pFishes],
 	    PlayerData[playerid][pSavingsCollect],
+	    quit ? 0 : 1,
 	    PlayerData[playerid][pPlayingSeconds],
 	    PlayerData[playerid][pADPoint],
 	    PlayerData[playerid][pWepLic]
@@ -5642,15 +5680,6 @@ SQL_SaveCharacter(playerid, bool:quit = true, bool:thenLoadList = false)
 	);
 
 	mysql_pquery(dbCon, query);
-
-	if(swap_weapons)
-	{
-		for(new i = 0; i < 3; i++)
-		{
-			PlayerData[playerid][pWeapon][i] = temp_wep[i][0];
-			PlayerData[playerid][pAmmunation][i] = temp_wep[i][1];
-		}
-	}
 
 	//printf("QUERY LENGTH WAS %d", strlen(query));
 
@@ -5880,6 +5909,9 @@ public OnPlayerSpawn(playerid)
 {
 
 	if(!LoggedIn{playerid} || PlayerData[playerid][pID] == -1) return false;
+
+	if(PlayerData[playerid][pPnumber] == 0)
+		Phone_EnsureAssigned(playerid);
 
     if(!Spawned{playerid})
 	{
@@ -6367,7 +6399,7 @@ SetPlayerSpawn(playerid)
 				{
                     AirportSpawn(playerid);
 
-					SendServerMessage(playerid, "Your spawn point is incorrect, please change the spawn point on UCP losjawa-rp.net.");
+					SendServerMessage(playerid, "Your spawn point is incorrect, please change the spawn point on UCP " SERVER_DOMAIN ".");
 				}
 		    }
 
@@ -6700,8 +6732,8 @@ public OnPlayerDeath(playerid, killerid, reason)
 	{
 	    PlayerData[playerid][pHealth] = 150.0;
 
-		SendClientMessage(playerid, COLOR_LIGHTRED, "Looks like you died in our video guide. This may be because of 3rd party mods you have installed.");
-		SendClientMessage(playerid, COLOR_LIGHTRED, "We recommend removing mods thay may cause this for the duration of the video guide.");
+		SendClientMessage(playerid, COLOR_LIGHTRED, "Looks like you died during the tutorial. This may be because of 3rd party mods you have installed.");
+		SendClientMessage(playerid, COLOR_LIGHTRED, "We recommend removing mods that may cause this for the duration of the tutorial.");
 		return true;
 	}
 
@@ -6729,7 +6761,7 @@ public OnPlayerDeath(playerid, killerid, reason)
 					PlayerData[playerid][pPos][2] = z;
 				}
 				GetPlayerFacingAngle(playerid, PlayerData[playerid][pPos][3]);
-				DeathTimer[playerid] = 120;
+				DeathTimer[playerid] = DEATH_WAIT_SECONDS;
 		    }
 		    else
 			{
@@ -7159,7 +7191,7 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
 
 		if(!HasDonatorRank(playerid, 1) && (model == 481 || model == 510)) // BMX Permission
 		{
-			SendServerMessage(playerid, "You don't have BMX permission. See our premium packages at losjawa-rp.net");
+			SendServerMessage(playerid, "You don't have BMX permission. See our premium packages at " SERVER_DOMAIN);
 			RemovePlayerFromVehicle(playerid);
 		}
 
@@ -8861,161 +8893,86 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 	return true;
 }
 
+FinishTutorial(playerid)
+{
+    if(!PlayerData[playerid][pTutorialStep]) return false;
+
+    FinishedTutorial{playerid} = true;
+    PlayerData[playerid][pTutorialStep] = 0;
+    PlayerData[playerid][pTutorial] = 1;
+    PlayerData[playerid][pPos][0] = 1643.0010;
+    PlayerData[playerid][pPos][1] = -2331.7056;
+    PlayerData[playerid][pPos][2] = -2.6797;
+    PlayerData[playerid][pPos][3] = 359.8919;
+    PlayerData[playerid][pSHealth] = 50.0;
+    PlayerData[playerid][pHealth] = 150.0;
+
+    if(!PlayerData[playerid][pPnumber]) Phone_EnsureAssigned(playerid);
+
+    SetSpawnInfo(playerid, NO_TEAM, PlayerData[playerid][pModel], PlayerData[playerid][pPos][0], PlayerData[playerid][pPos][1], PlayerData[playerid][pPos][2], PlayerData[playerid][pPos][3], 0, 0, 0, 0, 0, 0);
+
+    TogglePlayerSpectating(playerid, false);
+    SetPlayerPos(playerid, 1643.0010, -2331.7056, -2.6797);
+    SetPlayerFacingAngle(playerid, 359.8919);
+    SetCameraBehindPlayer(playerid);
+    SetPlayerVirtualWorld(playerid, 0);
+    TogglePlayerControllable(playerid, true);
+
+    SendClientMessageEx(playerid, COLOR_LIGHTRED, "Welcome to Los Jawa Roleplay, %s.", ReturnName(playerid, 0));
+    return true;
+}
+
 RefreshTutorial(playerid)
 {
-    if(PlayerData[playerid][pTutorialStep])
+    if(!PlayerData[playerid][pTutorialStep]) return 0;
+
+    TutorialDelay[playerid] = 8;
+    LastTeleport[playerid] = gettime();
+
+    switch(PlayerData[playerid][pTutorialStep])
     {
-		TutorialDelay[playerid] = 5; // countdown: 5 seconds per step
-		LastTeleport[playerid] = gettime();
-
-    	switch(PlayerData[playerid][pTutorialStep])
+        case 1:
         {
-            case 1:
-            {
-			 	SendClientMessage(playerid, COLOR_WHITE, ">> Welcome to Los Jawa Roleplay!");
-				SendClientMessage(playerid, COLOR_GRAD2, "This video tutorial will guide you for your first steps on Los Jawa-RP.");
-				SendClientMessage(playerid, COLOR_GRAD2, "The tutorial will go through on its own.");
-				SendClientMessage(playerid, COLOR_GRAD2, "We highly recommend you to take your time reading the text in the chat box.");
+            SendClientMessage(playerid, COLOR_WHITE, ">> Welcome to Los Jawa Roleplay!");
+            SendClientMessage(playerid, COLOR_GRAD2, "This short tutorial takes about 30 seconds. Type /skiptutorial at any time to skip.");
+            SendClientMessage(playerid, COLOR_GRAD2, "Use /help for commands, /rules for server rules, and /helpme to ask a tester.");
 
-                InterpolateCameraPos(playerid, 1669.1499,-2328.8406,-3.5769, 1541.1512,-2287.1345,91.9661, 1500, CAMERA_MOVE);
-                InterpolateCameraLookAt(playerid, 1654.4652,-2333.6084,-2.6797, 1623.3582,-2288.0413,77.9914, 1500, CAMERA_MOVE);
-            }
-            case 2:
-            {
-				SendClientMessage(playerid, COLOR_WHITE, ">> First time in Los Santos.");
-			    SendClientMessage(playerid, COLOR_GRAD2, " Welcome to the city of Los Santos, the largest city within the state of San Andreas. ");
-			    SendClientMessage(playerid, COLOR_GRAD2, " You're currently living at the Airport Motel, Untill you find yourself a better place.");
-			    SendClientMessage(playerid, COLOR_GRAD2, " You might want to start with reading today's newspaper, where you can find yourself some helpful information.");
-				SendClientMessage(playerid, COLOR_GRAD2, " The newspaper dispenser is located right next to	the Airport Motel, your current spawn point. ");
-				SendClientMessage(playerid, COLOR_GRAD2, " Go to the 'i' marker and type /newspaper to read.");
+            InterpolateCameraPos(playerid, 1669.1499,-2328.8406,-3.5769, 1541.1512,-2287.1345,91.9661, 1500, CAMERA_MOVE);
+            InterpolateCameraLookAt(playerid, 1654.4652,-2333.6084,-2.6797, 1623.3582,-2288.0413,77.9914, 1500, CAMERA_MOVE);
+        }
+        case 2:
+        {
+            SendClientMessage(playerid, COLOR_WHITE, ">> Getting around");
+            SendClientMessage(playerid, COLOR_GRAD2, "Call a taxi with /call 544, or rent a nearby vehicle with /rentvehicle.");
+            SendClientMessage(playerid, COLOR_GRAD2, "Use /phone for your phone, /stats for your character, and /help for the full command list.");
+            GameTextForPlayer(playerid, "~p~/call 544~w~ for a taxi~n~~y~/rentvehicle~w~ for a rental", 5000, 3);
 
-            	InterpolateCameraPos(playerid, 1541.1512,-2287.1345,91.9661, 1669.1499,-2328.8406,-3.5769, 1500, CAMERA_MOVE);
-           		InterpolateCameraLookAt(playerid, 1623.3582,-2288.0413,77.9914, 1654.4652,-2333.6084,-2.6797, 1500, CAMERA_MOVE);
-            }
-            case 3:
-            {
-			    SendClientMessage(playerid, COLOR_WHITE, ">> Transportation");
-			    SendClientMessage(playerid, COLOR_GRAD2, "In order to move around the city, you will have to get yourself a ride.");
-			    SendClientMessage(playerid, COLOR_GRAD2, "You can either wait for a bus, call a taxi or rent a vehicle for a certain amount of money");
-			    SendClientMessage(playerid, COLOR_GRAD2, "/service taxi for a taxi service, /service bus for a bus service. Rentable cars can be found around the city.");
-			    GameTextForPlayer(playerid, "~p~/service ~w~ to call ~n~ ~y~ Los Santos Public ~n~ ~y~ Transportation Services", 3200, 3);
+            InterpolateCameraPos(playerid, 1541.1512,-2287.1345,91.9661, 1807.2902,-1939.7085,67.2748, 1500, CAMERA_MOVE);
+            InterpolateCameraLookAt(playerid, 1623.3582,-2288.0413,77.9914, 1773.8251,-1902.2825,13.5502, 1500, CAMERA_MOVE);
+        }
+        case 3:
+        {
+            SendClientMessage(playerid, COLOR_WHITE, ">> Jobs & money");
+            SendClientMessage(playerid, COLOR_GRAD2, "Look for a briefcase job point, then type /joinjob.");
+            SendClientMessage(playerid, COLOR_GRAD2, "Use /jobhelp to see your job commands, or /help for other ways to earn money.");
+            GameTextForPlayer(playerid, "~y~Find a job point~n~~p~/joinjob", 5000, 3);
 
-                InterpolateCameraPos(playerid, 1669.1499,-2328.8406,-3.5769, 1807.2902,-1939.7085,67.2748, 1500, CAMERA_MOVE);
-                InterpolateCameraLookAt(playerid, 1654.4652,-2333.6084,-2.6797, 1773.8251,-1902.2825,13.5502, 1500, CAMERA_MOVE);
-            }
-            case 4:
-            {
-				SendClientMessage(playerid, COLOR_WHITE, ">> Live on your own.");
-				SendClientMessage(playerid, COLOR_GRAD2, "When you feel like it's time to move out of the Airport Motel to your own place you should start looking for a new house or another motel.");
-				SendClientMessage(playerid, COLOR_GRAD2, "There are plenty of houses around Los Santos that can be either purchased or rented by anyone in exchange for some money.");
-				SendClientMessage(playerid, COLOR_GRAD2, "There are also a few hotels and motels around the city where you can rent a room for a certain amount of money.");
-				GameTextForPlayer(playerid, "~y~ Idlewood Motel ~n~ ~p~/rent /rentroom", 3200, 3);
-
-                InterpolateCameraPos(playerid, 1807.2902,-1939.7085,67.2748, 2119.4541,-1751.1744,21.5524, 1500, CAMERA_MOVE);
-                InterpolateCameraLookAt(playerid, 1773.8251,-1902.2825,13.5502, 2155.6519,-1776.4888,18.5486, 1500, CAMERA_MOVE);
-            }
-            case 5:
-            {
-			    SendClientMessage(playerid, COLOR_WHITE, ">> Keep a healthy lifestyle.");
-			    SendClientMessage(playerid, COLOR_GRAD2, "Always try to keep yourlife style healthy and eat in time. You will start loosing HP constantly when you character becomes hungry.");
-			    SendClientMessage(playerid, COLOR_GRAD2, "Usage of drugs will possibly lower your HP, increase your hunger level, and even get you sick or killed.");
-			    SendClientMessage(playerid, COLOR_GRAD2, "There are many resturants around the city, where you can eat, increase your HP and lower your hunger level.");
-			    GameTextForPlayer(playerid, "~y~ Willowfield Cluckin' bell ~n~ ~p~ /eat", 3900, 3);
-
-                InterpolateCameraPos(playerid, 2119.4541,-1751.1744,21.5524, 2413.5383, -1885.4564, 23.2313, 1500, CAMERA_MOVE);
-                InterpolateCameraLookAt(playerid, 2155.6519,-1776.4888,18.5486, 2412.8733, -1886.1985, 23.0213, 1500, CAMERA_MOVE);
-            }
-            case 6:
-            {
-			    SendClientMessage(playerid, COLOR_WHITE, ">> Communicate and meet new people.");
-			    SendClientMessage(playerid, COLOR_GRAD2, "Los Santos'society is quite big. There are many kinds of people around with different hobbies and interests.");
-			    SendClientMessage(playerid, COLOR_GRAD2, "You can meet new people around the most populer places in the city. It can either be a club, pub, resturant or anywhere else.");
-			    SendClientMessage(playerid, COLOR_GRAD2, "One of the most popular places, which serves for a meeting place as well as shopping, is the mall");
-				SendClientMessage(playerid, COLOR_GRAD2, "The mall is one of the various hot spots in Los Santos where you can communicate and interact with random people.");
-			    SendClientMessage(playerid, COLOR_GRAD2, "There are plenty of shops in the mall, such as clothes, tools, electronics, Musical instruments and even more.");
-			    SendClientMessage(playerid, COLOR_GRAD2, "You can buy saveable items that can improve your roleplay atmosphere and your character's look.");
-			    GameTextForPlayer(playerid, "~w~ Los Santos Mall", 3900, 3);
-            }
-            case 7:
-            {
-			    SendClientMessage(playerid, COLOR_WHITE, ">> Obtain your own properties");
-			    SendClientMessage(playerid, COLOR_GRAD2, "You can obtain your own properites around the city by publishing advertismets, talking to people or visting shops.");
-				SendClientMessage(playerid, COLOR_GRAD2, "Properties can be given to you in exchange of some money, or without a payment at all. It is all up to the way you roleplay it.");
-				SendClientMessage(playerid, COLOR_GRAD2, "You can purchase new houses and vehicles from dealership or other players around the server");
-				SendClientMessage(playerid, COLOR_GRAD2, "You can also steam properties from other players in your own roleplay ways and techniques.");
-			 	SendClientMessage(playerid, COLOR_GRAD2, "However, stealing may not always be the clean way to do things, and someone might be looking for you afterwards.");
-			 	GameTextForPlayer(playerid, "~w~ Advertisement Office", 3900, 3);
-
-            	InterpolateCameraPos(playerid, 1129.1364,-1359.0806,60.4063, 1697.8542,-1308.5330,60.4948, 1500, CAMERA_MOVE);
-                InterpolateCameraLookAt(playerid, 1129.1011,-1488.4135,22.7614, 1736.1309,-1267.8335,13.5431, 1500, CAMERA_MOVE);
-            }
-            case 8:
-            {
-			    SendClientMessage(playerid, COLOR_WHITE, ">> Increase you income");
-			    SendClientMessage(playerid, COLOR_GRAD2, "Before purchasing anything, you will need money. There are many different ways to earn money around Los Santos.");
-				SendClientMessage(playerid, COLOR_GRAD2, "You can either publish an advertisment, ask people for it on your own way or check the newspaper.");
-				SendClientMessage(playerid, COLOR_GRAD2, "You can also earn money on your unique way. It's all up to your creativity");
-				GameTextForPlayer(playerid, "~w~ Pizza Job", 3900, 3);
-
-                InterpolateCameraPos(playerid, 1697.8542,-1308.5330,60.4948, 2091.2349, -1767.2347, 33.5644, 1500, CAMERA_MOVE);
-                InterpolateCameraLookAt(playerid, 1736.1309,-1267.8335,13.5431, 2091.8325, -1768.0430, 32.9144, 1500, CAMERA_MOVE);
-            }
-            case 9:
-            {
-			    SendClientMessage(playerid, COLOR_WHITE, ">> Public Services:");
-			    SendClientMessage(playerid, COLOR_GRAD2, "Los Santos public services will always be there for you when you require their services.");
-				SendClientMessage(playerid, COLOR_GRAD2, "There are two law enforcement agencies which are the {8D8DFF}Los Santos Police Department {BFC0C2}and {8D8DFF}San Andreas Sheriff's Department");
-				SendClientMessage(playerid, COLOR_GRAD2, "The {FF8282}Los Santos Fire Department {BFC0C2}is in charge of Los Santos medicine. They provide both hospital and EMT services.");
-				SendClientMessage(playerid, COLOR_GRAD2, "If you ever require any of the listed agencies service, do not hesitate to dail 911 amd call them.");
-			    GameTextForPlayer(playerid, "~w~ All Sanints General Hospital", 3900, 3);
-
-                InterpolateCameraPos(playerid, 2091.2349, -1767.2347, 33.5644, 1206.9229, -1377.9990, 47.1973, 1500, CAMERA_MOVE);
-                InterpolateCameraLookAt(playerid, 2091.8325, -1768.0430, 32.9144, 1206.2468, -1377.2543, 46.7572, 1500, CAMERA_MOVE);
-            }
-            case 10:
-            {
-			    SendClientMessage(playerid, COLOR_WHITE, ">> Server Rules");
-			    SendClientMessage(playerid, COLOR_GRAD2, "Always remember to follow all the rules, respect everyone and listen to administrators instructions");
-				SendClientMessage(playerid, COLOR_GRAD2, "This is a Roleplay server. Always remember to follow all roleplay rules (PG, MG, DM, unrealistic roleplay etc.) and roleplay all the times.");
-				SendClientMessage(playerid, COLOR_GRAD2, "As the time goes by you will learn more about roleplay and more about the server, If you need help");
-
-            	InterpolateCameraPos(playerid, 1206.9229, -1377.9990, 47.1973, 1474.6232,-1723.1591,42.9895, 1500, CAMERA_MOVE);
-                InterpolateCameraLookAt(playerid, 1206.2468, -1377.2543, 46.7572, 1480.6512,-1771.0350,31.6094, 1500, CAMERA_MOVE);
-            }
-            case 11:
-            {
- 				SendClientMessage(playerid, COLOR_WHITE, ">> Conclusion:");
-				SendClientMessage(playerid, COLOR_GRAD3, "Always keep in mind that you must obey all server rules, respect or honor all players, and listen to advice from the server administrators.");
-            }
-			case 12:
-			{
-			    FinishedTutorial{playerid} = true;
-
-				PlayerData[playerid][pTutorialStep] = 0;
-
-				PlayerData[playerid][pPos][0] = 1643.0010;
-				PlayerData[playerid][pPos][1] = -2331.7056;
-				PlayerData[playerid][pPos][2] = -2.6797;
-				PlayerData[playerid][pPos][3] = 359.8919;
-				PlayerData[playerid][pTutorial] = 1;
-				PlayerData[playerid][pSHealth] = 50.0;
-				PlayerData[playerid][pHealth] = 150.0;
-
-				if(!PlayerData[playerid][pPnumber]) PlayerData[playerid][pPnumber] = 100000 + random(99999);
-
-				SetSpawnInfo(playerid, NO_TEAM, PlayerData[playerid][pModel], PlayerData[playerid][pPos][0], PlayerData[playerid][pPos][1], PlayerData[playerid][pPos][2], PlayerData[playerid][pPos][3], 0, 0, 0, 0, 0, 0);
-
-				TogglePlayerSpectating(playerid, false);
-				SetPlayerPos(playerid, 1643.0010, -2331.7056, -2.6797);
-				SetPlayerFacingAngle(playerid, 359.8919);
-				SetCameraBehindPlayer(playerid);
-				SetPlayerVirtualWorld(playerid, 0);
-				TogglePlayerControllable(playerid, true);
-
-				SendClientMessageEx(playerid, COLOR_LIGHTRED, "Welcome to Los Jawa Roleplay, %s.", ReturnName(playerid, 0));
-			}
+            InterpolateCameraPos(playerid, 1807.2902,-1939.7085,67.2748, 2119.4541,-1751.1744,21.5524, 1500, CAMERA_MOVE);
+            InterpolateCameraLookAt(playerid, 1773.8251,-1902.2825,13.5502, 2155.6519,-1776.4888,18.5486, 1500, CAMERA_MOVE);
+        }
+        case 4:
+        {
+            SendClientMessage(playerid, COLOR_WHITE, ">> Ready to play");
+            SendClientMessage(playerid, COLOR_GRAD2, "Read /rules, respect other players, and stay in character.");
+            SendClientMessage(playerid, COLOR_GRAD2, "Need help? Use /help or /helpme. Enjoy your stay!");
+            GameTextForPlayer(playerid, "~g~Welcome to~n~~y~Los Jawa Roleplay", 5000, 3);
+        }
+        case 5:
+        {
+            FinishTutorial(playerid);
         }
     }
+    return 1;
 }
 
 public OnPlayerUpdate(playerid)
@@ -11061,7 +11018,7 @@ Dialog:LoginScreen(playerid, response, listitem, inputtext[])
 	    return Kick(playerid);
 
 	if(isnull(inputtext))
-	    return Dialog_Show(playerid, LoginScreen, DIALOG_STYLE_PASSWORD, "Welcome to Los Jawa Roleplay", "Hello,\n\nPlease enter your password below to access character selection.\n\nIf you are not currently registered with LosJawa-RP, you can create\n\nyour account at LosJawa-rp.net.", "Submit", "Exit");
+	    return Dialog_Show(playerid, LoginScreen, DIALOG_STYLE_PASSWORD, "Welcome to Los Jawa Roleplay", "Hello,\n\nPlease enter your password below to access character selection.\n\nIf you are not currently registered with LosJawa-RP, you can create\n\nyour account at " SERVER_DOMAIN ".", "Submit", "Exit");
 
 	SQL_AttemptLogin(playerid, inputtext);
 	return true;

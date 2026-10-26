@@ -4261,34 +4261,6 @@ CMD:givemoney(playerid, params[])
 	return true;
 }
 
-CMD:givecell(playerid, params[])
-{
-	AdminGate(playerid, 1);
-
-	new userid;
-
-	if(sscanf(params, "u", userid))
-		return SendSyntaxMessage(playerid, "/givecell [playerid/PartOfName]");
-
-	if(!IsPlayerConnected(userid))
-		return SendErrorMessage(playerid, "The player you specified isn't connected.");
-
-	if(!SQL_IsLogged(userid))
-		return SendErrorMessage(playerid, "The player you specified isn't logged in.");
-
-	if(PlayerData[userid][pPnumber])
-		return SendErrorMessage(playerid, "That player already has a phone (number: %d).", PlayerData[userid][pPnumber]);
-
-	new newNumber = 100000 + random(99999);
-	PlayerData[userid][pPnumber] = newNumber;
-	PlayerData[userid][pPhoneModel] = 0;
-
-	SendClientMessageEx(userid,   COLOR_WHITE,  "SERVER: An admin gave you a new phone. Your number: %d", newNumber);
-	SendClientMessageEx(playerid, COLOR_YELLOW, "AdmCmd: You gave a phone to %s (number: %d).", ReturnName(userid), newNumber);
-	SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmCmd: %s gave a phone to %s [%d]. Number: %d", ReturnName(playerid), ReturnName(userid), userid, newNumber);
-	return true;
-}
-
 CMD:takemoney(playerid, params[])
 {
 	AdminGate(playerid, 3);
@@ -4431,21 +4403,13 @@ FUNX::OnAccountCheck(playerid, const account[], const character[], tutorial)
 	if(!cache_num_rows())
 		return SendServerMessage(playerid, "Account '%s' doesn't exist in the database.", account);
 
-	new accountSQLID, query[200], phoneNumber = randomEx(100000, 999999);
+	new accountSQLID;
 	cache_get_value_name_int(0, "ID", accountSQLID);	
 
 	SendServerMessage(playerid, "Account %s (%d) is valid, now creating character '%s'.", account, accountSQLID, character);	
 
-	mysql_format(dbCon, query, sizeof(query), "INSERT INTO `characters` (master, char_name, PhoneNumbr, Activated, Tutorial, PhoneModel) VALUES (%d, '%e', %d, 1, %d, 1)", accountSQLID, character, phoneNumber, tutorial);
-    mysql_tquery(dbCon, query, "OnCharacterCreated", "dsds", playerid, account, accountSQLID, character);	
+	CharacterCreate_Start(playerid, accountSQLID, account, character, tutorial, 1, 1);
 	return true;
-}
-
-FUNX::OnCharacterCreated(playerid, const account[], accountSQLID, const character[])
-{
-	new characterSQLID = cache_insert_id();
-
-	SendServerMessage(playerid, "Character %s #%d has been succesfully added to account %s (%d).", character, characterSQLID, account, accountSQLID);
 }
 
 FUNX::OnAccountCreated(playerid, const username[])
@@ -4577,7 +4541,7 @@ CMD:setstat(playerid, params[])
 	{
 		SendSyntaxMessage(playerid, "/setstat [playerid] [statcode] [amount]");
 		SendClientMessage(playerid, COLOR_GRAD4, "|1 Level |2 Skin(not saved) |3 RespectPoints |4 Sex |5 Bank");
-		SendClientMessage(playerid, COLOR_GRAD4, "|6 Hours |7 Cash |8 Donator |9 Upgrade(removed) |10 Phone Number ");
+		SendClientMessage(playerid, COLOR_GRAD4, "|6 Hours |7 Cash |8 Donator |9 Upgrade(removed) |10 Phone (automatic)");
 		SendClientMessage(playerid, COLOR_GRAD4, "|11 Savings |12 House Key |13 Radio |14 Channel(removed)");
 		SendClientMessage(playerid, COLOR_GRAD4, "|15 Bizz Key |16 Faction(removed) |17 Faction Rank(removed) |18 Job |19 Side Job");
 		SendClientMessage(playerid, COLOR_GRAD4, "|20 Job Rank | 21 Career | 22 Skin(saved) | 23 Car License | 24 Weapon License | 25 CCW License");
@@ -4668,11 +4632,7 @@ CMD:setstat(playerid, params[])
 		}
 		case 10:
 		{
-			PlayerData[pid][pPnumber] = amount;
-
-			SendClientMessageEx(pid, COLOR_YELLOW, "%s set %s's phone number to %d", ReturnName(playerid), ReturnName(pid), amount);
-
-			SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmWarn(3) %s has set %s's Phone Number to %d.", ReturnName(playerid), ReturnName(pid), amount);
+			return SendErrorMessage(playerid, "Phone numbers are assigned automatically and cannot be changed.");
 		}
 		case 11:
 		{

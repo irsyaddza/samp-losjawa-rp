@@ -391,21 +391,30 @@ PurchaseClothing(playerid, slot)
 
 ClothingExistSlot(playerid)
 {
-	new checkQuery[128], rows, slot = -1;
+	new checkQuery[128], rows, slotid, slot = -1;
+	new bool:used[MAX_CLOTHES];
 
-	for(new i = 0; i != MAX_CLOTHES; ++i)
+	mysql_format(dbCon, checkQuery, sizeof(checkQuery), "SELECT `slot` FROM `clothing` WHERE `owner` = '%d'", PlayerData[playerid][pID]);
+	new Cache:cache = mysql_query(dbCon, checkQuery);
+
+	rows = cache_num_rows();
+
+	for(new i = 0; i < rows; ++i)
 	{
-		mysql_format(dbCon, checkQuery, sizeof(checkQuery), "SELECT `id` FROM `clothing` WHERE `owner` = '%d' AND `slot` = '%d'", PlayerData[playerid][pID], i);
-		new Cache:cache = mysql_query(dbCon, checkQuery);
+		cache_get_value_name_int(i, "slot", slotid);
 
-        rows = cache_num_rows();
+		if(slotid >= 0 && slotid < MAX_CLOTHES)
+			used[slotid] = true;
+	}
 
-        cache_delete(cache);
+	cache_delete(cache);
 
-		if(!rows)
+	for(new i = 0; i < MAX_CLOTHES; ++i)
+	{
+		if(!used[i])
 		{
-		    slot = i;
-		    break;
+			slot = i;
+			break;
 		}
 	}
 
