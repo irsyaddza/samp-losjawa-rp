@@ -206,16 +206,16 @@ public OnQueryFinished(extraid, threadid)
 				{
 					SendErrorMessage(extraid, "Your IP Address is banned!");
 
-					SendNoticeMessage(extraid, "Please create a ban appeal at forum.losjawa-rp.net before playing again.");
+					SendNoticeMessage(extraid, "Please create a ban appeal at " SERVER_FORUM " before playing again.");
 				}
 				else
 				{
 					SendErrorMessage(extraid, "One or more of your characters is banned!");
 
-					SendNoticeMessage(extraid, "Please create a ban appeal at forum.losjawa-rp.net before playing again.");
+					SendNoticeMessage(extraid, "Please create a ban appeal at " SERVER_FORUM " before playing again.");
 				}
 
-				SendNoticeMessage(extraid, "Please create a ban apeal at forum.losjawa-rp.net");
+				SendNoticeMessage(extraid, "Please create a ban appeal at " SERVER_FORUM);
 
 				KickEx(extraid);
 		    }

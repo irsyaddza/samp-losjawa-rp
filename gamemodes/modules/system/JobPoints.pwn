@@ -338,7 +338,7 @@ CMD:joinjob(playerid, params[])
     SendServerMessage(playerid, "Congratulations! You have joined the %s job. Use /jobhelp for commands.", GetJobNameByID(jobId));
 
     new query[128];
-    mysql_format(dbCon, query, sizeof(query), "UPDATE `accounts` SET `playerJob` = '%d' WHERE `ID` = '%d' LIMIT 1", PlayerData[playerid][pJob], AccountData[playerid][aUserid]);
+    mysql_format(dbCon, query, sizeof(query), "UPDATE `characters` SET `playerJob` = '%d' WHERE `ID` = '%d' LIMIT 1", jobId, PlayerData[playerid][pID]);
     mysql_tquery(dbCon, query);
 
     return 1;

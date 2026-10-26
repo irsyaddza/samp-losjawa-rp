@@ -1,4 +1,8 @@
-new gServerSite[128] = "https://ucp.rusdi-bot.site";
+#define SERVER_DOMAIN "losjawa-rp.fun"
+#define SERVER_UCP "https://ucp.losjawa-rp.fun"
+#define SERVER_FORUM "https://forum.losjawa-rp.fun"
+
+new gServerSite[128] = SERVER_UCP;
 new gServerMode[64] = "LJ:RP 0.1.0";
 
 #if IS_LOCAL_HOST == true

@@ -41,7 +41,7 @@ SQL_Connect()
 		// Ensure server_settings table exists
 		mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `server_settings` (" \
 			"`id` INT(11) NOT NULL PRIMARY KEY DEFAULT '1'," \
-			"`web_url` VARCHAR(128) NOT NULL DEFAULT 'https://ucp.rusdi-bot.site'," \
+			"`web_url` VARCHAR(128) NOT NULL DEFAULT '" SERVER_UCP "'," \
 			"`server_mode` VARCHAR(64) NOT NULL DEFAULT 'LJ:RP 0.1.0'" \
 		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;", "OnServerSettingsTableInit", "");
 
@@ -84,7 +84,8 @@ SQL_Connect()
 forward OnServerSettingsTableInit();
 public OnServerSettingsTableInit()
 {
-	mysql_tquery(dbCon, "INSERT IGNORE INTO `server_settings` (`id`, `web_url`, `server_mode`) VALUES (1, 'https://ucp.rusdi-bot.site', 'LJ:RP 0.1.0');");
+	mysql_tquery(dbCon, "INSERT IGNORE INTO `server_settings` (`id`, `web_url`, `server_mode`) VALUES (1, '" SERVER_UCP "', 'LJ:RP 0.1.0');");
+	mysql_tquery(dbCon, "UPDATE `server_settings` SET `web_url` = '" SERVER_UCP "' WHERE `id` = 1 AND `web_url` IN ('https://ucp.rusdi-bot.site', 'http://ucp.rusdi-bot.site');");
 	mysql_tquery(dbCon, "SELECT * FROM `server_settings` WHERE `id` = 1 LIMIT 1", "LoadServerSettings", "");
 	return 1;
 }

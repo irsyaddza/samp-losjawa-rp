@@ -2002,6 +2002,7 @@ new Iterator:sv_activevehicles<MAX_VEHICLES>;
 #include "modules/system/SkinTest.pwn"
 #include "modules/VehicleParts.pwn"
 #include "modules/timers/Server.pwn"
+forward FinishTutorial(playerid);
 forward RefreshTutorial(playerid);
 #include "modules/timers/Player.pwn"
 #include "modules/timers/Vehicle.pwn"
@@ -2797,7 +2798,7 @@ public OnPlayerGiveDamage(playerid, damagedid, Float: amount, weaponid, bodypart
 
 			if(health < 1)
 			{
-	   			DeathTimer[damagedid] = 120;
+				DeathTimer[damagedid] = DEATH_WAIT_SECONDS;
 				PlayerData[damagedid][pInjured] = 1;
 				PlayerData[damagedid][pInterior] = GetPlayerInterior(damagedid);
 				PlayerData[damagedid][pWorld] = GetPlayerVirtualWorld(damagedid);
@@ -2963,7 +2964,8 @@ public e_COMMAND_ERRORS:OnPlayerCommandReceived(playerid, cmdtext[], e_COMMAND_E
 
 	if(PlayerData[playerid][pTutorialStep])
 	{
-		return COMMAND_DENIED;		
+		if(strcmp(cmdtext, "/skiptutorial", true) == 0) return COMMAND_OK;
+		return COMMAND_DENIED;
 	}
 
 	return COMMAND_OK;
@@ -4811,7 +4813,7 @@ ResetStatistics(playerid) // Clear player Stats
 	gLastCar[playerid] = 0;
 	SafeTime[playerid] = 120;
 	DeathMode{playerid} = false;
-	DeathTimer[playerid] = 120;
+	DeathTimer[playerid] = DEATH_WAIT_SECONDS;
     TaxiDuty{playerid} = false;
 	TaxiFare{playerid} = 0;
 	TaxiStart{playerid} = false;
@@ -5402,7 +5404,14 @@ Relog_Player(playerid)
 		}
 	}
 
-	// 3. Clear animations and attached objects; the generic reset handles the rest
+	// 3. Destroy HudV2 player textdraws before ResetCharacterState clears
+	//    HUD_Created; otherwise the old textdraws stay on screen and stack
+	//    with the new set created after character selection.
+	HideHudV2Full(playerid);
+	DestroyHudV2PlayerTDs(playerid);
+	HUD_Created{playerid} = false;
+
+	// 4. Clear animations and attached objects; the generic reset handles the rest
 	ClearAnimations(playerid);
 
 	for(new i = 0; i < 10; i++)
@@ -5415,13 +5424,13 @@ Relog_Player(playerid)
 
 	ResetCharacterState(playerid);
 
-	// 4. Restore player name back to account name (strip character name)
+	// 5. Restore player name back to account name (strip character name)
 	SetPlayerName(playerid, AccountData[playerid][aUsername]);
 
-	// 7. Put player back in spectate mode so they don't appear in-world
+	// 6. Put player back in spectate mode so they don't appear in-world
 	TogglePlayerSpectating(playerid, true);
 
-	// 8. Cancel any active TextDraw selection mode
+	// 7. Cancel any active TextDraw selection mode
 	CancelSelectTextDraw(playerid);
 
 	// Destroy any existing selection actors to prevent duplication
@@ -5434,22 +5443,14 @@ Relog_Player(playerid)
 		}
 	}
 
-	// 9. Destroy ALL 13 old CharSelectionTD slots so they don't stack up
+	// 8. Destroy ALL 13 old CharSelectionTD slots so they don't stack up
 	for(new i = 0; i < 13; ++i)
 	{
 		PlayerTextDrawDestroy(playerid, CharSelectionTD[playerid][i]);
 		CharSelectionTD[playerid][i] = PlayerText:INVALID_TEXT_DRAW;
 	}
 
-	// 10. Destroy HudV2 player textdraws to prevent duplication on re-spawn
-	if(HUD_Created{playerid})
-	{
-		HideHudV2Full(playerid);
-		DestroyHudV2PlayerTDs(playerid);
-		HUD_Created{playerid} = false;
-	}
-
-	// 11. Character list will be loaded by the delayed callback
+	// 9. Character list will be loaded by the delayed callback
 	//     (OnCharacterSavedThenLoadList → 5s → OnRelogLoadCharacterList)
 	//     to ensure all side-table saves have committed first.
 	//     Do NOT call SQL_LoadCharacters here — a second load would
@@ -6395,7 +6396,7 @@ SetPlayerSpawn(playerid)
 				{
                     AirportSpawn(playerid);
 
-					SendServerMessage(playerid, "Your spawn point is incorrect, please change the spawn point on UCP losjawa-rp.net.");
+					SendServerMessage(playerid, "Your spawn point is incorrect, please change the spawn point on UCP " SERVER_DOMAIN ".");
 				}
 		    }
 
@@ -6728,8 +6729,8 @@ public OnPlayerDeath(playerid, killerid, reason)
 	{
 	    PlayerData[playerid][pHealth] = 150.0;
 
-		SendClientMessage(playerid, COLOR_LIGHTRED, "Looks like you died in our video guide. This may be because of 3rd party mods you have installed.");
-		SendClientMessage(playerid, COLOR_LIGHTRED, "We recommend removing mods thay may cause this for the duration of the video guide.");
+		SendClientMessage(playerid, COLOR_LIGHTRED, "Looks like you died during the tutorial. This may be because of 3rd party mods you have installed.");
+		SendClientMessage(playerid, COLOR_LIGHTRED, "We recommend removing mods that may cause this for the duration of the tutorial.");
 		return true;
 	}
 
@@ -6757,7 +6758,7 @@ public OnPlayerDeath(playerid, killerid, reason)
 					PlayerData[playerid][pPos][2] = z;
 				}
 				GetPlayerFacingAngle(playerid, PlayerData[playerid][pPos][3]);
-				DeathTimer[playerid] = 120;
+				DeathTimer[playerid] = DEATH_WAIT_SECONDS;
 		    }
 		    else
 			{
@@ -7187,7 +7188,7 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
 
 		if(!HasDonatorRank(playerid, 1) && (model == 481 || model == 510)) // BMX Permission
 		{
-			SendServerMessage(playerid, "You don't have BMX permission. See our premium packages at losjawa-rp.net");
+			SendServerMessage(playerid, "You don't have BMX permission. See our premium packages at " SERVER_DOMAIN);
 			RemovePlayerFromVehicle(playerid);
 		}
 
@@ -8889,161 +8890,86 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 	return true;
 }
 
+FinishTutorial(playerid)
+{
+    if(!PlayerData[playerid][pTutorialStep]) return false;
+
+    FinishedTutorial{playerid} = true;
+    PlayerData[playerid][pTutorialStep] = 0;
+    PlayerData[playerid][pTutorial] = 1;
+    PlayerData[playerid][pPos][0] = 1643.0010;
+    PlayerData[playerid][pPos][1] = -2331.7056;
+    PlayerData[playerid][pPos][2] = -2.6797;
+    PlayerData[playerid][pPos][3] = 359.8919;
+    PlayerData[playerid][pSHealth] = 50.0;
+    PlayerData[playerid][pHealth] = 150.0;
+
+    if(!PlayerData[playerid][pPnumber]) PlayerData[playerid][pPnumber] = 100000 + random(99999);
+
+    SetSpawnInfo(playerid, NO_TEAM, PlayerData[playerid][pModel], PlayerData[playerid][pPos][0], PlayerData[playerid][pPos][1], PlayerData[playerid][pPos][2], PlayerData[playerid][pPos][3], 0, 0, 0, 0, 0, 0);
+
+    TogglePlayerSpectating(playerid, false);
+    SetPlayerPos(playerid, 1643.0010, -2331.7056, -2.6797);
+    SetPlayerFacingAngle(playerid, 359.8919);
+    SetCameraBehindPlayer(playerid);
+    SetPlayerVirtualWorld(playerid, 0);
+    TogglePlayerControllable(playerid, true);
+
+    SendClientMessageEx(playerid, COLOR_LIGHTRED, "Welcome to Los Jawa Roleplay, %s.", ReturnName(playerid, 0));
+    return true;
+}
+
 RefreshTutorial(playerid)
 {
-    if(PlayerData[playerid][pTutorialStep])
+    if(!PlayerData[playerid][pTutorialStep]) return 0;
+
+    TutorialDelay[playerid] = 8;
+    LastTeleport[playerid] = gettime();
+
+    switch(PlayerData[playerid][pTutorialStep])
     {
-		TutorialDelay[playerid] = 5; // countdown: 5 seconds per step
-		LastTeleport[playerid] = gettime();
-
-    	switch(PlayerData[playerid][pTutorialStep])
+        case 1:
         {
-            case 1:
-            {
-			 	SendClientMessage(playerid, COLOR_WHITE, ">> Welcome to Los Jawa Roleplay!");
-				SendClientMessage(playerid, COLOR_GRAD2, "This video tutorial will guide you for your first steps on Los Jawa-RP.");
-				SendClientMessage(playerid, COLOR_GRAD2, "The tutorial will go through on its own.");
-				SendClientMessage(playerid, COLOR_GRAD2, "We highly recommend you to take your time reading the text in the chat box.");
+            SendClientMessage(playerid, COLOR_WHITE, ">> Welcome to Los Jawa Roleplay!");
+            SendClientMessage(playerid, COLOR_GRAD2, "This short tutorial takes about 30 seconds. Type /skiptutorial at any time to skip.");
+            SendClientMessage(playerid, COLOR_GRAD2, "Use /help for commands, /rules for server rules, and /helpme to ask a tester.");
 
-                InterpolateCameraPos(playerid, 1669.1499,-2328.8406,-3.5769, 1541.1512,-2287.1345,91.9661, 1500, CAMERA_MOVE);
-                InterpolateCameraLookAt(playerid, 1654.4652,-2333.6084,-2.6797, 1623.3582,-2288.0413,77.9914, 1500, CAMERA_MOVE);
-            }
-            case 2:
-            {
-				SendClientMessage(playerid, COLOR_WHITE, ">> First time in Los Santos.");
-			    SendClientMessage(playerid, COLOR_GRAD2, " Welcome to the city of Los Santos, the largest city within the state of San Andreas. ");
-			    SendClientMessage(playerid, COLOR_GRAD2, " You're currently living at the Airport Motel, Untill you find yourself a better place.");
-			    SendClientMessage(playerid, COLOR_GRAD2, " You might want to start with reading today's newspaper, where you can find yourself some helpful information.");
-				SendClientMessage(playerid, COLOR_GRAD2, " The newspaper dispenser is located right next to	the Airport Motel, your current spawn point. ");
-				SendClientMessage(playerid, COLOR_GRAD2, " Go to the 'i' marker and type /newspaper to read.");
+            InterpolateCameraPos(playerid, 1669.1499,-2328.8406,-3.5769, 1541.1512,-2287.1345,91.9661, 1500, CAMERA_MOVE);
+            InterpolateCameraLookAt(playerid, 1654.4652,-2333.6084,-2.6797, 1623.3582,-2288.0413,77.9914, 1500, CAMERA_MOVE);
+        }
+        case 2:
+        {
+            SendClientMessage(playerid, COLOR_WHITE, ">> Getting around");
+            SendClientMessage(playerid, COLOR_GRAD2, "Call a taxi with /call 544, or rent a nearby vehicle with /rentvehicle.");
+            SendClientMessage(playerid, COLOR_GRAD2, "Use /phone for your phone, /stats for your character, and /help for the full command list.");
+            GameTextForPlayer(playerid, "~p~/call 544~w~ for a taxi~n~~y~/rentvehicle~w~ for a rental", 5000, 3);
 
-            	InterpolateCameraPos(playerid, 1541.1512,-2287.1345,91.9661, 1669.1499,-2328.8406,-3.5769, 1500, CAMERA_MOVE);
-           		InterpolateCameraLookAt(playerid, 1623.3582,-2288.0413,77.9914, 1654.4652,-2333.6084,-2.6797, 1500, CAMERA_MOVE);
-            }
-            case 3:
-            {
-			    SendClientMessage(playerid, COLOR_WHITE, ">> Transportation");
-			    SendClientMessage(playerid, COLOR_GRAD2, "In order to move around the city, you will have to get yourself a ride.");
-			    SendClientMessage(playerid, COLOR_GRAD2, "You can either wait for a bus, call a taxi or rent a vehicle for a certain amount of money");
-			    SendClientMessage(playerid, COLOR_GRAD2, "/service taxi for a taxi service, /service bus for a bus service. Rentable cars can be found around the city.");
-			    GameTextForPlayer(playerid, "~p~/service ~w~ to call ~n~ ~y~ Los Santos Public ~n~ ~y~ Transportation Services", 3200, 3);
+            InterpolateCameraPos(playerid, 1541.1512,-2287.1345,91.9661, 1807.2902,-1939.7085,67.2748, 1500, CAMERA_MOVE);
+            InterpolateCameraLookAt(playerid, 1623.3582,-2288.0413,77.9914, 1773.8251,-1902.2825,13.5502, 1500, CAMERA_MOVE);
+        }
+        case 3:
+        {
+            SendClientMessage(playerid, COLOR_WHITE, ">> Jobs & money");
+            SendClientMessage(playerid, COLOR_GRAD2, "Look for a briefcase job point, then type /joinjob.");
+            SendClientMessage(playerid, COLOR_GRAD2, "Use /jobhelp to see your job commands, or /help for other ways to earn money.");
+            GameTextForPlayer(playerid, "~y~Find a job point~n~~p~/joinjob", 5000, 3);
 
-                InterpolateCameraPos(playerid, 1669.1499,-2328.8406,-3.5769, 1807.2902,-1939.7085,67.2748, 1500, CAMERA_MOVE);
-                InterpolateCameraLookAt(playerid, 1654.4652,-2333.6084,-2.6797, 1773.8251,-1902.2825,13.5502, 1500, CAMERA_MOVE);
-            }
-            case 4:
-            {
-				SendClientMessage(playerid, COLOR_WHITE, ">> Live on your own.");
-				SendClientMessage(playerid, COLOR_GRAD2, "When you feel like it's time to move out of the Airport Motel to your own place you should start looking for a new house or another motel.");
-				SendClientMessage(playerid, COLOR_GRAD2, "There are plenty of houses around Los Santos that can be either purchased or rented by anyone in exchange for some money.");
-				SendClientMessage(playerid, COLOR_GRAD2, "There are also a few hotels and motels around the city where you can rent a room for a certain amount of money.");
-				GameTextForPlayer(playerid, "~y~ Idlewood Motel ~n~ ~p~/rent /rentroom", 3200, 3);
-
-                InterpolateCameraPos(playerid, 1807.2902,-1939.7085,67.2748, 2119.4541,-1751.1744,21.5524, 1500, CAMERA_MOVE);
-                InterpolateCameraLookAt(playerid, 1773.8251,-1902.2825,13.5502, 2155.6519,-1776.4888,18.5486, 1500, CAMERA_MOVE);
-            }
-            case 5:
-            {
-			    SendClientMessage(playerid, COLOR_WHITE, ">> Keep a healthy lifestyle.");
-			    SendClientMessage(playerid, COLOR_GRAD2, "Always try to keep yourlife style healthy and eat in time. You will start loosing HP constantly when you character becomes hungry.");
-			    SendClientMessage(playerid, COLOR_GRAD2, "Usage of drugs will possibly lower your HP, increase your hunger level, and even get you sick or killed.");
-			    SendClientMessage(playerid, COLOR_GRAD2, "There are many resturants around the city, where you can eat, increase your HP and lower your hunger level.");
-			    GameTextForPlayer(playerid, "~y~ Willowfield Cluckin' bell ~n~ ~p~ /eat", 3900, 3);
-
-                InterpolateCameraPos(playerid, 2119.4541,-1751.1744,21.5524, 2413.5383, -1885.4564, 23.2313, 1500, CAMERA_MOVE);
-                InterpolateCameraLookAt(playerid, 2155.6519,-1776.4888,18.5486, 2412.8733, -1886.1985, 23.0213, 1500, CAMERA_MOVE);
-            }
-            case 6:
-            {
-			    SendClientMessage(playerid, COLOR_WHITE, ">> Communicate and meet new people.");
-			    SendClientMessage(playerid, COLOR_GRAD2, "Los Santos'society is quite big. There are many kinds of people around with different hobbies and interests.");
-			    SendClientMessage(playerid, COLOR_GRAD2, "You can meet new people around the most populer places in the city. It can either be a club, pub, resturant or anywhere else.");
-			    SendClientMessage(playerid, COLOR_GRAD2, "One of the most popular places, which serves for a meeting place as well as shopping, is the mall");
-				SendClientMessage(playerid, COLOR_GRAD2, "The mall is one of the various hot spots in Los Santos where you can communicate and interact with random people.");
-			    SendClientMessage(playerid, COLOR_GRAD2, "There are plenty of shops in the mall, such as clothes, tools, electronics, Musical instruments and even more.");
-			    SendClientMessage(playerid, COLOR_GRAD2, "You can buy saveable items that can improve your roleplay atmosphere and your character's look.");
-			    GameTextForPlayer(playerid, "~w~ Los Santos Mall", 3900, 3);
-            }
-            case 7:
-            {
-			    SendClientMessage(playerid, COLOR_WHITE, ">> Obtain your own properties");
-			    SendClientMessage(playerid, COLOR_GRAD2, "You can obtain your own properites around the city by publishing advertismets, talking to people or visting shops.");
-				SendClientMessage(playerid, COLOR_GRAD2, "Properties can be given to you in exchange of some money, or without a payment at all. It is all up to the way you roleplay it.");
-				SendClientMessage(playerid, COLOR_GRAD2, "You can purchase new houses and vehicles from dealership or other players around the server");
-				SendClientMessage(playerid, COLOR_GRAD2, "You can also steam properties from other players in your own roleplay ways and techniques.");
-			 	SendClientMessage(playerid, COLOR_GRAD2, "However, stealing may not always be the clean way to do things, and someone might be looking for you afterwards.");
-			 	GameTextForPlayer(playerid, "~w~ Advertisement Office", 3900, 3);
-
-            	InterpolateCameraPos(playerid, 1129.1364,-1359.0806,60.4063, 1697.8542,-1308.5330,60.4948, 1500, CAMERA_MOVE);
-                InterpolateCameraLookAt(playerid, 1129.1011,-1488.4135,22.7614, 1736.1309,-1267.8335,13.5431, 1500, CAMERA_MOVE);
-            }
-            case 8:
-            {
-			    SendClientMessage(playerid, COLOR_WHITE, ">> Increase you income");
-			    SendClientMessage(playerid, COLOR_GRAD2, "Before purchasing anything, you will need money. There are many different ways to earn money around Los Santos.");
-				SendClientMessage(playerid, COLOR_GRAD2, "You can either publish an advertisment, ask people for it on your own way or check the newspaper.");
-				SendClientMessage(playerid, COLOR_GRAD2, "You can also earn money on your unique way. It's all up to your creativity");
-				GameTextForPlayer(playerid, "~w~ Pizza Job", 3900, 3);
-
-                InterpolateCameraPos(playerid, 1697.8542,-1308.5330,60.4948, 2091.2349, -1767.2347, 33.5644, 1500, CAMERA_MOVE);
-                InterpolateCameraLookAt(playerid, 1736.1309,-1267.8335,13.5431, 2091.8325, -1768.0430, 32.9144, 1500, CAMERA_MOVE);
-            }
-            case 9:
-            {
-			    SendClientMessage(playerid, COLOR_WHITE, ">> Public Services:");
-			    SendClientMessage(playerid, COLOR_GRAD2, "Los Santos public services will always be there for you when you require their services.");
-				SendClientMessage(playerid, COLOR_GRAD2, "There are two law enforcement agencies which are the {8D8DFF}Los Santos Police Department {BFC0C2}and {8D8DFF}San Andreas Sheriff's Department");
-				SendClientMessage(playerid, COLOR_GRAD2, "The {FF8282}Los Santos Fire Department {BFC0C2}is in charge of Los Santos medicine. They provide both hospital and EMT services.");
-				SendClientMessage(playerid, COLOR_GRAD2, "If you ever require any of the listed agencies service, do not hesitate to dail 911 amd call them.");
-			    GameTextForPlayer(playerid, "~w~ All Sanints General Hospital", 3900, 3);
-
-                InterpolateCameraPos(playerid, 2091.2349, -1767.2347, 33.5644, 1206.9229, -1377.9990, 47.1973, 1500, CAMERA_MOVE);
-                InterpolateCameraLookAt(playerid, 2091.8325, -1768.0430, 32.9144, 1206.2468, -1377.2543, 46.7572, 1500, CAMERA_MOVE);
-            }
-            case 10:
-            {
-			    SendClientMessage(playerid, COLOR_WHITE, ">> Server Rules");
-			    SendClientMessage(playerid, COLOR_GRAD2, "Always remember to follow all the rules, respect everyone and listen to administrators instructions");
-				SendClientMessage(playerid, COLOR_GRAD2, "This is a Roleplay server. Always remember to follow all roleplay rules (PG, MG, DM, unrealistic roleplay etc.) and roleplay all the times.");
-				SendClientMessage(playerid, COLOR_GRAD2, "As the time goes by you will learn more about roleplay and more about the server, If you need help");
-
-            	InterpolateCameraPos(playerid, 1206.9229, -1377.9990, 47.1973, 1474.6232,-1723.1591,42.9895, 1500, CAMERA_MOVE);
-                InterpolateCameraLookAt(playerid, 1206.2468, -1377.2543, 46.7572, 1480.6512,-1771.0350,31.6094, 1500, CAMERA_MOVE);
-            }
-            case 11:
-            {
- 				SendClientMessage(playerid, COLOR_WHITE, ">> Conclusion:");
-				SendClientMessage(playerid, COLOR_GRAD3, "Always keep in mind that you must obey all server rules, respect or honor all players, and listen to advice from the server administrators.");
-            }
-			case 12:
-			{
-			    FinishedTutorial{playerid} = true;
-
-				PlayerData[playerid][pTutorialStep] = 0;
-
-				PlayerData[playerid][pPos][0] = 1643.0010;
-				PlayerData[playerid][pPos][1] = -2331.7056;
-				PlayerData[playerid][pPos][2] = -2.6797;
-				PlayerData[playerid][pPos][3] = 359.8919;
-				PlayerData[playerid][pTutorial] = 1;
-				PlayerData[playerid][pSHealth] = 50.0;
-				PlayerData[playerid][pHealth] = 150.0;
-
-				if(!PlayerData[playerid][pPnumber]) PlayerData[playerid][pPnumber] = 100000 + random(99999);
-
-				SetSpawnInfo(playerid, NO_TEAM, PlayerData[playerid][pModel], PlayerData[playerid][pPos][0], PlayerData[playerid][pPos][1], PlayerData[playerid][pPos][2], PlayerData[playerid][pPos][3], 0, 0, 0, 0, 0, 0);
-
-				TogglePlayerSpectating(playerid, false);
-				SetPlayerPos(playerid, 1643.0010, -2331.7056, -2.6797);
-				SetPlayerFacingAngle(playerid, 359.8919);
-				SetCameraBehindPlayer(playerid);
-				SetPlayerVirtualWorld(playerid, 0);
-				TogglePlayerControllable(playerid, true);
-
-				SendClientMessageEx(playerid, COLOR_LIGHTRED, "Welcome to Los Jawa Roleplay, %s.", ReturnName(playerid, 0));
-			}
+            InterpolateCameraPos(playerid, 1807.2902,-1939.7085,67.2748, 2119.4541,-1751.1744,21.5524, 1500, CAMERA_MOVE);
+            InterpolateCameraLookAt(playerid, 1773.8251,-1902.2825,13.5502, 2155.6519,-1776.4888,18.5486, 1500, CAMERA_MOVE);
+        }
+        case 4:
+        {
+            SendClientMessage(playerid, COLOR_WHITE, ">> Ready to play");
+            SendClientMessage(playerid, COLOR_GRAD2, "Read /rules, respect other players, and stay in character.");
+            SendClientMessage(playerid, COLOR_GRAD2, "Need help? Use /help or /helpme. Enjoy your stay!");
+            GameTextForPlayer(playerid, "~g~Welcome to~n~~y~Los Jawa Roleplay", 5000, 3);
+        }
+        case 5:
+        {
+            FinishTutorial(playerid);
         }
     }
+    return 1;
 }
 
 public OnPlayerUpdate(playerid)
@@ -11089,7 +11015,7 @@ Dialog:LoginScreen(playerid, response, listitem, inputtext[])
 	    return Kick(playerid);
 
 	if(isnull(inputtext))
-	    return Dialog_Show(playerid, LoginScreen, DIALOG_STYLE_PASSWORD, "Welcome to Los Jawa Roleplay", "Hello,\n\nPlease enter your password below to access character selection.\n\nIf you are not currently registered with LosJawa-RP, you can create\n\nyour account at LosJawa-rp.net.", "Submit", "Exit");
+	    return Dialog_Show(playerid, LoginScreen, DIALOG_STYLE_PASSWORD, "Welcome to Los Jawa Roleplay", "Hello,\n\nPlease enter your password below to access character selection.\n\nIf you are not currently registered with LosJawa-RP, you can create\n\nyour account at " SERVER_DOMAIN ".", "Submit", "Exit");
 
 	SQL_AttemptLogin(playerid, inputtext);
 	return true;

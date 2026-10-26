@@ -256,6 +256,17 @@ ptask Players[1000](i)
 		}
 	}
 
+	if((PlayerData[i][pInjured] || DeathMode{i}) && DeathTimer[i] > 0 && h_times[i] <= 0)
+	{
+	    new deathMsg[128];
+
+	    if(DeathMode{i}) format(deathMsg, sizeof(deathMsg), "~r~DEAD~n~~w~Respawn in ~y~%d~w~ seconds", DeathTimer[i]);
+	    else if(KnockedOut{i}) format(deathMsg, sizeof(deathMsg), "~b~KNOCKED OUT~n~~w~Wait ~y~%d~w~ seconds, then /helpup", DeathTimer[i]);
+	    else format(deathMsg, sizeof(deathMsg), "~r~WOUNDED~n~~w~Wait ~y~%d~w~ seconds, then /acceptdeath", DeathTimer[i]);
+
+	    ShowPlayerFooter(i, deathMsg, 1200);
+	}
+
 	//unscrambling
 	if(h_times[i] > 0)
 	{

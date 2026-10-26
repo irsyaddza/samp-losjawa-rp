@@ -15,6 +15,7 @@
 #define FULL_SKILL		3
 
 #define MAX_SERVER_HEALTH (200.0)
+#define DEATH_WAIT_SECONDS (60)
 #define MAX_SCENES 50
 #define MAX_COOLDOWNS 3
 #define MAX_SIGNALTOWER 60
