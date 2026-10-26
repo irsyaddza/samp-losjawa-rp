@@ -341,6 +341,72 @@ GetPlayerByPhoneNumber(number)
 	return INVALID_PLAYER_ID;
 }
 
+stock Phone_EnsureAssigned(playerid)
+{
+	if(!IsPlayerConnected(playerid) || PlayerData[playerid][pID] == -1 || PlayerData[playerid][pPnumber] != 0)
+	    return 0;
+
+	if(GetPVarInt(playerid, "PhoneAssignPending") == PlayerData[playerid][pID])
+	    return 0;
+
+	SetPVarInt(playerid, "PhoneAssignPending", PlayerData[playerid][pID]);
+	if(!Phone_TryAssignNumber(playerid, 0))
+	{
+	    DeletePVar(playerid, "PhoneAssignPending");
+	    SendErrorMessage(playerid, "Could not assign a phone number. Please try again later.");
+	    return 0;
+	}
+
+	return 1;
+}
+
+stock Phone_TryAssignNumber(playerid, attempt)
+{
+	if(!IsPlayerConnected(playerid) || PlayerData[playerid][pID] == -1)
+	    return 0;
+
+	new query[180], number = randomEx(PHONE_NUMBER_MIN, PHONE_NUMBER_MAX), characterID = PlayerData[playerid][pID];
+	mysql_format(dbCon, query, sizeof(query),
+	    "UPDATE IGNORE `characters` SET `PhoneNumbr` = '%d', `PhoneModel` = 0 WHERE `ID` = '%d' AND `PhoneNumbr` = 0",
+	    number, characterID);
+	return mysql_tquery(dbCon, query, "OnPhoneAssigned", "dddd", playerid, attempt, number, characterID);
+}
+
+forward OnPhoneAssigned(playerid, attempt, number, characterID);
+public OnPhoneAssigned(playerid, attempt, number, characterID)
+{
+	if(!IsPlayerConnected(playerid))
+	    return 1;
+
+	if(PlayerData[playerid][pID] != characterID)
+	{
+	    if(GetPVarInt(playerid, "PhoneAssignPending") == characterID)
+	        DeletePVar(playerid, "PhoneAssignPending");
+	    return 1;
+	}
+
+	if(PlayerData[playerid][pPnumber] != 0)
+	{
+	    DeletePVar(playerid, "PhoneAssignPending");
+	    return 1;
+	}
+
+	if(!cache_affected_rows())
+	{
+	    if(attempt + 1 < PHONE_ASSIGN_ATTEMPTS && Phone_TryAssignNumber(playerid, attempt + 1))
+	        return 1;
+
+	    DeletePVar(playerid, "PhoneAssignPending");
+	    return SendErrorMessage(playerid, "Could not assign a unique phone number. Please contact an administrator.");
+	}
+
+	DeletePVar(playerid, "PhoneAssignPending");
+	PlayerData[playerid][pPnumber] = number;
+	PlayerData[playerid][pPhoneModel] = 0;
+	SendNoticeMessage(playerid, "Your phone number has been assigned: %d", number);
+	return 1;
+}
+
 RenderPlayerPhone(playerid, menuid, subid, select = 0)
 {
     ph_menuid[playerid] = menuid;

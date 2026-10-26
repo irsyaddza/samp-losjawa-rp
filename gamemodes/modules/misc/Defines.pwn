@@ -71,6 +71,10 @@
 #define PH_INCOMING 1
 #define PH_MISSED 	2
 
+#define PHONE_NUMBER_MIN 100000
+#define PHONE_NUMBER_MAX 999999
+#define PHONE_ASSIGN_ATTEMPTS 20
+
 // Main configuration
 #define TollCost (50) 					// How much it costs to pass the tolls
 #define TollDelayCop (4) 				// The timespace in seconds between each /toll command for all cops (To avoid spam)

@@ -34,10 +34,6 @@ SQL_Connect()
 	{
 		printf("[SQL] Connection to \"%s\" passed!", SQL_HOSTNAME);
 
-		// Ensure Hunger & Thirst columns exist in characters table
-		mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `Hunger` INT(11) NOT NULL DEFAULT '100';");
-		mysql_tquery(dbCon, "ALTER TABLE `characters` ADD COLUMN `Thirst` INT(11) NOT NULL DEFAULT '100';");
-
 		// Ensure server_settings table exists
 		mysql_tquery(dbCon, "CREATE TABLE IF NOT EXISTS `server_settings` (" \
 			"`id` INT(11) NOT NULL PRIMARY KEY DEFAULT '1'," \
@@ -139,10 +135,7 @@ SQL_LoadCharacters(playerid)
 
 SQL_CreateCharacter(playerid, const character[])
 {
-	new query[300], phoneNumber = randomEx(100000, 999999);
-	
-	mysql_format(dbCon, query, sizeof(query), "INSERT INTO `characters` (master, char_name, PhoneNumbr, Activated) VALUES (%d, '%e', %d, 1)", AccountData[playerid][aUserid], character, phoneNumber);
-    mysql_tquery(dbCon, query, "OnQueryFinished", "dd", playerid, THREAD_CREATE_CHARACTER);
+	CharacterCreate_Start(playerid, AccountData[playerid][aUserid], AccountData[playerid][aUsername], character, 0, 0, 0);
 }
 
 SQL_AttemptLogin(playerid, const password[])

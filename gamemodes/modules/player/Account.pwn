@@ -12,7 +12,6 @@
 #define THREAD_CHECK_CHARACTER 		(10)
 #define THREAD_PLAYER_HOLDWEAPON	(11)
 #define THREAD_PLAYER_RADIO         (12)
-#define THREAD_CREATE_CHARACTER     (13)
 #define THREAD_PLAYER_DRUGS         (14)
 #define THREAD_PLAYER_FRIENDS       (15)
 #define THREAD_ADMIN_ACTIONS        (16)
@@ -32,6 +31,90 @@ enum E_ACCOUNT_DATA
 };
 
 new AccountData[MAX_PLAYERS][E_ACCOUNT_DATA];
+
+enum E_CHAR_CREATE_DATA
+{
+	ccActive,
+	ccAdmin,
+	ccMaster,
+	ccAccount[MAX_PLAYER_NAME],
+	ccName[MAX_PLAYER_NAME],
+	ccTutorial,
+	ccPhoneModel,
+	ccAttempts
+};
+
+new CharCreateData[MAX_PLAYERS][E_CHAR_CREATE_DATA];
+
+// Retries on duplicate phone numbers; the unique index is the final guard.
+stock CharacterCreate_Start(playerid, master, const account[], const character[], tutorial, phoneModel, admin)
+{
+	CharCreateData[playerid][ccActive] = 1;
+	CharCreateData[playerid][ccAdmin] = admin;
+	CharCreateData[playerid][ccMaster] = master;
+	format(CharCreateData[playerid][ccAccount], MAX_PLAYER_NAME, "%s", account);
+	format(CharCreateData[playerid][ccName], MAX_PLAYER_NAME, "%s", character);
+	CharCreateData[playerid][ccTutorial] = tutorial;
+	CharCreateData[playerid][ccPhoneModel] = phoneModel;
+	CharCreateData[playerid][ccAttempts] = 0;
+	return CharacterCreate_Try(playerid);
+}
+
+stock CharacterCreate_Try(playerid)
+{
+	if(!IsPlayerConnected(playerid) || !CharCreateData[playerid][ccActive])
+	    return 0;
+
+	new query[320], phone = randomEx(PHONE_NUMBER_MIN, PHONE_NUMBER_MAX);
+	mysql_format(dbCon, query, sizeof(query),
+	    "INSERT INTO `characters` (`master`, `char_name`, `PhoneNumbr`, `Activated`, `Tutorial`, `PhoneModel`, `Hunger`, `Thirst`) \
+	     VALUES ('%d', '%e', '%d', 1, '%d', '%d', 100, 100) \
+	     ON DUPLICATE KEY UPDATE `ID` = `ID`",
+	    CharCreateData[playerid][ccMaster],
+	    CharCreateData[playerid][ccName],
+	    phone,
+	    CharCreateData[playerid][ccTutorial],
+	    CharCreateData[playerid][ccPhoneModel]);
+	mysql_tquery(dbCon, query, "OnCharacterCreateAttempt", "d", playerid);
+	return 1;
+}
+
+forward OnCharacterCreateAttempt(playerid);
+public OnCharacterCreateAttempt(playerid)
+{
+	if(!IsPlayerConnected(playerid) || !CharCreateData[playerid][ccActive])
+	    return 1;
+
+	if(!cache_affected_rows())
+	{
+	    if(++CharCreateData[playerid][ccAttempts] < PHONE_ASSIGN_ATTEMPTS)
+	        return CharacterCreate_Try(playerid);
+
+	    new admin = CharCreateData[playerid][ccAdmin];
+	    CharCreateData[playerid][ccActive] = 0;
+
+	    if(admin)
+	        return SendServerMessage(playerid, "Failed to create character '%s' after %d attempts. Check for duplicate name or phone.", CharCreateData[playerid][ccName], PHONE_ASSIGN_ATTEMPTS);
+
+	    SendClientMessage(playerid, COLOR_LIGHTRED, "Something went wrong, please contact an administrator.");
+	    return KickEx(playerid);
+	}
+
+	new characterSQLID = cache_insert_id();
+	new admin = CharCreateData[playerid][ccAdmin];
+	new master = CharCreateData[playerid][ccMaster];
+	new account[MAX_PLAYER_NAME], name[MAX_PLAYER_NAME];
+
+	format(account, sizeof(account), "%s", CharCreateData[playerid][ccAccount]);
+	format(name, sizeof(name), "%s", CharCreateData[playerid][ccName]);
+	CharCreateData[playerid][ccActive] = 0;
+
+	if(admin)
+	    return SendServerMessage(playerid, "Character %s #%d has been successfully added to account %s (%d).", name, characterSQLID, account, master);
+
+	SQL_LoadCharacters(playerid);
+	return 1;
+}
 
 // Functions
 
@@ -752,16 +835,6 @@ public OnQueryFinished(extraid, threadid)
                     PlayerData[extraid][pRadioChan][slot] = channel;
 				}
 			}
-		}
-		case THREAD_CREATE_CHARACTER:
-		{
-		    if(!cache_affected_rows())
-		    {
-		        SendClientMessage(extraid, COLOR_LIGHTRED, "Something went wrong, please contact an administrator.");
-		        return KickEx(extraid);
-			}
-
-		    SQL_LoadCharacters(extraid);
 		}
 		case THREAD_CHECK_CHARACTER:
 		{

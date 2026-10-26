@@ -5910,6 +5910,9 @@ public OnPlayerSpawn(playerid)
 
 	if(!LoggedIn{playerid} || PlayerData[playerid][pID] == -1) return false;
 
+	if(PlayerData[playerid][pPnumber] == 0)
+		Phone_EnsureAssigned(playerid);
+
     if(!Spawned{playerid})
 	{
         Spawned{playerid} = true;
@@ -8904,7 +8907,7 @@ FinishTutorial(playerid)
     PlayerData[playerid][pSHealth] = 50.0;
     PlayerData[playerid][pHealth] = 150.0;
 
-    if(!PlayerData[playerid][pPnumber]) PlayerData[playerid][pPnumber] = 100000 + random(99999);
+    if(!PlayerData[playerid][pPnumber]) Phone_EnsureAssigned(playerid);
 
     SetSpawnInfo(playerid, NO_TEAM, PlayerData[playerid][pModel], PlayerData[playerid][pPos][0], PlayerData[playerid][pPos][1], PlayerData[playerid][pPos][2], PlayerData[playerid][pPos][3], 0, 0, 0, 0, 0, 0);
 

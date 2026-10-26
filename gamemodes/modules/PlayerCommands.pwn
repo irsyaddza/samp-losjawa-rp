@@ -1801,7 +1801,7 @@ Dialog:Help_Main(playerid, response, listitem, inputtext[])
 			strcat(gstr, "{A9C4E4}/hangup / /h{FFFFFF} - End active call\n");
 			strcat(gstr, "{A9C4E4}/p{FFFFFF} - Answer incoming call\n");
 			strcat(gstr, "{A9C4E4}/sms [Number] [Text]{FFFFFF} - Send text message (SMS)\n");
-			strcat(gstr, "{A9C4E4}/dropcell / /loudspeaker / /convo{FFFFFF} - Phone options\n");
+			strcat(gstr, "{A9C4E4}/loudspeaker / /convo{FFFFFF} - Phone options\n");
 			strcat(gstr, "{A9C4E4}/setchannel / /setslot / /part / /r / /radio / /rlow / /r1../r8{FFFFFF} - Portable radio");
 
 			Dialog_Show(playerid, Help_Detail, DIALOG_STYLE_MSGBOX, "Help: Phone & Radio", gstr, "<< Back", "Close");
@@ -2412,7 +2412,7 @@ CMD:phonehelp(playerid, params[])
 {
 	SendClientMessage(playerid, COLOR_LIGHTRED, "Phone Commands:");
 	SendClientMessage(playerid, COLOR_WHITE, "/c(all) - /p(ickup) - /h(angup) - /ph(one)");
-	SendClientMessage(playerid, COLOR_WHITE, "/text - /txt - /sms - /loudspeaker - /dropcell - /selfie - /passcall");
+	SendClientMessage(playerid, COLOR_WHITE, "/text - /txt - /sms - /loudspeaker - /selfie - /passcall");
 	SendClientMessage(playerid, COLOR_WHITE, "/phone switch - /burnerhelp");
 	return true;
 }
@@ -3675,64 +3675,6 @@ CMD:selfie(playerid, params[])
     }
 
     OnPhoneClick_Selfie(playerid);
-	return true;
-}
-
-CMD:dropcell(playerid, params[])
-{
-    if(PlayerData[playerid][pInjured])
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "You cannot use the phone at this time.");
-
-	new query[128];
-
-	if(PlayerData[playerid][pPnumber])
-	{
-	    format(query, sizeof(query), "DELETE FROM phone_contacts WHERE contactAdded = '%d'", PlayerData[playerid][pPnumber]); // Delete Contacts
-		mysql_pquery(dbCon, query);
-
-	    format(query, sizeof(query), "DELETE FROM phone_sms WHERE PhoneReceive = '%d'", PlayerData[playerid][pPnumber]); // Delete a message
-		mysql_pquery(dbCon, query);
-
-		if(PlayerData[playerid][pCallLine] != INVALID_PLAYER_ID)
-		{
-			SendClientMessage(PlayerData[playerid][pCallLine], COLOR_GRAD2, "[ ! ] They hung up.");
-			CancelCall(playerid);
-		}
-
-        PhoneSelfie_Stop(playerid);
-
-     	PlayerData[playerid][pPnumber] = 0;
-     	PlayerData[playerid][pPhoneModel] = 0;
-
-		SendNoticeMessage(playerid, "You've dropped your mobile phone.");
-	}
-	else SendClientMessage(playerid, COLOR_GRAD1, "   You don't have a phone");
-
-	return true;
-}
-
-CMD:buycell(playerid, params[])
-{
-	if(PlayerData[playerid][pInjured])
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "Error: You are not able to do this right now.");
-
-	if(DeathMode{playerid})
-		return SendClientMessage(playerid, COLOR_LIGHTRED, "Error: You are not able to do this right now.");
-
-	if(PlayerData[playerid][pPnumber])
-		return SendClientMessage(playerid, COLOR_GRAD1, "   You already own a phone.");
-
-	if(PlayerData[playerid][pCash] < 500)
-		return SendClientMessageEx(playerid, COLOR_LIGHTRED, "Error: You need at least %s to buy a phone.", FormatNumber(500));
-
-	// Assign a unique random number (100000-199999)
-	new newNumber = 100000 + random(99999);
-	PlayerData[playerid][pPnumber] = newNumber;
-	PlayerData[playerid][pPhoneModel] = 0; // default black cover
-
-	TakePlayerMoney(playerid, 500);
-
-	SendNoticeMessage(playerid, "You purchased a new phone for $500. Your number: %d", newNumber);
 	return true;
 }
 
