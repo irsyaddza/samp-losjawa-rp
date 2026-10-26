@@ -58,6 +58,14 @@ ptask Players[1000](i)
 
 	new playerState = GetPlayerState(i), vehicleid = GetPlayerVehicleID(i), timestamp = gettime();
 
+	if(LastSave[i] == 0) LastSave[i] = timestamp;
+
+	if(timestamp - LastSave[i] >= 300)
+	{
+		SQL_SaveCharacter(i, false);
+		LastSave[i] = timestamp;
+	}
+
 	PlayerData[i][pPlayingSeconds]++;
 
 	if(PhoneOpen{i})

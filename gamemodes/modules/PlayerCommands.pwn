@@ -14133,6 +14133,29 @@ CMD:vehiclename(playerid, parmas[])
 	return true;
 }
 
+// Builds one query for every spare key the player holds.
+stock BuildDupKeysQuery(playerid, query[], size)
+{
+	new count, len;
+
+	len = format(query, size, "SELECT `carID`, `carModel`, `carPlate` FROM `cars` WHERE `carID` IN (");
+
+	for(new i = 0; i < 10; ++i)
+	{
+		if(PlayerData[playerid][pDupKeys][i] != 9999)
+		{
+			len += format(query[len], size - len, "%s%d", count ? "," : "", PlayerData[playerid][pDupKeys][i]);
+			count++;
+		}
+	}
+
+	if(!count)
+		return 0;
+
+	format(query[len], size - len, ")");
+	return 1;
+}
+
 YCMD:vehicle(playerid, params[], help) = v;
 
 CMD:v(playerid, params[])
@@ -14308,32 +14331,10 @@ CMD:v(playerid, params[])
 	}
 	else if(!strcmp(type, "keys", true))
 	{
-	    new count, rows, model, plate[30];
+	    if(!BuildDupKeysQuery(playerid, query, sizeof(query)))
+	        return SendClientMessage(playerid, COLOR_LIGHTRED, "You don't have any keys.");
 
-	    for(new i = 0; i < 10; ++i)
-	    {
-	        if(PlayerData[playerid][pDupKeys][i] != 9999)
-	        {
-				mysql_format(dbCon, query, sizeof(query), "SELECT `carModel`, `carPlate` FROM `cars` WHERE `carID` = '%d' LIMIT 1", PlayerData[playerid][pDupKeys][i]);
-				new Cache:cache = mysql_query(dbCon, query);
-
-				cache_get_row_count(rows);
-
-				if(rows)
-				{
-					cache_get_value_name_int(0, "carModel", model);
-					cache_get_value_name(0, "carPlate", plate, 30);
-
-					SendClientMessageEx(playerid, COLOR_YELLOW3, "KEYID:%d VEHICLE: %s PLATES: %s", i + 1, ReturnVehicleModelNameEx(model), plate);
-
-					count++;
-				}
-
-				cache_delete(cache);
-	        }
-	    }
-
-	    if(!count) SendClientMessage(playerid, COLOR_LIGHTRED, "You don't have any keys.");
+	    mysql_tquery(dbCon, query, "OnShowVehicleKeys", "d", playerid);
 	}
 	else if(!strcmp(type, "dropkey", true))
 	{
@@ -14356,28 +14357,10 @@ CMD:v(playerid, params[])
 		if(PlayerData[playerid][pDupKeys][keyid] == 9999)
 		    return SendErrorMessage(playerid, "You don't have a key in that slot.");
 
-	    new rows, model, plate[30];
+	    carid = PlayerData[playerid][pDupKeys][keyid];
 
-		mysql_format(dbCon, query, sizeof(query), "SELECT `carModel`, `carPlate` FROM `cars` WHERE `carID` = '%d' LIMIT 1", PlayerData[playerid][pDupKeys][keyid]);
-		new Cache:cache = mysql_query(dbCon, query);
-
-		cache_get_row_count(rows);
-
-		if(!rows)
-		{
-		    cache_delete(cache);
-		    
-			return SendClientMessage(playerid, COLOR_YELLOW, "Fatal error dropping your spare key.");
-		}
-
-		cache_get_value_name_int(0, "carModel", model);
-		cache_get_value_name(0, "carPlate", plate, 30);
-		
-		cache_delete(cache);
-
-		RemoveVehicleDupKey(playerid, PlayerData[playerid][pDupKeys][keyid]);
-
-		SendClientMessageEx(playerid, COLOR_YELLOW, "SERVER: You dropped the spare key to a %s with the license plate %s.", ReturnVehicleModelNameEx(model), plate);
+		mysql_format(dbCon, query, sizeof(query), "SELECT `carModel`, `carPlate` FROM `cars` WHERE `carID` = '%d' LIMIT 1", carid);
+		mysql_tquery(dbCon, query, "OnDropVehicleKey", "ddd", playerid, keyid, carid);
 	}
 	else if(!strcmp(type, "upgrade", true))
 	{
@@ -14732,38 +14715,8 @@ CMD:v(playerid, params[])
 	}
 	else if(!strcmp(type, "location", true))
 	{
-	    new vehicleData[2], vehicleName[64], Float:vehDistance[4], rows;
-
 		mysql_format(dbCon, query, sizeof(query), "SELECT `carID`, `carModel`, `carName`, `carPosX`, `carPosY`, `carPosZ` FROM `cars` WHERE `carOwner` = '%d'", PlayerData[playerid][pID]);
-		new Cache:cache = mysql_query(dbCon, query);
-
-		cache_get_row_count(rows);
-
-		if(!rows)
-		{
-			cache_delete(cache);
-
-			return SendClientMessage(playerid, COLOR_LIGHTRED, "You don't own any vehicles.");
-		}
-
-		for(new i = 0; i < rows; ++i)
-		{
-		    cache_get_value_name_int(i, "carID", vehicleData[0]);
-			cache_get_value_name_int(i, "carModel", vehicleData[1]);
-
-			cache_get_value_name(i, "carName", vehicleName, 64);
-
-			cache_get_value_name_float(i, "carPosX", vehDistance[0]);
-			cache_get_value_name_float(i, "carPosY", vehDistance[1]);
-			cache_get_value_name_float(i, "carPosZ", vehDistance[2]);
-
-			if(strlen(vehicleName) >= 3)
-				SendClientMessageEx(playerid, COLOR_GREEN, "Your %s (#%d) is set to spawn at %s, San Andreas.", vehicleName, vehicleData[1], ReturnDynamicAddress(vehDistance[0], vehDistance[1]));
-			else
-				SendClientMessageEx(playerid, COLOR_GREEN, "Your %s (#%d) is set to spawn at %s, San Andreas.", ReturnVehicleModelNameEx(vehicleData[1]), vehicleData[1], ReturnDynamicAddress(vehDistance[0], vehDistance[1]));
-		}
-
-		cache_delete(cache);
+		mysql_tquery(dbCon, query, "OnPlayerVehicleLocations", "d", playerid);
 	}
 	else if(!strcmp(type, "buypark", true))
 	{
@@ -15308,6 +15261,193 @@ stock IsVehicleTrunk(vehicleid)
 	return 0;
 }
 
+forward OnShowCheques(playerid, all, display_id);
+public OnShowCheques(playerid, all, display_id)
+{
+	if(!IsPlayerConnected(playerid))
+		return 0;
+
+	new rows = cache_num_rows();
+
+	if(!rows)
+		return 0;
+
+	new playername[MAX_PLAYER_NAME+1], rec[MAX_PLAYER_NAME+1], sen[MAX_PLAYER_NAME+1], code[64], amount, id;
+
+	GetPlayerName(playerid, playername, sizeof(playername));
+
+	for(new i = 0; i < rows; ++i)
+	{
+		cache_get_value_name(i, "sender", sen);
+		cache_get_value_name(i, "reciever", rec);
+		cache_get_value_name(i, "code", code);
+		cache_get_value_name_int(i, "amount", amount);
+
+		id = all ? 0 : display_id;
+		if(all) cache_get_value_name_int(i, "id", id);
+
+		SendClientMessage(playerid,COLOR_YELLOW3, "-------------------------------------------------------------------------------");
+		SendClientMessageEx(playerid,COLOR_YELLOW3,   "|_Check_ID:_%06d_|", id);
+		SendClientMessage(playerid,COLOR_YELLOW3, "|_BANK OF LOS SANTOS - Los Santos, San Andress.");
+		SendClientMessageEx(playerid,COLOR_YELLOW3,   "|_Pay to the order of: %s |_ From: %s", rec, sen);
+		SendClientMessageEx(playerid,COLOR_YELLOW3,   "|____  To the sum of: $%d", amount);
+		SendClientMessage(playerid,COLOR_YELLOW3, "| Signature: Towards your efforts n the agency.");
+		SendClientMessage(playerid,COLOR_YELLOW3, "-------------------------------------------------------------------------------");
+
+		if(!strcmp(playername, rec, true))
+		{
+			SendClientMessageEx(playerid, COLOR_YELLOW3,   "|=== Code: %s", code);
+		}
+	}
+	return 1;
+}
+
+forward OnShowVehicleKeys(playerid);
+public OnShowVehicleKeys(playerid)
+{
+	if(!IsPlayerConnected(playerid))
+		return 0;
+
+	new rows = cache_num_rows(), count, carid, model, plate[30];
+
+	for(new i = 0; i < rows; ++i)
+	{
+		cache_get_value_name_int(i, "carID", carid);
+
+		for(new j = 0; j < 10; ++j)
+		{
+			if(PlayerData[playerid][pDupKeys][j] == carid)
+			{
+				cache_get_value_name_int(i, "carModel", model);
+				cache_get_value_name(i, "carPlate", plate, 30);
+
+				SendClientMessageEx(playerid, COLOR_YELLOW3, "KEYID:%d VEHICLE: %s PLATES: %s", j + 1, ReturnVehicleModelNameEx(model), plate);
+
+				count++;
+				break;
+			}
+		}
+	}
+
+	if(!count) SendClientMessage(playerid, COLOR_LIGHTRED, "You don't have any keys.");
+	return 1;
+}
+
+forward OnDropVehicleKey(playerid, keyid, carid);
+public OnDropVehicleKey(playerid, keyid, carid)
+{
+	if(!IsPlayerConnected(playerid))
+		return 0;
+
+	if(keyid < 0 || keyid > 9 || PlayerData[playerid][pDupKeys][keyid] != carid)
+		return 0;
+
+	if(!cache_num_rows())
+	{
+		SendClientMessage(playerid, COLOR_YELLOW, "Fatal error dropping your spare key.");
+		return 0;
+	}
+
+	new model, plate[30];
+
+	cache_get_value_name_int(0, "carModel", model);
+	cache_get_value_name(0, "carPlate", plate, 30);
+
+	RemoveVehicleDupKey(playerid, carid);
+
+	SendClientMessageEx(playerid, COLOR_YELLOW, "SERVER: You dropped the spare key to a %s with the license plate %s.", ReturnVehicleModelNameEx(model), plate);
+	return 1;
+}
+
+forward OnVehKeysAdminLoaded(playerid, mode);
+public OnVehKeysAdminLoaded(playerid, mode)
+{
+	if(!IsPlayerConnected(playerid))
+		return 0;
+
+	new rows = cache_num_rows(), count, carid, model, plate[30], string[1024], key[32];
+
+	if(mode == 0)
+		format(string, sizeof(string), "Slot\tVehicle Model\tLicense Plate\n");
+
+	for(new i = 0; i < rows; ++i)
+	{
+		cache_get_value_name_int(i, "carID", carid);
+
+		for(new j = 0; j < 10; ++j)
+		{
+			if(PlayerData[playerid][pDupKeys][j] == carid)
+			{
+				cache_get_value_name_int(i, "carModel", model);
+				cache_get_value_name(i, "carPlate", plate, 30);
+
+				if(mode == 0)
+					format(string, sizeof(string), "%sSlot %d\t%s\t%s\n", string, j + 1, ReturnVehicleModelNameEx(model), plate);
+				else
+				{
+					format(string, sizeof(string), "%sSlot %d: %s [%s]\n", string, j + 1, ReturnVehicleModelNameEx(model), plate);
+					format(key, sizeof(key), "Vdrop_KeyIdx_%d", count);
+					SetPVarInt(playerid, key, j);
+				}
+
+				count++;
+				break;
+			}
+		}
+	}
+
+	if(!count)
+	{
+		if(mode == 0)
+			SendErrorMessage(playerid, "You do not hold any spare keys.");
+		else
+			SendErrorMessage(playerid, "You do not hold any spare keys to drop.");
+
+		ShowPlayerVehMainDialog(playerid);
+		return 0;
+	}
+
+	if(mode == 0)
+		Dialog_Show(playerid, PlayerVehKeysList, DIALOG_STYLE_TABLIST_HEADERS, "My Spare Keys", string, "Close", "Back");
+	else
+		Dialog_Show(playerid, PlayerVehKeysDropList, DIALOG_STYLE_LIST, "Drop Spare Key", string, "Drop", "Back");
+
+	return 1;
+}
+
+forward OnPlayerVehicleLocations(playerid);
+public OnPlayerVehicleLocations(playerid)
+{
+	if(!IsPlayerConnected(playerid))
+		return 0;
+
+	new rows = cache_num_rows();
+
+	if(!rows)
+	{
+		SendClientMessage(playerid, COLOR_LIGHTRED, "You don't own any vehicles.");
+		return 0;
+	}
+
+	new vehicleData[2], vehicleName[64], Float:vehDistance[4];
+
+	for(new i = 0; i < rows; ++i)
+	{
+		cache_get_value_name_int(i, "carID", vehicleData[0]);
+		cache_get_value_name_int(i, "carModel", vehicleData[1]);
+		cache_get_value_name(i, "carName", vehicleName, 64);
+		cache_get_value_name_float(i, "carPosX", vehDistance[0]);
+		cache_get_value_name_float(i, "carPosY", vehDistance[1]);
+		cache_get_value_name_float(i, "carPosZ", vehDistance[2]);
+
+		if(strlen(vehicleName) >= 3)
+			SendClientMessageEx(playerid, COLOR_GREEN, "Your %s (#%d) is set to spawn at %s, San Andreas.", vehicleName, vehicleData[1], ReturnDynamicAddress(vehDistance[0], vehDistance[1]));
+		else
+			SendClientMessageEx(playerid, COLOR_GREEN, "Your %s (#%d) is set to spawn at %s, San Andreas.", ReturnVehicleModelNameEx(vehicleData[1]), vehicleData[1], ReturnDynamicAddress(vehDistance[0], vehDistance[1]));
+	}
+	return 1;
+}
+
 CMD:cheque(playerid, params[])
 {
 	new tmp[32], tmp2[32], query[256];
@@ -15335,77 +15475,14 @@ CMD:cheque(playerid, params[])
         if(strcmp(string,"all",true) == 0)
 		{
 			format(query,sizeof(query),"SELECT * FROM cheques WHERE owner_ID = '%d' ORDER BY id ASC", PlayerData[playerid][pID]);
-			new Cache:cache = mysql_query(dbCon, query);
-
-			if(cache_num_rows())
-			{
-			    new playername[MAX_PLAYER_NAME+1], rec[MAX_PLAYER_NAME+1], sen[MAX_PLAYER_NAME+1], code[64], amount, id;
-
-			    GetPlayerName(playerid, playername, sizeof(playername));
-
-			    for(new i = 0; i != cache_num_rows(); ++i)
-			    {
-				    cache_get_value_name(i, "sender", sen);
-				    cache_get_value_name(i, "reciever", rec);
-				    cache_get_value_name(i, "code", code);
-					cache_get_value_name_int(i, "amount", amount);
-					cache_get_value_name_int(i, "id", id);
-
-                    SendClientMessage(playerid,COLOR_YELLOW3, "-------------------------------------------------------------------------------");
-                    SendClientMessageEx(playerid,COLOR_YELLOW3,   "|_Check_ID:_%06d_|", id);
-                    SendClientMessage(playerid,COLOR_YELLOW3, "|_BANK OF LOS SANTOS - Los Santos, San Andress.");
-                    SendClientMessageEx(playerid,COLOR_YELLOW3,   "|_Pay to the order of: %s |_ From: %s", rec, sen);
-                    SendClientMessageEx(playerid,COLOR_YELLOW3,   "|____  To the sum of: $%d", amount);
-                    SendClientMessage(playerid,COLOR_YELLOW3, "| Signature: Towards your efforts n the agency.");
-                    SendClientMessage(playerid,COLOR_YELLOW3, "-------------------------------------------------------------------------------");
-
-                    if(!strcmp(playername, rec, true))
-                    {
-                    	SendClientMessageEx(playerid, COLOR_YELLOW3,   "|=== Code: %s", code);
-                    }
-			    }
-			}
-
-			cache_delete(cache);
+			mysql_tquery(dbCon, query, "OnShowCheques", "ddd", playerid, 1, 0);
 		}
-		else
+		else if(IsNumeric(string))
 		{
-			if(IsNumeric(string))
-			{
-				format(query,sizeof(query),"SELECT * FROM cheques WHERE owner_ID = '%d' AND id = '%s'", PlayerData[playerid][pID], string);
-				new Cache:cache = mysql_query(dbCon, query);
-
-				if(cache_num_rows())
-				{
-				    new playername[MAX_PLAYER_NAME+1], rec[MAX_PLAYER_NAME+1], sen[MAX_PLAYER_NAME+1], code[64];
-
-				    cache_get_value_name(0, "sender", sen);
-				    cache_get_value_name(0, "reciever", rec);
-				    cache_get_value_name(0, "code", code);
-
-					new amount;
-					cache_get_value_name_int(0, "amount", amount);
-
-                    SendClientMessage(playerid,COLOR_YELLOW3, "-------------------------------------------------------------------------------");
-                    SendClientMessageEx(playerid,COLOR_YELLOW3,   "|_Check_ID:_%06d_|", strval(string));
-                    SendClientMessage(playerid,COLOR_YELLOW3, "|_BANK OF LOS SANTOS - Los Santos, San Andress.");
-                    SendClientMessageEx(playerid,COLOR_YELLOW3,   "|_Pay to the order of: %s |_ From: %s", rec, sen);
-                    SendClientMessageEx(playerid,COLOR_YELLOW3,   "|____  To the sum of: $%d", amount);
-                    SendClientMessage(playerid,COLOR_YELLOW3, "| Signature: Towards your efforts n the agency.");
-                    SendClientMessage(playerid,COLOR_YELLOW3, "-------------------------------------------------------------------------------");
-
-                    GetPlayerName(playerid, playername, sizeof(playername));
-                    if(!strcmp(playername, rec, true))
-                    {
-                    	SendClientMessageEx(playerid,COLOR_YELLOW3,   "|=== Code: %s", code);
-                    }
-				}
-
-				cache_delete(cache);
-			}
+			format(query,sizeof(query),"SELECT * FROM cheques WHERE owner_ID = '%d' AND id = '%s'", PlayerData[playerid][pID], string);
+			mysql_tquery(dbCon, query, "OnShowCheques", "ddd", playerid, 0, strval(string));
 		}
 		return true;
-
 	}
 	else if(strcmp(tmp,"paycheck",true) == 0)
 	{
@@ -18499,31 +18576,15 @@ Dialog:PlayerVehKeysAdmin(playerid, response, listitem, inputtext[])
 	{
 		case 0: // View my spare keys
 		{
-			new string[1024], count = 0, rows, model, plate[30], query[128];
-			format(string, sizeof(string), "Slot\tVehicle Model\tLicense Plate\n");
-			for(new i = 0; i < 10; ++i)
-			{
-				if(PlayerData[playerid][pDupKeys][i] != 9999)
-				{
-					mysql_format(dbCon, query, sizeof(query), "SELECT `carModel`, `carPlate` FROM `cars` WHERE `carID` = '%d' LIMIT 1", PlayerData[playerid][pDupKeys][i]);
-					new Cache:cache = mysql_query(dbCon, query);
-					cache_get_row_count(rows);
-					if(rows)
-					{
-						cache_get_value_name_int(0, "carModel", model);
-						cache_get_value_name(0, "carPlate", plate, 30);
-						format(string, sizeof(string), "%sSlot %d\t%s\t%s\n", string, i + 1, ReturnVehicleModelNameEx(model), plate);
-						count++;
-					}
-					cache_delete(cache);
-				}
-			}
-			if(!count)
+			new query[256];
+
+			if(!BuildDupKeysQuery(playerid, query, sizeof(query)))
 			{
 				SendErrorMessage(playerid, "You do not hold any spare keys.");
 				return ShowPlayerVehMainDialog(playerid);
 			}
-			Dialog_Show(playerid, PlayerVehKeysList, DIALOG_STYLE_TABLIST_HEADERS, "My Spare Keys", string, "Close", "Back");
+
+			mysql_tquery(dbCon, query, "OnVehKeysAdminLoaded", "dd", playerid, 0);
 		}
 		case 1: // Duplicate Key
 		{
@@ -18543,33 +18604,15 @@ Dialog:PlayerVehKeysAdmin(playerid, response, listitem, inputtext[])
 		}
 		case 2: // Drop Key
 		{
-			new string[512], count = 0, rows, model, plate[30], query[128];
-			new key[32];
-			for(new i = 0; i < 10; ++i)
-			{
-				if(PlayerData[playerid][pDupKeys][i] != 9999)
-				{
-					mysql_format(dbCon, query, sizeof(query), "SELECT `carModel`, `carPlate` FROM `cars` WHERE `carID` = '%d' LIMIT 1", PlayerData[playerid][pDupKeys][i]);
-					new Cache:cache = mysql_query(dbCon, query);
-					cache_get_row_count(rows);
-					if(rows)
-					{
-						cache_get_value_name_int(0, "carModel", model);
-						cache_get_value_name(0, "carPlate", plate, 30);
-						format(string, sizeof(string), "%sSlot %d: %s [%s]\n", string, i + 1, ReturnVehicleModelNameEx(model), plate);
-						format(key, sizeof(key), "Vdrop_KeyIdx_%d", count);
-						SetPVarInt(playerid, key, i);
-						count++;
-					}
-					cache_delete(cache);
-				}
-			}
-			if(!count)
+			new query[256];
+
+			if(!BuildDupKeysQuery(playerid, query, sizeof(query)))
 			{
 				SendErrorMessage(playerid, "You do not hold any spare keys to drop.");
 				return ShowPlayerVehMainDialog(playerid);
 			}
-			Dialog_Show(playerid, PlayerVehKeysDropList, DIALOG_STYLE_LIST, "Drop Spare Key", string, "Drop", "Back");
+
+			mysql_tquery(dbCon, query, "OnVehKeysAdminLoaded", "dd", playerid, 1);
 		}
 	}
 	return 1;
@@ -18668,21 +18711,10 @@ Dialog:PlayerVehKeysDropList(playerid, response, listitem, inputtext[])
 		return ShowPlayerVehMainDialog(playerid);
 	}
 	
-	new rows, model, plate[30], query[128];
-	mysql_format(dbCon, query, sizeof(query), "SELECT `carModel`, `carPlate` FROM `cars` WHERE `carID` = '%d' LIMIT 1", PlayerData[playerid][pDupKeys][keyid]);
-	new Cache:cache = mysql_query(dbCon, query);
-	cache_get_row_count(rows);
-	if(!rows)
-	{
-		cache_delete(cache);
-		return SendErrorMessage(playerid, "Fatal error dropping your spare key.");
-	}
-	cache_get_value_name_int(0, "carModel", model);
-	cache_get_value_name(0, "carPlate", plate, 30);
-	cache_delete(cache);
-	
-	RemoveVehicleDupKey(playerid, PlayerData[playerid][pDupKeys][keyid]);
-	SendClientMessageEx(playerid, COLOR_YELLOW, "SERVER: You dropped the spare key to a %s with the license plate %s.", ReturnVehicleModelNameEx(model), plate);
+	new query[128], carid = PlayerData[playerid][pDupKeys][keyid];
+
+	mysql_format(dbCon, query, sizeof(query), "SELECT `carModel`, `carPlate` FROM `cars` WHERE `carID` = '%d' LIMIT 1", carid);
+	mysql_tquery(dbCon, query, "OnDropVehicleKey", "ddd", playerid, keyid, carid);
 	return 1;
 }
 

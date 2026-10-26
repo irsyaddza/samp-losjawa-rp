@@ -1134,6 +1134,7 @@ new nearApartment_var[MAX_PLAYERS];
 new PropertyViewPage[MAX_PLAYERS];
 new PropertyViewPageIndexes[30][2];
 new TutorialDelay[MAX_PLAYERS];   // countdown seconds remaining for tutorial auto-advance
+new LastSave[MAX_PLAYERS];        // last periodic character autosave (unix time)
 
 new
 	pToAccept[MAX_PLAYERS],
@@ -2154,6 +2155,12 @@ public OnGameModeInit()
 
 public OnGameModeExit()
 {
+	// Best effort on unexpected shutdown; the periodic autosave is the primary guard.
+	foreach (new i : Player)
+	{
+		if(SQL_IsLogged(i)) SQL_SaveCharacter(i, true);
+	}
+
 	mysql_close(dbCon);
 	DestroyHudV2GlobalTDs();
 
@@ -4476,6 +4483,7 @@ ResetPlayer(playerid)
 ResetStatistics(playerid) // Clear player Stats
 {
 	PlayerData[playerid][pAdmin] = 0;
+	LastSave[playerid] = 0;
 
     //master account data
 	AccountData[playerid][aConnectionID] = 0;
@@ -5011,11 +5019,202 @@ ResetStatistics(playerid) // Clear player Stats
 	format(GraffitiFont[playerid], 24, "Arial");
 }
 
-TerminateConnection(playerid, reason)
+CleanupCharacterWorldState(playerid, bool:disconnecting = false)
 {
 	if(Unpackaging{playerid}) KillTimer(UnpackageTimer[playerid]);
+	if(selfie_timer[playerid]) KillTimer(selfie_timer[playerid]);
+	if(calltimer[playerid]) KillTimer(calltimer[playerid]);
+	if(smstimer[playerid]) KillTimer(smstimer[playerid]);
+	if(PlayerData[playerid][pShowFooter]) KillTimer(PlayerData[playerid][pFooterTimer]);
+	if(PlayerData[playerid][pFreeze]) KillTimer(PlayerData[playerid][pFreezeTimer]);
 
 	RemovePrisonLabel(playerid);
+
+	if(PlayerData[playerid][pInTuning]) Tuning_ExitDisplay(playerid, disconnecting);
+
+	if(ReplacingGraffiti{playerid}) KillTimer(spraytimer[playerid]);
+
+	if(HelpingPlayer[playerid] != INVALID_PLAYER_ID)
+	{
+		new userid = HelpingPlayer[playerid];
+
+		if(!KnockedOut{playerid})
+		{
+			KillTimer(HelpUpTimer[userid]);
+			HelpupStage[userid] = 0;
+
+			if(IsValidDynamic3DTextLabel(KnockoutLabel[userid])) DestroyDynamic3DTextLabel(KnockoutLabel[userid]);
+		}
+		else
+		{
+			KillTimer(HelpUpTimer[playerid]);
+			HelpupStage[playerid] = 0;
+
+			if(IsValidDynamic3DTextLabel(KnockoutLabel[playerid])) DestroyDynamic3DTextLabel(KnockoutLabel[playerid]);
+		}
+
+		HelpingPlayer[userid] = INVALID_PLAYER_ID;
+		HelpingPlayer[playerid] = INVALID_PLAYER_ID;
+	}
+
+	if(TaxiMoney[playerid] > 0 && IsPlayerInAnyVehicle(playerid))
+	{
+		gPassengerCar[playerid] = GetPlayerVehicleID(playerid);
+		ChargePerson(playerid);
+	}
+
+	if(BoomboxData[playerid][boomboxPlaced])
+	{
+		Boombox_Destroy(playerid);
+
+		foreach (new i : Player)
+		{
+			if(grantboombox[i] == playerid)
+			{
+				grantboombox[i] = INVALID_PLAYER_ID;
+			}
+		}
+	}
+
+	if(BreakingIn[playerid] != -1)
+	{
+		new breakingcar = BreakingIn[playerid];
+
+		CancelVehicleBreakin(breakingcar);
+
+		if(IsValidVehicle(breakingcar))
+		{
+			new
+				engine,
+				lights,
+				alarm,
+				doors,
+				bonnet,
+				boot,
+				objective;
+
+			GetVehicleParamsEx(breakingcar, engine, lights, alarm, doors, bonnet, boot, objective);
+			SetVehicleParamsEx(breakingcar, engine, lights, 0, doors, bonnet, boot, 0);
+		}
+	}
+
+	ExitSettingVehicle(playerid);
+
+	new callerid = PlayerData[playerid][pCallConnect];
+
+	if(callerid != INVALID_PLAYER_ID)
+	{
+		SendClientMessage(callerid, COLOR_GRAD2, "[ ! ] They hung up (disconnected)");
+
+		RenderPlayerPhone(callerid, 0, 0);
+
+		if(GetPlayerSpecialAction(callerid) == SPECIAL_ACTION_USECELLPHONE) SetPlayerSpecialAction(callerid, SPECIAL_ACTION_STOPUSECELLPHONE);
+
+		PlayerData[callerid][pCallConnect] = INVALID_PLAYER_ID;
+		PlayerData[playerid][pCallConnect] = INVALID_PLAYER_ID;
+	}
+	return true;
+}
+
+ResetCharacterState(playerid)
+{
+	new
+		admin = PlayerData[playerid][pAdmin],
+		connectionid = AccountData[playerid][aConnectionID],
+		userid = AccountData[playerid][aUserid],
+		username[MAX_PLAYER_NAME],
+		email[MAX_PLAYER_NAME],
+		secretword[MAX_PLAYER_NAME],
+		combined0 = AccountData[playerid][aCombinedLevel][0],
+		combined1 = AccountData[playerid][aCombinedLevel][1],
+		serial[50],
+		lastserial[50],
+		lastlogin = LastLogin[playerid],
+		connectstamp = ConnectStamp[playerid],
+		loginattempts = LoginAttempts[playerid],
+		bool:accountchecked = AccountChecked{playerid}
+	;
+
+	format(username, sizeof(username), "%s", AccountData[playerid][aUsername]);
+	format(email, sizeof(email), "%s", AccountData[playerid][aEmail]);
+	format(secretword, sizeof(secretword), "%s", AccountData[playerid][aSecretWord]);
+	format(serial, sizeof(serial), "%s", PlayerSerial[playerid]);
+	format(lastserial, sizeof(lastserial), "%s", LastSerial[playerid]);
+
+	ResetStatistics(playerid);
+	ResetPlayerWeapons(playerid);
+
+	PlayerData[playerid][pAdmin] = admin;
+	AccountData[playerid][aConnectionID] = connectionid;
+	AccountData[playerid][aUserid] = userid;
+	format(AccountData[playerid][aUsername], MAX_PLAYER_NAME, "%s", username);
+	format(AccountData[playerid][aEmail], MAX_PLAYER_NAME, "%s", email);
+	format(AccountData[playerid][aSecretWord], MAX_PLAYER_NAME, "%s", secretword);
+	AccountData[playerid][aCombinedLevel][0] = combined0;
+	AccountData[playerid][aCombinedLevel][1] = combined1;
+	format(PlayerSerial[playerid], 50, "%s", serial);
+	format(LastSerial[playerid], 50, "%s", lastserial);
+	LastLogin[playerid] = lastlogin;
+	ConnectStamp[playerid] = connectstamp;
+	LoginAttempts[playerid] = loginattempts;
+	AccountChecked{playerid} = accountchecked;
+
+	PlayerData[playerid][pDBRank] = 0;
+	PlayerData[playerid][pSWATRank] = 0;
+	PlayerData[playerid][pEMSRank] = 0;
+	PlayerData[playerid][pFireRank] = 0;
+	PlayerData[playerid][pFactionSpawn] = 0;
+	pIllegalJob[playerid] = 0;
+	PlayerData[playerid][pPbiskey] = -1;
+	PlayerData[playerid][pCarLic] = 0;
+	PlayerData[playerid][pWepLic] = 0;
+	PlayerData[playerid][pCCWLic] = 0;
+	PlayerData[playerid][pFlyLic] = 0;
+	PlayerData[playerid][pMedLic] = 0;
+	PlayerData[playerid][pTruckLic] = 0;
+	PlayerData[playerid][pBusJobDelay] = 0;
+	PlayerData[playerid][pSweeperJobDelay] = 0;
+	PlayerData[playerid][pFarmerRank] = 1;
+	PlayerData[playerid][pFarmerExp] = 0;
+	PlayerData[playerid][pPrisonTimes] = 0;
+	PlayerData[playerid][pJailTimes] = 0;
+	PlayerData[playerid][pActiveListings] = 0;
+	PlayerData[playerid][pDrugAmountUsed] = 0.0;
+	PlayerData[playerid][pDrugDuration] = 0;
+	PlayerData[playerid][pNarcan] = 0;
+	PlayerData[playerid][pMedkits] = 0;
+	PlayerData[playerid][pOverdosing] = 0;
+	PlayerData[playerid][pOverdoseTimer] = 0;
+	PlayerData[playerid][pTuningCategoryID] = 0;
+	PlayerData[playerid][pTuningCount] = 0;
+	PlayerData[playerid][pTuningComponent] = 0;
+	PlayerData[playerid][pCallCost] = 0;
+	PlayerData[playerid][pHelpmeMessage][0] = EOS;
+	PlayerData[playerid][pAnimation] = 0;
+	PlayerData[playerid][pHunger] = 100;
+	PlayerData[playerid][pThirst] = 100;
+	PlayerData[playerid][pInTuning] = 0;
+	PlayerData[playerid][pRadio] = 0;
+	PlayerData[playerid][pRChannel] = 0;
+	PlayerData[playerid][pRSlot] = 0;
+	PlayerData[playerid][pLoginToggle] = 0;
+	PlayerData[playerid][pLoginSound] = 0;
+	PlayerData[playerid][pLoginNotify] = 0;
+	PlayerData[playerid][pSprayBanned] = 0;
+	LessLethalActive{playerid} = false;
+
+	format(PlayerData[playerid][pMarriedTo], MAX_PLAYER_NAME, "None");
+
+	for(new i = 0; i < 10; i++) PlayerData[playerid][pDrugTolerance][i] = 0;
+	for(new i = 0; i < 12; i++) PlayerData[playerid][ItemCache][i] = -1;
+
+	LastSave[playerid] = 0;
+	return true;
+}
+
+TerminateConnection(playerid, reason)
+{
+	CleanupCharacterWorldState(playerid, true);
 
 	new vehicleid, carid;
 
@@ -5076,87 +5275,9 @@ TerminateConnection(playerid, reason)
 		}
 	}
 
-    if(PlayerData[playerid][pInTuning]) Tuning_ExitDisplay(playerid, true);
-
-	if(ReplacingGraffiti{playerid})
-	{
-	    KillTimer(spraytimer[playerid]);
-	}
-
-	if(HelpingPlayer[playerid] != INVALID_PLAYER_ID)
-	{
-	    new userid = HelpingPlayer[playerid];
-
-	    if(!KnockedOut{playerid})
-	    {
-	        KillTimer(HelpUpTimer[userid]);
-
-	        HelpupStage[userid] = 0;
-			
-			if(IsValidDynamic3DTextLabel(KnockoutLabel[userid])) DestroyDynamic3DTextLabel(KnockoutLabel[userid]);
-	    }
-	    else
-	    {
-	        KillTimer(HelpUpTimer[playerid]);
-
-	        HelpupStage[playerid] = 0;
-
-			if(IsValidDynamic3DTextLabel(KnockoutLabel[playerid])) DestroyDynamic3DTextLabel(KnockoutLabel[playerid]);
-	    }
-
-	    HelpingPlayer[userid] = INVALID_PLAYER_ID;
-	    HelpingPlayer[playerid] = INVALID_PLAYER_ID;
-	}	
-
-	if(TaxiMoney[playerid] > 0 && IsPlayerInAnyVehicle(playerid))
-	{
-    	gPassengerCar[playerid] = GetPlayerVehicleID(playerid);
-
-		ChargePerson(playerid);
-	}
-
-	if(BoomboxData[playerid][boomboxPlaced])
-	{
-		Boombox_Destroy(playerid);
-
-		foreach (new i : Player)
-		{
-			if(grantboombox[i] == playerid)
-			{
-				grantboombox[i] = INVALID_PLAYER_ID;
-			}
-		}
-	}
-
-	if(BreakingIn[playerid] != -1)
-	{
-		new breakingcar = BreakingIn[playerid];
-
-		CancelVehicleBreakin(breakingcar);
-
-		if(IsValidVehicle(breakingcar))
-		{
-			new
-				engine,
-				lights,
-				alarm,
-				doors,
-				bonnet,
-				boot,
-				objective;
-
-			GetVehicleParamsEx(breakingcar, engine, lights, alarm, doors, bonnet, boot, objective);
-			SetVehicleParamsEx(breakingcar, engine, lights, 0, doors, bonnet, boot, 0);	
-		}
-	}
-
 	if(AdminDuty{playerid}) SendAdminAlert(COLOR_YELLOW, JUNIOR_ADMINS, "AdmCmd: %s is now off admin duty. (disconnected)", AccountName(playerid));
 
 	if(TesterDuty{playerid}) SendTesterAlert(TEAM_TESTER_COLOR, "[TESTER] {FFBB00}%s is now off tester duty! (disconnected)", AccountName(playerid));
-
-	if(PlayerData[playerid][pShowFooter]) KillTimer(PlayerData[playerid][pFooterTimer]);
-
-	if(PlayerData[playerid][pFreeze]) KillTimer(PlayerData[playerid][pFreezeTimer]);
 
 	foreach (new i : Player)
 	{
@@ -5189,22 +5310,6 @@ TerminateConnection(playerid, reason)
 			prToAccept[i] = 0;
 			tToAccept[i] = 0;
 		}
-	}
-
-    ExitSettingVehicle(playerid);
-
-	new callerid = PlayerData[playerid][pCallConnect];
-
-	if(callerid != INVALID_PLAYER_ID)
-	{
-		SendClientMessage(callerid, COLOR_GRAD2, "[ ! ] They hung up (disconnected)");
-
-		RenderPlayerPhone(callerid, 0, 0);
-
-		if(GetPlayerSpecialAction(callerid) == SPECIAL_ACTION_USECELLPHONE) SetPlayerSpecialAction(callerid, SPECIAL_ACTION_STOPUSECELLPHONE);
-
-	   	PlayerData[callerid][pCallConnect] = INVALID_PLAYER_ID;
-	   	PlayerData[playerid][pCallConnect] = INVALID_PLAYER_ID;
 	}
 
 	if(AccountData[playerid][aUserid] > 0)
@@ -5246,8 +5351,11 @@ Relog_Player(playerid)
 	if(!SQL_IsLogged(playerid) || AccountData[playerid][aUserid] <= 0)
 		return SendErrorMessage(playerid, "You are not logged in.");
 
-	// 1. Save current character data, then load the character list after it commits
-	SQL_SaveCharacter(playerid, false, true);
+	// 1. Clear world state first so the save captures the cleaned position.
+	CleanupCharacterWorldState(playerid, false);
+
+	// 1b. Save current character data, then load the character list after it commits
+	SQL_SaveCharacter(playerid, true, true);
 
 	// 2. Exit any vehicle
 	if(IsPlayerInAnyVehicle(playerid))
@@ -5294,12 +5402,9 @@ Relog_Player(playerid)
 		}
 	}
 
-	// 3. Clear weapons, money display and animations
-	ResetPlayerWeapons(playerid);
-	ResetPlayerMoney(playerid);
+	// 3. Clear animations and attached objects; the generic reset handles the rest
 	ClearAnimations(playerid);
 
-	// Remove all attached objects (weapons on back, accessories, etc.)
 	for(new i = 0; i < 10; i++)
 	{
 		if(IsPlayerAttachedObjectSlotUsed(playerid, i))
@@ -5308,86 +5413,9 @@ Relog_Player(playerid)
 		}
 	}
 
-	// Reset internal weapon variables so server doesn't think they still hold weapons
-	for(new i = 0; i < 13; i++)
-	{
-		PlayerData[playerid][pGuns][i] = 0;
-	}
+	ResetCharacterState(playerid);
 
-	// 4. Reset in-game flags
-	Spawned{playerid} = false;
-	LoggedIn{playerid} = false;
-	SafeTime[playerid] = 120;
-
-	// 5. Mark character as not selected (pID = -1 means "at char select screen")
-	PlayerData[playerid][pID] = -1;
-
-	// Reset character-specific data so nothing carries over to next character
-	PlayerData[playerid][pFaction] = -1;
-	PlayerData[playerid][pFactionID] = -1;
-	PlayerData[playerid][pFactionRank] = 0;
-	PlayerData[playerid][pFactionEdit] = -1;
-	PlayerData[playerid][pDBRank] = 0;
-	PlayerData[playerid][pSWATRank] = 0;
-	PlayerData[playerid][pEMSRank] = 0;
-	PlayerData[playerid][pFireRank] = 0;
-	PlayerData[playerid][pSwat] = false;
-	PlayerData[playerid][pFireman] = false;
-	PlayerData[playerid][pJob] = 0;
-	PlayerData[playerid][pJobRank] = 0;
-	PlayerData[playerid][pCareer] = 0;
-	// Note: pAdmin is account-level (loaded from accounts table on connect), so do NOT reset it on relog
-	PlayerData[playerid][pDonateRank] = 0;
-	PlayerData[playerid][pDonateUnix] = 0;
-	PlayerData[playerid][pHouseKey] = -1;
-	PlayerData[playerid][pComplexKey] = -1;
-	PlayerData[playerid][pPbiskey] = -1;
-	PlayerData[playerid][pPCarkey] = 9999;
-	PlayerData[playerid][pMarriedTo][0] = EOS;
-	PlayerData[playerid][pWeapon][0] = 0;
-	PlayerData[playerid][pWeapon][1] = 0;
-	PlayerData[playerid][pWeapon][2] = 0;
-	PlayerData[playerid][pAmmunation][0] = 0;
-	PlayerData[playerid][pAmmunation][1] = 0;
-	PlayerData[playerid][pAmmunation][2] = 0;
-	PlayerData[playerid][pCash] = 0;
-	PlayerData[playerid][pAccount] = 0;
-	PlayerData[playerid][pSavings] = 0;
-	PlayerData[playerid][pSavingsCollect] = 0;
-	PlayerData[playerid][pLevel] = 1;
-	PlayerData[playerid][pExp] = 0;
-	PlayerData[playerid][pExpCounter] = 0;
-	PlayerData[playerid][pPlayingSeconds] = 0;
-	PlayerData[playerid][pPnumber] = 0;
-	PlayerData[playerid][pPhoneModel] = 0;
-	PlayerData[playerid][pInjured] = 0;
-	PlayerData[playerid][pJailed] = 0;
-	PlayerData[playerid][pSentenceTime] = 0;
-	PlayerData[playerid][pPrimaryLicense] = 0;
-	PlayerData[playerid][pSecondaryLicense] = 0;
-	PlayerData[playerid][pCCWLic] = 0;
-	PlayerData[playerid][pWepLic] = 0;
-	PlayerData[playerid][pCarLic] = 0;
-	PlayerData[playerid][pFlyLic] = 0;
-	PlayerData[playerid][pMedLic] = 0;
-	PlayerData[playerid][pTruckLic] = 0;
-	PlayerData[playerid][pOnDuty] = 0;
-	PlayerData[playerid][pOnDutySkin] = 0;
-	PlayerData[playerid][pFavUniform] = 0;
-	pIllegalJob[playerid] = 0;
-	MedicBill[playerid] = 0;
-	TotalPlayerDamages[playerid] = 0;
-	DeathReason[playerid] = 0;
-	AdminDuty{playerid} = false;
-	TesterDuty{playerid} = false;
-	KnockedOut{playerid} = false;
-	ForceKnockout{playerid} = false;
-	TazerActive{playerid} = false;
-	BeanbagActive{playerid} = false;
-	LessLethalActive{playerid} = false;
-	TagColor{playerid} = false;
-
-	// 6. Restore player name back to account name (strip character name)
+	// 4. Restore player name back to account name (strip character name)
 	SetPlayerName(playerid, AccountData[playerid][aUsername]);
 
 	// 7. Put player back in spectate mode so they don't appear in-world
@@ -5447,8 +5475,8 @@ SQL_SaveCharacter(playerid, bool:quit = true, bool:thenLoadList = false)
 	    adminduty,
 	    testerduty,
 	    hudtoggled,
-	    bool:swap_weapons = false,
-	    temp_wep[3][2]
+	    save_wep[3],
+	    save_ammo[3]
 	;
 
 	PlayerData[playerid][pInterior] = GetPlayerInterior(playerid);
@@ -5462,29 +5490,37 @@ SQL_SaveCharacter(playerid, bool:quit = true, bool:thenLoadList = false)
 	{
 	    PlayerData[playerid][pOnDutySkin] = GetPlayerSkin(playerid);
 
-		if(quit)
-		{
-        	RestorePlayerWeapons(playerid, false);
-		}
-		else
-		{
-			swap_weapons = true;
-			for(new i = 0; i < 3; i++)
-			{
-				temp_wep[i][0] = PlayerData[playerid][pWeapon][i];
-				temp_wep[i][1] = PlayerData[playerid][pAmmunation][i];
-
-				PlayerData[playerid][pWeapon][i] = TempWeapons[playerid][i][0];
-				PlayerData[playerid][pAmmunation][i] = TempWeapons[playerid][i][1];
-			}
-		}
-
-		if(!PlayerData[playerid][pTimeout]) PlayerData[playerid][pArmour] = 0;
+		if(quit && !PlayerData[playerid][pTimeout]) PlayerData[playerid][pArmour] = 0;
 	}
 
-	if(ParticleSettings[playerid][usingParticle])
+	// Periodic saves must not mutate transient duty/particle state.
+	if(quit)
 	{
-        RestorePlayerWeapons(playerid, false);
+		if(PlayerData[playerid][pOnDuty] || ParticleSettings[playerid][usingParticle])
+			RestorePlayerWeapons(playerid, false);
+
+		for(new i = 0; i < 3; i++)
+		{
+			save_wep[i] = PlayerData[playerid][pWeapon][i];
+			save_ammo[i] = PlayerData[playerid][pAmmunation][i];
+		}
+	}
+	else
+	{
+		for(new i = 0; i < 3; i++)
+		{
+			save_wep[i] = PlayerData[playerid][pWeapon][i];
+			save_ammo[i] = PlayerData[playerid][pAmmunation][i];
+		}
+
+		if(PlayerData[playerid][pOnDuty] || ParticleSettings[playerid][usingParticle])
+		{
+			for(new i = 0; i < 3; i++)
+			{
+				save_wep[i] = TempWeapons[playerid][i][0];
+				save_ammo[i] = TempWeapons[playerid][i][1];
+			}
+		}
 	}
 
 	if(KnockedOut{playerid})
@@ -5505,7 +5541,7 @@ SQL_SaveCharacter(playerid, bool:quit = true, bool:thenLoadList = false)
 
 	    if(TesterDuty{playerid}) testerduty = 1;
 	}
-	else
+	else if(quit)
 	{
 	    if(PlayerData[playerid][pHasMask])
 	    {
@@ -5525,12 +5561,12 @@ SQL_SaveCharacter(playerid, bool:quit = true, bool:thenLoadList = false)
 		PlayerData[playerid][pInterior],
 		PlayerData[playerid][pWorld],
 		PlayerData[playerid][pLocal],
-		PlayerData[playerid][pWeapon][0],
-		PlayerData[playerid][pAmmunation][0],
-		PlayerData[playerid][pWeapon][1],
-		PlayerData[playerid][pAmmunation][1],
-		PlayerData[playerid][pWeapon][2],
-		PlayerData[playerid][pAmmunation][2]
+		save_wep[0],
+		save_ammo[0],
+		save_wep[1],
+		save_ammo[1],
+		save_wep[2],
+		save_ammo[2]
 	);
 
 	format(query, sizeof(query), "%s, `Tutorial` = '%d', `Model` = '%d', `PhoneNumbr` = '%d', `PhoneModel` = '%d', `SpawnPoint` = '%d', `FactionSpawn` = '%d', `Level` = '%d', `Exp` = '%d', `ExpCounter` = '%d', `PayDay` = '%d', `PayDayHad` = '%d', `PayCheck` = '%d', `ChequeCash` = '%d', `Injured` = '%d', `playerTimeout` = '%d', `MedicBill` = '%d', `Armour` = '%f', `Health` = '%f', `Hunger` = '%d', `Thirst` = '%d' WHERE `ID` = '%d'",
@@ -5586,7 +5622,7 @@ SQL_SaveCharacter(playerid, bool:quit = true, bool:thenLoadList = false)
 		PlayerData[playerid][pCarLic]
 	);
 
-	format(query, sizeof(query), "%s, `Radio` = '%d', `RadioChannel` = '%d', `RadioSlot` = '%d', `playerJob` = '%d', `playerJobRank` = '%d', `playerCareer` = '%d', `playerHouseKey` = '%d', `playerComplexKey` = '%d', `PlayerBusinessKey` = '%d', `PlayerCarkey` = '%d', `Checkpoint_Type` = '%d', `Checkpoint_X` = '%f', `Checkpoint_Y` = '%f', `Checkpoint_Z` = '%f', `Fishes` = '%d', `SavingsCollect` = '%d', `Online` = '0', `PlayingSeconds` = '%d', `ADPoint` = '%d', `WepLic` = '%d'",
+	format(query, sizeof(query), "%s, `Radio` = '%d', `RadioChannel` = '%d', `RadioSlot` = '%d', `playerJob` = '%d', `playerJobRank` = '%d', `playerCareer` = '%d', `playerHouseKey` = '%d', `playerComplexKey` = '%d', `PlayerBusinessKey` = '%d', `PlayerCarkey` = '%d', `Checkpoint_Type` = '%d', `Checkpoint_X` = '%f', `Checkpoint_Y` = '%f', `Checkpoint_Z` = '%f', `Fishes` = '%d', `SavingsCollect` = '%d', `Online` = '%d', `PlayingSeconds` = '%d', `ADPoint` = '%d', `WepLic` = '%d'",
 	    query,
 	    PlayerData[playerid][pRadio],
 	    PlayerData[playerid][pRChannel],
@@ -5604,6 +5640,7 @@ SQL_SaveCharacter(playerid, bool:quit = true, bool:thenLoadList = false)
 	    PlayerData[playerid][pCP_Z],
 	    PlayerData[playerid][pFishes],
 	    PlayerData[playerid][pSavingsCollect],
+	    quit ? 0 : 1,
 	    PlayerData[playerid][pPlayingSeconds],
 	    PlayerData[playerid][pADPoint],
 	    PlayerData[playerid][pWepLic]
@@ -5642,15 +5679,6 @@ SQL_SaveCharacter(playerid, bool:quit = true, bool:thenLoadList = false)
 	);
 
 	mysql_pquery(dbCon, query);
-
-	if(swap_weapons)
-	{
-		for(new i = 0; i < 3; i++)
-		{
-			PlayerData[playerid][pWeapon][i] = temp_wep[i][0];
-			PlayerData[playerid][pAmmunation][i] = temp_wep[i][1];
-		}
-	}
 
 	//printf("QUERY LENGTH WAS %d", strlen(query));
 

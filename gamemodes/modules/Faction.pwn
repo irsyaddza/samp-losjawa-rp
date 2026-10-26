@@ -283,24 +283,36 @@ ReturnFactionNameByType(faction)
 
 ViewFactions2(playerid)
 {
-	new count, members;
+	new count, members[MAX_FACTIONS], factionSQL, memberCount;
 
 	gstr[0] = EOS;
+
+	new checkQuery[128];
+	mysql_format(dbCon, checkQuery, sizeof(checkQuery), "SELECT `Faction`, COUNT(*) AS `members` FROM `characters` GROUP BY `Faction`");
+	new Cache:cache = mysql_query(dbCon, checkQuery);
+
+	for(new i = 0, j = cache_num_rows(); i < j; ++i)
+	{
+		cache_get_value_name_int(i, "Faction", factionSQL);
+		cache_get_value_name_int(i, "members", memberCount);
+
+		for(new k = 0; k != MAX_FACTIONS; ++k)
+		{
+			if(FactionData[k][factionExists] && FactionData[k][factionID] == factionSQL)
+			{
+				members[k] = memberCount;
+				break;
+			}
+		}
+	}
+
+	cache_delete(cache);
 
 	for(new i = 0; i != MAX_FACTIONS; ++i)
 	{
 		if(FactionData[i][factionExists])
 		{
-		    count = 0;
-		    members = 0;
-
-			new checkQuery[128];
-			mysql_format(dbCon, checkQuery, sizeof(checkQuery), "SELECT `ID` FROM `characters` WHERE `Faction` = '%d'", FactionData[i][factionID]);
-			new Cache:cache = mysql_query(dbCon, checkQuery);
-
-			members = cache_num_rows();
-
-			cache_delete(cache);
+			count = 0;
 
 			foreach (new k : Player)
 			{
@@ -310,7 +322,7 @@ ViewFactions2(playerid)
 				}
 			}
 
-			format(gstr, sizeof(gstr), "%s{7e98b6}%d\t{A9C4E4}%s\t{A9C4E4}[{7e98b6}%d out of %d{A9C4E4}]\n", gstr, FactionData[i][factionID], FactionData[i][factionName], count, members);
+			format(gstr, sizeof(gstr), "%s{7e98b6}%d\t{A9C4E4}%s\t{A9C4E4}[{7e98b6}%d out of %d{A9C4E4}]\n", gstr, FactionData[i][factionID], FactionData[i][factionName], count, members[i]);
 		}
 	}
 
@@ -867,21 +879,48 @@ HasFactionRank(playerid, rank)
 	return false;
 }
 
+forward LoadFactionPermissions(playerid, bool:notice);
+forward OnFactionPermissionsLoaded(playerid, factionid, factionrank, notice);
+
 AssignFactionPermissions(playerid)
 {
+	LoadFactionPermissions(playerid, true);
+}
+
+LoadFactionPermissions(playerid, bool:notice)
+{
+	if(PlayerData[playerid][pFactionID] <= 0)
+		return false;
+
 	new checkQuery[256];
 
 	mysql_format(dbCon, checkQuery, sizeof(checkQuery), "SELECT `FactionRank` FROM `characters` WHERE `master` = '%d' AND `Faction` = '%d' AND `FactionRank` < '%d' ORDER BY FactionRank ASC LIMIT 1", AccountData[playerid][aUserid], PlayerData[playerid][pFactionID], PlayerData[playerid][pFactionRank]);
-	new Cache:cache = mysql_query(dbCon, checkQuery);
+	mysql_tquery(dbCon, checkQuery, "OnFactionPermissionsLoaded", "dddd", playerid, PlayerData[playerid][pFactionID], PlayerData[playerid][pFactionRank], _:notice);
+	return true;
+}
+
+public OnFactionPermissionsLoaded(playerid, factionid, factionrank, notice)
+{
+	if(!IsPlayerConnected(playerid))
+		return 0;
+
+	if(PlayerData[playerid][pFactionID] != factionid || PlayerData[playerid][pFactionRank] != factionrank)
+		return 0;
 
 	if(cache_num_rows())
 	{
 		cache_get_value_name_int(0, "FactionRank", FactionPermissions[playerid]);
 
-		SendNoticeMessage(playerid, "You inherited faction permissions from your alternative account. (%s, Rank %d)", ReturnRank(PlayerData[playerid][pFaction], FactionPermissions[playerid] - 1), FactionPermissions[playerid]);
+		if(notice)
+		{
+			SendNoticeMessage(playerid, "You inherited faction permissions from your alternative account. (%s, Rank %d)", ReturnRank(PlayerData[playerid][pFaction], FactionPermissions[playerid] - 1), FactionPermissions[playerid]);
+		}
+		else
+		{
+			SendClientMessageEx(playerid, COLOR_WHITE, "SERVER: You inherited %s faction permissions from an alt account.", ReturnRank(PlayerData[playerid][pFaction], FactionPermissions[playerid] - 1));
+		}
 	}
-
-	cache_delete(cache);
+	return 1;
 }
 
 SetPlayerFaction(playerid)
@@ -898,19 +937,7 @@ SetPlayerFaction(playerid)
 		{
 			if(PlayerData[playerid][pFactionRank] != 1)
 			{
-				new checkQuery[256];
-
-				mysql_format(dbCon, checkQuery, sizeof(checkQuery), "SELECT `FactionRank` FROM `characters` WHERE `master` = '%d' AND `Faction` = '%d' AND `FactionRank` < '%d' ORDER BY FactionRank ASC LIMIT 1", AccountData[playerid][aUserid], PlayerData[playerid][pFactionID], PlayerData[playerid][pFactionRank]);
-				new Cache:cache = mysql_query(dbCon, checkQuery);
-
-				if(cache_num_rows())
-				{
-					cache_get_value_name_int(0, "FactionRank", FactionPermissions[playerid]);
-
-					SendClientMessageEx(playerid, COLOR_WHITE, "SERVER: You inherited %s faction permissions from an alt account.", ReturnRank(PlayerData[playerid][pFaction], FactionPermissions[playerid] - 1));
-				}
-
-				cache_delete(cache);
+				LoadFactionPermissions(playerid, false);
 			}
 		}
 	}
