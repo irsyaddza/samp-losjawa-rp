@@ -8822,19 +8822,32 @@ CMD:trace(playerid, params[])
 {
     if(!IsPolice(playerid))
         return SendClientMessage(playerid, COLOR_GREY, "You aren't able to trace.");
-    
-    new id, Float:FindFloats[3];
-    if(sscanf(params, "u", id))
-        return SendSyntaxMessage(playerid, "/trace [playerid]");
 
     if(!PlayerData[playerid][pOnDuty])
         return SendClientMessage(playerid, COLOR_GREY, "You're not on duty.");
 
-    new location[MAX_ZONE_NAME];
-    GetPlayerPos(id, FindFloats[0], FindFloats[1], FindFloats[2]);
-    GetPlayer2DZone(id, location, sizeof(location));
-	SetPlayerCheckpoint(playerid, FindFloats[0], FindFloats[1], FindFloats[2], 3.0);
-    return 1;
+    new number;
+    if(sscanf(params, "d", number) || number <= 0)
+        return SendSyntaxMessage(playerid, "/trace [phone number]");
+
+    new targetid = GetPlayerByPhoneNumber(number);
+    if(targetid == INVALID_PLAYER_ID)
+        return SendErrorMessage(playerid, "No connected player is using that phone number.");
+
+    if(targetid == playerid)
+        return SendErrorMessage(playerid, "You can't trace your own phone.");
+
+    if(!CheckPhoneStatus(targetid))
+        return SendErrorMessage(playerid, "That phone is switched off.");
+
+    if(ph_airmode[targetid])
+        return SendErrorMessage(playerid, "That phone has no signal (airplane mode).");
+
+    new Float:position[3];
+    GetPlayerPos(targetid, position[0], position[1], position[2]);
+    SetPlayerCheckpoint(playerid, position[0], position[1], position[2], 3.0);
+    SendClientMessageEx(playerid, COLOR_YELLOW, "Trace: phone %d locked near %s.", number, ReturnLocationPos(position[0], position[1]));
+    return true;
 }
 
 CMD:tagcolor(playerid, params[])

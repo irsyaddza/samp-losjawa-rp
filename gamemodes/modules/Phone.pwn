@@ -330,6 +330,17 @@ CheckPhoneStatus(playerid)
 	return true;
 }
 
+GetPlayerByPhoneNumber(number)
+{
+	foreach (new i : Player)
+	{
+		if(PlayerData[i][pPnumber] == number)
+		    return i;
+	}
+
+	return INVALID_PLAYER_ID;
+}
+
 RenderPlayerPhone(playerid, menuid, subid, select = 0)
 {
     ph_menuid[playerid] = menuid;
