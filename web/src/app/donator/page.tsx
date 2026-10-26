@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getSession } from '@/lib/auth';
+import { FORUM_URL } from '@/lib/site';
 import pool from '@/lib/db';
 import { RowDataPacket } from 'mysql2';
 import {
@@ -489,7 +490,7 @@ export default async function DonatorPage() {
                 Donator
               </Link>
               <a
-                href="https://forum.losjawa-rp.net"
+                href={FORUM_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="transition hover:text-white"

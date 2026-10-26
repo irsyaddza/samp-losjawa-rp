@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { FORUM_URL } from '@/lib/site';
 import {
   LogOut,
   LayoutDashboard,
@@ -146,7 +147,7 @@ export default function Navbar({ session }: NavbarProps) {
             </Link>
           )}
           <a
-            href="https://forum.losjawa-rp.net"
+            href={FORUM_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs font-bold uppercase tracking-wider text-zinc-400 hover:text-white transition-colors"
@@ -391,7 +392,7 @@ export default function Navbar({ session }: NavbarProps) {
               </>
             )}
             <a
-              href="https://forum.losjawa-rp.fun"
+              href={FORUM_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-xl px-4 py-3 text-xs font-bold uppercase tracking-wider text-zinc-300 hover:bg-zinc-900 hover:text-white"
