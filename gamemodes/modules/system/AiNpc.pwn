@@ -1,4 +1,4 @@
-// ponytail: Full AI NPC system integrated with pawn-requests (Southclaws) & OpenRouter API
+// ponytail: Full AI NPC system integrated with pawn-requests (Southclaws) & Google AI Studio API
 
 #include <YSI_Coding/y_hooks>
 
@@ -26,12 +26,29 @@ enum E_AI_NPC_DATA
 	npcThinkingTimer
 };
 
-new AiNpcData[MAX_AI_NPC][E_AI_NPC_DATA];
-new Iterator:AiNpc<MAX_AI_NPC>;
-new RequestsClient:openrouterClient;
+enum E_AI_REPLY_MODE
+{
+	AI_REPLY_SPEECH = 0,
+	AI_REPLY_ME,
+	AI_REPLY_DO
+};
 
-new gOpenRouterKey[128];
-new gOpenRouterModel[64] = "x-ai/grok-4.20";
+enum E_AI_PENDING
+{
+	bool:aiPendingActive,
+	Request:aiPendingRequest,
+	aiPendingMode
+};
+
+new AiNpcData[MAX_AI_NPC][E_AI_NPC_DATA];
+new AiPending[MAX_AI_NPC][E_AI_PENDING];
+new Iterator:AiNpc<MAX_AI_NPC>;
+new RequestsClient:googleAiClient;
+
+new gGoogleAiKey[128];
+new gGoogleAiModel[64] = "gemini-2.5-flash";
+
+forward bool:StartAiNpcQuery(playerid, npcSlot, const userMessage[], E_AI_REPLY_MODE:mode);
 
 // Admin Dialog Step Creation
 new AiNpcTempName[MAX_PLAYERS][32];
@@ -43,11 +60,11 @@ new AiNpcTempTraits[MAX_PLAYERS][256];
 
 hook OnGameModeInit()
 {
-	// Load OpenRouter configuration
+	// Load Google AI Studio configuration
 	LoadAiConfig();
 
-	// Initialize Pawn-Requests Client to OpenRouter API
-	openrouterClient = RequestsClient("https://openrouter.ai");
+	// Initialize Pawn-Requests Client for Gemini's OpenAI-compatible endpoint
+	googleAiClient = RequestsClient("https://generativelanguage.googleapis.com");
 	return 1;
 }
 
@@ -58,10 +75,10 @@ stock LoadAiConfig()
 		new File:f = fopen("ai_config.json", io_write);
 		if(f)
 		{
-			fwrite(f, "{\n  \"openrouter_api_key\": \"YOUR_API_KEY\",\n  \"openrouter_model\": \"x-ai/grok-4.20\"\n}");
+			fwrite(f, "{\n  \"google_api_key\": \"YOUR_GOOGLE_AI_STUDIO_API_KEY\",\n  \"google_model\": \"gemini-2.5-flash\"\n}");
 			fclose(f);
 		}
-		format(gOpenRouterKey, sizeof(gOpenRouterKey), "YOUR_API_KEY");
+		format(gGoogleAiKey, sizeof(gGoogleAiKey), "YOUR_GOOGLE_AI_STUDIO_API_KEY");
 		return;
 	}
 
@@ -76,15 +93,15 @@ stock LoadAiConfig()
 		if(JsonParse(buf, confNode) == 0)
 		{
 			new keyStr[128], modelStr[64];
-			if(JsonGetString(confNode, "openrouter_api_key", keyStr, sizeof(keyStr)) == 0 && strlen(keyStr) > 0)
+			if(JsonGetString(confNode, "google_api_key", keyStr, sizeof(keyStr)) == 0 && strlen(keyStr) > 0)
 			{
-				format(gOpenRouterKey, sizeof(gOpenRouterKey), "%s", keyStr);
+				format(gGoogleAiKey, sizeof(gGoogleAiKey), "%s", keyStr);
 			}
-			if(JsonGetString(confNode, "openrouter_model", modelStr, sizeof(modelStr)) == 0 && strlen(modelStr) > 0)
+			if(JsonGetString(confNode, "google_model", modelStr, sizeof(modelStr)) == 0 && strlen(modelStr) > 0)
 			{
-				format(gOpenRouterModel, sizeof(gOpenRouterModel), "%s", modelStr);
+				format(gGoogleAiModel, sizeof(gGoogleAiModel), "%s", modelStr);
 			}
-			printf("[AI NPC CONFIG]: Loaded key: '%.15s...' and model: '%s'", gOpenRouterKey, gOpenRouterModel);
+			printf("[AI NPC CONFIG]: Loaded Google AI Studio model: '%s'", gGoogleAiModel);
 		}
 	}
 }
@@ -174,90 +191,222 @@ hook OnPlayerText(playerid, text[])
 	new npcSlot = GetNearestAiNpc(playerid, 3.0);
 	if(npcSlot != -1)
 	{
-		if(AiNpcData[npcSlot][npcIsThinking])
-		{
-			SendClientMessage(playerid, COLOR_GRAD2, "Please wait, this NPC is still thinking...");
+		if(!StartAiNpcQuery(playerid, npcSlot, text, AI_REPLY_SPEECH))
 			return 0;
-		}
 
-		// Trigger Player Hand Talking Animation
 		ChatAnimation(playerid, strlen(text));
-
-		// Set NPC Facing towards Player
-		new Float:px, Float:py, Float:pz, Float:angle;
-		GetPlayerPos(playerid, px, py, pz);
-		angle = atan2(py - AiNpcData[npcSlot][npcPosY], px - AiNpcData[npcSlot][npcPosX]) - 90.0;
-		SetActorFacingAngle(AiNpcData[npcSlot][npcActorID], angle);
-
-		// Set Thinking State & Label
-		AiNpcData[npcSlot][npcIsThinking] = true;
-		RefreshAiNpcLabel(npcSlot);
-
-		// Send AI Request via Pawn-Requests to OpenRouter
-		SendAiNpcQuery(playerid, npcSlot, text);
 		return 0;
 	}
 	return 1;
 }
 
-stock SendAiNpcQuery(playerid, npcSlot, const userMessage[])
+stock bool:StartAiNpcQuery(playerid, npcSlot, const userMessage[], E_AI_REPLY_MODE:mode)
 {
-	new systemPrompt[1024];
+	if(AiNpcData[npcSlot][npcIsThinking])
+	{
+		SendClientMessage(playerid, COLOR_GRAD2, "Please wait, this NPC is still thinking...");
+		return false;
+	}
+
+	// Face the NPC towards the player.
+	new Float:px, Float:py, Float:pz, Float:angle;
+	GetPlayerPos(playerid, px, py, pz);
+	angle = atan2(py - AiNpcData[npcSlot][npcPosY], px - AiNpcData[npcSlot][npcPosX]) - 90.0;
+	SetActorFacingAngle(AiNpcData[npcSlot][npcActorID], angle);
+
+	AiNpcData[npcSlot][npcIsThinking] = true;
+	RefreshAiNpcLabel(npcSlot);
+	SendAiNpcQuery(playerid, npcSlot, userMessage, mode);
+	return true;
+}
+
+stock TryAiNpcRoleplay(playerid, const text[], bool:isDo)
+{
+	new npcSlot = GetNearestAiNpc(playerid, 3.0);
+	if(npcSlot == -1) return 0;
+
+	new contextual[256];
+	if(isDo)
+	{
+		format(contextual, sizeof(contextual), "[Roleplay /do] %s (( %s ))", text, ReturnName(playerid, 0));
+		return StartAiNpcQuery(playerid, npcSlot, contextual, AI_REPLY_DO);
+	}
+
+	format(contextual, sizeof(contextual), "[Roleplay /me] %s %s", ReturnName(playerid, 0), text);
+	return StartAiNpcQuery(playerid, npcSlot, contextual, AI_REPLY_ME);
+}
+
+stock JsonEscape(const input[], output[], size)
+{
+	new j = 0;
+	for(new i = 0; input[i] != EOS && j < size - 2; i++)
+	{
+		switch(input[i])
+		{
+			case '"': { output[j++] = '\\'; output[j++] = '"'; }
+			case '\\': { output[j++] = '\\'; output[j++] = '\\'; }
+			case '\n': { output[j++] = '\\'; output[j++] = 'n'; }
+			case '\r': { output[j++] = '\\'; output[j++] = 'r'; }
+			case '\t': { output[j++] = '\\'; output[j++] = 't'; }
+			default: output[j++] = input[i];
+		}
+	}
+	output[j] = EOS;
+}
+
+stock GetAiNpcFirstName(npcSlot, output[], size)
+{
+	new i = 0;
+	while(AiNpcData[npcSlot][npcName][i] != EOS && AiNpcData[npcSlot][npcName][i] != ' ' && i < size - 1)
+	{
+		output[i] = AiNpcData[npcSlot][npcName][i];
+		i++;
+	}
+	output[i] = EOS;
+}
+
+stock CleanAiNpcReply(npcSlot, const input[], output[], size)
+{
+	new start = 0;
+	while(input[start] == ' ' || input[start] == '\t' || input[start] == '\n' || input[start] == '\r') start++;
+	if(input[start] == '*')
+	{
+		start++;
+		while(input[start] == ' ' || input[start] == '\t') start++;
+	}
+
+	new text[300];
+	format(text, sizeof(text), "%s", input[start]);
+
+	if(strlen(text) == 0)
+	{
+		format(output, size, "remains silent.");
+		return;
+	}
+
+	new name[32], first[32];
+	format(name, sizeof(name), "%s", AiNpcData[npcSlot][npcName]);
+	GetAiNpcFirstName(npcSlot, first, sizeof(first));
+
+	new nameLen = strlen(name), firstLen = strlen(first);
+
+	if(nameLen > 0 && strcmp(text, name, true, nameLen) == 0)
+	{
+		format(output, size, "%s", text);
+		return;
+	}
+
+	if(firstLen > 0 && strcmp(text, first, true, firstLen) == 0)
+	{
+		format(output, size, "%s%s", name, text[firstLen]);
+		return;
+	}
+
+	format(output, size, "%s %s", name, text);
+}
+
+stock SendAiNpcQuery(playerid, npcSlot, const userMessage[], E_AI_REPLY_MODE:mode)
+{
+	static systemPrompt[1536];
+	static bodyString[4096];
+	static authHeader[200];
+	static modePrompt[256];
+	static escapedSystem[3072];
+	static escapedUser[512];
+
+	switch(mode)
+	{
+		case AI_REPLY_ME:
+			format(modePrompt, sizeof(modePrompt), "The player is performing an action via /me. Reply with a short third-person action or reaction only. Start directly with a verb. Never include your own name, possessives, asterisks, or quotation marks.");
+		case AI_REPLY_DO:
+			format(modePrompt, sizeof(modePrompt), "The player is describing the scene via /do. Reply with a short third-person scene description or reaction only. Start directly with the scene detail. Never include your own name, possessives, asterisks, or quotation marks.");
+		default:
+			format(modePrompt, sizeof(modePrompt), "Reply with short in-character dialogue only. Do not use quotation marks around your dialogue.");
+	}
+
 	format(systemPrompt, sizeof(systemPrompt), 
 		"You are an in-game Roleplay NPC character named '%s' in a San Andreas Roleplay SA-MP server. " \
 		"Age: %d, Gender: %s, Ethnicity: %s. Traits: %s. Context: %s. " \
 		"Reply strictly in character, in Indonesian/English as appropriate. " \
-		"Keep response short (max 2 sentences, maximum 120 chars). Do NOT use quotation marks around your dialogue.",
+		"%s Keep response short (max 2 sentences, maximum 120 chars).",
 		AiNpcData[npcSlot][npcName],
 		AiNpcData[npcSlot][npcAge],
 		AiNpcData[npcSlot][npcGender],
 		AiNpcData[npcSlot][npcEthnicity],
 		AiNpcData[npcSlot][npcTraits],
-		AiNpcData[npcSlot][npcContext]
+		AiNpcData[npcSlot][npcContext],
+		modePrompt
 	);
 
-	new bodyString[2048];
+	JsonEscape(systemPrompt, escapedSystem, sizeof(escapedSystem));
+	JsonEscape(userMessage, escapedUser, sizeof(escapedUser));
+
 	format(bodyString, sizeof(bodyString),
 		"{\"model\": \"%s\", \"messages\": [{\"role\": \"system\", \"content\": \"%s\"}, {\"role\": \"user\", \"content\": \"%s\"}]}",
-		gOpenRouterModel,
-		systemPrompt,
-		userMessage
+		gGoogleAiModel,
+		escapedSystem,
+		escapedUser
 	);
 
-	new authHeader[200];
-	format(authHeader, sizeof(authHeader), "Bearer %s", gOpenRouterKey);
+	format(authHeader, sizeof(authHeader), "Bearer %s", gGoogleAiKey);
 
-	new Headers:headers = RequestHeaders("Authorization", authHeader, "Content-Type", "application/json", "HTTP-Referer", "https://losjawa-roleplay.com");
+	new Headers:headers = RequestHeaders("Authorization", authHeader, "Content-Type", "application/json");
 
-	Request(
-		openrouterClient,
-		"/api/v1/chat/completions",
+	new Request:req = Request(
+		googleAiClient,
+		"/v1beta/openai/chat/completions",
 		HTTP_METHOD_POST,
 		"OnAiNpcRawResponse",
 		bodyString,
 		headers
 	);
+
+	if(!IsValidRequest(req))
+	{
+		printf("[AI NPC ERROR]: Failed to create request.");
+		EndAiNpcRequest(npcSlot);
+		return;
+	}
+
+	AiPending[npcSlot][aiPendingActive] = true;
+	AiPending[npcSlot][aiPendingRequest] = req;
+	AiPending[npcSlot][aiPendingMode] = mode;
+}
+
+stock EndAiNpcRequest(npcSlot)
+{
+	AiPending[npcSlot][aiPendingActive] = false;
+	AiNpcData[npcSlot][npcIsThinking] = false;
+	RefreshAiNpcLabel(npcSlot);
+}
+
+stock FindAiNpcByRequest(Request:id)
+{
+	foreach(new i : AiNpc)
+	{
+		if(AiPending[i][aiPendingActive] && AiPending[i][aiPendingRequest] == id)
+			return i;
+	}
+	return -1;
 }
 
 forward OnAiNpcRawResponse(Request:id, E_HTTP_STATUS:status, data[]);
 public OnAiNpcRawResponse(Request:id, E_HTTP_STATUS:status, data[])
 {
+	new npcSlot = FindAiNpcByRequest(id);
 	if(status != HTTP_STATUS_OK)
 	{
-		printf("[AI NPC ERROR]: OpenRouter returned HTTP %d | Body: %.200s", _:status, data);
-		foreach(new i : AiNpc)
-		{
-			if(AiNpcData[i][npcIsThinking])
-			{
-				AiNpcData[i][npcIsThinking] = false;
-				RefreshAiNpcLabel(i);
-			}
-		}
+		printf("[AI NPC ERROR]: Google AI Studio returned HTTP %d | Body: %.200s", _:status, data);
+		if(npcSlot != -1) EndAiNpcRequest(npcSlot);
 		return 1;
 	}
 
 	new Node:node;
-	if(JsonParse(data, node) != 0) return 1;
+	if(JsonParse(data, node) != 0)
+	{
+		if(npcSlot != -1) EndAiNpcRequest(npcSlot);
+		return 1;
+	}
 
 	new replyText[256];
 	new Node:choicesArray, Node:firstChoice, Node:msgNode;
@@ -277,35 +426,55 @@ public OnAiNpcRawResponse(Request:id, E_HTTP_STATUS:status, data[])
 		format(replyText, sizeof(replyText), "... (nodded silently)");
 	}
 
-	// Deliver AI response to nearest thinking NPC
-	foreach(new i : AiNpc)
+	if(npcSlot == -1)
 	{
-		if(AiNpcData[i][npcIsThinking])
+		printf("[AI NPC WARN]: No pending NPC for request %d", _:id);
+		return 1;
+	}
+
+	new mode = AiPending[npcSlot][aiPendingMode];
+	EndAiNpcRequest(npcSlot);
+
+	// Play Talking Animation on Actor
+	ApplyActorAnimation(AiNpcData[npcSlot][npcActorID], "PED", "IDLE_chat", 4.1, 0, 1, 1, 1, 3000);
+
+	new chatMsg[300], color;
+	switch(mode)
+	{
+		case AI_REPLY_ME:
 		{
-			AiNpcData[i][npcIsThinking] = false;
-			RefreshAiNpcLabel(i);
+			new cleanReply[300];
+			CleanAiNpcReply(npcSlot, replyText, cleanReply, sizeof(cleanReply));
+			if(strcmp(cleanReply, AiNpcData[npcSlot][npcName], true, strlen(AiNpcData[npcSlot][npcName])) == 0)
+				format(chatMsg, sizeof(chatMsg), "* %s", cleanReply);
+			else
+				format(chatMsg, sizeof(chatMsg), "* %s %s", AiNpcData[npcSlot][npcName], cleanReply);
+			color = COLOR_PURPLE;
+		}
+		case AI_REPLY_DO:
+		{
+			format(chatMsg, sizeof(chatMsg), "* %s (( %s ))", replyText, AiNpcData[npcSlot][npcName]);
+			color = COLOR_PURPLE;
+		}
+		default:
+		{
+			format(chatMsg, sizeof(chatMsg), "%s says: %s", AiNpcData[npcSlot][npcName], replyText);
+			color = COLOR_WHITE;
+		}
+	}
 
-			// Play Talking Animation on Actor
-			ApplyActorAnimation(AiNpcData[i][npcActorID], "PED", "IDLE_chat", 4.1, 0, 1, 1, 1, 3000);
-
-			new chatMsg[300];
-			format(chatMsg, sizeof(chatMsg), "%s says: %s", AiNpcData[i][npcName], replyText);
-			
-			// Broadcast response to nearby players within 15 meters
-			for(new p = 0; p < MAX_PLAYERS; p++)
+	// Broadcast response to nearby players within 15 meters
+	for(new p = 0; p < MAX_PLAYERS; p++)
+	{
+		if(IsPlayerConnected(p) && LoggedIn{p})
+		{
+			if(GetPlayerVirtualWorld(p) == AiNpcData[npcSlot][npcVW] && GetPlayerInterior(p) == AiNpcData[npcSlot][npcInterior])
 			{
-				if(IsPlayerConnected(p) && LoggedIn{p})
+				if(GetPlayerDistanceFromPoint(p, AiNpcData[npcSlot][npcPosX], AiNpcData[npcSlot][npcPosY], AiNpcData[npcSlot][npcPosZ]) <= 15.0)
 				{
-					if(GetPlayerVirtualWorld(p) == AiNpcData[i][npcVW] && GetPlayerInterior(p) == AiNpcData[i][npcInterior])
-					{
-						if(GetPlayerDistanceFromPoint(p, AiNpcData[i][npcPosX], AiNpcData[i][npcPosY], AiNpcData[i][npcPosZ]) <= 15.0)
-						{
-							SendClientMessage(p, COLOR_WHITE, chatMsg);
-						}
-					}
+					SendClientMessage(p, color, chatMsg);
 				}
 			}
-			break;
 		}
 	}
 	return 1;
@@ -315,14 +484,8 @@ forward OnRequestFailure(Request:id, errorCode, errorMessage[], len);
 public OnRequestFailure(Request:id, errorCode, errorMessage[], len)
 {
 	printf("[AI NPC REQUEST FAILURE]: Error Code: %d | Message: %s", errorCode, errorMessage);
-	foreach(new i : AiNpc)
-	{
-		if(AiNpcData[i][npcIsThinking])
-		{
-			AiNpcData[i][npcIsThinking] = false;
-			RefreshAiNpcLabel(i);
-		}
-	}
+	new npcSlot = FindAiNpcByRequest(id);
+	if(npcSlot != -1) EndAiNpcRequest(npcSlot);
 	return 1;
 }
 
