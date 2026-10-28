@@ -1,3 +1,5 @@
+forward TryAiNpcRoleplay(playerid, const text[], bool:isDo);
+
 CMD:relog(playerid, params[])
 {
 	if(!SQL_IsLogged(playerid))
@@ -107,6 +109,7 @@ CMD:me(playerid, params[])
 	}
 	else SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s %s", ReturnName(playerid, 0), params);
 
+	TryAiNpcRoleplay(playerid, params, false);
 	return true;
 }
 
@@ -266,6 +269,7 @@ CMD:do(playerid, params[])
 	}
 	else SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s (( %s ))", params, ReturnName(playerid, 0));
 
+	TryAiNpcRoleplay(playerid, params, true);
 	return true;
 }
 
