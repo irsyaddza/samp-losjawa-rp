@@ -206,7 +206,7 @@ export default function AdminPanel({ initialApps, currentAdminLevel }: AdminPane
         >
           Radio Manager
         </Link>
-        {currentAdminLevel && currentAdminLevel >= 4 && (
+        {(currentAdminLevel === 1336 || currentAdminLevel === 1337) && (
           <Link
             href="/dashboard/admin/roster"
             className="shrink-0 whitespace-nowrap px-5 py-3 text-sm font-bold border-b-2 border-transparent text-amber-400 hover:text-amber-300 transition flex items-center gap-1.5"

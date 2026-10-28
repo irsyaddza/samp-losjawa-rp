@@ -81,7 +81,7 @@ export default function RosterClient({ initialAdmins, currentAdminLevel }: Roste
   // Stats calculation
   const totalStaff = admins.length;
   const headAdmins = admins.filter(a => a.Admin === 1337).length;
-  const deputyHeads = admins.filter(a => a.Admin === 4).length;
+  const deputyHeads = admins.filter(a => a.Admin === 1336).length;
   const seniorAdmins = admins.filter(a => a.Admin === 3).length;
   const juniorAdmins = admins.filter(a => a.Admin <= 2 && a.Admin > 0).length;
 
@@ -310,7 +310,7 @@ export default function RosterClient({ initialAdmins, currentAdminLevel }: Roste
                 {filteredAdmins.map((admin) => {
                   const role = getAdminRoleInfo(admin.Admin);
                   const Icon = role.icon;
-                  const isProtectedHeadAdmin = admin.Admin === 1337 && currentAdminLevel < 1337;
+                  const isProtectedAdmin = admin.Admin >= 1336 && currentAdminLevel < 1337;
 
                   return (
                     <tr key={admin.ID} className="hover:bg-zinc-900/40 transition">
@@ -349,8 +349,8 @@ export default function RosterClient({ initialAdmins, currentAdminLevel }: Roste
 
                       {/* Action buttons */}
                       <td className="py-4 pl-4 text-right">
-                        {isProtectedHeadAdmin ? (
-                          <span className="text-[10px] text-zinc-600 italic">Protected (Head Admin)</span>
+                        {isProtectedAdmin ? (
+                          <span className="text-[10px] text-zinc-600 italic">Protected (Deputy/Head Admin)</span>
                         ) : (
                           <div className="flex items-center justify-end gap-2">
                             <button
@@ -427,9 +427,11 @@ export default function RosterClient({ initialAdmins, currentAdminLevel }: Roste
                   <option value={2}>Level 2 - Junior Admin</option>
                   <option value={3}>Level 3 - Senior Admin</option>
                   <option value={4}>Level 4 - Senior Admin 2</option>
-                  <option value={1336}>Level 1336 - Deputy Head Admin</option>
                   {currentAdminLevel === 1337 && (
-                    <option value={1337}>Level 1337 - Head Admin / Executive</option>
+                    <>
+                      <option value={1336}>Level 1336 - Deputy Head Admin</option>
+                      <option value={1337}>Level 1337 - Head Admin / Executive</option>
+                    </>
                   )}
                   <option value={-1}>Level -1 - Tester / Volunteer</option>
                 </select>
@@ -487,9 +489,11 @@ export default function RosterClient({ initialAdmins, currentAdminLevel }: Roste
                   <option value={2}>Level 2 - Junior Admin</option>
                   <option value={3}>Level 3 - Senior Admin</option>
                   <option value={4}>Level 4 - Senior Admin 2</option>
-                  <option value={1336}>Level 1336 - Deputy Head Admin</option>
                   {currentAdminLevel === 1337 && (
-                    <option value={1337}>Level 1337 - Head Admin / Executive</option>
+                    <>
+                      <option value={1336}>Level 1336 - Deputy Head Admin</option>
+                      <option value={1337}>Level 1337 - Head Admin / Executive</option>
+                    </>
                   )}
                   <option value={-1}>Level -1 - Tester / Volunteer</option>
                 </select>
