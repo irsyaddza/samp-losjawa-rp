@@ -20,7 +20,7 @@ export default function DeleteCharacterButton({ charId, charName }: DeleteCharac
 
   const handleDelete = async () => {
     if (confirmName.trim().toLowerCase() !== formattedName.toLowerCase()) {
-      setError('Nama karakter yang Anda ketik tidak cocok.');
+      setError('The character name you entered does not match.');
       return;
     }
 
@@ -39,14 +39,14 @@ export default function DeleteCharacterButton({ charId, charName }: DeleteCharac
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Gagal menghapus karakter.');
+        throw new Error(data.error || 'Failed to delete the character.');
       }
 
       setIsOpen(false);
       router.push('/dashboard');
       router.refresh();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Terjadi kesalahan sistem.';
+      const message = err instanceof Error ? err.message : 'A system error occurred.';
       setError(message);
     } finally {
       setLoading(false);
@@ -60,7 +60,7 @@ export default function DeleteCharacterButton({ charId, charName }: DeleteCharac
         className="inline-flex items-center gap-2 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-400 px-4 py-2.5 text-xs font-bold transition cursor-pointer"
       >
         <Trash2 className="h-4 w-4" />
-        Hapus Karakter
+        Delete Character
       </button>
 
       {isOpen && (
@@ -68,27 +68,27 @@ export default function DeleteCharacterButton({ charId, charName }: DeleteCharac
           <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl relative overflow-hidden">
             <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-red-500 animate-pulse" />
-              Konfirmasi Penghapusan
+              Confirm Deletion
             </h3>
 
             <p className="text-zinc-400 text-xs leading-relaxed mb-4">
-              Tindakan ini <span className="text-red-400 font-bold">permanen</span>. Semua aset berupa kendaraan akan dihapus, dan properti (rumah/bisnis) milik <span className="text-white font-bold">{formattedName}</span> akan dikembalikan ke Negara.
+              This action is <span className="text-red-400 font-bold">permanent</span>. All vehicle assets will be deleted, and any properties (houses/businesses) owned by <span className="text-white font-bold">{formattedName}</span> will be returned to the State.
             </p>
 
             <div className="bg-red-500/5 border border-red-500/10 rounded-xl p-3 mb-6">
               <p className="text-[11px] text-red-400">
-                Karakter tidak boleh sedang online di dalam game saat dihapus.
+                The character must be offline in-game before deletion.
               </p>
             </div>
 
             <div className="space-y-4">
               <div>
                 <label className="text-[11px] text-zinc-500 block mb-1.5">
-                  Ketik <span className="text-white font-bold select-none">{formattedName}</span> untuk mengonfirmasi:
+                  Type <span className="text-white font-bold select-none">{formattedName}</span> to confirm:
                 </label>
                 <input
                   type="text"
-                  placeholder="Ketik nama lengkap karakter"
+                  placeholder="Enter the character's full name"
                   value={confirmName}
                   onChange={(e) => setConfirmName(e.target.value)}
                   className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 py-2 text-xs text-white placeholder-zinc-600 focus:border-red-500 focus:outline-none transition"
@@ -114,7 +114,7 @@ export default function DeleteCharacterButton({ charId, charName }: DeleteCharac
                   className="rounded-xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-850 px-4 py-2 text-xs font-semibold text-zinc-400 hover:text-white transition"
                   disabled={loading}
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button
                   onClick={handleDelete}
@@ -124,10 +124,10 @@ export default function DeleteCharacterButton({ charId, charName }: DeleteCharac
                   {loading ? (
                     <>
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      Menghapus...
+                      Deleting...
                     </>
                   ) : (
-                    'Hapus Permanen'
+                    'Delete Permanently'
                   )}
                 </button>
               </div>

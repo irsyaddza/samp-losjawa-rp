@@ -105,17 +105,17 @@ export default async function FactionPortalPage({ params }: PageProps) {
             Dashboard
           </Link>
           <span className="text-zinc-650 text-xs">/</span>
-          <span className="text-xs text-zinc-500 font-medium">Portal Faksi</span>
+          <span className="text-xs text-zinc-500 font-medium">Faction Portal</span>
         </div>
 
         {/* Heading */}
         <div className="mb-8">
           <h2 className="text-2xl font-black text-white flex items-center gap-2">
             <Shield className="h-6 w-6 text-amber-500" />
-            {FACTION_NAMES[factionId] || `Faksi ID ${factionId}`}
+            {FACTION_NAMES[factionId] || `Faction ID ${factionId}`}
           </h2>
           <p className="text-xs text-zinc-400 mt-1">
-            Halaman UCP untuk meninjau roster faksi resmi server Los Jawa RP.
+            Review the official faction roster for Los Jawa RP.
           </p>
         </div>
 

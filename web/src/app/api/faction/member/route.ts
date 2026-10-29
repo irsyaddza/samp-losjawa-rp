@@ -64,7 +64,7 @@ export async function POST(request: Request) {
 
       const nameRegex = /^[A-Z][a-z]+_[A-Z][a-z]+$/;
       if (!nameRegex.test(targetCharName)) {
-        return NextResponse.json({ error: 'Format nama harus Firstname_Lastname (e.g. Budi_Pranoto)' }, { status: 400 });
+        return NextResponse.json({ error: 'Character name must use the Firstname_Lastname format (e.g. Budi_Pranoto).' }, { status: 400 });
       }
 
       if (faction.maxRank < 1) {

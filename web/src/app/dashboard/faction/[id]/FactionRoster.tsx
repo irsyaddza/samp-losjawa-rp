@@ -51,14 +51,14 @@ export default function FactionRoster({ factionId, members, isLeader, actorRank,
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || 'Gagal memproses aksi');
+        setError(data.error || 'Failed to process the action.');
       } else {
-        setSuccess(data.message || 'Aksi berhasil dilakukan');
+        setSuccess(data.message || 'Action completed successfully.');
         if (action === 'invite') setInviteName('');
         router.refresh();
       }
     } catch {
-      setError('Koneksi internet bermasalah');
+      setError('Network error. Please try again.');
     } finally {
       setLoadingActionId(null);
     }
@@ -85,7 +85,7 @@ export default function FactionRoster({ factionId, members, isLeader, actorRank,
         <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
           <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
             <UserPlus className="h-4.5 w-4.5 text-amber-500" />
-            Undang Anggota Baru
+            Invite New Member
           </h3>
           <div className="flex flex-col sm:flex-row gap-3">
             <input
@@ -93,7 +93,7 @@ export default function FactionRoster({ factionId, members, isLeader, actorRank,
               required
               value={inviteName}
               onChange={(e) => setInviteName(e.target.value)}
-              placeholder="Contoh: Budi_Pranoto"
+              placeholder="e.g. Budi_Pranoto"
               className="flex-1 h-11 border border-zinc-800 rounded-xl px-4 text-xs font-medium focus:border-amber-500 focus:outline-none bg-zinc-900 text-white transition"
             />
             <button
@@ -104,7 +104,7 @@ export default function FactionRoster({ factionId, members, isLeader, actorRank,
               {loadingActionId === 'invite' ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                'Undang Anggota'
+                'Invite Member'
               )}
             </button>
           </div>
@@ -114,18 +114,18 @@ export default function FactionRoster({ factionId, members, isLeader, actorRank,
       {/* Roster List Table */}
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6 overflow-hidden">
         <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-6">
-          Daftar Roster Faksi
+          Faction Roster
         </h3>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-zinc-900 text-zinc-500 font-semibold uppercase tracking-wider">
-                <th className="pb-3 pr-4">Nama Karakter</th>
+                <th className="pb-3 pr-4">Character Name</th>
                 <th className="pb-3 px-4">Level</th>
                 <th className="pb-3 px-4">Rank Level</th>
                 <th className="pb-3 px-4">Status</th>
-                {isLeader && <th className="pb-3 pl-4 text-right">Tindakan</th>}
+                {isLeader && <th className="pb-3 pl-4 text-right">Actions</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-900">
