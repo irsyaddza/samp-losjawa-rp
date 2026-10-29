@@ -2031,6 +2031,7 @@ new LastCargoPickupMsg[MAX_PLAYERS];
 
 public OnGameModeInit()
 {
+	Server_SetLongCallTime(50000); // 50 ms; crashdetect's 5 ms default flags normal scheduling jitter
 	mysql_log(ERROR);
 
 	SQL_Connect();
