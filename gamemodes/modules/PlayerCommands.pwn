@@ -1661,15 +1661,6 @@ CMD:help(playerid, params[])
     return 1;
 }
 
-CMD:skiptutorial(playerid, params[])
-{
-    if(!PlayerData[playerid][pTutorialStep])
-        return SendErrorMessage(playerid, "You are not in the tutorial.");
-
-    FinishTutorial(playerid);
-    return 1;
-}
-
 ShowHelpCategories(playerid)
 {
 	gstr[0] = EOS;

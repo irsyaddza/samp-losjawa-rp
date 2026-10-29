@@ -41,18 +41,19 @@ ptask Players[1000](i)
 	}
 	PlayerDrunkLevelLast[i] = GetPlayerDrunkLevel(i);
 
-	if(PlayerData[i][pTutorialStep])
+	if(PlayerData[i][pTutorialStep] && Spawned{i})
 	{
-		if(TutorialDelay[i] > 0)
+		if(TutorialCamTimer[i] > 0) TutorialCamTimer[i]--;
+
+		if(TutorialCamTimer[i] == 0)
 		{
-			TutorialDelay[i]--;
-			if(TutorialDelay[i] <= 0)
-			{
-				PlayerData[i][pTutorialStep]++;
-				ClearChatBox(i);
-				RefreshTutorial(i);
-			}
-			// Silent auto-advance
+			new camNext = (TutorialCamStep[i] + 1) % sizeof(TutorialCamPos);
+			new Float:camX, Float:camY, Float:camZ;
+
+			GetPlayerCameraPos(i, camX, camY, camZ);
+			InterpolateCameraPos(i, camX, camY, camZ, TutorialCamPos[camNext][0], TutorialCamPos[camNext][1], TutorialCamPos[camNext][2], 10000, CAMERA_MOVE);
+			TutorialCamStep[i] = camNext;
+			TutorialCamTimer[i] = 10;
 		}
 	}
 
