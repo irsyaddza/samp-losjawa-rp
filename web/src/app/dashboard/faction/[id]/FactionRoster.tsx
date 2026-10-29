@@ -16,9 +16,11 @@ interface FactionRosterProps {
   factionId: number;
   members: Member[];
   isLeader: boolean;
+  actorRank: number;
+  maxRank: number;
 }
 
-export default function FactionRoster({ factionId, members, isLeader }: FactionRosterProps) {
+export default function FactionRoster({ factionId, members, isLeader, actorRank, maxRank }: FactionRosterProps) {
   const router = useRouter();
   
   // States
@@ -26,6 +28,8 @@ export default function FactionRoster({ factionId, members, isLeader }: FactionR
   const [loadingActionId, setLoadingActionId] = useState<number | string | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  const canManageMember = (member: Member) => isLeader && member.FactionRank > actorRank;
 
   const handleAction = async (targetId: number | null, action: 'promote' | 'demote' | 'kick' | 'invite') => {
     setError('');
@@ -47,14 +51,14 @@ export default function FactionRoster({ factionId, members, isLeader }: FactionR
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || 'Gagal memproses aksi');
+        setError(data.error || 'Failed to process the action.');
       } else {
-        setSuccess(data.message || 'Aksi berhasil dilakukan');
+        setSuccess(data.message || 'Action completed successfully.');
         if (action === 'invite') setInviteName('');
         router.refresh();
       }
     } catch {
-      setError('Koneksi internet bermasalah');
+      setError('Network error. Please try again.');
     } finally {
       setLoadingActionId(null);
     }
@@ -81,7 +85,7 @@ export default function FactionRoster({ factionId, members, isLeader }: FactionR
         <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
           <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
             <UserPlus className="h-4.5 w-4.5 text-amber-500" />
-            Undang Anggota Baru
+            Invite New Member
           </h3>
           <div className="flex flex-col sm:flex-row gap-3">
             <input
@@ -89,7 +93,7 @@ export default function FactionRoster({ factionId, members, isLeader }: FactionR
               required
               value={inviteName}
               onChange={(e) => setInviteName(e.target.value)}
-              placeholder="Contoh: Budi_Pranoto"
+              placeholder="e.g. Budi_Pranoto"
               className="flex-1 h-11 border border-zinc-800 rounded-xl px-4 text-xs font-medium focus:border-amber-500 focus:outline-none bg-zinc-900 text-white transition"
             />
             <button
@@ -100,7 +104,7 @@ export default function FactionRoster({ factionId, members, isLeader }: FactionR
               {loadingActionId === 'invite' ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                'Undang Anggota'
+                'Invite Member'
               )}
             </button>
           </div>
@@ -110,18 +114,18 @@ export default function FactionRoster({ factionId, members, isLeader }: FactionR
       {/* Roster List Table */}
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6 overflow-hidden">
         <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-6">
-          Daftar Roster Faksi
+          Faction Roster
         </h3>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-zinc-900 text-zinc-500 font-semibold uppercase tracking-wider">
-                <th className="pb-3 pr-4">Nama Karakter</th>
+                <th className="pb-3 pr-4">Character Name</th>
                 <th className="pb-3 px-4">Level</th>
                 <th className="pb-3 px-4">Rank Level</th>
                 <th className="pb-3 px-4">Status</th>
-                {isLeader && <th className="pb-3 pl-4 text-right">Tindakan</th>}
+                {isLeader && <th className="pb-3 pl-4 text-right">Actions</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-900">
@@ -148,7 +152,7 @@ export default function FactionRoster({ factionId, members, isLeader }: FactionR
                       <div className="flex justify-end gap-1.5">
                         <button
                           onClick={() => handleAction(member.ID, 'promote')}
-                          disabled={loadingActionId !== null}
+                          disabled={loadingActionId !== null || !canManageMember(member) || member.FactionRank <= 1}
                           title="Promote Member"
                           className="w-8 h-8 rounded-lg border border-zinc-800 hover:border-zinc-700 bg-zinc-900 hover:bg-zinc-800 flex items-center justify-center text-green-400 hover:text-green-300 transition cursor-pointer disabled:opacity-50"
                         >
@@ -156,7 +160,7 @@ export default function FactionRoster({ factionId, members, isLeader }: FactionR
                         </button>
                         <button
                           onClick={() => handleAction(member.ID, 'demote')}
-                          disabled={loadingActionId !== null || member.FactionRank <= 1}
+                          disabled={loadingActionId !== null || !canManageMember(member) || member.FactionRank >= maxRank}
                           title="Demote Member"
                           className="w-8 h-8 rounded-lg border border-zinc-800 hover:border-zinc-700 bg-zinc-900 hover:bg-zinc-800 flex items-center justify-center text-amber-500 hover:text-amber-400 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
@@ -164,7 +168,7 @@ export default function FactionRoster({ factionId, members, isLeader }: FactionR
                         </button>
                         <button
                           onClick={() => handleAction(member.ID, 'kick')}
-                          disabled={loadingActionId !== null}
+                          disabled={loadingActionId !== null || !canManageMember(member)}
                           title="Kick Member"
                           className="w-8 h-8 rounded-lg border border-red-950/30 hover:border-red-900/50 bg-red-950/10 hover:bg-red-950/20 flex items-center justify-center text-red-400 hover:text-red-300 transition cursor-pointer disabled:opacity-50"
                         >

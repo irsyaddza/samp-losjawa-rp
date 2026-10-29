@@ -405,6 +405,32 @@ Faction_GetAbbreviation(playerid, type_idx = -1)
 	return abbrv;
 }
 
+Faction_GetMaxRank(factionid)
+{
+	if(factionid < 0 || factionid >= MAX_FACTIONS || !FactionData[factionid][factionExists])
+	    return 0;
+
+	for(new i = 18; i >= 0; i--)
+	{
+		if(strlen(FactionRanks[factionid][i]) > 0)
+		    return i + 1;
+	}
+	return 0;
+}
+
+Faction_GetEffectiveRank(playerid)
+{
+	new factionid = PlayerData[playerid][pFaction];
+	if(factionid < 0 || factionid >= MAX_FACTIONS)
+	    return 99;
+
+	new rank = PlayerData[playerid][pFactionRank];
+	if(FactionPermissions[playerid] > 0 && FactionPermissions[playerid] < rank)
+	    rank = FactionPermissions[playerid];
+
+	return rank;
+}
+
 Faction_GetRank(playerid)
 {
     new
@@ -415,7 +441,7 @@ Faction_GetRank(playerid)
 	    return rank;
 
 	new prank = PlayerData[playerid][pFactionRank];
-	if(prank < 1 || prank > 15)
+	if(prank < 1 || prank > Faction_GetMaxRank(factionid))
 		return rank;
 
 	if(GetFactionType(playerid) == FACTION_POLICE && PlayerData[playerid][pDBRank] > 0)
@@ -536,6 +562,8 @@ SetFaction(playerid, id)
 	{
 	    if(PlayerData[playerid][pFaction] != id)
 	    {
+	        FactionPermissions[playerid] = 16;
+
 	        if(PlayerData[playerid][pOnDuty])
 	        {
 				ResetWeapons(playerid);
@@ -831,6 +859,7 @@ ResetFaction(playerid, bool:variables = true)
     PlayerData[playerid][pFaction] = -1;
     PlayerData[playerid][pFactionID] = -1;
     PlayerData[playerid][pFactionRank] = 0;
+    FactionPermissions[playerid] = 16;
 
     if(variables)
     {
@@ -919,6 +948,10 @@ public OnFactionPermissionsLoaded(playerid, factionid, factionrank, notice)
 		{
 			SendClientMessageEx(playerid, COLOR_WHITE, "SERVER: You inherited %s faction permissions from an alt account.", ReturnRank(PlayerData[playerid][pFaction], FactionPermissions[playerid] - 1));
 		}
+	}
+	else
+	{
+		FactionPermissions[playerid] = 16;
 	}
 	return 1;
 }

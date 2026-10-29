@@ -2,23 +2,18 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shield, Mail, Key, Eye, EyeOff, Loader2, CheckCircle, ShieldAlert } from 'lucide-react';
+import { Shield, Mail, Key, Loader2, CheckCircle, ShieldAlert } from 'lucide-react';
 
 interface SettingsFormProps {
   initialEmail: string;
-  initialSecretWord: string;
-  initialSecretHint: string;
 }
 
-export default function SettingsForm({
-  initialEmail,
-  initialSecretWord,
-  initialSecretHint,
-}: SettingsFormProps) {
+export default function SettingsForm({ initialEmail }: SettingsFormProps) {
   const router = useRouter();
 
   // Email form
   const [email, setEmail] = useState(initialEmail);
+  const [emailPassword, setEmailPassword] = useState('');
   const [emailSuccess, setEmailSuccess] = useState('');
   const [emailError, setEmailError] = useState('');
   const [emailLoading, setEmailLoading] = useState(false);
@@ -32,8 +27,9 @@ export default function SettingsForm({
   const [passLoading, setPassLoading] = useState(false);
 
   // Security Word form
-  const [secretWord, setSecretWord] = useState(initialSecretWord);
-  const [secretHint, setSecretHint] = useState(initialSecretHint);
+  const [secretWord, setSecretWord] = useState('');
+  const [secretHint, setSecretHint] = useState('');
+  const [secPassword, setSecPassword] = useState('');
   const [secSuccess, setSecSuccess] = useState('');
   const [secError, setSecError] = useState('');
   const [secLoading, setSecLoading] = useState(false);
@@ -48,13 +44,14 @@ export default function SettingsForm({
       const res = await fetch('/api/user/settings/email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, password: emailPassword }),
       });
       const data = await res.json();
       if (!res.ok) {
         setEmailError(data.error || 'Failed to update email');
       } else {
-        setEmailSuccess('Recovery email updated successfully');
+        setEmailSuccess(data.message || 'Recovery email updated successfully');
+        setEmailPassword('');
         router.refresh();
       }
     } catch {
@@ -108,13 +105,16 @@ export default function SettingsForm({
       const res = await fetch('/api/user/settings/security', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ secretWord, secretHint }),
+        body: JSON.stringify({ secretWord, secretHint, password: secPassword }),
       });
       const data = await res.json();
       if (!res.ok) {
         setSecError(data.error || 'Failed to update security credentials');
       } else {
-        setSecSuccess('Security credentials updated successfully');
+        setSecSuccess(data.message || 'Security credentials updated successfully');
+        setSecretWord('');
+        setSecretHint('');
+        setSecPassword('');
         router.refresh();
       }
     } catch {
@@ -167,6 +167,21 @@ export default function SettingsForm({
                 className="w-full h-11 border border-zinc-805 rounded-xl px-4 text-xs font-medium focus:border-amber-500 focus:outline-none bg-zinc-900 text-white transition border-zinc-800"
               />
             </div>
+            <div>
+              <label className="block text-xs font-semibold text-zinc-400 mb-1.5" htmlFor="email-password">
+                Current Password
+              </label>
+              <input
+                id="email-password"
+                type="password"
+                required
+                autoComplete="current-password"
+                value={emailPassword}
+                onChange={(e) => setEmailPassword(e.target.value)}
+                placeholder="Confirm with your current password"
+                className="w-full h-11 border border-zinc-805 rounded-xl px-4 text-xs font-medium focus:border-amber-500 focus:outline-none bg-zinc-900 text-white transition border-zinc-800"
+              />
+            </div>
             <button
               type="submit"
               disabled={emailLoading}
@@ -209,12 +224,15 @@ export default function SettingsForm({
               <input
                 id="sec-word"
                 type="text"
-                required
+                maxLength={24}
                 value={secretWord}
                 onChange={(e) => setSecretWord(e.target.value)}
-                placeholder="Enter new security word"
+                placeholder="Leave blank to keep current"
                 className="w-full h-11 border border-zinc-805 rounded-xl px-4 text-xs font-medium focus:border-amber-500 focus:outline-none bg-zinc-900 text-white transition border-zinc-800"
               />
+              <p className="mt-1.5 text-[11px] text-zinc-500">
+                Enter a new secret word only when you want to change it.
+              </p>
             </div>
             <div>
               <label className="block text-xs font-semibold text-zinc-400 mb-1.5" htmlFor="sec-hint">
@@ -223,9 +241,25 @@ export default function SettingsForm({
               <input
                 id="sec-hint"
                 type="text"
+                maxLength={24}
                 value={secretHint}
                 onChange={(e) => setSecretHint(e.target.value)}
-                placeholder="e.g. Name of my first pet"
+                placeholder="Leave blank to keep current"
+                className="w-full h-11 border border-zinc-805 rounded-xl px-4 text-xs font-medium focus:border-amber-500 focus:outline-none bg-zinc-900 text-white transition border-zinc-800"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-zinc-400 mb-1.5" htmlFor="sec-password">
+                Current Password
+              </label>
+              <input
+                id="sec-password"
+                type="password"
+                required
+                autoComplete="current-password"
+                value={secPassword}
+                onChange={(e) => setSecPassword(e.target.value)}
+                placeholder="Confirm with your current password"
                 className="w-full h-11 border border-zinc-805 rounded-xl px-4 text-xs font-medium focus:border-amber-500 focus:outline-none bg-zinc-900 text-white transition border-zinc-800"
               />
             </div>
@@ -234,7 +268,7 @@ export default function SettingsForm({
               disabled={secLoading}
               className="h-10 px-5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-md transition flex items-center justify-center cursor-pointer disabled:opacity-50"
             >
-              {secLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Security Word'}
+              {secLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Security Details'}
             </button>
           </form>
         </div>

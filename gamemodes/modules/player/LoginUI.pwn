@@ -271,6 +271,7 @@ forward OnPlayerGtaVSpawnFinish(playerid);
 public OnPlayerGtaVSpawnFinish(playerid)
 {
     if (!IsPlayerConnected(playerid)) return 1;
+    if (PlayerData[playerid][pTutorialStep]) return 1; // tutorial owns the camera
     SetCameraBehindPlayer(playerid);
     TogglePlayerControllable(playerid, true);
     return 1;

@@ -202,30 +202,41 @@ TLS termination is a functional requirement, not a nicety. The session cookie se
 
 ### DNS records
 
-Create two records in Cloudflare, both set to **DNS only** (grey cloud):
+Create two records in Cloudflare:
 
-| Type | Name | Content | Purpose |
-| :--- | :--- | :--- | :--- |
-| A | `ucp` | production host IP | Web portal (UCP) |
-| A | `play` | production host IP | Game server and model CDN |
+| Type | Name | Content | Proxy | Purpose |
+| :--- | :--- | :--- | :--- | :--- |
+| A | `ucp` | production host IP | Proxied (orange cloud) | Web portal (UCP) |
+| A | `play` | production host IP | DNS only (grey cloud) | Game server and model CDN |
 
-Both records must remain unproxied. The Cloudflare free plan proxies HTTP and HTTPS on a fixed list of ports (80, 443, 8080, 8443, and a few others) and does not proxy UDP at all. The game server listens on UDP 7777 and the model CDN on TCP 7778, so neither can pass through the proxy. The web portal is unproxied as well, which keeps Let's Encrypt's HTTP-01 challenge reachable.
+The `play` record must remain unproxied. Cloudflare proxies HTTP and HTTPS on a fixed list of ports and does not proxy UDP at all. The game server listens on UDP 7777 and the model CDN on TCP 7778, so neither can pass through the proxy.
+
+The `ucp` record can be proxied because the portal only uses HTTP/HTTPS. With orange cloud enabled, use **Full (strict)** and a Cloudflare Origin Certificate mounted into Caddy, because Let's Encrypt's HTTP-01 challenge cannot reach the origin through the proxy. Caddy trusts Cloudflare's edge ranges so application logs and rate limits see the player IP, not the edge IP.
 
 ### Reverse proxy
 
 `caddy/Caddyfile` holds the entire proxy configuration:
 
 ```caddyfile
+{
+	servers {
+		# Full Cloudflare range list lives in caddy/Caddyfile.
+		trusted_proxies static 173.245.48.0/20 ... 2c0f:f248::/32
+		trusted_proxies_strict
+		client_ip_headers CF-Connecting-IP X-Forwarded-For
+	}
+}
+
 ucp.losjawa-rp.fun {
 	encode zstd gzip
 
 	reverse_proxy web:3000 {
-		header_up X-Real-IP {remote_host}
+		header_up X-Real-IP {client_ip}
 	}
 }
 ```
 
-Caddy requests a certificate on first start and renews it automatically. Key material and issued certificates live in the `caddy_data` volume, so they survive container recreation and are never re-issued unnecessarily.
+Caddy manages TLS for the site block. It requests a Let's Encrypt certificate on first start and renews it automatically. Key material and issued certificates live in the `caddy_data` volume, so they survive container recreation and are never re-issued unnecessarily. When `ucp` is proxied through Cloudflare, use the Origin Certificate setup described below instead.
 
 ### Firewall
 
@@ -265,11 +276,26 @@ curl -sS -o /dev/null -w '%{http_code}\n' http://ucp.losjawa-rp.fun
 
 A `200` from the first request and a `308` from the second indicate the proxy, the certificate, and the redirect are all working.
 
-### Optional: Cloudflare proxy in front of Caddy
+### Cloudflare proxy in front of Caddy
 
-To add WAF rules and DDoS mitigation, switch the `ucp` record to proxied (orange cloud) and set the SSL/TLS mode to **Full (strict)**. Because Let's Encrypt's HTTP-01 challenge cannot reach the origin through the proxy, issue a Cloudflare Origin Certificate instead, mount it into the Caddy container, and point the site block's `tls` directive at it. Origin certificates are valid for 15 years.
+The `ucp` record is proxied (orange cloud) for WAF and DDoS mitigation. Set SSL/TLS mode to **Full (strict)** and mount a Cloudflare Origin Certificate into the Caddy container. Origin certificates are valid for 15 years.
 
-Once the proxy is enabled, configure `trusted_proxies` in the Caddy global block so the application logs the real client address rather than the Cloudflare edge node.
+Add the certificate files as read-only volumes on the `caddy` service and point the site block at them:
+
+```yaml
+volumes:
+  - ./caddy/origin-cert.pem:/etc/caddy/origin-cert.pem:ro
+  - ./caddy/origin-key.pem:/etc/caddy/origin-key.pem:ro
+```
+
+```caddyfile
+ucp.losjawa-rp.fun {
+	tls /etc/caddy/origin-cert.pem /etc/caddy/origin-key.pem
+	# ...
+}
+```
+
+The Caddy global block already trusts Cloudflare's published edge ranges, enables strict right-to-left parsing, and reads `CF-Connecting-IP` first. This keeps the application's audit log and rate limits on the real client address instead of the Cloudflare edge node.
 
 ---
 

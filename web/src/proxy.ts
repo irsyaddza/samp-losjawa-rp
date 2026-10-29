@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { getTrustedBaseUrl } from '@/lib/site';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
@@ -19,21 +20,41 @@ function requestOrigin(request: NextRequest): string {
   return `${proto}://${host}`;
 }
 
+function isLoopbackHost(hostname: string): boolean {
+  return (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '::1' ||
+    hostname === '[::1]'
+  );
+}
+
 function isAllowedOrigin(value: string, request: NextRequest): boolean {
   try {
     const origin = new URL(value);
-    const current = new URL(requestOrigin(request));
+    const trusted = new URL(getTrustedBaseUrl());
 
-    if (origin.host === current.host) {
+    if (origin.origin === trusted.origin) {
       return true;
     }
 
-    const configured = process.env.NEXT_PUBLIC_BASE_URL;
-    if (configured) {
-      return origin.origin === new URL(configured).origin;
+    // Local development often alternates between localhost and 127.0.0.1.
+    if (
+      origin.protocol === trusted.protocol &&
+      origin.port === trusted.port &&
+      isLoopbackHost(origin.hostname) &&
+      isLoopbackHost(trusted.hostname)
+    ) {
+      return true;
     }
 
-    return false;
+    // Production trusts only the configured public origin, never request headers.
+    if (process.env.NODE_ENV === 'production') {
+      return false;
+    }
+
+    const current = new URL(requestOrigin(request));
+    return origin.origin === current.origin;
   } catch {
     return false;
   }

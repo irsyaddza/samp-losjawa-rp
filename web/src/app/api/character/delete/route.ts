@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     // Verify online status - players must log out of the game before deleting!
     if (character.Online === 1) {
       return NextResponse.json(
-        { error: 'Karakter sedang online di dalam game. Silakan keluar dari game terlebih dahulu!' },
+        { error: 'Character is currently online in-game. Please log out of the game first.' },
         { status: 400 }
       );
     }

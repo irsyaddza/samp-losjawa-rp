@@ -10,19 +10,20 @@ import RosterClient from './RosterClient';
 async function getAdminRoster() {
   try {
     const [admins] = await pool.execute<RowDataPacket[]>(
-      `SELECT ID, Username, Email, Admin, RegisterDate 
-       FROM accounts 
-       WHERE Admin != 0 
-       ORDER BY 
-         CASE 
-           WHEN Admin = 1337 THEN 1 
-           WHEN Admin = 4 THEN 2 
-           WHEN Admin = 3 THEN 3 
-           WHEN Admin = 2 THEN 4 
-           WHEN Admin = 1 THEN 5 
-           ELSE 6 
-         END, 
-         Admin DESC, 
+      `SELECT ID, Username, Email, Admin, RegisterDate
+       FROM accounts
+       WHERE Admin != 0
+       ORDER BY
+         CASE
+           WHEN Admin = 1337 THEN 1
+           WHEN Admin = 1336 THEN 2
+           WHEN Admin = 4 THEN 3
+           WHEN Admin = 3 THEN 4
+           WHEN Admin = 2 THEN 5
+           WHEN Admin = 1 THEN 6
+           ELSE 7
+         END,
+         Admin DESC,
          Username ASC`
     );
     return admins as unknown as {
@@ -57,8 +58,8 @@ export default async function AdminRosterPage() {
     redirect('/login');
   }
 
-  // Access Control: Only Deputy Head Admin (Level >= 4) and Head Admin (Level 1337)
-  if (session.adminLevel < 4) {
+  // Access Control: Deputy Head Admin (1336) and Head Admin (1337) only
+  if (session.adminLevel !== 1336 && session.adminLevel !== 1337) {
     redirect('/dashboard');
   }
 

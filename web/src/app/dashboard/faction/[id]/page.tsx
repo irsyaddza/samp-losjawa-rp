@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
+import { canManageFaction, getFactionInfo } from '@/lib/faction';
 import { RowDataPacket } from 'mysql2';
 import { ArrowLeft, Shield } from 'lucide-react';
 import Navbar from '@/components/Navbar';
@@ -21,7 +22,7 @@ const FACTION_NAMES: Record<number, string> = {
 async function getFactionMembers(factionId: number) {
   try {
     const [rows] = await pool.execute<RowDataPacket[]>(
-      'SELECT ID, char_name, Level, FactionRank, Online FROM characters WHERE Faction = ? ORDER BY FactionRank DESC, ID ASC',
+      'SELECT ID, char_name, Level, FactionRank, Online FROM characters WHERE Faction = ? ORDER BY FactionRank ASC, ID ASC',
       [factionId]
     );
     return rows;
@@ -34,10 +35,11 @@ async function getFactionMembers(factionId: number) {
 async function verifyFactionMembership(userId: number, factionId: number) {
   try {
     const [rows] = await pool.execute<RowDataPacket[]>(
-      'SELECT ID, FactionRank FROM characters WHERE master = ? AND Faction = ? LIMIT 1',
+      'SELECT MIN(FactionRank) AS FactionRank FROM characters WHERE master = ? AND Faction = ? AND FactionRank > 0',
       [userId, factionId]
     );
-    return rows[0] || null;
+    const rank = Number(rows[0]?.FactionRank);
+    return Number.isInteger(rank) && rank > 0 ? { FactionRank: rank } : null;
   } catch (error) {
     console.error('Error verifying faction membership:', error);
     return null;
@@ -63,10 +65,18 @@ interface PageProps {
 export default async function FactionPortalPage({ params }: PageProps) {
   const { id } = await params;
   const factionId = parseInt(id, 10);
+  if (!Number.isInteger(factionId) || factionId <= 0) {
+    redirect('/dashboard');
+  }
   const session = await getSession();
 
   if (!session) {
     redirect('/login');
+  }
+
+  const faction = await getFactionInfo(factionId);
+  if (!faction) {
+    redirect('/dashboard');
   }
 
   // Security check: Verify that the user owns a character belonging to this faction
@@ -75,8 +85,7 @@ export default async function FactionPortalPage({ params }: PageProps) {
     redirect('/dashboard');
   }
 
-  // If the member's rank is >= 5, they are considered an officer/leader
-  const isLeader = memberRecord.FactionRank >= 5;
+  const isLeader = canManageFaction(faction.factionType, memberRecord.FactionRank);
 
   const email = await getUserEmail(session.userId);
   const members = await getFactionMembers(factionId);
@@ -96,17 +105,17 @@ export default async function FactionPortalPage({ params }: PageProps) {
             Dashboard
           </Link>
           <span className="text-zinc-650 text-xs">/</span>
-          <span className="text-xs text-zinc-500 font-medium">Portal Faksi</span>
+          <span className="text-xs text-zinc-500 font-medium">Faction Portal</span>
         </div>
 
         {/* Heading */}
         <div className="mb-8">
           <h2 className="text-2xl font-black text-white flex items-center gap-2">
             <Shield className="h-6 w-6 text-amber-500" />
-            {FACTION_NAMES[factionId] || `Faksi ID ${factionId}`}
+            {FACTION_NAMES[factionId] || `Faction ID ${factionId}`}
           </h2>
           <p className="text-xs text-zinc-400 mt-1">
-            Halaman UCP untuk meninjau roster faksi resmi server Los Jawa RP.
+            Review the official faction roster for Los Jawa RP.
           </p>
         </div>
 
@@ -115,6 +124,8 @@ export default async function FactionPortalPage({ params }: PageProps) {
           factionId={factionId}
           members={members as unknown as { ID: number; char_name: string; Level: number; FactionRank: number; Online: number }[]}
           isLeader={isLeader}
+          actorRank={memberRecord.FactionRank}
+          maxRank={faction.maxRank}
         />
       </main>
     </div>

@@ -4,9 +4,19 @@ import { getSession } from '@/lib/auth';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { logAdminAction } from '@/lib/audit';
 
-// Helper to verify if user is Deputy Head Admin (Level >= 4) or Head Admin (Level 1337)
+const HEAD_ADMIN = 1337;
+const DEPUTY_HEAD_ADMIN = 1336;
+const ADMIN_LEVELS = [-1, 1, 2, 3, 4, DEPUTY_HEAD_ADMIN, HEAD_ADMIN];
+const VALID_ADMIN_LEVELS = new Set(ADMIN_LEVELS);
+
+// Roster management is limited to Deputy Head Admin (1336) and Head Admin (1337).
 function isAuthorizedAdmin(adminLevel: number): boolean {
-  return adminLevel >= 4;
+  return adminLevel === DEPUTY_HEAD_ADMIN || adminLevel === HEAD_ADMIN;
+}
+
+// Deputy Head Admin can manage regular staff, but only Head Admin can manage Deputy/Head Admins.
+function canManageAdminLevel(actorLevel: number, level: number): boolean {
+  return actorLevel === HEAD_ADMIN || level < DEPUTY_HEAD_ADMIN;
 }
 
 export async function GET() {
@@ -57,15 +67,17 @@ export async function POST(req: Request) {
       }
 
       const cleanUsername = username.trim();
-      const level = parseInt(newAdminLevel, 10);
+      const level = Number(newAdminLevel);
 
-      if (isNaN(level) || level === 0) {
+      if (!Number.isInteger(level) || !VALID_ADMIN_LEVELS.has(level)) {
         return NextResponse.json({ error: 'Please select a valid admin rank level.' }, { status: 400 });
       }
 
-      // Check if target user cannot be assigned higher rank than requester unless requester is Head Admin (1337)
-      if (level >= 1337 && session.adminLevel < 1337) {
-        return NextResponse.json({ error: 'Only Head Admin (1337) can assign Head Admin rank.' }, { status: 403 });
+      if (!canManageAdminLevel(session.adminLevel, level)) {
+        return NextResponse.json(
+          { error: 'Only Head Admin (1337) can assign Deputy Head Admin or Head Admin ranks.' },
+          { status: 403 }
+        );
       }
 
       // Check if account exists
@@ -110,19 +122,27 @@ export async function POST(req: Request) {
 
     // 2. UPDATE EXISTING ADMIN LEVEL
     if (action === 'update') {
-      if (!targetUserId) {
+      const targetId = Number(targetUserId);
+      if (!Number.isInteger(targetId) || targetId <= 0) {
         return NextResponse.json({ error: 'Invalid target user ID.' }, { status: 400 });
       }
 
-      const level = parseInt(newAdminLevel, 10);
-      if (isNaN(level)) {
+      const level = Number(newAdminLevel);
+      if (!Number.isInteger(level) || !VALID_ADMIN_LEVELS.has(level)) {
         return NextResponse.json({ error: 'Invalid admin level.' }, { status: 400 });
+      }
+
+      if (!canManageAdminLevel(session.adminLevel, level)) {
+        return NextResponse.json(
+          { error: 'Only Head Admin (1337) can assign Deputy Head Admin or Head Admin ranks.' },
+          { status: 403 }
+        );
       }
 
       // Fetch target account
       const [targetRows] = await pool.execute<RowDataPacket[]>(
         'SELECT ID, Username, Admin FROM accounts WHERE ID = ? LIMIT 1',
-        [targetUserId]
+        [targetId]
       );
 
       if (targetRows.length === 0) {
@@ -131,18 +151,16 @@ export async function POST(req: Request) {
 
       const targetAccount = targetRows[0];
 
-      // Prevent editing Head Admin unless requester is Head Admin (1337)
-      if (targetAccount.Admin === 1337 && session.adminLevel < 1337) {
-        return NextResponse.json({ error: 'Only Head Admin (1337) can modify Head Admin accounts.' }, { status: 403 });
-      }
-
-      if (level >= 1337 && session.adminLevel < 1337) {
-        return NextResponse.json({ error: 'Only Head Admin (1337) can assign Head Admin rank.' }, { status: 403 });
+      if (!canManageAdminLevel(session.adminLevel, Number(targetAccount.Admin))) {
+        return NextResponse.json(
+          { error: 'Only Head Admin (1337) can modify Deputy Head Admin or Head Admin accounts.' },
+          { status: 403 }
+        );
       }
 
       await pool.execute<ResultSetHeader>(
         'UPDATE accounts SET Admin = ? WHERE ID = ?',
-        [level, targetUserId]
+        [level, targetId]
       );
 
       await logAdminAction({
@@ -163,14 +181,15 @@ export async function POST(req: Request) {
 
     // 3. REMOVE / DEMOTE ADMIN
     if (action === 'remove') {
-      if (!targetUserId) {
+      const targetId = Number(targetUserId);
+      if (!Number.isInteger(targetId) || targetId <= 0) {
         return NextResponse.json({ error: 'Invalid target user ID.' }, { status: 400 });
       }
 
       // Fetch target account
       const [targetRows] = await pool.execute<RowDataPacket[]>(
         'SELECT ID, Username, Admin FROM accounts WHERE ID = ? LIMIT 1',
-        [targetUserId]
+        [targetId]
       );
 
       if (targetRows.length === 0) {
@@ -179,13 +198,16 @@ export async function POST(req: Request) {
 
       const targetAccount = targetRows[0];
 
-      if (targetAccount.Admin === 1337 && session.adminLevel < 1337) {
-        return NextResponse.json({ error: 'Only Head Admin (1337) can demote Head Admin accounts.' }, { status: 403 });
+      if (!canManageAdminLevel(session.adminLevel, Number(targetAccount.Admin))) {
+        return NextResponse.json(
+          { error: 'Only Head Admin (1337) can demote Deputy Head Admin or Head Admin accounts.' },
+          { status: 403 }
+        );
       }
 
       await pool.execute<ResultSetHeader>(
         'UPDATE accounts SET Admin = 0 WHERE ID = ?',
-        [targetUserId]
+        [targetId]
       );
 
       await logAdminAction({

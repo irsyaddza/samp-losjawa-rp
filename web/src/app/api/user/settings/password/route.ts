@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { getSession, setSessionCookieForAccount } from '@/lib/auth';
-import { whirlpool } from '@/lib/hash';
+import { verifyPassword } from '@/lib/hash';
 import bcrypt from 'bcryptjs';
 import { RowDataPacket } from 'mysql2';
 
@@ -32,16 +32,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Account not found' }, { status: 404 });
     }
 
-    const currentHashed = rows[0].Password;
-    let isOldPasswordValid = false;
-    const isBcrypt = currentHashed.startsWith('$2a$') || currentHashed.startsWith('$2y$') || currentHashed.startsWith('$2b$');
-
-    if (isBcrypt) {
-      isOldPasswordValid = await bcrypt.compare(oldPassword, currentHashed);
-    } else {
-      const oldHashed = whirlpool(oldPassword);
-      isOldPasswordValid = (currentHashed.toUpperCase() === oldHashed);
-    }
+    const currentHashed = String(rows[0].Password ?? '');
+    const isOldPasswordValid = await verifyPassword(oldPassword, currentHashed);
 
     if (!isOldPasswordValid) {
       return NextResponse.json({ error: 'Old password is incorrect' }, { status: 400 });

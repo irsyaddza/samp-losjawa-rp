@@ -1661,15 +1661,6 @@ CMD:help(playerid, params[])
     return 1;
 }
 
-CMD:skiptutorial(playerid, params[])
-{
-    if(!PlayerData[playerid][pTutorialStep])
-        return SendErrorMessage(playerid, "You are not in the tutorial.");
-
-    FinishTutorial(playerid);
-    return 1;
-}
-
 ShowHelpCategories(playerid)
 {
 	gstr[0] = EOS;
@@ -5207,27 +5198,37 @@ CMD:factionhelp(playerid, params[])
 
 CanFactionInvite(playerid)
 {
-	if(PlayerData[playerid][pFaction] == -1) return false;
+	new factionid = PlayerData[playerid][pFaction];
+	if(factionid < 0 || factionid >= MAX_FACTIONS) return false;
+
+	new rank = Faction_GetEffectiveRank(playerid);
+	if(rank < 1) return false;
 
 	switch(GetFactionType(playerid))
 	{
 		case FACTION_POLICE:
 		{
-			if(PlayerData[playerid][pFactionRank] <= 4 || FactionPermissions[playerid] <= 4) // Commander and UP.
-			{
-				return true;
-			}
+			if(rank <= 4) return true; // Commander and UP.
 		}
 		default:
 		{
-			if(PlayerData[playerid][pFactionRank] <= 1 || FactionPermissions[playerid] <= 1)
-			{
-				return true;
-			}
+			if(rank <= 1) return true;
 		}
 	}
 
 	return false;
+}
+
+CanManageFactionMember(playerid, userid)
+{
+	if(playerid == userid)
+	    return false;
+
+	new factionid = PlayerData[playerid][pFaction];
+	if(factionid < 0 || factionid >= MAX_FACTIONS || PlayerData[userid][pFaction] != factionid)
+	    return false;
+
+	return Faction_GetEffectiveRank(userid) > Faction_GetEffectiveRank(playerid);
 }
 
 CMD:invite(playerid, params[])
@@ -5317,7 +5318,10 @@ if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVA
 	    return SendErrorMessage(playerid, "This player is not in your faction.");
 
 	if(playerid == userid)
-		return SendErrorMessage(playerid, "You can't uninvite yourself.");	
+		return SendErrorMessage(playerid, "You can't uninvite yourself.");
+
+	if(!CanManageFactionMember(playerid, userid))
+		return SendUnauthMessage(playerid, "You cannot manage a member with equal or higher authority.");
 
     SendClientMessageEx(playerid, COLOR_YELLOW, "You have successfully removed %s from your faction.", ReturnName(userid, 0));
     SendClientMessageEx(userid, COLOR_YELLOW, "You have been removed from your faction by %s.", ReturnName(playerid, 0));
@@ -5333,11 +5337,12 @@ CMD:rank(playerid, params[])
 	if(factionid == -1)
 	    return SendErrorMessage(playerid, "You are not in any faction, you cannot rank anyone.");
 
-	/*if(!HasFactionRank(playerid, 2))
-	    return SendUnauthMessage(playerid, "Your rank is lacking power to rank members.");*/
-
 	if(!CanFactionInvite(playerid))
-	    return SendUnauthMessage(playerid, "Your rank is lacking power to invite members.");		
+	    return SendUnauthMessage(playerid, "Your rank is lacking power to invite members.");
+
+	new maxrank = Faction_GetMaxRank(factionid);
+	if(maxrank < 1)
+	    return SendErrorMessage(playerid, "This faction has no ranks configured.");
 
     new
 	    userid,
@@ -5346,7 +5351,7 @@ CMD:rank(playerid, params[])
 
 	if(sscanf(params, "ud", userid, rankid))
 	{
-	    for(new i = 0; i < FactionData[factionid][factionRanks]; ++i)
+	    for(new i = 0; i < maxrank; ++i)
 	    {
 	        if(strlen(FactionRanks[factionid][i]) > 0)
 	        {
@@ -5357,25 +5362,40 @@ CMD:rank(playerid, params[])
 	    return SendSyntaxMessage(playerid, "/rank [playerid/PartOfName] [NewRankID]");
 	}
 
-if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
-	return SendErrorMessage(playerid, "The player you specified isn't connected.");
+	if(userid == INVALID_PLAYER_ID && (userid = ResolveMaskedTarget(params)) == INVALID_PLAYER_ID)
+		return SendErrorMessage(playerid, "The player you specified isn't connected.");
 	if(!SQL_IsLogged(userid))
 		return SendErrorMessage(playerid, "The player you specified isn't logged in.");
 
 	if(PlayerData[userid][pFaction] != PlayerData[playerid][pFaction])
 	    return SendErrorMessage(playerid, "This player is not in your faction.");
 
-	if(rankid < 1 || rankid > FactionData[PlayerData[playerid][pFaction]][factionRanks])
-	    return SendClientMessageEx(playerid, COLOR_GRAD1, "   Invalid rank. Rank must be between 1 to %d", FactionData[PlayerData[playerid][pFaction]][factionRanks]);
+	if(!CanManageFactionMember(playerid, userid))
+		return SendUnauthMessage(playerid, "You cannot manage a member with equal or higher authority.");
 
-	if(PlayerData[playerid][pFactionRank] == PlayerData[userid][pFactionRank] || rankid < PlayerData[playerid][pFactionRank])
-		return SendUnauthMessage(playerid, "You cannot modify ranks of people qeuivalent to your rank permission (%d) nor set people higher than it.", PlayerData[playerid][pFactionRank]);
+	if(rankid < 1 || rankid > maxrank)
+	    return SendClientMessageEx(playerid, COLOR_GRAD1, "   Invalid rank. Choose an existing rank between 1 and %d", maxrank);
 
-	new oldrank = PlayerData[userid][pFactionRank] - 1, faction = PlayerData[userid][pFaction];
+	if(strlen(FactionRanks[factionid][rankid - 1]) == 0)
+	    return SendClientMessageEx(playerid, COLOR_GRAD1, "   That rank slot is empty. Choose an existing rank.");
+
+	if(rankid <= Faction_GetEffectiveRank(playerid))
+		return SendUnauthMessage(playerid, "You cannot set a rank equal to or higher than your own.");
+
+	if(rankid == PlayerData[userid][pFactionRank])
+	    return SendErrorMessage(playerid, "This player already has that rank.");
+
+	new oldrank = PlayerData[userid][pFactionRank] - 1;
 
 	PlayerData[userid][pFactionRank] = rankid;
 
-	SendClientMessageEx(userid, COLOR_YELLOW, "Your rank has been updated from %s to %s by %s", ReturnRank(faction, oldrank), Faction_GetRank(userid), ReturnName(playerid, 0));
+	new query[128];
+	mysql_format(dbCon, query, sizeof(query), "UPDATE `characters` SET `FactionRank` = '%d' WHERE `ID` = '%d' LIMIT 1", rankid, PlayerData[userid][pID]);
+	mysql_tquery(dbCon, query);
+
+	LoadFactionPermissions(userid, false);
+
+	SendClientMessageEx(userid, COLOR_YELLOW, "Your rank has been updated from %s to %s by %s", ReturnRank(factionid, oldrank), Faction_GetRank(userid), ReturnName(playerid, 0));
 	SendClientMessageEx(playerid, COLOR_YELLOW, "Rank of %s changed to %s", ReturnName(userid, 0), Faction_GetRank(userid));
 	return true;
 }
@@ -5405,16 +5425,7 @@ CMD:accept(playerid, params[])
 
 	SetFaction(playerid, factionid);
 
-	new rank;
-	for(new i = 18; i >= 0; i--)
-	{
-		if(strlen(FactionRanks[factionid][i]) >= 1)
-		{
-			rank = i + 1;
-			break;
-		}
-	}
-
+	new rank = Faction_GetMaxRank(factionid);
 	PlayerData[playerid][pFactionRank] = rank;
 
 	SendClientMessageEx(playerid, COLOR_YELLOW, "You are now a member of %s!", Faction_GetName(targetid));

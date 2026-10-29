@@ -4801,7 +4801,8 @@ CMD:asetrank(playerid, params[])
 	new
 		userid,
 		rank,
-		factionid
+		factionid,
+		maxrank
 	;
 
 	if(sscanf(params, "ud", userid, rank))
@@ -4813,12 +4814,25 @@ CMD:asetrank(playerid, params[])
 	if((factionid = PlayerData[userid][pFaction]) == -1)
 	    return SendClientMessage(playerid, COLOR_GRAD1, "   The player is not a member of any faction or group");
 
-    if(rank < 1 || rank > FactionData[factionid][factionRanks])
-        return SendClientMessageEx(playerid, COLOR_GRAD1, "   The rank is not valid. The rank of this faction or group is between 1 and %d", FactionData[factionid][factionRanks]);
+	maxrank = Faction_GetMaxRank(factionid);
+	if(maxrank < 1)
+	    return SendErrorMessage(playerid, "This faction has no ranks configured.");
+
+    if(rank < 1 || rank > maxrank)
+        return SendClientMessageEx(playerid, COLOR_GRAD1, "   The rank is not valid. Choose an existing rank between 1 and %d", maxrank);
+
+    if(strlen(FactionRanks[factionid][rank - 1]) == 0)
+        return SendClientMessageEx(playerid, COLOR_GRAD1, "   That rank slot is empty. Choose an existing rank.");
 
 	new oldrank = PlayerData[userid][pFactionRank] - 1;
 
 	PlayerData[userid][pFactionRank] = rank;
+
+	new query[128];
+	mysql_format(dbCon, query, sizeof(query), "UPDATE `characters` SET `FactionRank` = '%d' WHERE `ID` = '%d' LIMIT 1", rank, PlayerData[userid][pID]);
+	mysql_tquery(dbCon, query);
+
+	LoadFactionPermissions(userid, false);
 
 	SendClientMessageEx(playerid, COLOR_YELLOW, "You updated %s's rank from %s to %s", ReturnName(userid, 0), ReturnRank(factionid, oldrank), Faction_GetRank(userid));
 	SendClientMessageEx(userid, COLOR_YELLOW, "Your rank has been updated from %s to %s by %s", ReturnRank(factionid, oldrank), Faction_GetRank(userid), ReturnName(playerid, 0));

@@ -89,7 +89,7 @@ export default function LoginPage() {
 
   const handleLinkEmail = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!legacyAccount || !newEmailInput) return;
+    if (!legacyAccount || !newEmailInput || !password) return;
     setLinkLoading(true);
     setLinkSuccess(false);
     setError('');
@@ -102,6 +102,7 @@ export default function LoginPage() {
           accountId: legacyAccount.id,
           username: legacyAccount.username,
           email: newEmailInput,
+          password,
         }),
       });
 
@@ -110,6 +111,7 @@ export default function LoginPage() {
       if (res.ok) {
         setLinkSuccess(true);
         setRequireEmail(false);
+        setPassword('');
       } else {
         setError(data.error || 'Failed to link email address.');
       }

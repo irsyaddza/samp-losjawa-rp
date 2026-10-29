@@ -1133,7 +1133,28 @@ new nearProperty_var[MAX_PLAYERS];
 new nearApartment_var[MAX_PLAYERS];
 new PropertyViewPage[MAX_PLAYERS];
 new PropertyViewPageIndexes[30][2];
-new TutorialDelay[MAX_PLAYERS];   // countdown seconds remaining for tutorial auto-advance
+#define TUTORIAL_LAST_PAGE      (5)
+#define TUTORIAL_LANG_ID        (1)
+#define TUTORIAL_LANG_EN        (2)
+#define TUTORIAL_CAM_START      (6)
+
+new TutorialLang[MAX_PLAYERS];
+new TutorialCamStep[MAX_PLAYERS];
+new TutorialCamTimer[MAX_PLAYERS];
+
+// Camera orbit starts at Pershing Square and circles the city centre.
+new const Float:TutorialCamPos[8][3] =
+{
+    {1703.5927, -1781.5214, 140.0}, // east
+    {1639.1562, -1625.9579, 140.0}, // north-east
+    {1483.5927, -1561.5214, 140.0}, // north
+    {1328.0292, -1625.9579, 140.0}, // north-west
+    {1263.5927, -1781.5214, 140.0}, // west
+    {1328.0292, -1937.0849, 140.0}, // south-west
+    {1483.5927, -2001.5214, 140.0}, // south (start)
+    {1639.1562, -1937.0849, 140.0}  // south-east
+};
+new const Float:TutorialLookAt[3] = {1483.5927, -1781.5214, 20.0};
 new LastSave[MAX_PLAYERS];        // last periodic character autosave (unix time)
 
 new
@@ -2031,6 +2052,7 @@ new LastCargoPickupMsg[MAX_PLAYERS];
 
 public OnGameModeInit()
 {
+	Server_SetLongCallTime(50000); // 50 ms; crashdetect's 5 ms default flags normal scheduling jitter
 	mysql_log(ERROR);
 
 	SQL_Connect();
@@ -2964,7 +2986,6 @@ public e_COMMAND_ERRORS:OnPlayerCommandReceived(playerid, cmdtext[], e_COMMAND_E
 
 	if(PlayerData[playerid][pTutorialStep])
 	{
-		if(strcmp(cmdtext, "/skiptutorial", true) == 0) return COMMAND_OK;
 		return COMMAND_DENIED;
 	}
 
@@ -4913,6 +4934,9 @@ ResetStatistics(playerid) // Clear player Stats
 	PlayerData[playerid][pID] = -1;
 	PlayerData[playerid][pTutorial] = 0;
 	PlayerData[playerid][pTutorialStep] = 0;
+	TutorialLang[playerid] = 0;
+	TutorialCamStep[playerid] = 0;
+	TutorialCamTimer[playerid] = 0;
     PlayerData[playerid][pModel] = 0;
     PlayerData[playerid][pPhoneModel] = 0;
     PlayerData[playerid][pPnumber] = 0;
@@ -5938,7 +5962,11 @@ public OnPlayerSpawn(playerid)
 		SetPlayerSpawn(playerid);
 		SetPlayerTime(playerid, ghour, gminute);
 
-		if(!PlayerData[playerid][pInjured])
+		if(PlayerData[playerid][pTutorialStep])
+		{
+			initiateTutorial(playerid);
+		}
+		else if(!PlayerData[playerid][pInjured])
 		{
 			new Float:px, Float:py, Float:pz;
 			px = PlayerData[playerid][pPos][0];
@@ -5955,11 +5983,6 @@ public OnPlayerSpawn(playerid)
 		{
 			SetCameraBehindPlayer(playerid);
 			TogglePlayerControllable(playerid, false);
-		}
-
-		if(PlayerData[playerid][pTutorialStep] == 1)
-		{
-			initiateTutorial(playerid);
 		}
 
 		if(FinishedTutorial{playerid})
@@ -8897,9 +8920,14 @@ FinishTutorial(playerid)
 {
     if(!PlayerData[playerid][pTutorialStep]) return false;
 
+    if(Dialog_Opened(playerid)) Dialog_Close(playerid);
+
     FinishedTutorial{playerid} = true;
     PlayerData[playerid][pTutorialStep] = 0;
     PlayerData[playerid][pTutorial] = 1;
+    TutorialLang[playerid] = 0;
+    TutorialCamStep[playerid] = 0;
+    TutorialCamTimer[playerid] = 0;
     PlayerData[playerid][pPos][0] = 1643.0010;
     PlayerData[playerid][pPos][1] = -2331.7056;
     PlayerData[playerid][pPos][2] = -2.6797;
@@ -8922,56 +8950,91 @@ FinishTutorial(playerid)
     return true;
 }
 
+new const TutorialTextID[TUTORIAL_LAST_PAGE][] =
+{
+    "{FFFFFF}Selamat datang di {A9C4E4}Los Jawa Roleplay{FFFFFF}!\n\nPanduan singkat ini menjelaskan dasar-dasar sebelum kamu mulai.\nGunakan tombol {A9C4E4}Next{FFFFFF} untuk lanjut dan {A9C4E4}Back{FFFFFF} untuk kembali.\n\n{7E98B6}Roleplay{FFFFFF} berarti memainkan karaktermu seperti orang sungguhan.\n{FF6347}Jangan DM, MG, PG, atau RK.{FFFFFF} Hormati pemain lain.",
+    "{FFFFFF}Chat & Bantuan\n\n{7E98B6}IC{FFFFFF} = dalam karakter. {7E98B6}OOC{FFFFFF} = di luar karakter.\nGunakan {A9C4E4}/b{FFFFFF} untuk chat OOC dan {A9C4E4}/pm{FFFFFF} untuk pesan pribadi.\n\n{A9C4E4}/help{FFFFFF} - daftar perintah\n{A9C4E4}/rules{FFFFFF} - peraturan server\n{A9C4E4}/helpme{FFFFFF} - minta bantuan tester\n{A9C4E4}/stats{FFFFFF} - statistik karakter",
+    "{FFFFFF}Berpindah & Navigasi\n\n{A9C4E4}/call 544{FFFFFF} - panggil taksi\n{A9C4E4}/rentvehicle{FFFFFF} - sewa kendaraan di dekatmu\n{A9C4E4}/GPS{FFFFFF} - buka peta & navigasi\n\nDi {A9C4E4}/GPS{FFFFFF} kamu bisa mencari jalan, properti, SPBU, 24/7,\ntempat umum, lowongan kerja, dan bisnis. Pilih lokasi lalu ikuti rutenya.",
+    "{FFFFFF}Pekerjaan & Uang\n\nCari titik kerja berbentuk tas, lalu ketik {A9C4E4}/joinjob{FFFFFF}.\nGunakan {A9C4E4}/jobhelp{FFFFFF} untuk melihat perintah pekerjaanmu.\n{A9C4E4}/stats{FFFFFF} menampilkan uang, level, dan status karakter.\n{A9C4E4}/phone{FFFFFF} membuka ponsel untuk kontak dan SMS.",
+    "{FFFFFF}Siap Memulai\n\nBaca {A9C4E4}/rules{FFFFFF}, tetap dalam karakter, dan hormati pemain lain.\nButuh bantuan? Gunakan {A9C4E4}/helpme{FFFFFF} atau tanya admin.\n\n{Tekan Next untuk mulai bermain.}"
+};
+
+new const TutorialTextEN[TUTORIAL_LAST_PAGE][] =
+{
+    "{FFFFFF}Welcome to {A9C4E4}Los Jawa Roleplay{FFFFFF}!\n\nThis short guide explains the basics before you start.\nUse {A9C4E4}Next{FFFFFF} to continue and {A9C4E4}Back{FFFFFF} to go back.\n\n{7E98B6}Roleplay{FFFFFF} means acting as your character in a realistic world.\n{FF6347}Do not DM, MG, PG, or RK.{FFFFFF} Respect other players.",
+    "{FFFFFF}Chat & Help\n\n{7E98B6}IC{FFFFFF} = in character. {7E98B6}OOC{FFFFFF} = out of character.\nUse {A9C4E4}/b{FFFFFF} for OOC chat and {A9C4E4}/pm{FFFFFF} for private messages.\n\n{A9C4E4}/help{FFFFFF} - command list\n{A9C4E4}/rules{FFFFFF} - server rules\n{A9C4E4}/helpme{FFFFFF} - ask a tester for help\n{A9C4E4}/stats{FFFFFF} - character stats",
+    "{FFFFFF}Getting Around & Navigation\n\n{A9C4E4}/call 544{FFFFFF} - call a taxi\n{A9C4E4}/rentvehicle{FFFFFF} - rent a nearby vehicle\n{A9C4E4}/GPS{FFFFFF} - open the map & navigation\n\nIn {A9C4E4}/GPS{FFFFFF} you can find streets, properties, gas stations, 24/7,\npublic places, jobs, and businesses. Pick a location and follow the route.",
+    "{FFFFFF}Jobs & Money\n\nFind a briefcase job point, then type {A9C4E4}/joinjob{FFFFFF}.\nUse {A9C4E4}/jobhelp{FFFFFF} to see your job commands.\n{A9C4E4}/stats{FFFFFF} shows your money, level, and character status.\n{A9C4E4}/phone{FFFFFF} opens your phone for contacts and SMS.",
+    "{FFFFFF}Ready to Play\n\nRead {A9C4E4}/rules{FFFFFF}, stay in character, and respect other players.\nNeed help? Use {A9C4E4}/helpme{FFFFFF} or ask an admin.\n\n{Click Next to start playing.}"
+};
+
+ShowTutorialLanguage(playerid)
+{
+    Dialog_Show(playerid, TutorialLanguage, DIALOG_STYLE_MSGBOX, "Los Jawa Roleplay",
+        "{FFFFFF}Pilih bahasa panduan.\nChoose the language for your guide.",
+        "Indonesia", "English");
+    return 1;
+}
+
 RefreshTutorial(playerid)
 {
     if(!PlayerData[playerid][pTutorialStep]) return 0;
 
-    TutorialDelay[playerid] = 8;
     LastTeleport[playerid] = gettime();
 
-    switch(PlayerData[playerid][pTutorialStep])
+    if(!TutorialLang[playerid])
+        return ShowTutorialLanguage(playerid);
+
+    new step = PlayerData[playerid][pTutorialStep];
+    if(step < 1 || step > TUTORIAL_LAST_PAGE)
+        return FinishTutorial(playerid);
+
+    // Button1 is Back, button2 is Next; SA-MP maps ESC to button2.
+    new title[64];
+    if(TutorialLang[playerid] == TUTORIAL_LANG_ID)
     {
-        case 1:
-        {
-            SendClientMessage(playerid, COLOR_WHITE, ">> Welcome to Los Jawa Roleplay!");
-            SendClientMessage(playerid, COLOR_GRAD2, "This short tutorial takes about 30 seconds. Type /skiptutorial at any time to skip.");
-            SendClientMessage(playerid, COLOR_GRAD2, "Use /help for commands, /rules for server rules, and /helpme to ask a tester.");
-
-            InterpolateCameraPos(playerid, 1669.1499,-2328.8406,-3.5769, 1541.1512,-2287.1345,91.9661, 1500, CAMERA_MOVE);
-            InterpolateCameraLookAt(playerid, 1654.4652,-2333.6084,-2.6797, 1623.3582,-2288.0413,77.9914, 1500, CAMERA_MOVE);
-        }
-        case 2:
-        {
-            SendClientMessage(playerid, COLOR_WHITE, ">> Getting around");
-            SendClientMessage(playerid, COLOR_GRAD2, "Call a taxi with /call 544, or rent a nearby vehicle with /rentvehicle.");
-            SendClientMessage(playerid, COLOR_GRAD2, "Use /phone for your phone, /stats for your character, and /help for the full command list.");
-            GameTextForPlayer(playerid, "~p~/call 544~w~ for a taxi~n~~y~/rentvehicle~w~ for a rental", 5000, 3);
-
-            InterpolateCameraPos(playerid, 1541.1512,-2287.1345,91.9661, 1807.2902,-1939.7085,67.2748, 1500, CAMERA_MOVE);
-            InterpolateCameraLookAt(playerid, 1623.3582,-2288.0413,77.9914, 1773.8251,-1902.2825,13.5502, 1500, CAMERA_MOVE);
-        }
-        case 3:
-        {
-            SendClientMessage(playerid, COLOR_WHITE, ">> Jobs & money");
-            SendClientMessage(playerid, COLOR_GRAD2, "Look for a briefcase job point, then type /joinjob.");
-            SendClientMessage(playerid, COLOR_GRAD2, "Use /jobhelp to see your job commands, or /help for other ways to earn money.");
-            GameTextForPlayer(playerid, "~y~Find a job point~n~~p~/joinjob", 5000, 3);
-
-            InterpolateCameraPos(playerid, 1807.2902,-1939.7085,67.2748, 2119.4541,-1751.1744,21.5524, 1500, CAMERA_MOVE);
-            InterpolateCameraLookAt(playerid, 1773.8251,-1902.2825,13.5502, 2155.6519,-1776.4888,18.5486, 1500, CAMERA_MOVE);
-        }
-        case 4:
-        {
-            SendClientMessage(playerid, COLOR_WHITE, ">> Ready to play");
-            SendClientMessage(playerid, COLOR_GRAD2, "Read /rules, respect other players, and stay in character.");
-            SendClientMessage(playerid, COLOR_GRAD2, "Need help? Use /help or /helpme. Enjoy your stay!");
-            GameTextForPlayer(playerid, "~g~Welcome to~n~~y~Los Jawa Roleplay", 5000, 3);
-        }
-        case 5:
-        {
-            FinishTutorial(playerid);
-        }
+        format(title, sizeof(title), "Los Jawa Roleplay | Panduan %d/%d", step, TUTORIAL_LAST_PAGE);
+        Dialog_Show(playerid, TutorialGuide, DIALOG_STYLE_MSGBOX, title, TutorialTextID[step - 1], "Back", "Next");
     }
+    else
+    {
+        format(title, sizeof(title), "Los Jawa Roleplay | Guide %d/%d", step, TUTORIAL_LAST_PAGE);
+        Dialog_Show(playerid, TutorialGuide, DIALOG_STYLE_MSGBOX, title, TutorialTextEN[step - 1], "Back", "Next");
+    }
+    return 1;
+}
+
+Dialog:TutorialLanguage(playerid, response, listitem, inputtext[])
+{
+    if(PlayerData[playerid][pTutorialStep] != 1) return 1;
+
+    TutorialLang[playerid] = response ? TUTORIAL_LANG_ID : TUTORIAL_LANG_EN;
+    RefreshTutorial(playerid);
+    return 1;
+}
+
+Dialog:TutorialGuide(playerid, response, listitem, inputtext[])
+{
+    if(!PlayerData[playerid][pTutorialStep] || !TutorialLang[playerid]) return 1;
+
+    // SA-MP sends response 0 for both the right button and ESC. Next is the
+    // right button, so ESC advances instead of closing the tutorial.
+    if(response)
+    {
+        if(PlayerData[playerid][pTutorialStep] <= 1)
+            TutorialLang[playerid] = 0;
+        else
+            PlayerData[playerid][pTutorialStep]--;
+
+        RefreshTutorial(playerid);
+        return 1;
+    }
+
+    if(PlayerData[playerid][pTutorialStep] >= TUTORIAL_LAST_PAGE)
+        return FinishTutorial(playerid);
+
+    PlayerData[playerid][pTutorialStep]++;
+    RefreshTutorial(playerid);
     return 1;
 }
 
@@ -13990,13 +14053,18 @@ ReturnDonateRank(rank)
 initiateTutorial(playerid)
 {
     ClearChatBox(playerid);
-    
+
 	PlayerData[playerid][pTutorialStep] = 1;
+	TutorialLang[playerid] = 0;
+	TutorialCamStep[playerid] = TUTORIAL_CAM_START;
+	TutorialCamTimer[playerid] = 0;
 	SetPlayerVirtualWorld(playerid, playerid + 20000);
 	SetPlayerInterior(playerid, 0);
 	LastTeleport[playerid] = gettime();
 
 	TogglePlayerSpectating(playerid, true);
+	SetPlayerCameraPos(playerid, TutorialCamPos[TUTORIAL_CAM_START][0], TutorialCamPos[TUTORIAL_CAM_START][1], TutorialCamPos[TUTORIAL_CAM_START][2]);
+	SetPlayerCameraLookAt(playerid, TutorialLookAt[0], TutorialLookAt[1], TutorialLookAt[2]);
 
 	RefreshTutorial(playerid);
 	return true;

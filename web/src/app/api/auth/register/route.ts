@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { sendVerificationEmail } from '@/lib/mailer';
 import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
+import { isDuplicateEntryError } from '@/lib/db-errors';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 
 export async function POST(request: Request) {
@@ -83,6 +84,13 @@ export async function POST(request: Request) {
       message: 'Account created. Please check your email to verify your account.',
     });
   } catch (error) {
+    if (isDuplicateEntryError(error)) {
+      return NextResponse.json(
+        { error: 'Email address is already registered' },
+        { status: 400 }
+      );
+    }
+
     console.error('Registration error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

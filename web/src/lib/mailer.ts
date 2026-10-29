@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import { FORUM_URL, MAIN_SITE_URL } from '@/lib/site';
+import { FORUM_URL, getTrustedBaseUrl, normalizeBaseUrl } from '@/lib/site';
 
 function getTransporter() {
   const host = process.env.SMTP_HOST || 'smtp.gmail.com';
@@ -20,30 +20,37 @@ function getTransporter() {
   });
 }
 
+function firstHeaderValue(value: string | null): string | undefined {
+  return value?.split(',')[0]?.trim() || undefined;
+}
+
 export function resolveBaseUrl(requestOrBaseUrl?: Request | string): string {
-  if (typeof requestOrBaseUrl === 'string' && requestOrBaseUrl.trim() !== '') {
-    return requestOrBaseUrl.replace(/\/$/, '');
+  // Production always uses the configured base URL; request data is not trusted.
+  if (process.env.NODE_ENV === 'production') {
+    return getTrustedBaseUrl();
+  }
+
+  if (typeof requestOrBaseUrl === 'string') {
+    const explicit = normalizeBaseUrl(requestOrBaseUrl);
+    if (explicit) return explicit;
   }
 
   if (requestOrBaseUrl && typeof requestOrBaseUrl === 'object' && 'headers' in requestOrBaseUrl) {
     const req = requestOrBaseUrl as Request;
-    const origin = req.headers.get('origin');
-    if (origin && !origin.includes('0.0.0.0')) {
-      return origin.replace(/\/$/, '');
+    const origin = normalizeBaseUrl(req.headers.get('origin'));
+    if (origin && new URL(origin).hostname !== '0.0.0.0') {
+      return origin;
     }
-    const host = req.headers.get('x-forwarded-host') || req.headers.get('host');
-    const proto = req.headers.get('x-forwarded-proto') || 'http';
+
+    const host = firstHeaderValue(req.headers.get('x-forwarded-host') || req.headers.get('host'));
+    const proto = firstHeaderValue(req.headers.get('x-forwarded-proto')) || 'http';
     if (host && !host.startsWith('0.0.0.0')) {
-      return `${proto}://${host}`.replace(/\/$/, '');
+      const requestUrl = normalizeBaseUrl(`${proto}://${host}`);
+      if (requestUrl) return requestUrl;
     }
   }
 
-  const envUrl = process.env.NEXT_PUBLIC_BASE_URL;
-  if (envUrl && envUrl !== 'http://localhost:3000' && envUrl.trim() !== '') {
-    return envUrl.replace(/\/$/, '');
-  }
-
-  return MAIN_SITE_URL;
+  return normalizeBaseUrl(process.env.NEXT_PUBLIC_BASE_URL) || 'http://localhost:3000';
 }
 
 interface EnterpriseEmailOptions {
@@ -54,6 +61,15 @@ interface EnterpriseEmailOptions {
   buttonText: string;
   buttonUrl: string;
   expiryNote: string;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 function buildEnterpriseEmailHtml({
@@ -73,12 +89,12 @@ function buildEnterpriseEmailHtml({
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${title}</title>
+  <title>${escapeHtml(title)}</title>
 </head>
 <body style="margin:0;padding:0;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;color:#18181b;">
   <!-- Preheader text for inbox preview -->
   <div style="display:none;font-size:1px;color:#f4f4f5;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
-    ${preheader}
+    ${escapeHtml(preheader)}
   </div>
 
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f4f4f5;padding:40px 16px;">
@@ -93,7 +109,7 @@ function buildEnterpriseEmailHtml({
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                 <tr>
                   <td align="left" style="vertical-align:middle;">
-                    <img src="${logoUrl}" alt="Los Jawa RP Logo" width="42" height="42" style="display:block;height:42px;width:auto;border:0;" />
+                    <img src="${escapeHtml(logoUrl)}" alt="Los Jawa RP Logo" width="42" height="42" style="display:block;height:42px;width:auto;border:0;" />
                   </td>
                   <td align="right" style="vertical-align:middle;">
                     <span style="font-size:12px;font-weight:800;letter-spacing:0.15em;color:#09090b;text-transform:uppercase;">
@@ -109,19 +125,19 @@ function buildEnterpriseEmailHtml({
           <tr>
             <td style="padding:36px 32px;">
               <h1 style="margin:0 0 12px 0;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#09090b;line-height:1.3;">
-                ${title}
+                ${escapeHtml(title)}
               </h1>
               
               <p style="margin:0 0 28px 0;font-size:14px;line-height:1.6;color:#52525b;">
-                ${subtitle}
+                ${escapeHtml(subtitle)}
               </p>
 
               <!-- CTA Button -->
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 32px 0;">
                 <tr>
                   <td align="center" style="border-radius:12px;background-color:#f59e0b;">
-                    <a href="${buttonUrl}" target="_blank" style="display:inline-block;padding:14px 32px;font-size:14px;font-weight:700;letter-spacing:0.02em;color:#09090b;text-decoration:none;border-radius:12px;">
-                      ${buttonText}
+                    <a href="${escapeHtml(buttonUrl)}" target="_blank" style="display:inline-block;padding:14px 32px;font-size:14px;font-weight:700;letter-spacing:0.02em;color:#09090b;text-decoration:none;border-radius:12px;">
+                      ${escapeHtml(buttonText)}
                     </a>
                   </td>
                 </tr>
@@ -130,14 +146,14 @@ function buildEnterpriseEmailHtml({
               <!-- Security Notice Box -->
               <div style="background-color:#fffbeb;border:1px solid #fef08a;border-radius:12px;padding:16px;margin-bottom:24px;">
                 <p style="margin:0;font-size:12px;line-height:1.5;color:#92400e;font-weight:500;">
-                  ⚠️ <strong>Security Note:</strong> ${expiryNote}
+                  ⚠️ <strong>Security Note:</strong> ${escapeHtml(expiryNote)}
                 </p>
               </div>
 
               <!-- Fallback Direct URL -->
               <p style="margin:0;font-size:11px;line-height:1.5;color:#a1a1aa;word-break:break-all;">
                 If the button above does not work, copy and paste this link into your browser:<br />
-                <a href="${buttonUrl}" style="color:#d97706;text-decoration:underline;">${buttonUrl}</a>
+                <a href="${escapeHtml(buttonUrl)}" style="color:#d97706;text-decoration:underline;">${escapeHtml(buttonUrl)}</a>
               </p>
             </td>
           </tr>
@@ -149,9 +165,9 @@ function buildEnterpriseEmailHtml({
                 Los Jawa Roleplay — Official UCP Automated System
               </p>
               <p style="margin:0 0 16px 0;font-size:11px;color:#a1a1aa;">
-                <a href="${baseUrl}" style="color:#71717a;text-decoration:none;">Website</a> &nbsp;•&nbsp;
-                <a href="${FORUM_URL}" style="color:#71717a;text-decoration:none;">Forum</a> &nbsp;•&nbsp;
-                <a href="${baseUrl}/donator" style="color:#71717a;text-decoration:none;">Donator Portal</a>
+                <a href="${escapeHtml(baseUrl)}" style="color:#71717a;text-decoration:none;">Website</a> &nbsp;•&nbsp;
+                <a href="${escapeHtml(FORUM_URL)}" style="color:#71717a;text-decoration:none;">Forum</a> &nbsp;•&nbsp;
+                <a href="${escapeHtml(`${baseUrl}/donator`)}" style="color:#71717a;text-decoration:none;">Donator Portal</a>
               </p>
               <p style="margin:0;font-size:10px;color:#d4d4d8;line-height:1.4;">
                 This is an automated system email. Please do not reply directly to this address.<br />
