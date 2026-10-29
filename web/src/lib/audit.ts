@@ -1,4 +1,5 @@
 import pool from '@/lib/db';
+import { getClientIp } from '@/lib/rate-limit';
 
 interface LogAdminActionInput {
   adminId: number;
@@ -10,13 +11,11 @@ interface LogAdminActionInput {
   request?: Request;
 }
 
-function getClientIp(request?: Request) {
+function getAuditIp(request?: Request) {
   if (!request) return null;
 
-  const forwarded = request.headers.get('x-forwarded-for');
-  if (forwarded) return forwarded.split(',')[0]?.trim() || null;
-
-  return request.headers.get('x-real-ip') || null;
+  const ip = getClientIp(request);
+  return ip === 'unknown' ? null : ip.slice(0, 45);
 }
 
 export async function logAdminAction({
@@ -40,7 +39,7 @@ export async function logAdminAction({
         targetType ? targetType.slice(0, 32) : null,
         targetId === null || targetId === undefined ? null : String(targetId).slice(0, 64),
         details ? details.slice(0, 4000) : null,
-        getClientIp(request),
+        getAuditIp(request),
       ]
     );
   } catch (error) {

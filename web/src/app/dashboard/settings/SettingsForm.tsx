@@ -19,6 +19,7 @@ export default function SettingsForm({
 
   // Email form
   const [email, setEmail] = useState(initialEmail);
+  const [emailPassword, setEmailPassword] = useState('');
   const [emailSuccess, setEmailSuccess] = useState('');
   const [emailError, setEmailError] = useState('');
   const [emailLoading, setEmailLoading] = useState(false);
@@ -34,6 +35,7 @@ export default function SettingsForm({
   // Security Word form
   const [secretWord, setSecretWord] = useState(initialSecretWord);
   const [secretHint, setSecretHint] = useState(initialSecretHint);
+  const [secPassword, setSecPassword] = useState('');
   const [secSuccess, setSecSuccess] = useState('');
   const [secError, setSecError] = useState('');
   const [secLoading, setSecLoading] = useState(false);
@@ -48,13 +50,14 @@ export default function SettingsForm({
       const res = await fetch('/api/user/settings/email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, password: emailPassword }),
       });
       const data = await res.json();
       if (!res.ok) {
         setEmailError(data.error || 'Failed to update email');
       } else {
-        setEmailSuccess('Recovery email updated successfully');
+        setEmailSuccess(data.message || 'Recovery email updated successfully');
+        setEmailPassword('');
         router.refresh();
       }
     } catch {
@@ -108,13 +111,14 @@ export default function SettingsForm({
       const res = await fetch('/api/user/settings/security', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ secretWord, secretHint }),
+        body: JSON.stringify({ secretWord, secretHint, password: secPassword }),
       });
       const data = await res.json();
       if (!res.ok) {
         setSecError(data.error || 'Failed to update security credentials');
       } else {
-        setSecSuccess('Security credentials updated successfully');
+        setSecSuccess(data.message || 'Security credentials updated successfully');
+        setSecPassword('');
         router.refresh();
       }
     } catch {
@@ -164,6 +168,21 @@ export default function SettingsForm({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter new recovery email"
+                className="w-full h-11 border border-zinc-805 rounded-xl px-4 text-xs font-medium focus:border-amber-500 focus:outline-none bg-zinc-900 text-white transition border-zinc-800"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-zinc-400 mb-1.5" htmlFor="email-password">
+                Current Password
+              </label>
+              <input
+                id="email-password"
+                type="password"
+                required
+                autoComplete="current-password"
+                value={emailPassword}
+                onChange={(e) => setEmailPassword(e.target.value)}
+                placeholder="Confirm with your current password"
                 className="w-full h-11 border border-zinc-805 rounded-xl px-4 text-xs font-medium focus:border-amber-500 focus:outline-none bg-zinc-900 text-white transition border-zinc-800"
               />
             </div>
@@ -226,6 +245,21 @@ export default function SettingsForm({
                 value={secretHint}
                 onChange={(e) => setSecretHint(e.target.value)}
                 placeholder="e.g. Name of my first pet"
+                className="w-full h-11 border border-zinc-805 rounded-xl px-4 text-xs font-medium focus:border-amber-500 focus:outline-none bg-zinc-900 text-white transition border-zinc-800"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-zinc-400 mb-1.5" htmlFor="sec-password">
+                Current Password
+              </label>
+              <input
+                id="sec-password"
+                type="password"
+                required
+                autoComplete="current-password"
+                value={secPassword}
+                onChange={(e) => setSecPassword(e.target.value)}
+                placeholder="Confirm with your current password"
                 className="w-full h-11 border border-zinc-805 rounded-xl px-4 text-xs font-medium focus:border-amber-500 focus:outline-none bg-zinc-900 text-white transition border-zinc-800"
               />
             </div>
