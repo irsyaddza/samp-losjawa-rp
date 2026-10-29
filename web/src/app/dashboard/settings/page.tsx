@@ -11,7 +11,7 @@ import LoginHistory from './LoginHistory';
 async function getUserData(username: string) {
   try {
     const [rows] = await pool.execute<RowDataPacket[]>(
-      'SELECT Email, SecretWord, SecretHint FROM accounts WHERE Username = ? LIMIT 1',
+      'SELECT Email FROM accounts WHERE Username = ? LIMIT 1',
       [username]
     );
     return rows[0] || null;
@@ -87,11 +87,7 @@ export default async function SettingsPage() {
         </div>
 
         {/* Main Settings Form */}
-        <SettingsForm
-          initialEmail={account.Email || ''}
-          initialSecretWord={account.SecretWord || ''}
-          initialSecretHint={account.SecretHint || ''}
-        />
+        <SettingsForm initialEmail={account.Email || ''} />
 
         <div className="mt-8">
           <LoginHistory entries={loginHistory} />

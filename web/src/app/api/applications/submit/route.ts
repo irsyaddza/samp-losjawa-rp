@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
+import { getClientIp } from '@/lib/rate-limit';
 import { RowDataPacket } from 'mysql2';
 
 export async function POST(request: Request) {
@@ -59,7 +60,8 @@ export async function POST(request: Request) {
     const defaultSkin = gender.toLowerCase() === 'male' ? 264 : 298;
 
     // Save ip details
-    const userIp = request.headers.get('x-forwarded-for') || '127.0.0.1';
+    const clientIp = getClientIp(request);
+    const userIp = (clientIp === 'unknown' ? '127.0.0.1' : clientIp).slice(0, 60);
 
     // Insert into application table
     await pool.execute(

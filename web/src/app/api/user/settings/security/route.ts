@@ -19,9 +19,16 @@ export async function POST(request: Request) {
     const secretHint = typeof body?.secretHint === 'string' ? body.secretHint.trim() : '';
     const password = typeof body?.password === 'string' ? body.password : '';
 
-    if (!secretWord || !password) {
+    if (!password) {
       return NextResponse.json(
-        { error: 'Secret word and current password are required' },
+        { error: 'Current password is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!secretWord && !secretHint) {
+      return NextResponse.json(
+        { error: 'Enter a new secret word or hint' },
         { status: 400 }
       );
     }
@@ -56,10 +63,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Current password is incorrect' }, { status: 400 });
     }
 
-    await pool.execute(
-      'UPDATE accounts SET SecretWord = ?, SecretHint = ? WHERE ID = ?',
-      [secretWord, secretHint, session.userId]
-    );
+    const updates: string[] = [];
+    const values: (string | number)[] = [];
+
+    if (secretWord) {
+      updates.push('SecretWord = ?');
+      values.push(secretWord);
+    }
+    if (secretHint) {
+      updates.push('SecretHint = ?');
+      values.push(secretHint);
+    }
+
+    values.push(session.userId);
+    await pool.execute(`UPDATE accounts SET ${updates.join(', ')} WHERE ID = ?`, values);
 
     return NextResponse.json({
       success: true,

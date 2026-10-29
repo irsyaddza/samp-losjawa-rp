@@ -20,12 +20,31 @@ function requestOrigin(request: NextRequest): string {
   return `${proto}://${host}`;
 }
 
+function isLoopbackHost(hostname: string): boolean {
+  return (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '::1' ||
+    hostname === '[::1]'
+  );
+}
+
 function isAllowedOrigin(value: string, request: NextRequest): boolean {
   try {
     const origin = new URL(value);
     const trusted = new URL(getTrustedBaseUrl());
 
     if (origin.origin === trusted.origin) {
+      return true;
+    }
+
+    // Local development often alternates between localhost and 127.0.0.1.
+    if (
+      origin.protocol === trusted.protocol &&
+      origin.port === trusted.port &&
+      isLoopbackHost(origin.hostname) &&
+      isLoopbackHost(trusted.hostname)
+    ) {
       return true;
     }
 

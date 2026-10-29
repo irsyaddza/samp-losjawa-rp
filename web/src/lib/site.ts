@@ -2,19 +2,6 @@ export const MAIN_SITE_URL = 'https://losjawa-rp.fun';
 export const FORUM_URL = 'https://forum.losjawa-rp.fun';
 export const UCP_URL = 'https://ucp.losjawa-rp.fun';
 
-function isLocalhostUrl(value: string): boolean {
-  const hostname = new URL(value).hostname;
-  return (
-    hostname === 'localhost' ||
-    hostname === '127.0.0.1' ||
-    hostname === '0.0.0.0' ||
-    hostname === '::1' ||
-    hostname === '[::1]' ||
-    hostname === '::' ||
-    hostname === '[::]'
-  );
-}
-
 export function normalizeBaseUrl(value: string | null | undefined): string | null {
   if (!value) return null;
 
@@ -32,7 +19,5 @@ export function normalizeBaseUrl(value: string | null | undefined): string | nul
 }
 
 export function getTrustedBaseUrl(): string {
-  const configured = normalizeBaseUrl(process.env.NEXT_PUBLIC_BASE_URL);
-  if (configured && !isLocalhostUrl(configured)) return configured;
-  return UCP_URL;
+  return normalizeBaseUrl(process.env.NEXT_PUBLIC_BASE_URL) || UCP_URL;
 }

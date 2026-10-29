@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { verifyPassword } from '@/lib/hash';
 import { sendVerificationEmail } from '@/lib/mailer';
 import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
+import { isDuplicateEntryError } from '@/lib/db-errors';
 import { RowDataPacket } from 'mysql2';
 
 export async function POST(request: Request) {
@@ -108,6 +109,13 @@ export async function POST(request: Request) {
       message: `Email ${email} linked to account ${username}. Please check your inbox to verify your account.`,
     });
   } catch (error) {
+    if (isDuplicateEntryError(error)) {
+      return NextResponse.json(
+        { error: 'This email address is already registered to another account' },
+        { status: 400 }
+      );
+    }
+
     console.error('Link email error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

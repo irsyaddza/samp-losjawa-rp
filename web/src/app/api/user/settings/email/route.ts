@@ -5,6 +5,7 @@ import { getSession, setSessionCookieForAccount } from '@/lib/auth';
 import { verifyPassword } from '@/lib/hash';
 import { sendVerificationEmail } from '@/lib/mailer';
 import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit';
+import { isDuplicateEntryError } from '@/lib/db-errors';
 import { RowDataPacket } from 'mysql2';
 
 const EMAIL_MAX_LENGTH = 32;
@@ -116,6 +117,13 @@ export async function POST(request: Request) {
       message: 'Recovery email updated. Please check your inbox to verify the new address. Other sessions have been signed out.',
     });
   } catch (error) {
+    if (isDuplicateEntryError(error)) {
+      return NextResponse.json(
+        { error: 'This email address is already registered to another account' },
+        { status: 400 }
+      );
+    }
+
     console.error('Update email error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
