@@ -16,9 +16,11 @@ interface FactionRosterProps {
   factionId: number;
   members: Member[];
   isLeader: boolean;
+  actorRank: number;
+  maxRank: number;
 }
 
-export default function FactionRoster({ factionId, members, isLeader }: FactionRosterProps) {
+export default function FactionRoster({ factionId, members, isLeader, actorRank, maxRank }: FactionRosterProps) {
   const router = useRouter();
   
   // States
@@ -26,6 +28,8 @@ export default function FactionRoster({ factionId, members, isLeader }: FactionR
   const [loadingActionId, setLoadingActionId] = useState<number | string | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  const canManageMember = (member: Member) => isLeader && member.FactionRank > actorRank;
 
   const handleAction = async (targetId: number | null, action: 'promote' | 'demote' | 'kick' | 'invite') => {
     setError('');
@@ -148,7 +152,7 @@ export default function FactionRoster({ factionId, members, isLeader }: FactionR
                       <div className="flex justify-end gap-1.5">
                         <button
                           onClick={() => handleAction(member.ID, 'promote')}
-                          disabled={loadingActionId !== null}
+                          disabled={loadingActionId !== null || !canManageMember(member) || member.FactionRank <= 1}
                           title="Promote Member"
                           className="w-8 h-8 rounded-lg border border-zinc-800 hover:border-zinc-700 bg-zinc-900 hover:bg-zinc-800 flex items-center justify-center text-green-400 hover:text-green-300 transition cursor-pointer disabled:opacity-50"
                         >
@@ -156,7 +160,7 @@ export default function FactionRoster({ factionId, members, isLeader }: FactionR
                         </button>
                         <button
                           onClick={() => handleAction(member.ID, 'demote')}
-                          disabled={loadingActionId !== null || member.FactionRank <= 1}
+                          disabled={loadingActionId !== null || !canManageMember(member) || member.FactionRank >= maxRank}
                           title="Demote Member"
                           className="w-8 h-8 rounded-lg border border-zinc-800 hover:border-zinc-700 bg-zinc-900 hover:bg-zinc-800 flex items-center justify-center text-amber-500 hover:text-amber-400 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
@@ -164,7 +168,7 @@ export default function FactionRoster({ factionId, members, isLeader }: FactionR
                         </button>
                         <button
                           onClick={() => handleAction(member.ID, 'kick')}
-                          disabled={loadingActionId !== null}
+                          disabled={loadingActionId !== null || !canManageMember(member)}
                           title="Kick Member"
                           className="w-8 h-8 rounded-lg border border-red-950/30 hover:border-red-900/50 bg-red-950/10 hover:bg-red-950/20 flex items-center justify-center text-red-400 hover:text-red-300 transition cursor-pointer disabled:opacity-50"
                         >

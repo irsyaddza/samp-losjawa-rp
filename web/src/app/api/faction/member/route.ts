@@ -1,7 +1,19 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { getSession } from '@/lib/auth';
-import { RowDataPacket } from 'mysql2';
+import { canManageFaction, getFactionInfo } from '@/lib/faction';
+import { ResultSetHeader, RowDataPacket } from 'mysql2';
+
+const ACTIONS = new Set(['promote', 'demote', 'kick', 'invite']);
+
+async function getTargetCharacter(targetCharId: number, factionId: number) {
+  const [rows] = await pool.execute<RowDataPacket[]>(
+    'SELECT ID, char_name, master, Faction, FactionRank FROM characters WHERE ID = ? AND Faction = ? LIMIT 1',
+    [targetCharId, factionId]
+  );
+
+  return rows[0] ?? null;
+}
 
 export async function POST(request: Request) {
   try {
@@ -10,66 +22,55 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { factionId, targetCharId, targetCharName, action } = await request.json();
+    const body = await request.json();
+    const factionId = Number(body?.factionId);
+    const action = typeof body?.action === 'string' ? body.action : '';
+    const targetCharId = Number(body?.targetCharId);
+    const targetCharName = typeof body?.targetCharName === 'string' ? body.targetCharName.trim() : '';
 
-    if (!factionId || !action) {
-      return NextResponse.json({ error: 'Faction ID and action are required' }, { status: 400 });
+    if (!Number.isInteger(factionId) || factionId <= 0) {
+      return NextResponse.json({ error: 'Invalid faction ID' }, { status: 400 });
     }
 
-    // 1. Verify if the logged-in user owns a character that is a leader/officer of the faction
-    // We assume FactionRank >= 5 represents leadership/officer rank (common in SA-MP scripts)
-    const [leaderRows] = await pool.execute<RowDataPacket[]>(
-      'SELECT ID, FactionRank FROM characters WHERE master = ? AND Faction = ? AND FactionRank >= 5 LIMIT 1',
+    if (!ACTIONS.has(action)) {
+      return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+    }
+
+    const faction = await getFactionInfo(factionId);
+    if (!faction) {
+      return NextResponse.json({ error: 'Faction not found' }, { status: 404 });
+    }
+
+    // Rank 1 is the highest faction rank. Use the best rank across the account,
+    // matching the in-game permission inheritance for alternative characters.
+    const [actorRows] = await pool.execute<RowDataPacket[]>(
+      'SELECT MIN(FactionRank) AS FactionRank FROM characters WHERE master = ? AND Faction = ? AND FactionRank > 0',
       [session.userId, factionId]
     );
+    const actorRank = Number(actorRows[0]?.FactionRank ?? 0);
 
-    if (leaderRows.length === 0) {
-      return NextResponse.json({
-        error: 'Only faction leaders or officers (Rank 5+) can manage the roster.'
-      }, { status: 403 });
+    if (actorRank < 1) {
+      return NextResponse.json({ error: 'You are not a member of this faction.' }, { status: 403 });
     }
 
-    if (action === 'promote') {
-      if (!targetCharId) return NextResponse.json({ error: 'Target character ID is required' }, { status: 400 });
-      
-      await pool.execute(
-        'UPDATE characters SET FactionRank = FactionRank + 1 WHERE ID = ? AND Faction = ?',
-        [targetCharId, factionId]
-      );
-      return NextResponse.json({ success: true, message: 'Member promoted successfully.' });
-    } 
-    
-    else if (action === 'demote') {
-      if (!targetCharId) return NextResponse.json({ error: 'Target character ID is required' }, { status: 400 });
+    if (!canManageFaction(faction.factionType, actorRank)) {
+      return NextResponse.json({ error: 'Your rank does not allow managing this faction roster.' }, { status: 403 });
+    }
 
-      await pool.execute(
-        'UPDATE characters SET FactionRank = FactionRank - 1 WHERE ID = ? AND Faction = ? AND FactionRank > 1',
-        [targetCharId, factionId]
-      );
-      return NextResponse.json({ success: true, message: 'Member demoted successfully.' });
-    } 
-    
-    else if (action === 'kick') {
-      if (!targetCharId) return NextResponse.json({ error: 'Target character ID is required' }, { status: 400 });
+    if (action === 'invite') {
+      if (!targetCharName) {
+        return NextResponse.json({ error: 'Target character name is required' }, { status: 400 });
+      }
 
-      // Kick member by resetting Faction and FactionRank
-      await pool.execute(
-        'UPDATE characters SET Faction = -1, FactionRank = 0, FactionSpawn = 0 WHERE ID = ? AND Faction = ?',
-        [targetCharId, factionId]
-      );
-      return NextResponse.json({ success: true, message: 'Member kicked from faction.' });
-    } 
-    
-    else if (action === 'invite') {
-      if (!targetCharName) return NextResponse.json({ error: 'Target character name is required' }, { status: 400 });
-
-      // Format check (Firstname_Lastname)
       const nameRegex = /^[A-Z][a-z]+_[A-Z][a-z]+$/;
       if (!nameRegex.test(targetCharName)) {
         return NextResponse.json({ error: 'Format nama harus Firstname_Lastname (e.g. Budi_Pranoto)' }, { status: 400 });
       }
 
-      // Check if character exists
+      if (faction.maxRank < 1) {
+        return NextResponse.json({ error: 'Faction ranks are not configured.' }, { status: 400 });
+      }
+
       const [charRows] = await pool.execute<RowDataPacket[]>(
         'SELECT ID, Faction FROM characters WHERE char_name = ? LIMIT 1',
         [targetCharName]
@@ -80,22 +81,88 @@ export async function POST(request: Request) {
       }
 
       const memberChar = charRows[0];
-      if (memberChar.Faction > 0) {
+      if (Number(memberChar.Faction) > 0) {
         return NextResponse.json({ error: 'Character is already a member of another faction.' }, { status: 400 });
       }
 
-      // Invite to faction at Rank 1
-      await pool.execute(
-        'UPDATE characters SET Faction = ?, FactionRank = 1 WHERE ID = ?',
-        [factionId, memberChar.ID]
+      const [result] = await pool.execute<ResultSetHeader>(
+        'UPDATE characters SET Faction = ?, FactionRank = ? WHERE ID = ? AND Faction <= 0',
+        [factionId, faction.maxRank, memberChar.ID]
       );
 
-      return NextResponse.json({ success: true, message: `Successfully invited ${targetCharName.replace('_', ' ')}!` });
-    } 
-    
-    else {
-      return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+      if (result.affectedRows === 0) {
+        return NextResponse.json({ error: 'Character is already a member of another faction.' }, { status: 409 });
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: `Successfully invited ${targetCharName.replace('_', ' ')}!`,
+      });
     }
+
+    if (!Number.isInteger(targetCharId) || targetCharId <= 0) {
+      return NextResponse.json({ error: 'Target character ID is required' }, { status: 400 });
+    }
+
+    const target = await getTargetCharacter(targetCharId, factionId);
+    if (!target) {
+      return NextResponse.json({ error: 'Member not found in this faction.' }, { status: 404 });
+    }
+
+    const targetRank = Number(target.FactionRank);
+
+    if (Number(target.master) === session.userId) {
+      return NextResponse.json({ error: 'You cannot manage your own faction membership.' }, { status: 400 });
+    }
+
+    if (targetRank <= actorRank) {
+      return NextResponse.json({ error: 'You cannot manage a member with equal or higher rank.' }, { status: 403 });
+    }
+
+    if (action === 'promote') {
+      if (targetRank <= 1) {
+        return NextResponse.json({ error: 'Member is already at the highest rank.' }, { status: 400 });
+      }
+
+      const [result] = await pool.execute<ResultSetHeader>(
+        'UPDATE characters SET FactionRank = FactionRank - 1 WHERE ID = ? AND Faction = ? AND FactionRank = ? AND FactionRank > 1',
+        [targetCharId, factionId, targetRank]
+      );
+
+      if (result.affectedRows === 0) {
+        return NextResponse.json({ error: 'Member rank changed. Please refresh and try again.' }, { status: 409 });
+      }
+
+      return NextResponse.json({ success: true, message: 'Member promoted successfully.' });
+    }
+
+    if (action === 'demote') {
+      if (targetRank >= faction.maxRank) {
+        return NextResponse.json({ error: 'Member is already at the lowest rank.' }, { status: 400 });
+      }
+
+      const [result] = await pool.execute<ResultSetHeader>(
+        'UPDATE characters SET FactionRank = FactionRank + 1 WHERE ID = ? AND Faction = ? AND FactionRank = ? AND FactionRank < ?',
+        [targetCharId, factionId, targetRank, faction.maxRank]
+      );
+
+      if (result.affectedRows === 0) {
+        return NextResponse.json({ error: 'Member rank changed. Please refresh and try again.' }, { status: 409 });
+      }
+
+      return NextResponse.json({ success: true, message: 'Member demoted successfully.' });
+    }
+
+    const [result] = await pool.execute<ResultSetHeader>(
+      'UPDATE characters SET Faction = -1, FactionRank = 0, FactionSpawn = 0 WHERE ID = ? AND Faction = ? AND FactionRank = ?',
+      [targetCharId, factionId, targetRank]
+    );
+
+    if (result.affectedRows === 0) {
+      return NextResponse.json({ error: 'Member changed. Please refresh and try again.' }, { status: 409 });
+    }
+
+    return NextResponse.json({ success: true, message: 'Member kicked from faction.' });
   } catch (error) {
     console.error('Faction roster action error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
