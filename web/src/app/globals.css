@@ -36,6 +36,110 @@ body {
   color: #fff7ed;
 }
 
+.mailbox-editor-content,
+.mailbox-content {
+  font-size: 0.875rem;
+  line-height: 1.75;
+}
+
+.mailbox-editor-content {
+  min-height: 10rem;
+  padding: 0.75rem;
+  outline: none;
+}
+
+.mailbox-editor-content p,
+.mailbox-content p {
+  margin: 0.4rem 0;
+}
+
+.mailbox-editor-content ul,
+.mailbox-content ul {
+  list-style: disc;
+  margin: 0.5rem 0;
+  padding-left: 1.25rem;
+}
+
+.mailbox-editor-content ol,
+.mailbox-content ol {
+  list-style: decimal;
+  margin: 0.5rem 0;
+  padding-left: 1.25rem;
+}
+
+.mailbox-editor-content li,
+.mailbox-content li {
+  margin: 0.15rem 0;
+}
+
+.mailbox-editor-content blockquote,
+.mailbox-content blockquote {
+  border-left: 2px solid rgba(245, 158, 11, 0.45);
+  color: #a1a1aa;
+  margin: 0.5rem 0;
+  padding-left: 0.75rem;
+}
+
+.mailbox-editor-content pre,
+.mailbox-content pre {
+  background: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  margin: 0.5rem 0;
+  overflow-x: auto;
+  padding: 0.75rem;
+}
+
+.mailbox-editor-content code,
+.mailbox-content code {
+  background: #27272a;
+  border-radius: 0.25rem;
+  font-size: 0.85em;
+  padding: 0.1rem 0.3rem;
+}
+
+.mailbox-editor-content pre code,
+.mailbox-content pre code {
+  background: transparent;
+  font-size: inherit;
+  padding: 0;
+}
+
+.mailbox-editor-content a,
+.mailbox-content a {
+  color: #fbbf24;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.mailbox-editor-content img,
+.mailbox-content img {
+  border-radius: 0.5rem;
+  height: auto;
+  margin: 0.5rem 0;
+  max-width: 100%;
+}
+
+.mailbox-editor-content > :first-child,
+.mailbox-content > :first-child {
+  margin-top: 0;
+}
+
+.mailbox-editor-content > :last-child,
+.mailbox-content > :last-child {
+  margin-bottom: 0;
+}
+
+.mailbox-editor-content p.is-editor-empty:first-child::before {
+  color: #52525b;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

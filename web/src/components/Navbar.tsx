@@ -51,7 +51,7 @@ export default function Navbar({ session }: NavbarProps) {
       try {
         const [notificationRes, messageRes] = await Promise.all([
           fetch('/api/user/system-notifications/count'),
-          fetch('/api/user/notifications/count'),
+          fetch('/api/user/mailbox/count'),
         ]);
 
         if (notificationRes.ok) {

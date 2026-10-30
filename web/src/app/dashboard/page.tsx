@@ -76,7 +76,7 @@ async function getDashboardMeta(userId: number) {
   try {
     const [rows] = await pool.execute<RowDataPacket[]>(
       `SELECT
-         (SELECT COUNT(*) FROM notifications WHERE master = ? AND \`read\` = 0) AS unreadMessages,
+         (SELECT COUNT(*) FROM ucp_message_states WHERE account_id = ? AND mailbox = 'inbox' AND is_read = 0) AS unreadMessages,
          (SELECT COUNT(*) FROM ucp_friends WHERE friendID = ? AND friendPending = 1) AS pendingFriends,
          (SELECT COUNT(*) FROM characters WHERE Online = 1) AS onlinePlayers`,
       [userId, userId]
