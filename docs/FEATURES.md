@@ -148,12 +148,13 @@ flowchart LR
 - **Automated Transactional Emails:** Nodemailer integration (`SMTP_*`) handles email verification on registration and secure token-based password reset links.
 - **Live Character Telemetry:** Players inspect their in-game persona status, bank accounts, registered vehicles, property deeds, and faction ranks directly on the web dashboard.
 - **Donator & Supporter Portal:** Web-based interface for managing supporter packages and unlocking perks.
-- **Automated Server Status & Changelog:** Displays real-time server health, player counts, and update history.
+- **Automated Server Status & Changelog:** Displays real-time server health, player counts, and update history, split into game and portal tracks under one shared release version.
 - **Responsive Admin UI:** Dashboard and Navbar use a dark, card-based layout with admin stat cards, quick actions, and an unread notification badge.
+- **Unified Auth Entry Pages:** Login and registration share one responsive shell (`AuthShell`) with rotating server artwork, show/hide password controls, and inline validation states. Both pages reuse the same JWT session, verification, and password reset contracts as the rest of the portal.
 
 ### 5.2 Player Self-Service
 
-- **Unified Dashboard:** Players can reach character telemetry, support tickets, player reports, ban appeals, notifications, and account settings from one place.
+- **Unified Dashboard:** Players can reach character telemetry, support tickets, player reports, ban appeals, notifications, the mailbox, and account settings from one place.
 - **Support Center:** Players submit general helpdesk tickets and follow the conversation thread with staff.
 - **Player Reports:** Dedicated report flow for rule violations, separate from general support tickets.
 - **Ban Appeals:** Dedicated appeal flow for active bans, separate from general support tickets.
@@ -177,7 +178,22 @@ flowchart LR
 - **Deep Links:** Notifications can point to the related ticket, report, appeal, or application page.
 - **Game-to-Web Bridge:** In-game actions such as an unban can insert a notification for the affected account.
 
-### 5.5 Moderation Center
+### 5.5 UCP Mailbox (`ucp_messages`, `ucp_message_states`)
+
+Player-to-player messaging between UCP accounts, reachable from the Navbar entry at `/dashboard/inbox`.
+
+- **Recipient Resolution:** The recipient must be an existing UCP account. An unknown username returns `404`, and sending to your own account is rejected.
+- **Rich Text Storage:** Messages are composed with TipTap and stored as sanitized JSON in `ucp_messages.body`. Rendering uses the TipTap static renderer instead of `dangerouslySetInnerHTML`.
+- **Sanitization:** Accepted nodes are `paragraph`, `text`, `hardBreak`, `image`, `bulletList`, `orderedList`, `listItem`, `blockquote`, and `codeBlock`. Accepted marks are bold, italic, underline, strike, code, link, and text color. Links and images must use `http` or `https`; `javascript:` and `data:` URLs are dropped at write time and re-checked at render time.
+- **Searchable Plain Text:** A sanitized plain-text mirror is stored in `body_text`, so subject, body, sender, and recipient stay searchable without parsing JSON.
+- **Size Limits:** Subject is capped at 120 characters, message text at 5,000 characters, the JSON payload at 20,000 characters or 60 KB UTF-8, and the search query at 80 characters.
+- **Rate Limit:** 30 outgoing messages per account per hour.
+- **Per-Side State:** `ucp_message_states` holds one row per message per participant, so read state and deletion are independent for sender and recipient. The message row is removed once both sides delete it.
+- **Reading Experience:** Inbox and sent folders, 20 messages per page, unread indicators, direct image previews, and reply prefill.
+- **Unread Badge:** The Navbar polls `/api/user/mailbox/count` for the inbox unread total.
+- **Deliberate Scope Limits:** No attachments, drafts, starring, or archiving. Legacy `ucp_notifications` rows are not migrated into the mailbox.
+
+### 5.6 Moderation Center
 
 - **Account Search:** Staff search by UCP username before taking action.
 - **Web Ban:** Ban an entire UCP account with a reason and duration from **0 to 3650 days**; `0` means permanent.
@@ -187,14 +203,14 @@ flowchart LR
 - **Side Effects:** A web ban writes `logs_ban`, creates a moderation notification for the target, and records an audit entry.
 - **Login Enforcement:** UCP-created bans are enforced when the account next attempts to log in to the game.
 
-### 5.6 Player Directory & Moderation Timeline
+### 5.7 Player Directory & Moderation Timeline
 
 - **Account 360 View:** Staff inspect characters, online state, active bans, ban history, connection history, appeals, and reports for one account.
 - **Moderation Timeline:** Reports, bans, and appeals are merged into one chronological view with links to the relevant queue.
 - **Ban Provenance:** Active bans show whether they originated from the UCP or in-game.
 - **Quick Actions:** Staff can jump from an account to the moderation center, report queue, or appeal queue with the relevant search already applied.
 
-### 5.7 Ban Appeals (`ucp_ban_appeals`)
+### 5.8 Ban Appeals (`ucp_ban_appeals`)
 
 - **One Appeal per Ban:** A unique `ban_id` constraint prevents duplicate appeals for the same ban record.
 - **Ban Snapshot:** Reason, banning admin, IP, permanent flag, expiry, creation time, and source are copied into the appeal so the case remains readable after the ban row is removed.
@@ -204,7 +220,7 @@ flowchart LR
 - **Audit Trail:** Accept and reject actions are recorded as `appeal.accept` and `appeal.reject`.
 - **In-Game Closure:** When an administrator unbans an account in-game, any open appeal for that username is automatically marked `accepted`, stamped with the reviewer and response, and the player receives a notification.
 
-### 5.8 Player Reports (`ucp_player_reports`)
+### 5.9 Player Reports (`ucp_player_reports`)
 
 - **Report Categories:** Cheating/exploiting, harassment/toxicity, scamming, deathmatching, bug abuse, advertising/spam, and other.
 - **Report Payload:** Subject, chronology, evidence text/URLs, reported character or UCP username, and an optional reporting character.
@@ -216,7 +232,7 @@ flowchart LR
 - **Resolution:** `resolved` and `rejected` require a player-facing response; the reporter receives a notification.
 - **Report-to-Ban:** Staff can ban the reported account directly from the report modal. The ban is created with `source = 'web'`, the report becomes `resolved`, `ban_id` is linked, the reporter is notified, and the action is audited as `report.ban`.
 
-### 5.9 Admin Audit Trail (`ucp_admin_audit`)
+### 5.10 Admin Audit Trail (`ucp_admin_audit`)
 
 - **Unified Web and Game Audit:** Web actions and in-game moderation actions share one audit table.
 - **Recorded Context:** Admin ID, username, action, target type, target ID, details, IP/source marker, and timestamp.
@@ -226,13 +242,14 @@ flowchart LR
 - **Access Control:** The audit viewer requires `adminLevel >= 4`.
 - **Non-Blocking Writes:** Audit failures are logged but never block the underlying admin action.
 
-### 5.10 Admin Overview
+### 5.11 Admin Overview
 
 - **Operational Counters:** Pending applications, active tickets, pending mappings, online players, active bans, pending appeals, and pending reports.
 - **Quick Navigation:** Direct links to tickets, moderation, appeals, reports, player directory, mappings, audit log, and changelog.
+- **Component-Aware Changelog:** Head admins publish each entry to the game or portal track and can move an entry between tracks without deleting it. The public page filters by track, while the in-game `/changelog` lists game entries only. Both tracks share the release version because a single commit deploys the game and web images together.
 - **Role-Aware UI:** Audit links require `adminLevel >= 4`; head-admin tools require level `1337`.
 
-### 5.11 Data Model, Access Control & Integration Boundaries
+### 5.12 Data Model, Access Control & Integration Boundaries
 
 | Table / Column | Purpose |
 |---|---|
@@ -242,9 +259,11 @@ flowchart LR
 | `ucp_admin_audit` | Web and in-game staff action audit |
 | `ucp_ban_appeals` | Ban appeal with immutable ban snapshot |
 | `ucp_player_reports` | Player report, triage, resolution, and ban link |
+| `ucp_messages` | Mailbox message header, subject, and sanitized rich-text body |
+| `ucp_message_states` | Per-account inbox/sent state, read flag, and per-side deletion |
 | `bans.source` | Ban origin: `game` or `web` |
 
-- **Player access:** Submit and view their own tickets, reports, appeals, and notifications.
+- **Player access:** Submit and view their own tickets, reports, appeals, notifications, and mailbox messages.
 - **Staff access (`adminLevel > 0`):** Tickets, moderation, appeals, and player reports.
 - **Senior staff (`adminLevel >= 4`):** Admin audit viewer.
 - **Head admin (`adminLevel 1337`):** Changelog and other head-admin-only controls.
