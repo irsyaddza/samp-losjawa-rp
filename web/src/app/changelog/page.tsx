@@ -18,6 +18,7 @@ export const metadata: Metadata = {
 interface ChangelogEntry {
   id: number;
   version: string;
+  component: 'game' | 'web';
   entry: string;
   added_by: string;
   added_date: string;
@@ -30,6 +31,20 @@ interface Section {
   order: number;
   items: string[];
 }
+
+type ComponentKey = 'game' | 'web';
+type ChangelogTab = 'all' | ComponentKey;
+
+const COMPONENT_LABELS: Record<ComponentKey, string> = {
+  game: 'Game',
+  web: 'Portal',
+};
+
+const TABS: { key: ChangelogTab; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'game', label: 'Game' },
+  { key: 'web', label: 'Portal' },
+];
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -81,12 +96,26 @@ function buildSections(entries: ChangelogEntry[]): Section[] {
   return [...map.values()].sort((a, b) => a.order - b.order);
 }
 
-async function getEntries() {
+function buildComponents(entries: ChangelogEntry[]): ChangelogGroupView['components'] {
+  const order: ComponentKey[] = ['game', 'web'];
+
+  return order
+    .map((key) => ({
+      key,
+      label: COMPONENT_LABELS[key],
+      sections: buildSections(entries.filter((entry) => entry.component === key)),
+    }))
+    .filter((component) => component.sections.length > 0);
+}
+
+async function getEntries(component?: ComponentKey) {
   try {
     const [rows] = await pool.execute<RowDataPacket[]>(
-      `SELECT id, version, entry, added_by, added_date, created_at
+      `SELECT id, version, component, entry, added_by, added_date, created_at
        FROM server_changelogs
-       ORDER BY id DESC`
+       ${component ? 'WHERE component = ?' : ''}
+       ORDER BY id DESC`,
+      component ? [component] : []
     );
     return rows as unknown as ChangelogEntry[];
   } catch (error) {
@@ -115,14 +144,21 @@ function groupByVersion(entries: ChangelogEntry[]) {
   return grouped;
 }
 
-export default async function ChangelogPage() {
+export default async function ChangelogPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ component?: string }>;
+}) {
+  const { component } = await searchParams;
+  const active: ChangelogTab = component === 'game' || component === 'web' ? component : 'all';
+
   const session = await getSession();
   const emailRow = session
     ? ((await pool.execute<RowDataPacket[]>('SELECT Email FROM accounts WHERE Username = ? LIMIT 1', [session.username]))[0][0] as { Email?: string } | undefined)
     : undefined;
   const navSession = session ? { username: session.username, email: emailRow?.Email ?? '' } : null;
 
-  const entries = await getEntries();
+  const entries = await getEntries(active === 'all' ? undefined : active);
   const grouped = groupByVersion(entries);
   const latest = grouped[0];
 
@@ -132,7 +168,7 @@ export default async function ChangelogPage() {
     badge: versionBadge(group.version),
     entryCount: group.entries.length,
     isLatest: index === 0,
-    sections: buildSections(group.entries).map(({ label, cls, items }) => ({ label, cls, items })),
+    components: buildComponents(group.entries),
   }));
 
   return (
@@ -162,10 +198,31 @@ export default async function ChangelogPage() {
               Every change, on the record.
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-8 text-zinc-400">
-              Release notes for the systems, features, and fixes that keep Los Jawa moving.
+              Release notes for the game server and the UCP portal, kept on one release line.
             </p>
 
-            <div className="mt-10 grid gap-6 border-y border-white/5 py-6 sm:grid-cols-3">
+            <nav className="mt-8 flex flex-wrap gap-2" aria-label="Changelog component">
+              {TABS.map((tab) => {
+                const isActive = active === tab.key;
+
+                return (
+                  <Link
+                    key={tab.key}
+                    href={tab.key === 'all' ? '/changelog' : `/changelog?component=${tab.key}`}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={`rounded-full border px-4 py-1.5 text-xs font-semibold transition ${
+                      isActive
+                        ? 'border-amber-400/40 bg-amber-400/10 text-amber-300'
+                        : 'border-white/10 text-zinc-400 hover:border-white/20 hover:text-white'
+                    }`}
+                  >
+                    {tab.label}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            <div className="mt-8 grid gap-6 border-y border-white/5 py-6 sm:grid-cols-3">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Releases</p>
                 <p className="mt-2 text-2xl font-black text-white">{grouped.length}</p>

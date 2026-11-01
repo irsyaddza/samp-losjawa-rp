@@ -12,13 +12,19 @@ export interface ChangelogSection {
   items: string[];
 }
 
+export interface ChangelogComponentView {
+  key: 'game' | 'web';
+  label: string;
+  sections: ChangelogSection[];
+}
+
 export interface ChangelogGroupView {
   version: string;
   dateLabel: string;
   badge: string;
   entryCount: number;
   isLatest: boolean;
-  sections: ChangelogSection[];
+  components: ChangelogComponentView[];
 }
 
 function SectionList({ sections }: { sections: ChangelogSection[] }) {
@@ -45,6 +51,22 @@ function SectionList({ sections }: { sections: ChangelogSection[] }) {
   );
 }
 
+function ComponentList({ components }: { components: ChangelogComponentView[] }) {
+  return (
+    <div className="mt-5 space-y-6">
+      {components.map((component) => (
+        <div key={component.key}>
+          <h3 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
+            <span className="h-1 w-1 rounded-full bg-amber-400" />
+            {component.label}
+          </h3>
+          <SectionList sections={component.sections} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function LatestCard({ group }: { group: ChangelogGroupView }) {
   return (
     <div className="relative overflow-hidden rounded-3xl border border-amber-500/25 bg-white/[0.04] p-6 sm:p-8">
@@ -65,7 +87,7 @@ function LatestCard({ group }: { group: ChangelogGroupView }) {
             Latest
           </span>
         </div>
-        <SectionList sections={group.sections} />
+        <ComponentList components={group.components} />
       </div>
     </div>
   );
@@ -111,7 +133,7 @@ function AccordionItem({ group }: { group: ChangelogGroupView }) {
               className="overflow-hidden"
             >
               <div className="border-t border-white/5 px-5 pb-5">
-                <SectionList sections={group.sections} />
+                <ComponentList components={group.components} />
               </div>
             </m.div>
           )}
