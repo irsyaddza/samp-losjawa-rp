@@ -1096,8 +1096,10 @@ SideJob_RouteCmd(playerid, type, const params[])
 			return SendClientMessageEx(playerid, COLOR_LIGHTRED, "USAGE:{FFFFFF} %s", syn);
 		}
 
-		new q[256];
-		mysql_format(dbCon, q, sizeof(q), "DELETE FROM `%s` WHERE `vehiclePlate` = '%e'", SJDefs[SideJob_Row(type)][sjdRouteTable], plate);
+		new q[320];
+		mysql_format(dbCon, q, sizeof(q),
+		    "DELETE r, c FROM `%s` r LEFT JOIN `%s` c ON c.`routeId` = r.`id` WHERE r.`vehiclePlate` = '%e'",
+		    SJDefs[SideJob_Row(type)][sjdRouteTable], SJDefs[SideJob_Row(type)][sjdCpTable], plate);
 		mysql_tquery(dbCon, q, "SideJob_OnRouteDeleted", "ds", playerid, type, plate);
 		return 1;
 	}
