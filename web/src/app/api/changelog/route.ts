@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const [rows] = await pool.execute<RowDataPacket[]>(
-      `SELECT id, version, entry, added_by, added_date, created_at
+      `SELECT id, version, component, entry, added_by, added_date, created_at
        FROM server_changelogs
        ORDER BY id DESC`
     );

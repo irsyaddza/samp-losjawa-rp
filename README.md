@@ -35,7 +35,7 @@ The `playit` service is gated behind the `playit` profile, so it only starts whe
 
 ## Core Systems & Gameplay Architecture
 
-Los Jawa Roleplay is engineered on a high-performance **modular Pawn architecture** (`gamemodes/modules/`) backed by an asynchronous MySQL persistence engine and a Next.js 14 Web UCP. The codebase prioritizes data integrity, real-time spatial synchronization, and distributed operations:
+Los Jawa Roleplay is engineered on a high-performance **modular Pawn architecture** (`gamemodes/modules/`) backed by an asynchronous MySQL persistence engine and a Next.js 16 Web UCP. The codebase prioritizes data integrity, real-time spatial synchronization, and distributed operations:
 
 | System Domain | Technical Complexity & Highlights | Primary Modules |
 | :--- | :--- | :--- |
@@ -43,7 +43,7 @@ Los Jawa Roleplay is engineered on a high-performance **modular Pawn architectur
 | **Law Enforcement Technology** | Interactive in-game Mobile Data Computer (MDC) with citizen record indexing, live CCTV spectator stream interpolation, automated penal sentencing, and static vehicle fleet management. | `MobileDataComputer.pwn`, `CCTV.pwn`, `Prison.pwn`, `Faction.pwn` |
 | **Autonomous Transit & World** | Autonomous statewide railway transit network (`TrainSystem`), modular vehicle component health (engine, transmission, tires), trunk storage, and dynamic emergency strobes (ELM). | `TrainSystem.pwn`, `VehicleParts.pwn`, `ELM.pwn` |
 | **Illicit Markets & Gang Warfare** | Multi-phase contraband chemical synthesis, black market firearm assembly with serial tracking, dynamic spray-paint graffiti tagging, and gang turf boundary control. | `Drugs.pwn`, `IllegalWeapon.pwn`, `Graffiti.pwn`, `Zones.pwn` |
-| **Full-Stack Web Portal (UCP)** | Modern Next.js 14 App Router portal featuring JWT stateless auth, bcrypt password parity with open.mp, automated SMTP transactional emails, and real-time player telemetry. | Next.js 14, Tailwind, TypeScript, MySQL |
+| **Full-Stack Web Portal (UCP)** | Modern Next.js 16 App Router portal featuring JWT stateless auth, bcrypt password parity with open.mp, automated SMTP transactional emails, player-to-player messaging, and real-time player telemetry. | Next.js 16, Tailwind, TypeScript, MySQL |
 | **Staff Live-Ops & Tooling** | In-game 3D world map editor with live review/approval pipeline, heuristic anticheat (teleport, speed, weapon spoofing), and live in-game SQL query diagnostic engine. | `MapEditor.pwn`, `MappingRequest.pwn`, `Anticheat.pwn`, `Queries.pwn` |
 
 > 📖 **Deep-Dive Technical Reference:**  
@@ -328,6 +328,17 @@ Validate that the latest backup is intact and restorable:
 ```
 
 This script performs a dry-run restore into a temporary database (`jawa_restore_test`), verifies the SHA-256 checksum and gzip integrity, reports the recovered table count, and drops the test database automatically. It does not touch the production database.
+
+### Schema migrations
+
+`mysql/init/` scripts run only when the MySQL volume is created for the first time. An existing deployment must apply files from `migrations/` manually, in filename order, before running a web image that depends on the new schema:
+
+```bash
+docker compose exec -T mysql sh -c 'mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"' \
+  < migrations/2026-10-29_ucp_mailbox.sql
+```
+
+Migrations use `CREATE TABLE IF NOT EXISTS` and conditional `ALTER TABLE` guards so they can be re-run safely. There is no schema-version table, so keep a record of which files have already been applied to each environment.
 
 ---
 

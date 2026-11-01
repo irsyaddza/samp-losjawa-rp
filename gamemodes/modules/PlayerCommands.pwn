@@ -17970,7 +17970,7 @@ new CLVerCount[MAX_PLAYERS];
 CMD:changelog(playerid, params[])
 {
 	mysql_tquery(dbCon,
-	    "SELECT `version`, COUNT(*) AS cnt FROM `server_changelogs` GROUP BY `version` ORDER BY MAX(`created_at`) DESC",
+	    "SELECT `version`, COUNT(*) AS cnt FROM `server_changelogs` WHERE `component` = 'game' GROUP BY `version` ORDER BY MAX(`created_at`) DESC",
 	    "OnLoadChangelogVersions", "d", playerid);
 	return 1;
 }
@@ -18011,7 +18011,7 @@ Dialog:ChangeLogList(playerid, response, listitem, inputtext[])
 
 	new q[256];
 	mysql_format(dbCon, q, sizeof(q),
-	    "SELECT `added_date`, `entry` FROM `server_changelogs` WHERE `version` = '%e' ORDER BY `id` DESC LIMIT 30",
+	    "SELECT `added_date`, `entry` FROM `server_changelogs` WHERE `version` = '%e' AND `component` = 'game' ORDER BY `id` DESC LIMIT 30",
 	    CLVersions[playerid][listitem]);
 
 	SetPVarString(playerid, "CL_Version", CLVersions[playerid][listitem]);
@@ -18050,7 +18050,7 @@ Dialog:ChangeLogEntries(playerid, response, listitem, inputtext[])
 {
 	if(!response) // "< Back"
 	    mysql_tquery(dbCon,
-	        "SELECT `version`, COUNT(*) AS cnt FROM `server_changelogs` GROUP BY `version` ORDER BY MAX(`created_at`) DESC",
+	        "SELECT `version`, COUNT(*) AS cnt FROM `server_changelogs` WHERE `component` = 'game' GROUP BY `version` ORDER BY MAX(`created_at`) DESC",
 	        "OnLoadChangelogVersions", "d", playerid);
 	return 1;
 }

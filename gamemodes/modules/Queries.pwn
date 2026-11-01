@@ -48,11 +48,13 @@ SQL_Connect()
 			"`added_by` VARCHAR(32) NOT NULL DEFAULT 'Admin'," \
 			"`added_date` VARCHAR(64) NOT NULL DEFAULT 'Current'," \
 			"`version` VARCHAR(64) NOT NULL DEFAULT 'Legacy'," \
+			"`component` ENUM('game','web') NOT NULL DEFAULT 'game'," \
 			"`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP" \
 		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
 		// Changelog versioning columns (duplicate-safe)
 		mysql_tquery(dbCon, "ALTER TABLE `server_changelogs` ADD COLUMN `version` VARCHAR(64) NOT NULL DEFAULT 'Legacy';");
+		mysql_tquery(dbCon, "ALTER TABLE `server_changelogs` ADD COLUMN `component` ENUM('game','web') NOT NULL DEFAULT 'game';");
 		mysql_tquery(dbCon, "ALTER TABLE `server_changelogs` ADD COLUMN `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;");
 
 		// Ensure AI NPC table exists

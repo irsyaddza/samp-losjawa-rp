@@ -1,31 +1,47 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Loader2, Plus, Trash2, RefreshCw } from 'lucide-react';
+import { ArrowLeftRight, Loader2, Trash2, RefreshCw } from 'lucide-react';
+
+type Component = 'game' | 'web';
+
+const VERSION_PREFIX: Record<Component, string> = {
+  game: 'LJ:RP ',
+  web: 'UCP ',
+};
 
 interface Entry {
   id: number;
   version: string;
+  component: Component;
   entry: string;
   added_by: string;
   added_date: string;
 }
 
+interface VersionOption {
+  version: string;
+  component: Component;
+}
+
 export default function ChangelogManager() {
   const [entries, setEntries] = useState<Entry[]>([]);
+  const [versions, setVersions] = useState<VersionOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [version, setVersion] = useState('');
+  const [component, setComponent] = useState<Component>('game');
   const [text, setText] = useState('');
+  const [search, setSearch] = useState('');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
 
   const load = useCallback(async () => {
-    setLoading(true);
     try {
       const res = await fetch('/api/admin/changelog');
       if (res.ok) {
         const data = await res.json();
         setEntries(data.entries || []);
+        setVersions(data.versions || []);
       }
     } finally {
       setLoading(false);
@@ -33,14 +49,8 @@ export default function ChangelogManager() {
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    fetch('/api/admin/changelog')
-      .then((res) => res.ok ? res.json() : Promise.reject())
-      .then((data) => { if (!cancelled) setEntries(data.entries || []); })
-      .catch(() => {})
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  }, []);
+    void load();
+  }, [load]);
 
   const submit = async () => {
     setMessage('');
@@ -50,6 +60,10 @@ export default function ChangelogManager() {
       .filter(Boolean);
 
     if (!version.trim()) return setMessage('Version is required.');
+    const prefix = VERSION_PREFIX[component];
+    if (!version.trim().startsWith(prefix)) {
+      return setMessage(`Version must start with "${prefix}".`);
+    }
     if (lines.length === 0) return setMessage('At least one entry line is required.');
 
     setSaving(true);
@@ -57,7 +71,7 @@ export default function ChangelogManager() {
       const res = await fetch('/api/admin/changelog', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ version: version.trim(), lines }),
+        body: JSON.stringify({ version: version.trim(), lines, component }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -81,20 +95,30 @@ export default function ChangelogManager() {
     await load();
   };
 
-  // Group entries by version for the list view
-  const groups: { version: string; items: Entry[] }[] = [];
-  for (const e of entries) {
-    let g = groups.find((x) => x.version === e.version);
-    if (!g) {
-      g = { version: e.version, items: [] };
-      groups.push(g);
+  const move = async (id: number, current: Component) => {
+    const res = await fetch('/api/admin/changelog', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, component: current === 'game' ? 'web' : 'game' }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setMessage(data.error || 'Failed to move entry.');
+      return;
     }
-    g.items.push(e);
-  }
+    await load();
+  };
 
-  // Suggest the newest known version as the default input value
-  const suggestedVersion =
-    version || (groups.length > 0 ? groups[0].version : '');
+  const versionOptions = versions
+    .filter((option) => option.component === component)
+    .map((option) => option.version);
+
+  const query = search.trim().toLowerCase();
+  const visible = query
+    ? entries.filter((e) =>
+        `${e.entry} ${e.version} ${e.added_by}`.toLowerCase().includes(query)
+      )
+    : entries;
 
   return (
     <div className="rounded-xl border border-white/10 bg-white/5 p-6">
@@ -103,19 +127,43 @@ export default function ChangelogManager() {
         Changelog Manager
       </h3>
       <p className="mb-4 text-xs text-zinc-500">
-        One change per line. Each line becomes one entry in-game (/changelog)
-        and on the website.
+        One change per line. Game entries appear in-game (/changelog) and on the
+        website; portal entries appear on the website only.
       </p>
 
       {/* Add form */}
       <div className="space-y-3">
-        <input
-          type="text"
-          value={version}
-          onChange={(e) => setVersion(e.target.value)}
-          placeholder={`Version (e.g. ${suggestedVersion || 'LJ:RP 0.3.0-Alpha'})`}
-          className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white placeholder-zinc-600 outline-none focus:border-amber-500"
-        />
+        <div className="grid gap-3 sm:grid-cols-[1fr_150px]">
+          <input
+            type="text"
+            value={version}
+            onChange={(e) => setVersion(e.target.value)}
+            list="changelog-versions"
+            placeholder={`Version (e.g. ${versionOptions[0] || (component === 'game' ? 'LJ:RP 0.9.2-Beta' : 'UCP 1.0.1')})`}
+            className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white placeholder-zinc-600 outline-none focus:border-amber-500"
+          />
+          <select
+            value={component}
+            onChange={(e) => {
+              setComponent(e.target.value as Component);
+              setVersion('');
+            }}
+            aria-label="Changelog component"
+            className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-amber-500"
+          >
+            <option value="game">Game</option>
+            <option value="web">Portal</option>
+          </select>
+        </div>
+        <datalist id="changelog-versions">
+          {versionOptions.map((v) => (
+            <option key={v} value={v} />
+          ))}
+        </datalist>
+        <p className="text-[11px] text-zinc-500">
+          Game versions use <code>LJ:RP x.y.z-Stage</code>; portal versions use{' '}
+          <code>UCP x.y.z</code>.
+        </p>
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -138,41 +186,75 @@ export default function ChangelogManager() {
 
       {/* Existing entries */}
       <div className="mt-8">
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-3 flex items-center justify-between gap-3">
           <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">
             Recent entries
           </span>
-          <button
-            onClick={load}
-            className="flex items-center gap-1 text-xs text-zinc-500 hover:text-white"
-          >
-            <RefreshCw className="h-3 w-3" />
-            Refresh
-          </button>
+          <div className="flex items-center gap-3">
+            <span className="text-[11px] text-zinc-500">
+              {query ? `${visible.length} of ${entries.length}` : entries.length}
+            </span>
+            <button
+              onClick={load}
+              className="flex items-center gap-1 text-xs text-zinc-500 hover:text-white"
+            >
+              <RefreshCw className="h-3 w-3" />
+              Refresh
+            </button>
+          </div>
         </div>
+
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search entries, version or author"
+          aria-label="Search changelog entries"
+          className="mb-3 w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white placeholder-zinc-600 outline-none focus:border-amber-500"
+        />
 
         {loading ? (
           <p className="text-xs text-zinc-500">Loading…</p>
+        ) : visible.length === 0 ? (
+          <p className="text-xs text-zinc-500">No entries match this search.</p>
         ) : (
           <ul className="space-y-2">
-            {entries.map((e) => (
+            {visible.map((e) => (
               <li
                 key={e.id}
                 className="flex items-start justify-between gap-3 rounded-lg border border-white/5 bg-black/20 px-3 py-2"
               >
                 <div className="min-w-0">
                   <p className="truncate text-xs text-zinc-200">{e.entry}</p>
-                  <p className="mt-0.5 text-[11px] text-zinc-500">
-                    {e.version} · by {e.added_by} · {e.added_date}
+                  <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-zinc-500">
+                    <span
+                      className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                        e.component === 'web'
+                          ? 'bg-sky-500/15 text-sky-300'
+                          : 'bg-emerald-500/15 text-emerald-300'
+                      }`}
+                    >
+                      {e.component === 'web' ? 'Portal' : 'Game'}
+                    </span>
+                    <span>{e.version} · by {e.added_by} · {e.added_date}</span>
                   </p>
                 </div>
-                <button
-                  onClick={() => remove(e.id)}
-                  className="shrink-0 text-red-400/70 transition hover:text-red-400"
-                  title="Delete entry"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
+                <div className="flex shrink-0 items-center gap-2">
+                  <button
+                    onClick={() => move(e.id, e.component)}
+                    className="text-zinc-500 transition hover:text-white"
+                    title={`Move to ${e.component === 'game' ? 'portal' : 'game'} changelog`}
+                  >
+                    <ArrowLeftRight className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    onClick={() => remove(e.id)}
+                    className="text-red-400/70 transition hover:text-red-400"
+                    title="Delete entry"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
