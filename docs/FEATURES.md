@@ -148,7 +148,7 @@ flowchart LR
 - **Automated Transactional Emails:** Nodemailer integration (`SMTP_*`) handles email verification on registration and secure token-based password reset links.
 - **Live Character Telemetry:** Players inspect their in-game persona status, bank accounts, registered vehicles, property deeds, and faction ranks directly on the web dashboard.
 - **Donator & Supporter Portal:** Web-based interface for managing supporter packages and unlocking perks.
-- **Automated Server Status & Changelog:** Displays real-time server health, player counts, and update history, split into game and portal tracks under one shared release version.
+- **Automated Server Status & Changelog:** Displays real-time server health, player counts, and update history, split into game (`LJ:RP x.y.z-Stage`) and portal (`UCP x.y.z`) tracks with independent version lines.
 - **Responsive Admin UI:** Dashboard and Navbar use a dark, card-based layout with admin stat cards, quick actions, and an unread notification badge.
 - **Unified Auth Entry Pages:** Login and registration share one responsive shell (`AuthShell`) with rotating server artwork, show/hide password controls, and inline validation states. Both pages reuse the same JWT session, verification, and password reset contracts as the rest of the portal.
 
@@ -246,7 +246,7 @@ Player-to-player messaging between UCP accounts, reachable from the Navbar entry
 
 - **Operational Counters:** Pending applications, active tickets, pending mappings, online players, active bans, pending appeals, and pending reports.
 - **Quick Navigation:** Direct links to tickets, moderation, appeals, reports, player directory, mappings, audit log, and changelog.
-- **Component-Aware Changelog:** Head admins publish each entry to the game or portal track and can move an entry between tracks without deleting it. The public page filters by track, while the in-game `/changelog` lists game entries only. Both tracks share the release version because a single commit deploys the game and web images together.
+- **Component-Aware Changelog:** Head admins publish each entry to the game or portal track and can move an entry between tracks without deleting it. The public page filters by track, while the in-game `/changelog` lists game entries only. Each track keeps its own version line: game entries require an `LJ:RP ` prefix and portal entries require `UCP `, enforced by both the publish form and the API.
 - **Role-Aware UI:** Audit links require `adminLevel >= 4`; head-admin tools require level `1337`.
 
 ### 5.12 Data Model, Access Control & Integration Boundaries
